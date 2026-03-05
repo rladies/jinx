@@ -1,0 +1,52 @@
+name: Airtable Sync
+
+on:
+  schedule:
+    - cron: "0 0 * * FRI"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: What to sync
+        required: true
+        type: choice
+        options:
+          - directory
+          - global-team
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+          owner: rladies
+
+      - name: Checkout jinx
+        uses: actions/checkout@v4
+        with:
+          repository: rladies/jinx
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+
+      - name: Sync from Airtable
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+        run: |
+          Rscript -e '
+            target <- "${{ inputs.target }}"
+            if (target == "" || target == "directory") {
+              jinx::sync_directory_airtable()
+            }
+            if (target == "" || target == "global-team") {
+              jinx::sync_global_team_airtable()
+            }
+          '

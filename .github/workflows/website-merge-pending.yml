@@ -1,0 +1,35 @@
+name: Auto-Merge Pending Blog Posts
+
+on:
+  schedule:
+    - cron: "58 10 * * *"
+  workflow_dispatch:
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+          owner: rladies
+
+      - name: Checkout jinx
+        uses: actions/checkout@v4
+        with:
+          repository: rladies/jinx
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+
+      - name: Auto-merge pending PRs
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          Rscript -e 'jinx::auto_merge_pending()'

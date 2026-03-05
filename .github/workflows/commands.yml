@@ -1,0 +1,41 @@
+name: Jinx Commands
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  handle:
+    if: startsWith(github.event.comment.body, '/jinx ')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+
+      - name: Handle command
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          Rscript -e '
+            cmd <- jinx::parse_command(Sys.getenv("COMMENT_BODY"))
+            ctx <- list(
+              repo = Sys.getenv("REPO"),
+              issue = as.integer(Sys.getenv("ISSUE_NUMBER"))
+            )
+            jinx::execute_command(cmd, ctx)
+          '

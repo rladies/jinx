@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "name": {"type": "string"},
+    "twitter": {"type": "string"},
+    "github": {"type": "string"},
+    "linkedin": {"type": "string"},
+    "mastodon": {"type": "string"},
+    "bluesky": {"type": "string"},
+    "website": {"type": "string"},
+    "orcid": {"type": "string"}
+  },
+  "required": ["name"]
+}

@@ -1,0 +1,56 @@
+name: Update Contributors List
+
+on:
+  schedule:
+    - cron: "0 10 1 * *"
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: "Repository to update (leave empty for all key repos)"
+        required: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+          owner: rladies
+
+      - name: Checkout jinx
+        uses: actions/checkout@v4
+        with:
+          repository: rladies/jinx
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+
+      - name: Update contributors list
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          Rscript -e '
+            repo <- "${{ inputs.repo }}"
+            if (nzchar(repo)) {
+              jinx::update_contributors_list("rladies", repo)
+            } else {
+              repos <- c("rladies.github.io", "directory",
+                         "awesome-rladies-blogs", "meetup_archive",
+                         "rladiesguide", "jinx")
+              for (r in repos) {
+                tryCatch(
+                  jinx::update_contributors_list("rladies", r),
+                  error = function(e) {
+                    cli::cli_alert_warning("Failed for {r}: {e$message}")
+                  }
+                )
+              }
+            }
+          '

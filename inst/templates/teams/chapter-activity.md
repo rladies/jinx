@@ -1,0 +1,7 @@
+- The following Guide sections are relevant to the Team. Please read them carefully:
+    - [ ] [Monitoring Chapter Activity Guidelines](https://guide.rladies.org/coordination/monitoring/)
+- Join these channels in the R-Ladies Organizers Slack.
+    - [ ] [#organisers](https://r-ladies.slack.com/archives/C7L3BAHUG)
+    - [ ] [#new-chapters](https://r-ladies.slack.com/archives/C2T7CRBJ6)
+- [ ] Let the @rladies/leadership know to which email address you want the messages from chapteractivity@rladies.org be forwarded to.
+  - We strongly recommend that you create a special filter/label on that account so you can clearly identify the emails that are addressed to conferences@rladies.org

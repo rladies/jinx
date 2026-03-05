@@ -1,0 +1,51 @@
+name: Global Team - Offboard Finalize
+
+on:
+  issues:
+    types: [closed]
+
+jobs:
+  finalize:
+    if: contains(github.event.issue.labels.*.name, 'offboarding')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+
+      - name: Extract details and finalize
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_LABELS: ${{ join(github.event.issue.labels.*.name, ',') }}
+        run: |
+          Rscript -e '
+            title <- Sys.getenv("ISSUE_TITLE")
+            labels <- strsplit(Sys.getenv("ISSUE_LABELS"), ",")[[1]]
+
+            username_match <- regmatches(
+              Sys.getenv("ISSUE_BODY"),
+              regexpr("@([a-zA-Z0-9-]+) is leaving", Sys.getenv("ISSUE_BODY"))
+            )
+            username <- sub("^@", "", sub(" is leaving$", "", username_match))
+
+            team_labels <- setdiff(labels, c("offboarding", "onboarding"))
+            team <- if (length(team_labels) > 0) team_labels[1] else NA_character_
+
+            if (!is.na(team) && nzchar(username)) {
+              jinx::gt_finalize_offboarding(username, team)
+            } else {
+              cli::cli_alert_warning("Could not extract username or team from issue")
+            }
+          '

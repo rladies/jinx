@@ -1,0 +1,8 @@
+- The following Guide sections are relevant to the Team. Please read them carefully:
+    - [ ] [Abstract review](https://guide.rladies.org/comm/abstract-review/index.html)
+    - [ ] [Abstract Review Airtable base](https://guide.rladies.org/coordination/airtable/abstract-review/)
+- Join these channels in the R-Ladies Organizers Slack.
+    - [ ] [#conferences](https://r-ladies.slack.com/archives/C2KDRDLBU)
+    - [ ] [#conf-posit](https://r-ladies.slack.com/archives/C8HRVR4LT)
+    - [ ] [#conf-user](https://r-ladies.slack.com/archives/C9TGN9MH7)
+- [ ] Join the #events_* channels on R-Ladies Community Slack.

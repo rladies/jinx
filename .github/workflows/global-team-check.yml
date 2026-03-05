@@ -1,0 +1,64 @@
+name: Global Team - 02 - Check Invitations
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+
+      - name: Check pending global team invitations
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          Rscript -e '
+            accepted <- jinx::gt_check_invitations()
+            if (length(accepted) > 0) {
+              for (user in accepted) {
+                artifacts <- gh::gh(
+                  "GET /repos/{repo}/actions/artifacts",
+                  repo = Sys.getenv("GH_REPO"),
+                  .limit = Inf
+                )
+                for (art in artifacts$artifacts) {
+                  if (grepl(paste0("global-team-", user), art$name) && !art$expired) {
+                    tmp <- tempfile(fileext = ".zip")
+                    download.file(art$archive_download_url, tmp,
+                      headers = c(Authorization = paste("Bearer", Sys.getenv("GH_TOKEN")))
+                    )
+                    details <- jsonlite::fromJSON(unzip(tmp, exdir = tempdir()))
+                    gh::gh(
+                      "POST /repos/{repo}/actions/workflows/{workflow_id}/dispatches",
+                      repo = Sys.getenv("GH_REPO"),
+                      workflow_id = "global-team-finalize.yml",
+                      ref = "main",
+                      inputs = list(
+                        username = details$username,
+                        name = details$name,
+                        team = details$team
+                      )
+                    )
+                    cli::cli_alert_success("Triggered finalization for {user}")
+                  }
+                }
+              }
+            }
+          '

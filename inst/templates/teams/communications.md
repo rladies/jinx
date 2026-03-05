@@ -1,0 +1,7 @@
+- The following Guide sections are relevant to the Team. Please read them carefully:
+    - [ ] [General guidance for social media](https://guide.rladies.org/organization/online-presence/social-media/)
+    - [ ] [Branding](https://guide.rladies.org/organization/tech/brand/)
+- [ ] Check the [branding-materials](https://github.com/rladies/branding-materials) repository
+- Join these channels in the R-Ladies Organizers Slack.
+    - [ ] [#branding](https://r-ladies.slack.com/archives/C3F839PRT)
+    - [ ] [#communications](https://r-ladies.slack.com/archives/C4E6WMXLM)

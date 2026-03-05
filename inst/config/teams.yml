@@ -1,0 +1,176 @@
+organization: rladies
+global_team_id: 3388327
+
+teams:
+  abstract-review:
+    name: Abstract Review
+    role: maintainer
+    repos:
+      - abstract-review
+    notify_teams:
+      - leadership
+      - communications
+    slack_channels:
+      - "#team-abstract-review"
+
+  blog:
+    name: Blog
+    role: maintainer
+    repos:
+      - blog
+      - rladies.github.io
+    notify_teams:
+      - leadership
+      - website
+      - communications
+    slack_channels:
+      - "#team-website"
+      - "#team-blog"
+
+  campaigns:
+    name: Campaigns
+    role: maintainer
+    repos: []
+    notify_teams:
+      - leadership
+      - communications
+    slack_channels:
+      - "#branding"
+      - "#communications"
+
+  chapter-activity:
+    name: Chapter Activity
+    role: maintainer
+    repos: []
+    notify_teams:
+      - leadership
+    slack_channels:
+      - "#organisers"
+      - "#new-chapters"
+
+  chapter-onboarding:
+    name: Chapter Onboarding
+    role: maintainer
+    repos: []
+    notify_teams:
+      - leadership
+    slack_channels:
+      - "#organisers"
+      - "#new-chapters"
+
+  coc:
+    name: Code of Conduct
+    role: maintainer
+    repos: []
+    notify_teams:
+      - leadership
+    slack_channels:
+      - "#community_management"
+      - "#CoC"
+
+  communications:
+    name: Communications
+    role: maintainer
+    repos: []
+    notify_teams:
+      - leadership
+    slack_channels:
+      - "#branding"
+      - "#communications"
+
+  community-slack:
+    name: Community Slack
+    role: maintainer
+    repos: []
+    notify_teams:
+      - leadership
+    slack_channels:
+      - "#community_management"
+
+  conference-liaison:
+    name: Conference Liaison
+    role: maintainer
+    repos: []
+    notify_teams:
+      - leadership
+    slack_channels:
+      - "#conferences"
+      - "#conf-posit"
+      - "#conf-user"
+
+  directory:
+    name: Directory
+    role: maintainer
+    repos:
+      - directory
+    notify_teams:
+      - leadership
+    slack_channels:
+      - "#team-directory"
+
+  meetup-pro:
+    name: Meetup Pro
+    role: maintainer
+    repos: []
+    notify_teams:
+      - leadership
+    slack_channels:
+      - "#organisers"
+      - "#new-chapters"
+
+  mentoring:
+    name: Mentoring
+    role: maintainer
+    repos: []
+    notify_teams:
+      - leadership
+    slack_channels:
+      - "#organisers"
+      - "#new-chapters"
+      - "#team-mentoring"
+
+  rocur:
+    name: RoCur
+    role: maintainer
+    repos: []
+    notify_teams:
+      - leadership
+      - communications
+    slack_channels:
+      - "#branding"
+      - "#communications"
+
+  translation:
+    name: Translation
+    role: maintainer
+    repos:
+      - rladies.github.io
+    notify_teams:
+      - leadership
+      - website
+    slack_channels:
+      - "#branding"
+      - "#website"
+      - "#blog"
+
+  website:
+    name: Website
+    role: maintainer
+    repos:
+      - rladies.github.io
+      - directory
+      - hugo-output
+    notify_teams:
+      - leadership
+      - communications
+    slack_channels:
+      - "#team-website"
+      - "#team-directory"
+      - "#team-blog"
+
+default_assignees:
+  - leadership
+  - website
+  - email
+  - communications
+  - community-slack

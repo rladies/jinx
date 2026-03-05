@@ -1,0 +1,27 @@
+defaults:
+  max_reviewers: 2
+  reviewers: []
+
+rules:
+  - pattern: "^data/chapters/"
+    reviewers:
+      - chapter-onboarding
+  - pattern: "^data/directory/"
+    reviewers:
+      - directory
+  - pattern: "^data/global_team/"
+    reviewers:
+      - website
+  - pattern: "^content/blog/"
+    reviewers:
+      - blog
+      - communications
+  - pattern: "^data/rblogs/"
+    reviewers:
+      - blog
+  - pattern: "\\.R$"
+    reviewers:
+      - website
+  - pattern: "^\\.github/workflows/"
+    reviewers:
+      - website

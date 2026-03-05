@@ -1,0 +1,61 @@
+name: Global Team - Offboard
+
+on:
+  workflow_dispatch:
+    inputs:
+      team:
+        type: choice
+        description: Team
+        required: true
+        options:
+          - abstract-review
+          - blog
+          - campaigns
+          - chapter-activity
+          - chapter-onboarding
+          - coc
+          - communications
+          - community-slack
+          - conference-liaison
+          - directory
+          - meetup-pro
+          - mentoring
+          - rocur
+          - translation
+          - website
+      name:
+        description: Full name
+        required: true
+      username:
+        description: GitHub username (without @)
+        required: true
+
+jobs:
+  offboard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+
+      - name: Create offboarding issue
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          Rscript -e '
+            jinx::gt_create_offboarding(
+              username = "${{ inputs.username }}",
+              team = "${{ inputs.team }}",
+              name = "${{ inputs.name }}"
+            )
+          '

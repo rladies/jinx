@@ -1,0 +1,29 @@
+name: Global Team - Remind Stale Issues
+
+on:
+  schedule:
+    - cron: "10 9 * * 1"
+  workflow_dispatch: {}
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+
+      - name: Send stale reminders
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: Rscript -e 'jinx::gt_remind_stale()'
