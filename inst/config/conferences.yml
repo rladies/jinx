@@ -1,0 +1,40 @@
+conferences:
+  - name: "posit::conf"
+    frequency: annual
+    typical_cfp_month: 1
+    url: "https://posit.co/conference/"
+    tags:
+      - rstats
+      - data-science
+
+  - name: "useR!"
+    frequency: annual
+    typical_cfp_month: 12
+    url: "https://user-conf.r-project.org/"
+    tags:
+      - rstats
+      - statistics
+
+  - name: "rstudio::global"
+    frequency: annual
+    typical_cfp_month: 9
+    tags:
+      - rstats
+
+  - name: "SatRdays"
+    frequency: regional
+    tags:
+      - rstats
+      - community
+
+  - name: "csv,conf"
+    frequency: annual
+    typical_cfp_month: 11
+    tags:
+      - data
+      - open-source
+
+labels:
+  cfp: cfp
+  deadline_approaching: deadline-approaching
+  speaker_recommendation: speaker-recommendation

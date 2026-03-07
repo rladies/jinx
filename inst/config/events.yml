@@ -1,0 +1,10 @@
+sources:
+  meetup:
+    base_url: "https://api.meetup.com/gql"
+    env_var: MEETUP_API_KEY
+
+sync:
+  archive_repo: event-archive
+  frequency: weekly
+
+chapters: []

@@ -3,3 +3,6 @@
 ^README\.Rmd$
 ^\.Rproj\.user$
 ^jinx\.Rproj$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

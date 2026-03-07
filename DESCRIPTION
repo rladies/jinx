@@ -1,6 +1,6 @@
 Package: jinx
 Title: R-Ladies GitHub Organization Management
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R:
     person("R-Ladies Global", email = "info@rladies.org", role = c("aut", "cre"),
            comment = c(ROR = "https://ror.org/05wpb1k41"))
@@ -10,7 +10,8 @@ Description: GitHub App for managing the R-Ladies organization. Handles
     automation, chapter monitoring, and interactive issue commands.
 Depends: R (>= 4.1.0)
 License: MIT + file LICENSE
-URL: https://github.com/rladies/jinx
+URL: https://github.com/rladies/jinx,
+    https://rladies.github.io/jinx/
 BugReports: https://github.com/rladies/jinx/issues
 Imports:
     bskyr,
@@ -28,8 +29,11 @@ Imports:
     yaml
 Suggests:
     httptest2,
+    knitr,
+    pkgdown,
     testthat (>= 3.0.0),
     withr
+VignetteBuilder: knitr
 Config/testthat/edition: 3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

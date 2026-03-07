@@ -37,6 +37,10 @@ parse_command <- function(body) {
     "blog-check-links" = list(action = "blog-check-links"),
     "gha-dashboard" = list(action = "gha-dashboard"),
     contributors = parse_contributors_command(parts),
+    events = parse_events_command(parts),
+    analytics = list(action = "analytics"),
+    cfp = parse_cfp_command(parts),
+    translate = parse_translate_command(parts),
     help = list(action = "help"),
     list(action = "unknown", raw = paste(parts, collapse = " "))
   )
@@ -131,6 +135,84 @@ parse_chapter_update_command <- function(parts) {
     action = "chapter-update",
     city = parts[2],
     country = paste(parts[3:length(parts)], collapse = " ")
+  )
+}
+
+parse_events_command <- function(parts) {
+  if (length(parts) < 2) {
+    return(list(
+      action = "error",
+      message = "Usage: `/jinx events <chapter>` or `/jinx events sync`"
+    ))
+  }
+  if (tolower(parts[2]) == "sync") {
+    return(list(action = "events-sync"))
+  }
+  list(action = "events", chapter = parts[2])
+}
+
+parse_cfp_command <- function(parts) {
+  if (length(parts) < 2) {
+    return(list(
+      action = "error",
+      message = "Usage: `/jinx cfp list|add|recommend`"
+    ))
+  }
+  sub_action <- tolower(parts[2])
+  switch(sub_action,
+    list = list(action = "cfp-list"),
+    add = {
+      if (length(parts) < 5) {
+        return(list(
+          action = "error",
+          message = "Usage: `/jinx cfp add <conference> <deadline> <url>`"
+        ))
+      }
+      list(
+        action = "cfp-add",
+        conference = parts[3],
+        deadline = parts[4],
+        url = parts[5]
+      )
+    },
+    recommend = {
+      if (length(parts) < 4) {
+        return(list(
+          action = "error",
+          message = "Usage: `/jinx cfp recommend <conference> <speaker>`"
+        ))
+      }
+      list(
+        action = "cfp-recommend",
+        conference = parts[3],
+        speaker = sub("^@", "", parts[4])
+      )
+    },
+    list(
+      action = "error",
+      message = "Usage: `/jinx cfp list|add|recommend`"
+    )
+  )
+}
+
+parse_translate_command <- function(parts) {
+  if (length(parts) < 2) {
+    return(list(
+      action = "error",
+      message = "Usage: `/jinx translate status|validate <lang>`"
+    ))
+  }
+  sub_action <- tolower(parts[2])
+  switch(sub_action,
+    status = list(action = "translate-status"),
+    validate = {
+      lang <- if (length(parts) >= 3) parts[3] else NULL
+      list(action = "translate-validate", language = lang)
+    },
+    list(
+      action = "error",
+      message = "Usage: `/jinx translate status|validate <lang>`"
+    )
   )
 }
 
@@ -281,6 +363,84 @@ execute_command <- function(command, context) {
         "\n_Showing top ", nrow(top), " of ", nrow(contribs), " total_"
       )
       post_reply(owner, repo, context$issue, body)
+    },
+    events = {
+      post_reply(owner, repo, context$issue, glue::glue(
+        "Fetching events for **{command$chapter}**..."
+      ))
+      events <- list_chapter_events(command$chapter)
+      summary <- create_event_summary(events, "weekly")
+      post_reply(owner, repo, context$issue, summary)
+    },
+    "events-sync" = {
+      post_reply(owner, repo, context$issue, "Syncing chapter events...")
+      events <- sync_chapter_events(dry_run = FALSE)
+      summary <- create_event_summary(events, "weekly")
+      url <- publish_event_summary(summary)
+      post_reply(owner, repo, context$issue, glue::glue(
+        "Event summary published: {url}"
+      ))
+    },
+    analytics = {
+      post_reply(owner, repo, context$issue, "Generating analytics dashboard...")
+      data <- generate_analytics_dashboard()
+      url <- publish_analytics_dashboard(data)
+      post_reply(owner, repo, context$issue, glue::glue(
+        "Analytics dashboard published: {url}"
+      ))
+    },
+    "cfp-list" = {
+      cfps <- list_open_cfps()
+      if (nrow(cfps) == 0) {
+        post_reply(owner, repo, context$issue, "No open CFPs found.")
+      } else {
+        lines <- vapply(seq_len(nrow(cfps)), function(i) {
+          glue::glue("- **{cfps$conference[i]}** (deadline: {cfps$deadline[i]}) - {cfps$url[i]}")
+        }, character(1))
+        post_reply(owner, repo, context$issue, paste(
+          "## Open CFPs\n", paste(lines, collapse = "\n")
+        ))
+      }
+    },
+    "cfp-add" = {
+      post_reply(owner, repo, context$issue, glue::glue(
+        "Creating CFP issue for **{command$conference}**..."
+      ))
+      url <- create_cfp_issue(command$conference, command$deadline, command$url)
+      post_reply(owner, repo, context$issue, glue::glue(
+        "CFP issue created: {url}"
+      ))
+    },
+    "cfp-recommend" = {
+      recommend_speaker(command$conference, command$speaker)
+      post_reply(owner, repo, context$issue, glue::glue(
+        "Speaker recommendation for @{command$speaker} added to **{command$conference}**."
+      ))
+    },
+    "translate-status" = {
+      coverage <- check_translation_coverage()
+      lines <- vapply(seq_len(nrow(coverage)), function(i) {
+        glue::glue(
+          "- **{coverage$language[i]}**: {coverage$translated[i]}/{coverage$total_templates[i]} ({coverage$coverage_pct[i]}%)"
+        )
+      }, character(1))
+      post_reply(owner, repo, context$issue, paste(
+        "## Translation Coverage\n", paste(lines, collapse = "\n")
+      ))
+    },
+    "translate-validate" = {
+      results <- validate_translations(language = command$language)
+      issues <- results[results$status != "ok", ]
+      if (nrow(issues) == 0) {
+        post_reply(owner, repo, context$issue, "All translations are valid.")
+      } else {
+        lines <- vapply(seq_len(nrow(issues)), function(i) {
+          glue::glue("- {issues$template[i]} ({issues$language[i]}): {issues$status[i]}")
+        }, character(1))
+        post_reply(owner, repo, context$issue, paste(
+          "## Translation Issues\n", paste(lines, collapse = "\n")
+        ))
+      }
     },
     remind = {
       gt_remind_stale()
