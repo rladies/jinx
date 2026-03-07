@@ -42,6 +42,8 @@ review_pr <- function(owner, repo, pr_number) {
 #' @param file_paths Changed file paths.
 #' @param author PR author login (excluded from reviewers).
 #' @return Character vector of assigned reviewer logins.
+#' @keywords internal
+#' @noRd
 assign_reviewers <- function(owner, repo, pr_number, file_paths, author = NULL) {
   rules <- tryCatch(load_review_rules(), error = function(e) NULL)
   if (is.null(rules)) return(character(0))

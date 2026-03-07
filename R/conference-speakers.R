@@ -31,7 +31,7 @@ recommend_speaker <- function(conference,
   )
 
   speaker_ref <- if (!is.null(speaker_github)) {
-    glue::glue("@{speaker_github}")
+    cli::format_inline("@{speaker_github}")
   } else {
     speaker_name
   }
@@ -49,11 +49,8 @@ recommend_speaker <- function(conference,
       EXPERTISE = expertise_str
     ))
   } else {
-    glue::glue(
-      "### Speaker Recommendation\n\n",
-      "**Speaker**: {speaker_ref}\n",
-      "**Expertise**: {expertise_str}\n",
-      "**Conference**: {matched$conference[1]}"
+    cli::format_inline(
+      "### Speaker Recommendation\n\n**Speaker**: {speaker_ref}\n**Expertise**: {expertise_str}\n**Conference**: {matched$conference[1]}"
     )
   }
 

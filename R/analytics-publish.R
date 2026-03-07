@@ -45,7 +45,7 @@ publish_analytics_dashboard <- function(dashboard_data,
   issue <- gh::gh(
     "POST /repos/{owner}/{repo}/issues",
     owner = org, repo = target_repo,
-    title = glue::glue("Analytics Dashboard - {Sys.Date()}"),
+    title = cli::format_inline("Analytics Dashboard - {Sys.Date()}"),
     body = body,
     labels = list("report", "analytics")
   )

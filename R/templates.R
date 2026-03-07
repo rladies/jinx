@@ -7,6 +7,8 @@
 #' @param variables Named list of placeholder values. Names should match
 #'   the placeholder keys (without angle brackets).
 #' @return Rendered template as a single character string.
+#' @keywords internal
+#' @noRd
 render_template <- function(template_path, variables) {
   content <- paste(readLines(template_path, warn = FALSE), collapse = "\n")
   for (key in names(variables)) {
@@ -28,6 +30,8 @@ render_template <- function(template_path, variables) {
 #' @param base_content Rendered base template string.
 #' @param team_content Rendered team template string.
 #' @return Combined template as a single character string.
+#' @keywords internal
+#' @noRd
 combine_templates <- function(base_content, team_content) {
   extras <- extract_extras(team_content)
   if (is.null(extras)) {
@@ -64,6 +68,8 @@ inject_before_second_header <- function(base, extras) {
 #' @param username GitHub username.
 #' @param name Full name.
 #' @return Rendered issue body as a single character string.
+#' @keywords internal
+#' @noRd
 gt_build_onboarding_body <- function(team_slug, username, name) {
   base_path <- system.file("templates", "global-team-onboarding.md", package = "jinx")
   team_path <- system.file("templates", "teams", paste0(team_slug, ".md"),
@@ -92,6 +98,8 @@ gt_build_onboarding_body <- function(team_slug, username, name) {
 #' @param username GitHub username.
 #' @param name Full name.
 #' @return Rendered issue body as a single character string.
+#' @keywords internal
+#' @noRd
 gt_build_offboarding_body <- function(team_slug, username, name) {
   base_path <- system.file("templates", "global-team-offboarding.md", package = "jinx")
 

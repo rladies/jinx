@@ -66,12 +66,12 @@ create_cfp_issue <- function(conference,
       URL = url
     ))
   } else {
-    glue::glue(
+    cli::format_inline(
       "**{conference}**\n\nDeadline: {deadline} ({days_left} days)\nURL: {url}"
     )
   }
 
-  meta_block <- glue::glue(
+  meta_block <- cli::format_inline(
     "\n\n<!-- cfp-meta\nconference: {conference}\ndeadline: {deadline}\nurl: {url}\n-->"
   )
 
@@ -81,7 +81,7 @@ create_cfp_issue <- function(conference,
   issue <- gh::gh(
     "POST /repos/{owner}/{repo}/issues",
     owner = org, repo = repo,
-    title = glue::glue("CFP: {conference} (deadline {deadline})"),
+    title = cli::format_inline("CFP: {conference} (deadline {deadline})"),
     body = paste0(body, meta_block),
     labels = labels
   )
@@ -116,10 +116,8 @@ check_cfp_deadlines <- function(org = "rladies",
   }
 
   for (i in seq_len(nrow(approaching))) {
-    reminder <- glue::glue(
-      "Reminder: The CFP for **{approaching$conference[i]}** closes in ",
-      "**{approaching$days_left[i]} days** ({approaching$deadline[i]}).\n\n",
-      "{approaching$url[i]}"
+    reminder <- cli::format_inline(
+      "Reminder: The CFP for **{approaching$conference[i]}** closes in **{approaching$days_left[i]} days** ({approaching$deadline[i]}).\n\n{approaching$url[i]}"
     )
 
     gh::gh(

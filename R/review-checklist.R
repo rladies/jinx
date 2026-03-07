@@ -7,6 +7,8 @@
 #' @param pr_number PR number.
 #' @param file_paths Character vector of changed file paths.
 #' @return Posted comment URL (invisibly).
+#' @keywords internal
+#' @noRd
 post_checklist <- function(owner, repo, pr_number, file_paths) {
   checklist <- build_checklist(file_paths, repo)
   if (is.null(checklist)) return(invisible(NULL))
