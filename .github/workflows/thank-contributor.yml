@@ -19,7 +19,7 @@ jobs:
         with:
           app-id: ${{ secrets.JINX_APP_ID }}
           private-key: ${{ secrets.JINX_PRIVATE_KEY }}
-          owner: rladies
+          owner: rladies          owner: rladies
 
       - name: Checkout jinx
         uses: actions/checkout@v4
