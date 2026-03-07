@@ -32,6 +32,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           MEETUP_API_KEY: ${{ secrets.MEETUP_API_KEY }}
+          MEETUPR_JWT_TOKEN: ${{ secrets.MEETUPR_JWT_TOKEN }}
+          MEETUPR_CLIENT_ID: ${{ secrets.MEETUPR_CLIENT_ID }}
+          MEETUPR_JWT_ISSUER: ${{ secrets.MEETUPR_JWT_ISSUER }}
         run: |
           Rscript -e '
             events <- jinx::sync_chapter_events(dry_run = FALSE)

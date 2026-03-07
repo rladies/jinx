@@ -2,6 +2,8 @@
 #'
 #' @param x Character string to escape.
 #' @return Escaped string.
+#' @keywords internal
+#' @noRd
 escape_linkedin_chars <- function(x) {
   chars <- c(
     "\\|", "\\{", "\\}", "\\@", "\\[", "\\]",

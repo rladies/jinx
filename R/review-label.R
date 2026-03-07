@@ -5,6 +5,8 @@
 #' @param pr_number PR number.
 #' @param file_paths Character vector of changed file paths.
 #' @return Character vector of applied labels.
+#' @keywords internal
+#' @noRd
 label_pr <- function(owner, repo, pr_number, file_paths) {
   labels_config <- tryCatch(load_labels_config(), error = function(e) NULL)
   if (is.null(labels_config)) return(character(0))

@@ -15,20 +15,20 @@ meetup_list_events <- function(group_urlname,
 
   since <- format(Sys.Date() - lubridate::dmonths(months), "%Y-%m-%dT00:00:00")
 
-  query <- glue::glue('{{
-    groupByUrlname(urlname: "{group_urlname}") {{
-      pastEvents(input: {{ first: 50 }}) {{
-        edges {{
-          node {{
+  query <- sprintf('{
+    groupByUrlname(urlname: "%s") {
+      pastEvents(input: { first: 50 }) {
+        edges {
+          node {
             title
             dateTime
             eventUrl
             going
-          }}
-        }}
-      }}
-    }}
-  }}')
+          }
+        }
+      }
+    }
+  }', group_urlname)
 
   resp <- httr2::request("https://api.meetup.com/gql") |>
     httr2::req_headers(Authorization = paste("Bearer", api_key)) |>

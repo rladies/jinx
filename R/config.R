@@ -41,6 +41,8 @@ load_labels_config <- function() {
 #' @param config Teams config as returned by [load_teams_config()]. Loaded
 #'   automatically if `NULL`.
 #' @return Named list with team definition, or `NULL` if not found.
+#' @keywords internal
+#' @noRd
 team_by_slug <- function(slug, config = NULL) {
   config <- config %||% load_teams_config()
   config$teams[[slug]]
@@ -51,6 +53,8 @@ team_by_slug <- function(slug, config = NULL) {
 #' @param config Teams config as returned by [load_teams_config()]. Loaded
 #'   automatically if `NULL`.
 #' @return Character vector of team slugs.
+#' @keywords internal
+#' @noRd
 team_slugs <- function(config = NULL) {
   config <- config %||% load_teams_config()
   names(config$teams)
