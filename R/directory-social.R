@@ -11,8 +11,10 @@ verify_social_handles <- function(entry) {
   social <- entry$social_media
   if (is.null(social)) {
     return(data.frame(
-      platform = character(), handle = character(),
-      status = integer(), valid = logical(),
+      platform = character(),
+      handle = character(),
+      status = integer(),
+      valid = logical(),
       stringsAsFactors = FALSE
     ))
   }
@@ -21,11 +23,16 @@ verify_social_handles <- function(entry) {
     twitter = function(h) paste0("https://x.com/", sub("^@", "", h)),
     github = function(h) paste0("https://github.com/", sub("^@", "", h)),
     linkedin = function(h) {
-      if (grepl("^https?://", h)) h
-      else paste0("https://www.linkedin.com/in/", h)
+      if (grepl("^https?://", h)) {
+        h
+      } else {
+        paste0("https://www.linkedin.com/in/", h)
+      }
     },
     mastodon = function(h) {
-      if (grepl("^https?://", h)) return(h)
+      if (grepl("^https?://", h)) {
+        return(h)
+      }
       parts <- strsplit(sub("^@", "", h), "@")[[1]]
       if (length(parts) == 2) {
         paste0("https://", parts[2], "/@", parts[1])
@@ -44,8 +51,10 @@ verify_social_handles <- function(entry) {
     url_builder <- checks[[platform]]
     if (is.null(url_builder)) {
       return(data.frame(
-        platform = platform, handle = handle,
-        status = NA_integer_, valid = NA,
+        platform = platform,
+        handle = handle,
+        status = NA_integer_,
+        valid = NA,
         stringsAsFactors = FALSE
       ))
     }
@@ -53,8 +62,10 @@ verify_social_handles <- function(entry) {
     url <- url_builder(handle)
     if (is.na(url)) {
       return(data.frame(
-        platform = platform, handle = handle,
-        status = NA_integer_, valid = FALSE,
+        platform = platform,
+        handle = handle,
+        status = NA_integer_,
+        valid = FALSE,
         stringsAsFactors = FALSE
       ))
     }

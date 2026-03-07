@@ -18,10 +18,9 @@ All workflows use `actions/create-github-app-token@v1` with these **repo secrets
 |--------|---------|
 | `JINX_APP_ID` | GitHub App ID |
 | `JINX_PRIVATE_KEY` | GitHub App private key (.pem) |
-| `MEETUP_API_KEY` | Meetup Pro API key (event-sync.yml) |
-| `MEETUP_JWT_TOKEN` | Meetup Pro JWT token for meetupr (event-sync.yml) |
-| `MEETUP_CLIENT_ID` | Meetup Pro OAuth client ID for meetupr (event-sync.yml) |
-| `MEETUP_JWT_ISSUER` | Meetup Pro JWT issuer for meetupr (event-sync.yml) |
+| `MEETUPR_JWT_TOKEN` | Meetup Pro JWT token for meetupr (event-sync.yml) |
+| `MEETUPR_CLIENT_ID` | Meetup Pro OAuth client ID for meetupr (event-sync.yml) |
+| `MEETUPR_JWT_ISSUER` | Meetup Pro JWT issuer for meetupr (event-sync.yml) |
 | `AIRTABLE_API_KEY` | Airtable API key (airtable-sync.yml) |
 
 Always reference as `secrets.JINX_APP_ID`, never `vars.JINX_APP_ID`.

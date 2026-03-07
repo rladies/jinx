@@ -10,10 +10,21 @@ describe("load_teams_config", {
   it("contains all expected teams", {
     config <- load_teams_config()
     expected <- c(
-      "abstract-review", "blog", "campaigns", "chapter-activity",
-      "chapter-onboarding", "coc", "communications", "community-slack",
-      "conference-liaison", "directory", "meetup-pro", "mentoring",
-      "rocur", "translation", "website"
+      "abstract-review",
+      "blog",
+      "campaigns",
+      "chapter-activity",
+      "chapter-onboarding",
+      "coc",
+      "communications",
+      "community-slack",
+      "conference-liaison",
+      "directory",
+      "meetup-pro",
+      "mentoring",
+      "rocur",
+      "translation",
+      "website"
     )
     expect_true(all(expected %in% names(config$teams)))
   })

@@ -25,9 +25,12 @@ validate_translations <- function(language = NULL) {
   base_templates <- list.files(base_dir, pattern = "\\.md$")
   if (length(base_templates) == 0) {
     return(data.frame(
-      template = character(0), language = character(0),
-      status = character(0), missing_keys = character(0),
-      extra_keys = character(0), stringsAsFactors = FALSE
+      template = character(0),
+      language = character(0),
+      status = character(0),
+      missing_keys = character(0),
+      extra_keys = character(0),
+      stringsAsFactors = FALSE
     ))
   }
 
@@ -40,8 +43,11 @@ validate_translations <- function(language = NULL) {
 
       if (!nzchar(trans_path)) {
         results[[length(results) + 1]] <- data.frame(
-          template = tmpl, language = lang,
-          status = "missing", missing_keys = "", extra_keys = "",
+          template = tmpl,
+          language = lang,
+          status = "missing",
+          missing_keys = "",
+          extra_keys = "",
           stringsAsFactors = FALSE
         )
         next
@@ -60,7 +66,8 @@ validate_translations <- function(language = NULL) {
       }
 
       results[[length(results) + 1]] <- data.frame(
-        template = tmpl, language = lang,
+        template = tmpl,
+        language = lang,
         status = status,
         missing_keys = paste(missing, collapse = ", "),
         extra_keys = paste(extra, collapse = ", "),
@@ -71,9 +78,12 @@ validate_translations <- function(language = NULL) {
 
   if (length(results) == 0) {
     return(data.frame(
-      template = character(0), language = character(0),
-      status = character(0), missing_keys = character(0),
-      extra_keys = character(0), stringsAsFactors = FALSE
+      template = character(0),
+      language = character(0),
+      status = character(0),
+      missing_keys = character(0),
+      extra_keys = character(0),
+      stringsAsFactors = FALSE
     ))
   }
 

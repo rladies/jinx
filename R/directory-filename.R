@@ -25,7 +25,10 @@ validate_entry_filename <- function(filename) {
   }
 
   if (grepl("[^a-z0-9._-]", name)) {
-    issues <- c(issues, "Must contain only ASCII letters, numbers, dots, hyphens, underscores")
+    issues <- c(
+      issues,
+      "Must contain only ASCII letters, numbers, dots, hyphens, underscores"
+    )
   }
 
   if (grepl("^-|-$", name)) {

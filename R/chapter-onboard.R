@@ -10,9 +10,13 @@
 #' @param onboarding_repo Repository for chapter onboarding issues.
 #' @return Issue URL (invisibly).
 #' @export
-create_chapter_setup <- function(city, country, organizers,
-                                 org = "rladies",
-                                 onboarding_repo = "new-chapters-onboarding") {
+create_chapter_setup <- function(
+  city,
+  country,
+  organizers,
+  org = "rladies",
+  onboarding_repo = "new-chapters-onboarding"
+) {
   body <- render_template(
     system.file("templates", "chapter-setup.md", package = "jinx"),
     list(
@@ -24,7 +28,8 @@ create_chapter_setup <- function(city, country, organizers,
 
   issue <- gh::gh(
     "POST /repos/{owner}/{repo}/issues",
-    owner = org, repo = onboarding_repo,
+    owner = org,
+    repo = onboarding_repo,
     title = glue::glue("{city}, {country} chapter setup"),
     body = body,
     labels = list("new chapter")
@@ -46,8 +51,12 @@ create_chapter_setup <- function(city, country, organizers,
 #' @param onboarding_repo Repository for chapter onboarding issues.
 #' @return Issue URL (invisibly).
 #' @export
-create_chapter_update <- function(city, country, org = "rladies",
-                                  onboarding_repo = "new-chapters-onboarding") {
+create_chapter_update <- function(
+  city,
+  country,
+  org = "rladies",
+  onboarding_repo = "new-chapters-onboarding"
+) {
   body <- render_template(
     system.file("templates", "chapter-update.md", package = "jinx"),
     list(CITY = city, COUNTRY = country)
@@ -55,7 +64,8 @@ create_chapter_update <- function(city, country, org = "rladies",
 
   issue <- gh::gh(
     "POST /repos/{owner}/{repo}/issues",
-    owner = org, repo = onboarding_repo,
+    owner = org,
+    repo = onboarding_repo,
     title = glue::glue("{city}, {country} chapter update"),
     body = body,
     labels = list("chapter update")
@@ -83,18 +93,33 @@ create_chapter_update <- function(city, country, org = "rladies",
 #' @param website_repo Website repository name.
 #' @return PR URL (invisibly).
 #' @export
-create_chapter_json_pr <- function(city, country, region = NULL,
-                                   meetup_urlname, email,
-                                   organizers,
-                                   status = "prospective",
-                                   social_media = list(),
-                                   org = "rladies",
-                                   website_repo = "rladies.github.io") {
+create_chapter_json_pr <- function(
+  city,
+  country,
+  region = NULL,
+  meetup_urlname,
+  email,
+  organizers,
+  status = "prospective",
+  social_media = list(),
+  org = "rladies",
+  website_repo = "rladies.github.io"
+) {
   slug <- tolower(gsub("[^a-z0-9]+", "-", tolower(city), perl = TRUE))
-  country_slug <- tolower(gsub("[^a-z0-9]+", "-", tolower(country), perl = TRUE))
+  country_slug <- tolower(gsub(
+    "[^a-z0-9]+",
+    "-",
+    tolower(country),
+    perl = TRUE
+  ))
 
   filename <- if (!is.null(region)) {
-    region_slug <- tolower(gsub("[^a-z0-9]+", "-", tolower(region), perl = TRUE))
+    region_slug <- tolower(gsub(
+      "[^a-z0-9]+",
+      "-",
+      tolower(region),
+      perl = TRUE
+    ))
     glue::glue("{country_slug}-{region_slug}-{slug}.json")
   } else {
     glue::glue("{country_slug}-{slug}.json")
@@ -118,20 +143,26 @@ create_chapter_json_pr <- function(city, country, region = NULL,
     chapter_data[["state.region"]] <- jsonlite::unbox(region)
   }
 
-  json_content <- jsonlite::toJSON(chapter_data, pretty = TRUE, auto_unbox = FALSE)
+  json_content <- jsonlite::toJSON(
+    chapter_data,
+    pretty = TRUE,
+    auto_unbox = FALSE
+  )
   content_b64 <- jsonlite::base64_enc(charToRaw(as.character(json_content)))
 
   branch <- glue::glue("chapter/{slug}")
 
   main_ref <- gh::gh(
     "GET /repos/{owner}/{repo}/git/ref/heads/main",
-    owner = org, repo = website_repo
+    owner = org,
+    repo = website_repo
   )
 
   tryCatch(
     gh::gh(
       "POST /repos/{owner}/{repo}/git/refs",
-      owner = org, repo = website_repo,
+      owner = org,
+      repo = website_repo,
       ref = glue::glue("refs/heads/{branch}"),
       sha = main_ref$object$sha
     ),
@@ -142,7 +173,8 @@ create_chapter_json_pr <- function(city, country, region = NULL,
 
   gh::gh(
     "PUT /repos/{owner}/{repo}/contents/data/chapters/{filename}",
-    owner = org, repo = website_repo,
+    owner = org,
+    repo = website_repo,
     path = glue::glue("data/chapters/{filename}"),
     message = glue::glue("Add {city}, {country} chapter"),
     content = content_b64,
@@ -151,9 +183,11 @@ create_chapter_json_pr <- function(city, country, region = NULL,
 
   pr <- gh::gh(
     "POST /repos/{owner}/{repo}/pulls",
-    owner = org, repo = website_repo,
+    owner = org,
+    repo = website_repo,
     title = glue::glue("Add chapter: {city}, {country}"),
-    head = branch, base = "main",
+    head = branch,
+    base = "main",
     body = glue::glue(
       "Adding new chapter entry for **{city}, {country}**.\n\n",
       "- Status: {status}\n",
@@ -176,7 +210,9 @@ assign_onboarding_team <- function(org, repo, issue_number) {
       tryCatch(
         gh::gh(
           "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-          owner = org, repo = repo, issue_number = issue_number,
+          owner = org,
+          repo = repo,
+          issue_number = issue_number,
           body = glue::glue("cc @{org}/{notify_team}")
         ),
         error = function(e) NULL

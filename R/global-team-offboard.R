@@ -6,8 +6,12 @@
 #' @param org GitHub organization. Defaults to `"rladies"`.
 #' @return The created issue URL (invisibly).
 #' @export
-gt_create_offboarding <- function(username, team, name = username,
-                                           org = "rladies") {
+gt_create_offboarding <- function(
+  username,
+  team,
+  name = username,
+  org = "rladies"
+) {
   config <- load_teams_config()
   team_def <- team_by_slug(team, config)
 
@@ -49,7 +53,9 @@ gt_finalize_offboarding <- function(username, team, org = "rladies") {
           team_slug = team_slug,
           username = username
         )
-        cli::cli_alert_success("Removed {.val {username}} from {.val {team_slug}}")
+        cli::cli_alert_success(
+          "Removed {.val {username}} from {.val {team_slug}}"
+        )
       },
       http_error_404 = function(e) {
         cli::cli_alert_info("{.val {username}} was not in {.val {team_slug}}")

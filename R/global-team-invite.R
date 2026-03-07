@@ -12,7 +12,9 @@ gt_invite <- function(username, team, name = username, org = "rladies") {
   config <- load_teams_config()
 
   if (!team %in% team_slugs(config)) {
-    cli::cli_abort("Unknown team {.val {team}}. Valid: {.val {team_slugs(config)}}")
+    cli::cli_abort(
+      "Unknown team {.val {team}}. Valid: {.val {team_slugs(config)}}"
+    )
   }
 
   gh::gh(

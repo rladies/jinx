@@ -11,11 +11,20 @@
 #' @param output_dir Directory to write the JSON file.
 #' @return File path of the created JSON (invisibly).
 #' @export
-create_chapter <- function(city, country, organizers,
-                           social_media = list(),
-                           status = "prospective",
-                           output_dir = ".") {
-  slug <- tolower(gsub("[^a-z0-9]+", "-", paste(country, city), ignore.case = TRUE))
+create_chapter <- function(
+  city,
+  country,
+  organizers,
+  social_media = list(),
+  status = "prospective",
+  output_dir = "."
+) {
+  slug <- tolower(gsub(
+    "[^a-z0-9]+",
+    "-",
+    paste(country, city),
+    ignore.case = TRUE
+  ))
   slug <- gsub("^-|-$", "", slug)
 
   chapter <- list(

@@ -50,8 +50,13 @@ describe("airtable_to_directory_entry", {
       id = "rec000",
       fields = list(
         Name = "Full User",
-        twitter = "tw", github = "gh", linkedin = "li",
-        mastodon = "ma", bluesky = "bs", website = "ws", orcid = "or"
+        twitter = "tw",
+        github = "gh",
+        linkedin = "li",
+        mastodon = "ma",
+        bluesky = "bs",
+        website = "ws",
+        orcid = "or"
       )
     )
     result <- airtable_to_directory_entry(record)

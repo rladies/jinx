@@ -43,7 +43,9 @@ combine_templates <- function(base_content, team_content) {
 extract_extras <- function(content) {
   pattern <- "<!--\\s*Extra for us\\s*\n((?:.|\\n)*?)-->"
   match <- regmatches(content, regexec(pattern, content, perl = TRUE))[[1]]
-  if (length(match) < 2) return(NULL)
+  if (length(match) < 2) {
+    return(NULL)
+  }
   trimws(match[2])
 }
 
@@ -71,8 +73,15 @@ inject_before_second_header <- function(base, extras) {
 #' @keywords internal
 #' @noRd
 gt_build_onboarding_body <- function(team_slug, username, name) {
-  base_path <- system.file("templates", "global-team-onboarding.md", package = "jinx")
-  team_path <- system.file("templates", "teams", paste0(team_slug, ".md"),
+  base_path <- system.file(
+    "templates",
+    "global-team-onboarding.md",
+    package = "jinx"
+  )
+  team_path <- system.file(
+    "templates",
+    "teams",
+    paste0(team_slug, ".md"),
     package = "jinx"
   )
 
@@ -101,7 +110,11 @@ gt_build_onboarding_body <- function(team_slug, username, name) {
 #' @keywords internal
 #' @noRd
 gt_build_offboarding_body <- function(team_slug, username, name) {
-  base_path <- system.file("templates", "global-team-offboarding.md", package = "jinx")
+  base_path <- system.file(
+    "templates",
+    "global-team-offboarding.md",
+    package = "jinx"
+  )
 
   variables <- list(
     GH_USER = username,

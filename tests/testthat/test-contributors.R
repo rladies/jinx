@@ -93,8 +93,10 @@ describe("format_contributors_grid", {
 describe("format_contributors", {
   it("returns empty message for empty data", {
     df <- data.frame(
-      login = character(0), contributions = integer(0),
-      avatar_url = character(0), profile_url = character(0),
+      login = character(0),
+      contributions = integer(0),
+      avatar_url = character(0),
+      profile_url = character(0),
       stringsAsFactors = FALSE
     )
     expect_equal(format_contributors(df), "No contributors yet.")
@@ -102,8 +104,10 @@ describe("format_contributors", {
 
   it("dispatches to table format", {
     df <- data.frame(
-      login = "alice", contributions = 1L,
-      avatar_url = "url", profile_url = "url",
+      login = "alice",
+      contributions = 1L,
+      avatar_url = "url",
+      profile_url = "url",
       stringsAsFactors = FALSE
     )
     result <- format_contributors(df, format = "table")
@@ -112,8 +116,10 @@ describe("format_contributors", {
 
   it("dispatches to grid format", {
     df <- data.frame(
-      login = "alice", contributions = 1L,
-      avatar_url = "url", profile_url = "url",
+      login = "alice",
+      contributions = 1L,
+      avatar_url = "url",
+      profile_url = "url",
       stringsAsFactors = FALSE
     )
     result <- format_contributors(df, format = "grid")

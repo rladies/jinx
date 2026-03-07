@@ -10,12 +10,14 @@
 #' @param repo Repository where CFP issues are tracked.
 #' @return Comment URL (invisibly).
 #' @export
-recommend_speaker <- function(conference,
-                              speaker_name,
-                              speaker_github = NULL,
-                              expertise = character(0),
-                              org = "rladies",
-                              repo = "global-team") {
+recommend_speaker <- function(
+  conference,
+  speaker_name,
+  speaker_github = NULL,
+  expertise = character(0),
+  org = "rladies",
+  repo = "global-team"
+) {
   cfps <- list_open_cfps(org = org, repo = repo)
 
   matched <- cfps[grepl(conference, cfps$conference, ignore.case = TRUE), ]
@@ -26,7 +28,8 @@ recommend_speaker <- function(conference,
   issue_number <- matched$number[1]
 
   template_path <- system.file(
-    "templates", "speaker-recommendation.md",
+    "templates",
+    "speaker-recommendation.md",
     package = "jinx"
   )
 
@@ -43,11 +46,14 @@ recommend_speaker <- function(conference,
   }
 
   body <- if (nzchar(template_path)) {
-    render_template(template_path, list(
-      CONFERENCE = matched$conference[1],
-      SPEAKER = speaker_ref,
-      EXPERTISE = expertise_str
-    ))
+    render_template(
+      template_path,
+      list(
+        CONFERENCE = matched$conference[1],
+        SPEAKER = speaker_ref,
+        EXPERTISE = expertise_str
+      )
+    )
   } else {
     cli::format_inline(
       "### Speaker Recommendation\n\n**Speaker**: {speaker_ref}\n**Expertise**: {expertise_str}\n**Conference**: {matched$conference[1]}"
@@ -56,7 +62,8 @@ recommend_speaker <- function(conference,
 
   comment <- gh::gh(
     "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-    owner = org, repo = repo,
+    owner = org,
+    repo = repo,
     issue_number = issue_number,
     body = body
   )
@@ -74,15 +81,18 @@ recommend_speaker <- function(conference,
 #' @param repo Repository where CFP issues are tracked.
 #' @return Data frame with columns: speaker, expertise, recommended_by.
 #' @export
-list_speaker_recommendations <- function(conference,
-                                         org = "rladies",
-                                         repo = "global-team") {
+list_speaker_recommendations <- function(
+  conference,
+  org = "rladies",
+  repo = "global-team"
+) {
   cfps <- list_open_cfps(org = org, repo = repo)
   matched <- cfps[grepl(conference, cfps$conference, ignore.case = TRUE), ]
 
   if (nrow(matched) == 0) {
     return(data.frame(
-      speaker = character(0), expertise = character(0),
+      speaker = character(0),
+      expertise = character(0),
       recommended_by = character(0),
       stringsAsFactors = FALSE
     ))
@@ -90,16 +100,21 @@ list_speaker_recommendations <- function(conference,
 
   comments <- gh::gh(
     "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
-    owner = org, repo = repo,
+    owner = org,
+    repo = repo,
     issue_number = matched$number[1],
     .limit = Inf
   )
 
-  recs <- Filter(function(c) grepl("Speaker Recommendation", c$body %||% ""), comments)
+  recs <- Filter(
+    function(c) grepl("Speaker Recommendation", c$body %||% ""),
+    comments
+  )
 
   if (length(recs) == 0) {
     return(data.frame(
-      speaker = character(0), expertise = character(0),
+      speaker = character(0),
+      expertise = character(0),
       recommended_by = character(0),
       stringsAsFactors = FALSE
     ))

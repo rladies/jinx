@@ -9,9 +9,11 @@
 #' @param newsletter Logical, whether to also send a newsletter. Defaults
 #'   to `TRUE`.
 #' @export
-announce_post <- function(post,
-                          platforms = c("bluesky", "linkedin", "mastodon"),
-                          newsletter = TRUE) {
+announce_post <- function(
+  post,
+  platforms = c("bluesky", "linkedin", "mastodon"),
+  newsletter = TRUE
+) {
   if (is.null(post) || !file.exists(post)) {
     cli::cli_abort("Post file not found: {.path {post}}")
   }
@@ -25,7 +27,9 @@ announce_post <- function(post,
   )
 
   image <- file.path(dirname(post), frontmatter$image)
-  if (!file.exists(image)) image <- NULL
+  if (!file.exists(image)) {
+    image <- NULL
+  }
 
   short <- tryCatch(
     short_url(url),
@@ -64,7 +68,9 @@ announce_post <- function(post,
   if (newsletter) {
     tryCatch(
       send_newsletter(frontmatter, url),
-      error = function(e) cli::cli_alert_danger("Newsletter failed: {e$message}")
+      error = function(e) {
+        cli::cli_alert_danger("Newsletter failed: {e$message}")
+      }
     )
   }
 

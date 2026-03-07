@@ -11,11 +11,15 @@
 #' @noRd
 post_checklist <- function(owner, repo, pr_number, file_paths) {
   checklist <- build_checklist(file_paths, repo)
-  if (is.null(checklist)) return(invisible(NULL))
+  if (is.null(checklist)) {
+    return(invisible(NULL))
+  }
 
   comment <- gh::gh(
     "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-    owner = owner, repo = repo, issue_number = pr_number,
+    owner = owner,
+    repo = repo,
+    issue_number = pr_number,
     body = checklist
   )
 
@@ -33,52 +37,68 @@ build_checklist <- function(file_paths, repo) {
   has_data <- any(grepl("^data/", file_paths))
   has_content <- any(grepl("^content/", file_paths))
 
-  sections <- c(sections, paste0(
-    "## Review Checklist\n",
-    "- [ ] Changes are consistent with the PR description\n",
-    "- [ ] No sensitive information (credentials, tokens, emails) is included\n"
-  ))
+  sections <- c(
+    sections,
+    paste0(
+      "## Review Checklist\n",
+      "- [ ] Changes are consistent with the PR description\n",
+      "- [ ] No sensitive information (credentials, tokens, emails) is included\n"
+    )
+  )
 
   if (has_json) {
-    sections <- c(sections, paste0(
-      "### JSON files\n",
-      "- [ ] JSON is valid and well-formatted\n",
-      "- [ ] File names are lowercase with no special characters\n",
-      "- [ ] Required fields are present\n"
-    ))
+    sections <- c(
+      sections,
+      paste0(
+        "### JSON files\n",
+        "- [ ] JSON is valid and well-formatted\n",
+        "- [ ] File names are lowercase with no special characters\n",
+        "- [ ] Required fields are present\n"
+      )
+    )
   }
 
   if (has_r) {
-    sections <- c(sections, paste0(
-      "### R code\n",
-      "- [ ] Functions have roxygen2 documentation\n",
-      "- [ ] No hardcoded credentials or paths\n",
-      "- [ ] Tests cover new/changed functionality\n"
-    ))
+    sections <- c(
+      sections,
+      paste0(
+        "### R code\n",
+        "- [ ] Functions have roxygen2 documentation\n",
+        "- [ ] No hardcoded credentials or paths\n",
+        "- [ ] Tests cover new/changed functionality\n"
+      )
+    )
   }
 
   if (has_workflow) {
-    sections <- c(sections, paste0(
-      "### GitHub Actions workflows\n",
-      "- [ ] Secrets are referenced, not hardcoded\n",
-      "- [ ] Actions use pinned versions\n",
-      "- [ ] Workflow permissions follow least-privilege\n"
-    ))
+    sections <- c(
+      sections,
+      paste0(
+        "### GitHub Actions workflows\n",
+        "- [ ] Secrets are referenced, not hardcoded\n",
+        "- [ ] Actions use pinned versions\n",
+        "- [ ] Workflow permissions follow least-privilege\n"
+      )
+    )
   }
 
   if (has_content) {
-    sections <- c(sections, paste0(
-      "### Content\n",
-      "- [ ] Spelling and grammar checked\n",
-      "- [ ] All links are working\n",
-      "- [ ] Images have alt text\n"
-    ))
+    sections <- c(
+      sections,
+      paste0(
+        "### Content\n",
+        "- [ ] Spelling and grammar checked\n",
+        "- [ ] All links are working\n",
+        "- [ ] Images have alt text\n"
+      )
+    )
   }
 
   if (has_data) {
     items <- "- [ ] Data changes are intentional and verified\n"
     if (repo == "directory") {
-      items <- paste0(items,
+      items <- paste0(
+        items,
         "- [ ] Social media handles use handles, not full URLs\n",
         "- [ ] Images won't crop to unwanted section\n"
       )

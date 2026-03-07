@@ -28,8 +28,13 @@ describe("validate_blog_entry", {
 
   it("validates all json files in a directory", {
     tmp <- withr::local_tempdir()
-    good <- list(title = "Good", url = "https://x.com", type = "blog",
-                 authors = list(list(name = "A")), language = "en")
+    good <- list(
+      title = "Good",
+      url = "https://x.com",
+      type = "blog",
+      authors = list(list(name = "A")),
+      language = "en"
+    )
     bad <- list(title = "Bad")
     jsonlite::write_json(good, file.path(tmp, "good.json"), auto_unbox = TRUE)
     jsonlite::write_json(bad, file.path(tmp, "bad.json"), auto_unbox = TRUE)

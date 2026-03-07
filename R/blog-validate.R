@@ -5,10 +5,10 @@
 #' @param schema Path to JSON schema file. Uses the bundled schema by default.
 #' @return A data frame with columns `file`, `valid`, and `errors`.
 #' @export
-validate_blog_entry <- function(path,
-                                schema = system.file("schemas",
-                                  "blog-entry.json",
-                                  package = "jinx")) {
+validate_blog_entry <- function(
+  path,
+  schema = system.file("schemas", "blog-entry.json", package = "jinx")
+) {
   if (!nzchar(schema)) {
     cli::cli_abort("Blog entry schema not found in jinx package")
   }
@@ -28,14 +28,25 @@ validate_blog_entry <- function(path,
           schema,
           verbose = TRUE
         )
-        errors <- if (isTRUE(valid)) character(0) else attr(valid, "errors")$message
-        data.frame(file = basename(f), valid = isTRUE(valid),
+        errors <- if (isTRUE(valid)) {
+          character(0)
+        } else {
+          attr(valid, "errors")$message
+        }
+        data.frame(
+          file = basename(f),
+          valid = isTRUE(valid),
           errors = paste(errors, collapse = "; "),
-          stringsAsFactors = FALSE)
+          stringsAsFactors = FALSE
+        )
       },
       error = function(e) {
-        data.frame(file = basename(f), valid = FALSE,
-          errors = e$message, stringsAsFactors = FALSE)
+        data.frame(
+          file = basename(f),
+          valid = FALSE,
+          errors = e$message,
+          stringsAsFactors = FALSE
+        )
       }
     )
   })

@@ -11,8 +11,11 @@
 #' @return A data frame with columns `chapter`, `last_event`, `status`,
 #'   and `months_inactive`.
 #' @export
-check_chapter_health <- function(months = 12, org = "rladies",
-                                 data_repo = "meetup_archive") {
+check_chapter_health <- function(
+  months = 12,
+  org = "rladies",
+  data_repo = "meetup_archive"
+) {
   events_url <- glue::glue(
     "https://raw.githubusercontent.com/{org}/{data_repo}/main/data/events.json"
   )
@@ -40,7 +43,9 @@ check_chapter_health <- function(months = 12, org = "rladies",
     difftime(Sys.Date(), latest$last_event, units = "days") / 30
   )
   latest$status <- ifelse(
-    latest$last_event >= cutoff, "active", "inactive"
+    latest$last_event >= cutoff,
+    "active",
+    "inactive"
   )
 
   latest <- latest[order(-latest$months_inactive), ]

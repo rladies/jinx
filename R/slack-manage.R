@@ -11,12 +11,14 @@
 #' @param dry_run If `TRUE` (default), only returns prepared emails.
 #' @return Data frame of prepared emails (invisibly).
 #' @export
-send_slack_invites <- function(invite_link,
-                               base_id = "appJZFYABfCIdPYMR",
-                               api_key = Sys.getenv("AIRTABLE_API_KEY"),
-                               sender_name = "R-Ladies Global",
-                               sender_email = "info@rladies.org",
-                               dry_run = TRUE) {
+send_slack_invites <- function(
+  invite_link,
+  base_id = "appJZFYABfCIdPYMR",
+  api_key = Sys.getenv("AIRTABLE_API_KEY"),
+  sender_name = "R-Ladies Global",
+  sender_email = "info@rladies.org",
+  dry_run = TRUE
+) {
   if (!nzchar(api_key)) {
     cli::cli_abort("AIRTABLE_API_KEY environment variable is not set")
   }
@@ -49,15 +51,20 @@ send_slack_invites <- function(invite_link,
     stringsAsFactors = FALSE
   )
 
-  emails$body <- vapply(seq_len(nrow(emails)), function(i) {
-    glue::glue(
-      template_text,
-      link = invite_link,
-      date = expire_date,
-      sender = sender_name,
-      .open = "{{", .close = "}}"
-    )
-  }, character(1))
+  emails$body <- vapply(
+    seq_len(nrow(emails)),
+    function(i) {
+      glue::glue(
+        template_text,
+        link = invite_link,
+        date = expire_date,
+        sender = sender_name,
+        .open = "{{",
+        .close = "}}"
+      )
+    },
+    character(1)
+  )
 
   if (dry_run) {
     cli::cli_alert_info("Dry run: {nrow(emails)} invite emails prepared")
@@ -78,9 +85,11 @@ send_slack_invites <- function(invite_link,
 #' @param token Slack API token.
 #' @return API response (invisibly).
 #' @export
-subscribe_slack_rss <- function(rss_url,
-                                channel = "rladiesblogs",
-                                token = Sys.getenv("SLACK_TOKEN")) {
+subscribe_slack_rss <- function(
+  rss_url,
+  channel = "rladiesblogs",
+  token = Sys.getenv("SLACK_TOKEN")
+) {
   if (!nzchar(token)) {
     cli::cli_abort("SLACK_TOKEN environment variable is not set")
   }

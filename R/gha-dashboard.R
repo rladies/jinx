@@ -10,14 +10,17 @@
 #'   If `NULL`, returns the data without writing.
 #' @return List of workflow data (invisibly).
 #' @export
-generate_gha_dashboard <- function(org = "rladies",
-                                   exclude_pattern = "^meetup-",
-                                   output_path = NULL) {
+generate_gha_dashboard <- function(
+  org = "rladies",
+  exclude_pattern = "^meetup-",
+  output_path = NULL
+) {
   cli::cli_h2("Generating GitHub Actions dashboard for {org}")
 
   repos <- gh::gh(
     "GET /orgs/{org}/repos",
-    org = org, type = "all",
+    org = org,
+    type = "all",
     .limit = Inf
   )
 
@@ -27,29 +30,35 @@ generate_gha_dashboard <- function(org = "rladies",
   dashboard_data <- list()
 
   for (r in repos) {
-    workflows <- tryCatch({
-      wfs <- gh::gh(
-        "GET /repos/{owner}/{repo}/actions/workflows",
-        owner = org, repo = r$name,
-        .limit = Inf
-      )
-      if (length(wfs$workflows) == 0) next
-
-      wf_data <- lapply(wfs$workflows, function(w) {
-        list(
-          name = w$name,
-          url = w$html_url,
-          badge = w$badge_url,
-          run = w$updated_at,
-          state = w$state
+    workflows <- tryCatch(
+      {
+        wfs <- gh::gh(
+          "GET /repos/{owner}/{repo}/actions/workflows",
+          owner = org,
+          repo = r$name,
+          .limit = Inf
         )
-      })
+        if (length(wfs$workflows) == 0) {
+          next
+        }
 
-      dashboard_data[[length(dashboard_data) + 1]] <- list(
-        repository = r$name,
-        workflows = wf_data
-      )
-    }, error = function(e) NULL)
+        wf_data <- lapply(wfs$workflows, function(w) {
+          list(
+            name = w$name,
+            url = w$html_url,
+            badge = w$badge_url,
+            run = w$updated_at,
+            state = w$state
+          )
+        })
+
+        dashboard_data[[length(dashboard_data) + 1]] <- list(
+          repository = r$name,
+          workflows = wf_data
+        )
+      },
+      error = function(e) NULL
+    )
   }
 
   cli::cli_alert_success(
@@ -58,8 +67,12 @@ generate_gha_dashboard <- function(org = "rladies",
 
   if (!is.null(output_path)) {
     dir.create(dirname(output_path), recursive = TRUE, showWarnings = FALSE)
-    jsonlite::write_json(dashboard_data, output_path, pretty = TRUE,
-                         auto_unbox = TRUE)
+    jsonlite::write_json(
+      dashboard_data,
+      output_path,
+      pretty = TRUE,
+      auto_unbox = TRUE
+    )
     cli::cli_alert_success("Dashboard data written to {output_path}")
   }
 
@@ -75,14 +88,17 @@ generate_gha_dashboard <- function(org = "rladies",
 #' @param target_repo Repository to publish to.
 #' @return Issue URL (invisibly).
 #' @export
-publish_gha_dashboard <- function(dashboard_data,
-                                  org = "rladies",
-                                  target_repo = "global-team") {
+publish_gha_dashboard <- function(
+  dashboard_data,
+  org = "rladies",
+  target_repo = "global-team"
+) {
   body <- format_gha_dashboard(dashboard_data)
 
   issue <- gh::gh(
     "POST /repos/{owner}/{repo}/issues",
-    owner = org, repo = target_repo,
+    owner = org,
+    repo = target_repo,
     title = glue::glue("GitHub Actions Status Report - {Sys.Date()}"),
     body = body,
     labels = list("report", "gha-dashboard")
@@ -99,7 +115,9 @@ format_gha_dashboard <- function(dashboard_data) {
 
   header <- paste0(
     "## GitHub Actions Status Report\n",
-    "**Generated**: ", Sys.Date(), "\n\n",
+    "**Generated**: ",
+    Sys.Date(),
+    "\n\n",
     "| Repository | Workflow | Last Run | Status |\n",
     "|------------|----------|----------|--------|\n"
   )
@@ -117,9 +135,12 @@ format_gha_dashboard <- function(dashboard_data) {
       } else {
         wf$state %||% "unknown"
       }
-      rows <- c(rows, glue::glue(
-        "| {repo_data$repository} | [{wf$name}]({wf$url}) | {run_date} | {badge} |"
-      ))
+      rows <- c(
+        rows,
+        glue::glue(
+          "| {repo_data$repository} | [{wf$name}]({wf$url}) | {run_date} | {badge} |"
+        )
+      )
     }
   }
 

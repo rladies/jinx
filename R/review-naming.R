@@ -10,7 +10,9 @@
 check_pr_naming <- function(owner, repo, pr_number) {
   files <- gh::gh(
     "GET /repos/{owner}/{repo}/pulls/{pr_number}/files",
-    owner = owner, repo = repo, pr_number = pr_number,
+    owner = owner,
+    repo = repo,
+    pr_number = pr_number,
     .limit = Inf
   )
 
@@ -22,7 +24,9 @@ check_pr_naming <- function(owner, repo, pr_number) {
     body <- format_naming_violations(violations)
     gh::gh(
       "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-      owner = owner, repo = repo, issue_number = pr_number,
+      owner = owner,
+      repo = repo,
+      issue_number = pr_number,
       body = body
     )
     cli::cli_alert_warning("{nrow(violations)} naming violation{?s} found")
@@ -68,9 +72,13 @@ check_naming_conventions <- function(file_paths, repo) {
 }
 
 format_naming_violations <- function(violations) {
-  rows <- vapply(seq_len(nrow(violations)), function(i) {
-    glue::glue("| `{violations$filename[i]}` | {violations$reason[i]} |")
-  }, character(1))
+  rows <- vapply(
+    seq_len(nrow(violations)),
+    function(i) {
+      glue::glue("| `{violations$filename[i]}` | {violations$reason[i]} |")
+    },
+    character(1)
+  )
 
   paste0(
     "### Naming Convention Issues\n\n",

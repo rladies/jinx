@@ -8,14 +8,17 @@
 #' @param exclude_pattern Regex pattern to exclude repos.
 #' @return Data frame with columns: chapter, month, commits, prs, issues.
 #' @export
-collect_chapter_activity <- function(org = "rladies",
-                                     months = 12,
-                                     exclude_pattern = "^meetup-") {
+collect_chapter_activity <- function(
+  org = "rladies",
+  months = 12,
+  exclude_pattern = "^meetup-"
+) {
   cli::cli_h2("Collecting chapter activity for {org}")
 
   repos <- gh::gh(
     "GET /orgs/{org}/repos",
-    org = org, type = "all",
+    org = org,
+    type = "all",
     .limit = Inf
   )
   repos <- Filter(function(r) !grepl(exclude_pattern, r$name), repos)
@@ -25,26 +28,36 @@ collect_chapter_activity <- function(org = "rladies",
   all_data <- list()
 
   for (r in repos) {
-    tryCatch({
-      stats <- collect_monthly_stats(org, r$name, since)
-      if (!is.null(stats) && nrow(stats) > 0) {
-        all_data[[length(all_data) + 1]] <- stats
+    tryCatch(
+      {
+        stats <- collect_monthly_stats(org, r$name, since)
+        if (!is.null(stats) && nrow(stats) > 0) {
+          all_data[[length(all_data) + 1]] <- stats
+        }
+      },
+      error = function(e) {
+        cli::cli_alert_warning(
+          "Failed to collect stats for {r$name}: {e$message}"
+        )
       }
-    }, error = function(e) {
-      cli::cli_alert_warning("Failed to collect stats for {r$name}: {e$message}")
-    })
+    )
   }
 
   if (length(all_data) == 0) {
     return(data.frame(
-      chapter = character(0), month = character(0),
-      commits = integer(0), prs = integer(0), issues = integer(0),
+      chapter = character(0),
+      month = character(0),
+      commits = integer(0),
+      prs = integer(0),
+      issues = integer(0),
       stringsAsFactors = FALSE
     ))
   }
 
   combined <- do.call(rbind, all_data)
-  cli::cli_alert_success("Collected activity for {length(all_data)} repositories")
+  cli::cli_alert_success(
+    "Collected activity for {length(all_data)} repositories"
+  )
   combined
 }
 
@@ -66,20 +79,25 @@ collect_contributor_growth <- function(org = "rladies", months = 12) {
 
   contributors_by_month <- list()
   for (event in events) {
-    if (is.null(event$actor$login)) next
+    if (is.null(event$actor$login)) {
+      next
+    }
     month <- substr(event$created_at, 1, 7)
     if (is.null(contributors_by_month[[month]])) {
       contributors_by_month[[month]] <- character(0)
     }
     contributors_by_month[[month]] <- unique(c(
-      contributors_by_month[[month]], event$actor$login
+      contributors_by_month[[month]],
+      event$actor$login
     ))
   }
 
   if (length(contributors_by_month) == 0) {
     return(data.frame(
-      month = character(0), new_contributors = integer(0),
-      total_contributors = integer(0), active_repos = integer(0),
+      month = character(0),
+      new_contributors = integer(0),
+      total_contributors = integer(0),
+      active_repos = integer(0),
       stringsAsFactors = FALSE
     ))
   }
@@ -105,19 +123,30 @@ collect_contributor_growth <- function(org = "rladies", months = 12) {
 }
 
 collect_monthly_stats <- function(org, repo, since) {
-  commits <- tryCatch({
-    gh::gh(
-      "GET /repos/{owner}/{repo}/commits",
-      owner = org, repo = repo,
-      since = since, .limit = Inf
-    )
-  }, error = function(e) list())
+  commits <- tryCatch(
+    {
+      gh::gh(
+        "GET /repos/{owner}/{repo}/commits",
+        owner = org,
+        repo = repo,
+        since = since,
+        .limit = Inf
+      )
+    },
+    error = function(e) list()
+  )
 
-  if (length(commits) == 0) return(NULL)
+  if (length(commits) == 0) {
+    return(NULL)
+  }
 
-  months <- vapply(commits, function(c) {
-    substr(c$commit$committer$date %||% "", 1, 7)
-  }, character(1))
+  months <- vapply(
+    commits,
+    function(c) {
+      substr(c$commit$committer$date %||% "", 1, 7)
+    },
+    character(1)
+  )
 
   counts <- as.data.frame(table(months), stringsAsFactors = FALSE)
   names(counts) <- c("month", "commits")

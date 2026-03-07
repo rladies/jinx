@@ -9,8 +9,12 @@
 #' @param org GitHub organization. Defaults to `"rladies"`.
 #' @return The created issue URL (invisibly).
 #' @export
-gt_finalize_onboarding <- function(username, team, name = username,
-                                            org = "rladies") {
+gt_finalize_onboarding <- function(
+  username,
+  team,
+  name = username,
+  org = "rladies"
+) {
   config <- load_teams_config()
   team_def <- team_by_slug(team, config)
 

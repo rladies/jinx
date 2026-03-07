@@ -11,19 +11,29 @@ review_pr <- function(owner, repo, pr_number) {
 
   pr <- gh::gh(
     "GET /repos/{owner}/{repo}/pulls/{pr_number}",
-    owner = owner, repo = repo, pr_number = pr_number
+    owner = owner,
+    repo = repo,
+    pr_number = pr_number
   )
 
   files <- gh::gh(
     "GET /repos/{owner}/{repo}/pulls/{pr_number}/files",
-    owner = owner, repo = repo, pr_number = pr_number,
+    owner = owner,
+    repo = repo,
+    pr_number = pr_number,
     .limit = Inf
   )
 
   file_paths <- vapply(files, function(f) f$filename, character(1))
 
   labels <- label_pr(owner, repo, pr_number, file_paths)
-  reviewers <- assign_reviewers(owner, repo, pr_number, file_paths, pr$user$login)
+  reviewers <- assign_reviewers(
+    owner,
+    repo,
+    pr_number,
+    file_paths,
+    pr$user$login
+  )
   post_checklist(owner, repo, pr_number, file_paths)
 
   cli::cli_alert_success(
@@ -44,9 +54,17 @@ review_pr <- function(owner, repo, pr_number) {
 #' @return Character vector of assigned reviewer logins.
 #' @keywords internal
 #' @noRd
-assign_reviewers <- function(owner, repo, pr_number, file_paths, author = NULL) {
+assign_reviewers <- function(
+  owner,
+  repo,
+  pr_number,
+  file_paths,
+  author = NULL
+) {
   rules <- tryCatch(load_review_rules(), error = function(e) NULL)
-  if (is.null(rules)) return(character(0))
+  if (is.null(rules)) {
+    return(character(0))
+  }
 
   reviewers <- character(0)
   for (rule in rules$rules) {
@@ -62,23 +80,32 @@ assign_reviewers <- function(owner, repo, pr_number, file_paths, author = NULL) 
   }
 
   reviewers <- setdiff(reviewers, author)
-  if (length(reviewers) == 0) return(character(0))
+  if (length(reviewers) == 0) {
+    return(character(0))
+  }
 
   max_reviewers <- rules$defaults$max_reviewers %||% 2
   if (length(reviewers) > max_reviewers) {
     reviewers <- sample(reviewers, max_reviewers)
   }
 
-  tryCatch({
-    gh::gh(
-      "POST /repos/{owner}/{repo}/pulls/{pr_number}/requested_reviewers",
-      owner = owner, repo = repo, pr_number = pr_number,
-      reviewers = as.list(reviewers)
-    )
-    cli::cli_alert_info("Assigned reviewers: {paste(reviewers, collapse = ', ')}")
-  }, error = function(e) {
-    cli::cli_alert_warning("Failed to assign reviewers: {e$message}")
-  })
+  tryCatch(
+    {
+      gh::gh(
+        "POST /repos/{owner}/{repo}/pulls/{pr_number}/requested_reviewers",
+        owner = owner,
+        repo = repo,
+        pr_number = pr_number,
+        reviewers = as.list(reviewers)
+      )
+      cli::cli_alert_info(
+        "Assigned reviewers: {paste(reviewers, collapse = ', ')}"
+      )
+    },
+    error = function(e) {
+      cli::cli_alert_warning("Failed to assign reviewers: {e$message}")
+    }
+  )
 
   reviewers
 }

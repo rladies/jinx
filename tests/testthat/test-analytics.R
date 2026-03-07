@@ -37,8 +37,11 @@ describe("compute_activity_trends", {
 
   it("handles empty data", {
     empty <- data.frame(
-      chapter = character(0), month = character(0),
-      commits = integer(0), prs = integer(0), issues = integer(0),
+      chapter = character(0),
+      month = character(0),
+      commits = integer(0),
+      prs = integer(0),
+      issues = integer(0),
       stringsAsFactors = FALSE
     )
     result <- compute_activity_trends(empty)
@@ -80,13 +83,17 @@ describe("format_analytics_markdown", {
 
   it("handles empty data", {
     empty_t <- data.frame(
-      month = character(0), total_commits = integer(0),
-      change = numeric(0), sparkline = character(0),
+      month = character(0),
+      total_commits = integer(0),
+      change = numeric(0),
+      sparkline = character(0),
       stringsAsFactors = FALSE
     )
     empty_g <- data.frame(
-      month = character(0), new_contributors = integer(0),
-      total_contributors = integer(0), active_repos = integer(0),
+      month = character(0),
+      new_contributors = integer(0),
+      total_contributors = integer(0),
+      active_repos = integer(0),
       stringsAsFactors = FALSE
     )
     result <- format_analytics_markdown(empty_t, empty_g)

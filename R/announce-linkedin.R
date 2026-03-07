@@ -6,9 +6,21 @@
 #' @noRd
 escape_linkedin_chars <- function(x) {
   chars <- c(
-    "\\|", "\\{", "\\}", "\\@", "\\[", "\\]",
-    "\\(", "\\)", "\\<", "\\>", "\\#", "\\\\",
-    "\\*", "\\_", "\\~"
+    "\\|",
+    "\\{",
+    "\\}",
+    "\\@",
+    "\\[",
+    "\\]",
+    "\\(",
+    "\\)",
+    "\\<",
+    "\\>",
+    "\\#",
+    "\\\\",
+    "\\*",
+    "\\_",
+    "\\~"
   )
   p <- stats::setNames(paste0("\\", chars), chars)
   stringr::str_replace_all(x, p)
@@ -137,7 +149,9 @@ li_post_write <- function(author, text, image = NULL, image_alt = "") {
     httr2::req_perform() |>
     httr2::resp_header("x-restli-id")
 
-  cli::cli_alert_success("Posted to LinkedIn: {.url {file.path('https://www.linkedin.com/feed/update/', resp)}}")
+  cli::cli_alert_success(
+    "Posted to LinkedIn: {.url {file.path('https://www.linkedin.com/feed/update/', resp)}}"
+  )
   invisible(resp)
 }
 

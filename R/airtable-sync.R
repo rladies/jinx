@@ -9,10 +9,12 @@
 #' @param directory_repo Directory repository name.
 #' @return PR URL if changes found, `NULL` otherwise (invisibly).
 #' @export
-sync_directory_airtable <- function(base_id = "appM6GuE0Jl1UI9qx",
-                                    api_key = Sys.getenv("AIRTABLE_API_KEY"),
-                                    org = "rladies",
-                                    directory_repo = "directory") {
+sync_directory_airtable <- function(
+  base_id = "appM6GuE0Jl1UI9qx",
+  api_key = Sys.getenv("AIRTABLE_API_KEY"),
+  org = "rladies",
+  directory_repo = "directory"
+) {
   if (!nzchar(api_key)) {
     cli::cli_abort("AIRTABLE_API_KEY environment variable is not set")
   }
@@ -52,10 +54,12 @@ sync_directory_airtable <- function(base_id = "appM6GuE0Jl1UI9qx",
 #' @param website_repo Website repository name.
 #' @return PR URL if changes found, `NULL` otherwise (invisibly).
 #' @export
-sync_global_team_airtable <- function(base_id = "appZjaV7eM0Y9FsHZ",
-                                      api_key = Sys.getenv("AIRTABLE_API_KEY"),
-                                      org = "rladies",
-                                      website_repo = "rladies.github.io") {
+sync_global_team_airtable <- function(
+  base_id = "appZjaV7eM0Y9FsHZ",
+  api_key = Sys.getenv("AIRTABLE_API_KEY"),
+  org = "rladies",
+  website_repo = "rladies.github.io"
+) {
   if (!nzchar(api_key)) {
     cli::cli_abort("AIRTABLE_API_KEY environment variable is not set")
   }
@@ -109,7 +113,9 @@ airtable_list_records <- function(base_id, table, api_key) {
 
   repeat {
     query <- list(pageSize = 100)
-    if (!is.null(offset)) query$offset <- offset
+    if (!is.null(offset)) {
+      query$offset <- offset
+    }
 
     resp <- httr2::request(
       glue::glue("https://api.airtable.com/v0/{base_id}/{table}")
@@ -130,15 +136,24 @@ airtable_list_records <- function(base_id, table, api_key) {
 airtable_to_directory_entry <- function(record) {
   fields <- record$fields
   name <- fields$Name
-  if (is.null(name) || !nzchar(name)) return(NULL)
+  if (is.null(name) || !nzchar(name)) {
+    return(NULL)
+  }
 
   slug <- tolower(gsub("[^a-z0-9]+", "-", tolower(name), perl = TRUE))
   slug <- sub("^-|-$", "", slug)
 
   entry <- list(name = name)
 
-  social_fields <- c("twitter", "github", "linkedin", "mastodon",
-                      "bluesky", "website", "orcid")
+  social_fields <- c(
+    "twitter",
+    "github",
+    "linkedin",
+    "mastodon",
+    "bluesky",
+    "website",
+    "orcid"
+  )
   for (field in social_fields) {
     val <- fields[[field]]
     if (!is.null(val) && nzchar(val)) {
@@ -150,7 +165,9 @@ airtable_to_directory_entry <- function(record) {
 }
 
 extract_airtable_photo <- function(photo_field) {
-  if (is.null(photo_field) || length(photo_field) == 0) return(NULL)
+  if (is.null(photo_field) || length(photo_field) == 0) {
+    return(NULL)
+  }
   photo <- photo_field[[1]]
   if (!is.null(photo$url)) photo$url else NULL
 }
@@ -166,7 +183,9 @@ write_directory_entries <- function(entries, org, repo) {
     existing <- tryCatch(
       gh::gh(
         "GET /repos/{owner}/{repo}/contents/{path}",
-        owner = org, repo = repo, path = path
+        owner = org,
+        repo = repo,
+        path = path
       ),
       error = function(e) NULL
     )
@@ -175,7 +194,10 @@ write_directory_entries <- function(entries, org, repo) {
       rawToChar(jsonlite::base64_dec(existing$content))
     }
 
-    if (is.null(existing_content) || trimws(existing_content) != trimws(as.character(json))) {
+    if (
+      is.null(existing_content) ||
+        trimws(existing_content) != trimws(as.character(json))
+    ) {
       changed <- c(changed, filename)
     }
   }

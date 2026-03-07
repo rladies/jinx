@@ -8,8 +8,11 @@
 #'   Defaults to `"global-team"`.
 #' @return Issue URL (invisibly).
 #' @export
-report_chapter_health <- function(months = 6, org = "rladies",
-                                  target_repo = "global-team") {
+report_chapter_health <- function(
+  months = 6,
+  org = "rladies",
+  target_repo = "global-team"
+) {
   health <- check_chapter_health(months = months, org = org)
 
   if (nrow(health) == 0) {
@@ -21,7 +24,8 @@ report_chapter_health <- function(months = 6, org = "rladies",
 
   issue <- gh::gh(
     "POST /repos/{owner}/{repo}/issues",
-    owner = org, repo = target_repo,
+    owner = org,
+    repo = target_repo,
     title = glue::glue("Chapter health report - {Sys.Date()}"),
     body = body,
     labels = list("report", "chapters")
@@ -50,16 +54,21 @@ format_chapter_report <- function(health, months) {
     details <- "\n### Inactive Chapters\nAll chapters are active!\n"
   } else {
     inactive <- inactive[order(-inactive$months_inactive), ]
-    rows <- vapply(seq_len(nrow(inactive)), function(i) {
-      r <- inactive[i, ]
-      glue::glue("| {r$chapter} | {r$last_event} | {r$months_inactive} |")
-    }, character(1))
+    rows <- vapply(
+      seq_len(nrow(inactive)),
+      function(i) {
+        r <- inactive[i, ]
+        glue::glue("| {r$chapter} | {r$last_event} | {r$months_inactive} |")
+      },
+      character(1)
+    )
 
     details <- paste0(
       "\n### Inactive Chapters\n",
       "| Chapter | Last Event | Months Inactive |\n",
       "|---------|------------|-----------------|\n",
-      paste(rows, collapse = "\n"), "\n"
+      paste(rows, collapse = "\n"),
+      "\n"
     )
   }
 

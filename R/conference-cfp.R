@@ -7,15 +7,20 @@
 list_open_cfps <- function(org = "rladies", repo = "global-team") {
   issues <- gh::gh(
     "GET /repos/{owner}/{repo}/issues",
-    owner = org, repo = repo,
-    labels = "cfp", state = "open",
+    owner = org,
+    repo = repo,
+    labels = "cfp",
+    state = "open",
     .limit = Inf
   )
 
   if (length(issues) == 0) {
     return(data.frame(
-      conference = character(0), deadline = character(0),
-      url = character(0), number = integer(0), status = character(0),
+      conference = character(0),
+      deadline = character(0),
+      url = character(0),
+      number = integer(0),
+      status = character(0),
       stringsAsFactors = FALSE
     ))
   }
@@ -45,26 +50,32 @@ list_open_cfps <- function(org = "rladies", repo = "global-team") {
 #' @param repo Repository to create the issue in.
 #' @return Issue URL (invisibly).
 #' @export
-create_cfp_issue <- function(conference,
-                             deadline,
-                             url,
-                             topics = character(0),
-                             org = "rladies",
-                             repo = "global-team") {
+create_cfp_issue <- function(
+  conference,
+  deadline,
+  url,
+  topics = character(0),
+  org = "rladies",
+  repo = "global-team"
+) {
   template_path <- system.file(
-    "templates", "cfp-reminder.md",
+    "templates",
+    "cfp-reminder.md",
     package = "jinx"
   )
 
   days_left <- as.integer(as.Date(deadline) - Sys.Date())
 
   body <- if (nzchar(template_path)) {
-    render_template(template_path, list(
-      CONFERENCE = conference,
-      DEADLINE = deadline,
-      DAYS = as.character(days_left),
-      URL = url
-    ))
+    render_template(
+      template_path,
+      list(
+        CONFERENCE = conference,
+        DEADLINE = deadline,
+        DAYS = as.character(days_left),
+        URL = url
+      )
+    )
   } else {
     cli::format_inline(
       "**{conference}**\n\nDeadline: {deadline} ({days_left} days)\nURL: {url}"
@@ -76,11 +87,14 @@ create_cfp_issue <- function(conference,
   )
 
   labels <- list("cfp")
-  if (days_left <= 7) labels <- c(labels, "deadline-approaching")
+  if (days_left <= 7) {
+    labels <- c(labels, "deadline-approaching")
+  }
 
   issue <- gh::gh(
     "POST /repos/{owner}/{repo}/issues",
-    owner = org, repo = repo,
+    owner = org,
+    repo = repo,
     title = cli::format_inline("CFP: {conference} (deadline {deadline})"),
     body = paste0(body, meta_block),
     labels = labels
@@ -97,9 +111,11 @@ create_cfp_issue <- function(conference,
 #' @param warn_days Number of days before deadline to warn.
 #' @return Data frame of approaching CFPs (invisibly).
 #' @export
-check_cfp_deadlines <- function(org = "rladies",
-                                repo = "global-team",
-                                warn_days = 7) {
+check_cfp_deadlines <- function(
+  org = "rladies",
+  repo = "global-team",
+  warn_days = 7
+) {
   cfps <- list_open_cfps(org = org, repo = repo)
 
   if (nrow(cfps) == 0) {
@@ -108,7 +124,9 @@ check_cfp_deadlines <- function(org = "rladies",
   }
 
   cfps$days_left <- as.integer(as.Date(cfps$deadline) - Sys.Date())
-  approaching <- cfps[!is.na(cfps$days_left) & cfps$days_left <= warn_days & cfps$days_left >= 0, ]
+  approaching <- cfps[
+    !is.na(cfps$days_left) & cfps$days_left <= warn_days & cfps$days_left >= 0,
+  ]
 
   if (nrow(approaching) == 0) {
     cli::cli_alert_info("No CFPs approaching deadline")
@@ -122,14 +140,16 @@ check_cfp_deadlines <- function(org = "rladies",
 
     gh::gh(
       "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-      owner = org, repo = repo,
+      owner = org,
+      repo = repo,
       issue_number = approaching$number[i],
       body = reminder
     )
 
     gh::gh(
       "POST /repos/{owner}/{repo}/issues/{issue_number}/labels",
-      owner = org, repo = repo,
+      owner = org,
+      repo = repo,
       issue_number = approaching$number[i],
       .send_body = list("deadline-approaching")
     )

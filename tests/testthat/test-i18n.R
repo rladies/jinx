@@ -27,7 +27,9 @@ describe("list_supported_languages", {
   it("returns a data frame with expected columns", {
     result <- list_supported_languages()
     expect_s3_class(result, "data.frame")
-    expect_true(all(c("code", "name", "native_name", "direction") %in% names(result)))
+    expect_true(all(
+      c("code", "name", "native_name", "direction") %in% names(result)
+    ))
     expect_true(nrow(result) > 0)
     expect_true("en" %in% result$code)
   })
@@ -66,7 +68,10 @@ describe("check_translation_coverage", {
   it("returns coverage data frame", {
     result <- check_translation_coverage()
     expect_s3_class(result, "data.frame")
-    expect_true(all(c("language", "total_templates", "translated", "coverage_pct") %in% names(result)))
+    expect_true(all(
+      c("language", "total_templates", "translated", "coverage_pct") %in%
+        names(result)
+    ))
   })
 })
 

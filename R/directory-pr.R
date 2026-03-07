@@ -10,17 +10,26 @@
 validate_directory_pr <- function(owner, repo, pr_number) {
   files <- gh::gh(
     "GET /repos/{owner}/{repo}/pulls/{pr_number}/files",
-    owner = owner, repo = repo, pr_number = pr_number,
+    owner = owner,
+    repo = repo,
+    pr_number = pr_number,
     .limit = Inf
   )
 
-  json_files <- Filter(function(f) {
-    grepl("\\.json$", f$filename) && grepl("^data/", f$filename)
-  }, files)
+  json_files <- Filter(
+    function(f) {
+      grepl("\\.json$", f$filename) && grepl("^data/", f$filename)
+    },
+    files
+  )
 
   if (length(json_files) == 0) {
-    post_reply(owner, repo, pr_number,
-      "No directory JSON files changed in this PR.")
+    post_reply(
+      owner,
+      repo,
+      pr_number,
+      "No directory JSON files changed in this PR."
+    )
     return(invisible())
   }
 
@@ -33,18 +42,26 @@ validate_directory_pr <- function(owner, repo, pr_number) {
     fn_check <- validate_entry_filename(fname)
     if (!fn_check$valid) {
       all_valid <- FALSE
-      report_lines <- c(report_lines, glue::glue(
-        "**{fname}** - filename issues: {paste(fn_check$issues, collapse = ', ')}"
-      ))
+      report_lines <- c(
+        report_lines,
+        glue::glue(
+          "**{fname}** - filename issues: {paste(fn_check$issues, collapse = ', ')}"
+        )
+      )
     } else {
-      report_lines <- c(report_lines, glue::glue(
-        "**{fname}** - filename OK"
-      ))
+      report_lines <- c(
+        report_lines,
+        glue::glue(
+          "**{fname}** - filename OK"
+        )
+      )
     }
   }
 
   status <- if (all_valid) "All checks passed" else "Issues found"
-  header <- glue::glue("### Directory Validation Report\n\n**Status:** {status}\n")
+  header <- glue::glue(
+    "### Directory Validation Report\n\n**Status:** {status}\n"
+  )
   body <- paste(c(header, report_lines), collapse = "\n- ")
 
   post_reply(owner, repo, pr_number, body)

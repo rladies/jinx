@@ -4,19 +4,32 @@ describe("format_gha_dashboard", {
       list(
         repository = "jinx",
         workflows = list(
-          list(name = "CI", url = "https://github.com/r/j/ci",
-               badge = "https://github.com/r/j/ci/badge.svg",
-               run = "2024-03-15T10:00:00Z", state = "active"),
-          list(name = "Deploy", url = "https://github.com/r/j/deploy",
-               badge = "https://github.com/r/j/deploy/badge.svg",
-               run = "2024-03-14T08:00:00Z", state = "active")
+          list(
+            name = "CI",
+            url = "https://github.com/r/j/ci",
+            badge = "https://github.com/r/j/ci/badge.svg",
+            run = "2024-03-15T10:00:00Z",
+            state = "active"
+          ),
+          list(
+            name = "Deploy",
+            url = "https://github.com/r/j/deploy",
+            badge = "https://github.com/r/j/deploy/badge.svg",
+            run = "2024-03-14T08:00:00Z",
+            state = "active"
+          )
         )
       ),
       list(
         repository = "website",
         workflows = list(
-          list(name = "Build", url = "https://github.com/r/w/build",
-               badge = NULL, run = NULL, state = "disabled")
+          list(
+            name = "Build",
+            url = "https://github.com/r/w/build",
+            badge = NULL,
+            run = NULL,
+            state = "disabled"
+          )
         )
       )
     )
@@ -39,8 +52,13 @@ describe("format_gha_dashboard", {
       list(
         repository = "test",
         workflows = list(
-          list(name = "CI", url = "url", badge = NULL,
-               run = "2024-01-01T00:00:00Z", state = "disabled")
+          list(
+            name = "CI",
+            url = "url",
+            badge = NULL,
+            run = "2024-01-01T00:00:00Z",
+            state = "disabled"
+          )
         )
       )
     )

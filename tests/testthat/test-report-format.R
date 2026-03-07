@@ -13,10 +13,22 @@ describe("format_report_markdown", {
         total_issues_closed = 4L
       ),
       repos = list(
-        list(repo = "jinx", commits = 10L, prs_opened = 3L,
-             prs_merged = 2L, issues_opened = 5L, issues_closed = 3L),
-        list(repo = "website", commits = 5L, prs_opened = 2L,
-             prs_merged = 1L, issues_opened = 3L, issues_closed = 1L)
+        list(
+          repo = "jinx",
+          commits = 10L,
+          prs_opened = 3L,
+          prs_merged = 2L,
+          issues_opened = 5L,
+          issues_closed = 3L
+        ),
+        list(
+          repo = "website",
+          commits = 5L,
+          prs_opened = 2L,
+          prs_merged = 1L,
+          issues_opened = 3L,
+          issues_closed = 1L
+        )
       )
     )
     result <- format_report_markdown(report)
@@ -41,8 +53,14 @@ describe("format_report_markdown", {
         total_issues_closed = 0L
       ),
       repos = list(
-        list(repo = "jinx", commits = 0L, prs_opened = 0L,
-             prs_merged = 0L, issues_opened = 0L, issues_closed = 0L)
+        list(
+          repo = "jinx",
+          commits = 0L,
+          prs_opened = 0L,
+          prs_merged = 0L,
+          issues_opened = 0L,
+          issues_closed = 0L
+        )
       )
     )
     result <- format_report_markdown(report)
@@ -55,14 +73,30 @@ describe("format_report_markdown", {
       period = list(from = "2024-03-01", to = "2024-03-07"),
       generated_at = as.POSIXct("2024-03-07 12:00:00", tz = "UTC"),
       summary = list(
-        active_repos = 2L, total_commits = 15L, total_prs = 0L,
-        total_prs_merged = 0L, total_issues = 0L, total_issues_closed = 0L
+        active_repos = 2L,
+        total_commits = 15L,
+        total_prs = 0L,
+        total_prs_merged = 0L,
+        total_issues = 0L,
+        total_issues_closed = 0L
       ),
       repos = list(
-        list(repo = "small", commits = 2L, prs_opened = 0L,
-             prs_merged = 0L, issues_opened = 0L, issues_closed = 0L),
-        list(repo = "big", commits = 13L, prs_opened = 0L,
-             prs_merged = 0L, issues_opened = 0L, issues_closed = 0L)
+        list(
+          repo = "small",
+          commits = 2L,
+          prs_opened = 0L,
+          prs_merged = 0L,
+          issues_opened = 0L,
+          issues_closed = 0L
+        ),
+        list(
+          repo = "big",
+          commits = 13L,
+          prs_opened = 0L,
+          prs_merged = 0L,
+          issues_opened = 0L,
+          issues_closed = 0L
+        )
       )
     )
     result <- format_report_markdown(report)

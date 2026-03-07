@@ -7,18 +7,22 @@
 #' @param repo Repository name.
 #' @return Character vector of merged PR URLs (invisibly).
 #' @export
-auto_merge_pending <- function(org = "rladies",
-                               repo = "rladies.github.io") {
+auto_merge_pending <- function(org = "rladies", repo = "rladies.github.io") {
   prs <- gh::gh(
     "GET /repos/{owner}/{repo}/pulls",
-    owner = org, repo = repo,
-    state = "open", .limit = Inf
+    owner = org,
+    repo = repo,
+    state = "open",
+    .limit = Inf
   )
 
-  pending <- Filter(function(pr) {
-    labels <- vapply(pr$labels, function(l) l$name, character(1))
-    "pending" %in% labels && !isTRUE(pr$draft)
-  }, prs)
+  pending <- Filter(
+    function(pr) {
+      labels <- vapply(pr$labels, function(l) l$name, character(1))
+      "pending" %in% labels && !isTRUE(pr$draft)
+    },
+    prs
+  )
 
   if (length(pending) == 0) {
     cli::cli_alert_info("No pending PRs found")
@@ -31,28 +35,42 @@ auto_merge_pending <- function(org = "rladies",
   for (pr in pending) {
     files <- gh::gh(
       "GET /repos/{owner}/{repo}/pulls/{pr_number}/files",
-      owner = org, repo = repo, pr_number = pr$number,
+      owner = org,
+      repo = repo,
+      pr_number = pr$number,
       .limit = Inf
     )
 
-    content_files <- Filter(function(f) {
-      grepl("^content/.*/index(\\.[a-zA-Z]+)?\\.md$", f$filename)
-    }, files)
+    content_files <- Filter(
+      function(f) {
+        grepl("^content/.*/index(\\.[a-zA-Z]+)?\\.md$", f$filename)
+      },
+      files
+    )
 
-    if (length(content_files) == 0) next
+    if (length(content_files) == 0) {
+      next
+    }
 
     should_merge <- FALSE
     for (f in content_files) {
-      content <- tryCatch({
-        resp <- gh::gh(
-          "GET /repos/{owner}/{repo}/contents/{path}",
-          owner = org, repo = repo,
-          path = f$filename, ref = pr$head$ref
-        )
-        rawToChar(jsonlite::base64_dec(resp$content))
-      }, error = function(e) NULL)
+      content <- tryCatch(
+        {
+          resp <- gh::gh(
+            "GET /repos/{owner}/{repo}/contents/{path}",
+            owner = org,
+            repo = repo,
+            path = f$filename,
+            ref = pr$head$ref
+          )
+          rawToChar(jsonlite::base64_dec(resp$content))
+        },
+        error = function(e) NULL
+      )
 
-      if (is.null(content)) next
+      if (is.null(content)) {
+        next
+      }
 
       yaml_date <- extract_yaml_date(content)
       if (!is.null(yaml_date) && yaml_date == today) {
@@ -62,18 +80,23 @@ auto_merge_pending <- function(org = "rladies",
     }
 
     if (should_merge) {
-      tryCatch({
-        gh::gh(
-          "PUT /repos/{owner}/{repo}/pulls/{pr_number}/merge",
-          owner = org, repo = repo, pr_number = pr$number,
-          merge_method = "squash"
-        )
-        cli::cli_alert_success("Merged PR #{pr$number}: {pr$title}")
-        merged <- c(merged, pr$html_url)
-      }, error = function(e) {
-        cli::cli_alert_danger("Failed to merge PR #{pr$number}: {e$message}")
-        post_merge_failure_comment(org, repo, pr$number, e$message)
-      })
+      tryCatch(
+        {
+          gh::gh(
+            "PUT /repos/{owner}/{repo}/pulls/{pr_number}/merge",
+            owner = org,
+            repo = repo,
+            pr_number = pr$number,
+            merge_method = "squash"
+          )
+          cli::cli_alert_success("Merged PR #{pr$number}: {pr$title}")
+          merged <- c(merged, pr$html_url)
+        },
+        error = function(e) {
+          cli::cli_alert_danger("Failed to merge PR #{pr$number}: {e$message}")
+          post_merge_failure_comment(org, repo, pr$number, e$message)
+        }
+      )
     }
   }
 
@@ -122,7 +145,9 @@ post_blog_checklist <- function(owner, repo, pr_number) {
 
   comment <- gh::gh(
     "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-    owner = owner, repo = repo, issue_number = pr_number,
+    owner = owner,
+    repo = repo,
+    issue_number = pr_number,
     body = checklist
   )
 
@@ -140,8 +165,7 @@ post_blog_checklist <- function(owner, repo, pr_number) {
 #' @param org Organization name.
 #' @return Comment URL or `NULL` if author is a team member (invisibly).
 #' @export
-greet_contributor <- function(owner, repo, number, author,
-                              org = "rladies") {
+greet_contributor <- function(owner, repo, number, author, org = "rladies") {
   welcome_contributor(owner, repo, number, author, is_pr = TRUE, org = org)
 }
 
@@ -150,7 +174,9 @@ extract_yaml_date <- function(content) {
   in_yaml <- FALSE
   for (line in lines) {
     if (grepl("^---\\s*$", line)) {
-      if (in_yaml) break
+      if (in_yaml) {
+        break
+      }
       in_yaml <- TRUE
       next
     }
@@ -174,7 +200,9 @@ post_merge_failure_comment <- function(org, repo, pr_number, reason) {
   tryCatch(
     gh::gh(
       "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-      owner = org, repo = repo, issue_number = pr_number,
+      owner = org,
+      repo = repo,
+      issue_number = pr_number,
       body = body
     ),
     error = function(e) NULL

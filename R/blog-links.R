@@ -13,9 +13,14 @@ check_blog_links <- function(blogs_path) {
       error = function(e) return(NULL)
     )
     if (is.null(entry)) {
-      return(data.frame(file = basename(f), url = NA, rss_feed = NA,
-        url_status = NA_integer_, rss_status = NA_integer_,
-        stringsAsFactors = FALSE))
+      return(data.frame(
+        file = basename(f),
+        url = NA,
+        rss_feed = NA,
+        url_status = NA_integer_,
+        rss_status = NA_integer_,
+        stringsAsFactors = FALSE
+      ))
     }
 
     url_status <- check_url_status(entry$url)
@@ -46,7 +51,9 @@ check_blog_links <- function(blogs_path) {
 }
 
 check_url_status <- function(url) {
-  if (is.null(url) || !nzchar(url)) return(NA_integer_)
+  if (is.null(url) || !nzchar(url)) {
+    return(NA_integer_)
+  }
   tryCatch(
     {
       resp <- httr2::request(url) |>

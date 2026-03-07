@@ -9,8 +9,12 @@
 #' @param output_dir Directory to write the JSON file. Defaults to `"."`.
 #' @return File path of the created JSON (invisibly).
 #' @export
-create_blog_entry <- function(url, language = "en", author_name,
-                              output_dir = ".") {
+create_blog_entry <- function(
+  url,
+  language = "en",
+  author_name,
+  output_dir = "."
+) {
   resp <- tryCatch(
     {
       httr2::request(url) |>

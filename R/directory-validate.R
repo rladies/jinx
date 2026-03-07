@@ -5,10 +5,10 @@
 #' @param schema Path to JSON schema file. Uses the bundled schema by default.
 #' @return A data frame with columns `file`, `valid`, and `errors`.
 #' @export
-validate_directory_entries <- function(path,
-                                       schema = system.file("schemas",
-                                         "directory-entry.json",
-                                         package = "jinx")) {
+validate_directory_entries <- function(
+  path,
+  schema = system.file("schemas", "directory-entry.json", package = "jinx")
+) {
   if (!nzchar(schema)) {
     cli::cli_abort("Directory entry schema not found in jinx package")
   }

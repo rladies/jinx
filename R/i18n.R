@@ -11,11 +11,15 @@
 #'   `render_template()`.
 #' @return Rendered template as a single character string.
 #' @export
-translate_template <- function(template_name,
-                               language = "en",
-                               variables = list()) {
+translate_template <- function(
+  template_name,
+  language = "en",
+  variables = list()
+) {
   translated_path <- system.file(
-    "translations", language, template_name,
+    "translations",
+    language,
+    template_name,
     package = "jinx"
   )
 
@@ -47,8 +51,10 @@ list_supported_languages <- function() {
 
   if (length(langs) == 0) {
     return(data.frame(
-      code = character(0), name = character(0),
-      native_name = character(0), direction = character(0),
+      code = character(0),
+      name = character(0),
+      native_name = character(0),
+      direction = character(0),
       stringsAsFactors = FALSE
     ))
   }
@@ -76,17 +82,21 @@ list_supported_languages <- function() {
 #' @return Language code string.
 #' @export
 get_chapter_language <- function(chapter, org = "rladies") {
-  tryCatch({
-    content <- gh::gh(
-      "GET /repos/{owner}/{repo}/contents/chapter.json",
-      owner = org, repo = chapter
-    )
-    raw <- base64_decode(content$content)
-    meta <- jsonlite::fromJSON(raw)
-    meta$language %||% "en"
-  }, error = function(e) {
-    "en"
-  })
+  tryCatch(
+    {
+      content <- gh::gh(
+        "GET /repos/{owner}/{repo}/contents/chapter.json",
+        owner = org,
+        repo = chapter
+      )
+      raw <- base64_decode(content$content)
+      meta <- jsonlite::fromJSON(raw)
+      meta$language %||% "en"
+    },
+    error = function(e) {
+      "en"
+    }
+  )
 }
 
 load_languages_config <- function() {

@@ -44,7 +44,9 @@ describe("cfp command parsing", {
   })
 
   it("parses /jinx cfp add", {
-    cmd <- parse_command("/jinx cfp add posit::conf 2024-06-15 https://posit.co/cfp")
+    cmd <- parse_command(
+      "/jinx cfp add posit::conf 2024-06-15 https://posit.co/cfp"
+    )
     expect_equal(cmd$action, "cfp-add")
     expect_equal(cmd$conference, "posit::conf")
     expect_equal(cmd$deadline, "2024-06-15")

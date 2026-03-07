@@ -6,8 +6,7 @@
 #' @param repo Repository where CFP issues are tracked.
 #' @return Formatted markdown string.
 #' @export
-generate_conference_report <- function(org = "rladies",
-                                       repo = "global-team") {
+generate_conference_report <- function(org = "rladies", repo = "global-team") {
   cli::cli_h2("Generating conference coordination report")
 
   cfps <- list_open_cfps(org = org, repo = repo)
@@ -20,18 +19,22 @@ generate_conference_report <- function(org = "rladies",
   cfps$days_left <- as.integer(as.Date(cfps$deadline) - Sys.Date())
   cli::cli_alert_success("Found {nrow(cfps)} active CFP{?s}")
 
-  lines <- vapply(seq_len(nrow(cfps)), function(i) {
-    status <- if (!is.na(cfps$days_left[i]) && cfps$days_left[i] <= 7) {
-      "URGENT"
-    } else if (!is.na(cfps$days_left[i]) && cfps$days_left[i] <= 14) {
-      "Soon"
-    } else {
-      "Open"
-    }
-    cli::format_inline(
-      "| {cfps$conference[i]} | {cfps$deadline[i]} | {cfps$days_left[i]} days | {status} | [#{cfps$number[i]}]({cfps$url[i]}) |"
-    )
-  }, character(1))
+  lines <- vapply(
+    seq_len(nrow(cfps)),
+    function(i) {
+      status <- if (!is.na(cfps$days_left[i]) && cfps$days_left[i] <= 7) {
+        "URGENT"
+      } else if (!is.na(cfps$days_left[i]) && cfps$days_left[i] <= 14) {
+        "Soon"
+      } else {
+        "Open"
+      }
+      cli::format_inline(
+        "| {cfps$conference[i]} | {cfps$deadline[i]} | {cfps$days_left[i]} days | {status} | [#{cfps$number[i]}]({cfps$url[i]}) |"
+      )
+    },
+    character(1)
+  )
 
   paste(
     "## Conference Coordination Report\n",
