@@ -1,3 +1,174 @@
-url: https://rladies.org/jinx/
+url: https://rladies.github.io/jinx/
+
 template:
-  package: rladiesdocs
+  bootstrap: 5
+
+navbar:
+  structure:
+    left: [intro, reference, articles]
+    right: [search, github]
+
+reference:
+  - title: Commands
+    desc: Issue comment command interface
+    contents:
+      - parse_command
+      - execute_command
+
+  - title: Team management
+    desc: Global team onboarding and offboarding
+    contents:
+      - gt_invite
+      - gt_check_invitations
+      - gt_finalize_onboarding
+      - gt_create_offboarding
+      - gt_finalize_offboarding
+      - gt_remind_stale
+
+  - title: Announcements
+    desc: Cross-platform blog post announcements
+    contents:
+      - announce_post
+      - create_announcement_message
+      - post_bluesky
+      - post_mastodon
+      - li_post_write
+      - li_req
+      - li_oauth
+      - li_urn_me
+      - li_media_upload
+      - li_get_version
+      - send_newsletter
+      - short_url
+      - tags2hash
+      - random_emoji
+
+  - title: Directory
+    desc: Directory entry management and validation
+    contents:
+      - validate_directory_pr
+      - validate_directory_entries
+      - validate_entry_filename
+      - verify_social_handles
+      - crop_directory_image
+      - optimize_image
+
+  - title: Blogs
+    desc: Blog content management
+    contents:
+      - create_blog_entry
+      - validate_blog_entry
+      - check_blog_links
+      - post_blog_checklist
+
+  - title: Chapters
+    desc: Chapter lifecycle management
+    contents:
+      - create_chapter
+      - create_chapter_setup
+      - create_chapter_update
+      - create_chapter_json_pr
+      - check_chapter_health
+
+  - title: Reports
+    desc: Activity and health reporting
+    contents:
+      - generate_report
+      - publish_report
+      - format_report_markdown
+      - report_chapter_health
+
+  - title: PR review
+    desc: Automated pull request review
+    contents:
+      - review_pr
+      - check_pr_naming
+
+  - title: Airtable sync
+    desc: Airtable bidirectional sync
+    contents:
+      - sync_directory_airtable
+      - sync_global_team_airtable
+
+  - title: Website automation
+    desc: Website PR management and contributor greetings
+    contents:
+      - auto_merge_pending
+      - greet_contributor
+
+  - title: Chapter monitoring
+    desc: Chapter activity monitoring and outreach
+    contents:
+      - monitor_chapter_status
+      - prepare_inactivity_emails
+
+  - title: Slack management
+    desc: Community Slack automation
+    contents:
+      - send_slack_invites
+      - subscribe_slack_rss
+
+  - title: GHA dashboard
+    desc: GitHub Actions workflow status
+    contents:
+      - generate_gha_dashboard
+      - publish_gha_dashboard
+
+  - title: Contributors
+    desc: Contributor tracking and recognition
+    contents:
+      - list_contributors
+      - list_org_contributors
+      - format_contributors
+      - update_contributors_list
+      - welcome_contributor
+      - thank_contributor
+
+  - title: Events
+    desc: Chapter event management
+    contents:
+      - list_chapter_events
+      - sync_chapter_events
+      - create_event_summary
+      - publish_event_summary
+
+  - title: Analytics
+    desc: Org-wide activity analytics
+    contents:
+      - collect_chapter_activity
+      - collect_contributor_growth
+      - compute_activity_trends
+      - format_analytics_markdown
+      - generate_analytics_dashboard
+      - publish_analytics_dashboard
+
+  - title: Conference coordination
+    desc: CFP tracking and speaker recommendations
+    contents:
+      - list_open_cfps
+      - create_cfp_issue
+      - check_cfp_deadlines
+      - recommend_speaker
+      - list_speaker_recommendations
+      - generate_conference_report
+
+  - title: Internationalization
+    desc: Template translations
+    contents:
+      - translate_template
+      - list_supported_languages
+      - get_chapter_language
+      - validate_translations
+      - check_translation_coverage
+
+  - title: Configuration
+    desc: Config loading utilities
+    contents:
+      - load_teams_config
+      - load_review_rules
+      - load_labels_config
+
+  - title: Templates
+    desc: Response and template utilities
+    contents:
+      - post_reply

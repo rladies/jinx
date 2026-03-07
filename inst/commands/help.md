@@ -19,6 +19,14 @@
 | `/jinx contributors [repo]` | List contributors for a repo |
 | `/jinx contributors update [repo]` | Update contributors list via PR |
 | `/jinx contributors org` | Show top org-wide contributors |
+| `/jinx events <chapter>` | List recent events for a chapter |
+| `/jinx events sync` | Sync and publish event summary |
+| `/jinx analytics` | Generate analytics dashboard |
+| `/jinx cfp list` | List open calls for proposals |
+| `/jinx cfp add <conf> <deadline> <url>` | Track a new CFP |
+| `/jinx cfp recommend <conf> @speaker` | Recommend a speaker |
+| `/jinx translate status` | Check translation coverage |
+| `/jinx translate validate [lang]` | Validate translation placeholders |
 | `/jinx remind stale` | Send reminders on stale issues |
 | `/jinx help` | Show this help message |
 

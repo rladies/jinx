@@ -1,0 +1,40 @@
+name: Event Sync
+
+on:
+  schedule:
+    - cron: "30 9 * * 1"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+          owner: rladies
+
+      - name: Checkout jinx
+        uses: actions/checkout@v4
+        with:
+          repository: rladies/jinx
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+
+      - name: Sync and publish events
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          MEETUP_API_KEY: ${{ secrets.MEETUP_API_KEY }}
+        run: |
+          Rscript -e '
+            events <- jinx::sync_chapter_events(dry_run = FALSE)
+            summary <- jinx::create_event_summary(events, "weekly")
+            jinx::publish_event_summary(summary)
+          '

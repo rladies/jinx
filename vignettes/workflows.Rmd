@@ -1,0 +1,289 @@
+---
+title: "Workflow Reference for R-Ladies Org Admins"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Workflow Reference for R-Ladies Org Admins}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r}
+#| include: false
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+This vignette walks through each admin workflow jinx supports.
+For setup and architecture details, see `vignette("getting-started")`.
+
+## Onboarding a new team member
+
+**Via issue comment:**
+```
+/jinx invite @username to website
+```
+
+**What happens:**
+
+1. `gt_invite()` sends an org invitation to the user
+2. A tracking issue is created with the team-specific onboarding checklist
+3. Once the user accepts, `gt_finalize_onboarding()` adds them to the
+   appropriate team(s) and repos
+4. The tracking issue is closed
+
+**Programmatically:**
+```{r}
+#| eval: false
+gt_invite("octocat", "website")
+```
+
+**Checking pending invitations:**
+```{r}
+#| eval: false
+gt_check_invitations()
+```
+
+## Offboarding a team member
+
+**Via issue comment:**
+```
+/jinx offboard @username from blog
+```
+
+**What happens:**
+
+1. `gt_create_offboarding()` opens an offboarding tracking issue
+2. The issue lists cleanup steps (remove from team, repos, external services)
+3. Once complete, `gt_finalize_offboarding()` removes org access and closes
+   the issue
+
+**Programmatically:**
+```{r}
+#| eval: false
+gt_create_offboarding("octocat", "blog")
+```
+
+## Setting up a new chapter
+
+**Via issue comment:**
+```
+/jinx chapter-setup Berlin Germany
+```
+
+**What happens:**
+
+1. `create_chapter_setup()` opens a setup tracking issue
+2. The issue contains a checklist: create repos, add organizers, configure
+   Meetup, set up social media
+3. `create_chapter()` generates the chapter JSON for the directory
+4. `create_chapter_json_pr()` opens a PR to add the chapter to the directory
+
+**Updating an existing chapter:**
+```
+/jinx chapter-update Berlin Germany
+```
+
+## Monitoring chapter health
+
+**Scheduled workflow** runs periodically via `check_chapter_health()`.
+
+**Via issue comment:**
+```
+/jinx chapter-health
+```
+
+**What happens:**
+
+1. Reads chapter activity data (commits, issues, events)
+2. Classifies chapters as active, quiet, or inactive
+3. Posts a summary with recommendations
+
+**Outreach to inactive chapters:**
+```{r}
+#| eval: false
+statuses <- monitor_chapter_status()
+prepare_inactivity_emails(statuses)
+```
+
+## Blog post workflow
+
+### Adding a new blog entry
+
+**Via issue comment:**
+```
+/jinx blog-add https://example.com/my-rladies-post
+```
+
+**What happens:**
+
+1. `create_blog_entry()` fetches metadata from the URL
+2. Creates a YAML entry and opens a PR to the blog repo
+3. `post_blog_checklist()` adds a review checklist to the PR
+
+### Checking blog links
+
+```
+/jinx blog-check-links
+```
+
+Runs `check_blog_links()` to find broken URLs across all blog entries.
+
+### Auto-merge on publish date
+
+`auto_merge_pending()` runs on a schedule and merges blog PRs whose
+publish date has arrived. This is triggered by the
+`website-merge-pending.yml` workflow.
+
+## Announcing blog posts
+
+After a blog post merges, announce it across platforms:
+
+**Via issue comment:**
+```
+/jinx announce https://rladies.org/blog/my-post/
+```
+
+**What happens:**
+
+1. `announce_post()` reads the post's YAML front matter
+2. `create_announcement_message()` builds the message with hashtags
+3. Posts to Bluesky (`post_bluesky()`), Mastodon (`post_mastodon()`),
+   LinkedIn (`li_post_write()`), and newsletter (`send_newsletter()`)
+
+Each platform is posted independently -- failures on one do not block others.
+
+## Running reports
+
+### Activity reports
+
+**Via issue comment:**
+```
+/jinx report weekly
+/jinx report monthly
+```
+
+**Programmatically:**
+```{r}
+#| eval: false
+report <- generate_report(type = "weekly")
+publish_report(report)
+```
+
+### Chapter health reports
+
+```
+/jinx report chapters
+```
+
+```{r}
+#| eval: false
+url <- report_chapter_health()
+```
+
+## Managing the GHA dashboard
+
+```
+/jinx gha-dashboard
+```
+
+**What happens:**
+
+1. `generate_gha_dashboard()` queries workflow run status across all org repos
+2. `publish_gha_dashboard()` posts a formatted status table as a GitHub issue
+
+**Scheduled workflow** runs weekly via `gha-dashboard.yml`.
+
+## Airtable sync
+
+**Scheduled workflow** runs weekly via `airtable-sync.yml`.
+
+**Programmatically:**
+```{r}
+#| eval: false
+sync_directory_airtable()
+sync_global_team_airtable()
+```
+
+Syncs directory entries and global team data between Airtable and GitHub.
+Creates PRs for any changes detected.
+
+## Slack onboarding
+
+```{r}
+#| eval: false
+send_slack_invites(dry_run = TRUE)
+```
+
+Fetches pending invitees from Airtable and sends Slack workspace
+invitations. Use `dry_run = TRUE` (the default) to preview before sending.
+
+**RSS feed integration:**
+```{r}
+#| eval: false
+subscribe_slack_rss()
+```
+
+Subscribes Slack channels to the R-Ladies blog RSS feed.
+
+## Directory maintenance
+
+**Validating directory PRs:**
+
+The `validate_directory_pr()` function runs automatically on PRs that
+modify directory entries. It checks:
+
+- YAML schema compliance
+- Filename conventions (`validate_entry_filename()`)
+- Image optimization (`crop_directory_image()`, `optimize_image()`)
+- Social handle verification (`verify_social_handles()`)
+
+## Contributor recognition
+
+**List contributors for a repo:**
+```
+/jinx contributors jinx
+```
+
+**Update the contributors list:**
+```
+/jinx contributors update jinx
+```
+
+**Org-wide contributor stats:**
+```
+/jinx contributors org
+```
+
+**Automated greetings:**
+
+- `welcome_contributor()` posts a welcome comment on first-time PRs
+- `thank_contributor()` posts a thank-you when PRs are merged
+
+Both are triggered by the `welcome-contributor.yml` and
+`thank-contributor.yml` workflows.
+
+## PR review automation
+
+PR review runs automatically on pull requests via reusable workflows.
+
+**What happens:**
+
+1. `review_pr()` applies the rules from `review-rules.yml`
+2. Reviewers are assigned based on file paths and team ownership
+3. Labels are applied based on `labels.yml` mappings
+4. `check_pr_naming()` enforces branch and title conventions
+
+**See** `vignette("getting-started")` for how to add PR review to other
+repos.
+
+## Stale issue reminders
+
+```
+/jinx remind stale
+```
+
+`gt_remind_stale()` scans for onboarding/offboarding issues that have
+gone stale and posts reminder comments.
