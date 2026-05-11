@@ -111,3 +111,41 @@ subscribe_slack_rss <- function(
 
   invisible(resp)
 }
+
+#' Post a message to a Slack channel
+#'
+#' Sends a markdown-formatted message to the specified Slack channel
+#' using the Slack Web API.
+#'
+#' @param text Message text (supports Slack mrkdwn formatting).
+#' @param channel Slack channel name (without #).
+#' @param token Slack API token. Defaults to `Sys.getenv("SLACK_TOKEN")`.
+#' @return API response (invisibly).
+#' @export
+post_slack_message <- function(
+  text,
+  channel,
+  token = Sys.getenv("SLACK_TOKEN")
+) {
+  if (!nzchar(token)) {
+    cli::cli_abort("SLACK_TOKEN environment variable is not set")
+  }
+
+  resp <- httr2::request("https://slack.com/api/chat.postMessage") |>
+    httr2::req_headers(Authorization = paste("Bearer", token)) |>
+    httr2::req_body_json(list(
+      channel = channel,
+      text = text,
+      unfurl_links = FALSE
+    )) |>
+    httr2::req_perform() |>
+    httr2::resp_body_json()
+
+  if (isTRUE(resp$ok)) {
+    cli::cli_alert_success("Message posted to #{channel}")
+  } else {
+    cli::cli_alert_danger("Failed to post to #{channel}: {resp$error}")
+  }
+
+  invisible(resp)
+}
