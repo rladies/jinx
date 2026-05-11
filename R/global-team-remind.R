@@ -9,6 +9,7 @@
 #' @export
 gt_remind_stale <- function(org = "rladies", days = 30, repo = "global-team") {
   cutoff <- format(Sys.Date() - days, "%Y-%m-%d")
+  stale <- list()
 
   for (label in c("onboarding", "offboarding")) {
     issues <- gh::gh(
@@ -25,6 +26,7 @@ gt_remind_stale <- function(org = "rladies", days = 30, repo = "global-team") {
     for (issue in issues) {
       updated <- as.Date(sub("T.*", "", issue$updated_at))
       if (updated <= as.Date(cutoff)) {
+        days_stale <- as.integer(Sys.Date() - updated)
         post_reply(
           org,
           repo,
@@ -35,10 +37,15 @@ gt_remind_stale <- function(org = "rladies", days = 30, repo = "global-team") {
             "if it needs attention."
           )
         )
+        stale[[length(stale) + 1]] <- list(
+          title = issue$title,
+          url = issue$html_url,
+          days = days_stale
+        )
         cli::cli_alert_warning("Reminded: {issue$title} (#{issue$number})")
       }
     }
   }
 
-  invisible()
+  invisible(stale)
 }
