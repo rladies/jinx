@@ -34,28 +34,47 @@ jobs:
           SLACK_USER: ${{ github.event.client_payload.user_name }}
           SLACK_CHANNEL: ${{ github.event.client_payload.channel_id }}
           SLACK_RESPONSE_URL: ${{ github.event.client_payload.response_url }}
+          RUN_URL: https://github.com/rladies/jinx/actions/runs/${{ github.run_id }}
         run: |
           Rscript -e '
-            command_text <- paste("/jinx", Sys.getenv("COMMAND"))
-            cmd <- jinx::parse_command(command_text)
-            ctx <- list(
-              source = "slack",
-              user = Sys.getenv("SLACK_USER"),
-              channel = Sys.getenv("SLACK_CHANNEL"),
-              response_url = Sys.getenv("SLACK_RESPONSE_URL")
-            )
-            result <- tryCatch(
-              jinx::execute_command(cmd, ctx),
-              error = function(e) e$message
-            )
-            # Post result back to Slack
-            msg <- if (is.character(result)) {
-              paste0("❌ Oops! Something went wrong: ", result)
-            } else {
-              "✅ Done!"
+            response_url <- Sys.getenv("SLACK_RESPONSE_URL")
+
+            reply <- function(msg) {
+              # Try post_slack_message first, fall back to response_url
+              tryCatch(
+                jinx::post_slack_message(
+                  text = msg,
+                  channel = Sys.getenv("SLACK_CHANNEL")
+                ),
+                error = function(e) {
+                  if (nzchar(response_url)) {
+                    httr2::request(response_url) |>
+                      httr2::req_body_json(list(
+                        response_type = "ephemeral",
+                        text = msg
+                      )) |>
+                      httr2::req_perform()
+                  }
+                }
+              )
             }
-            jinx::post_slack_message(
-              text = msg,
-              channel = Sys.getenv("SLACK_CHANNEL")
-            )
+
+            result <- tryCatch({
+              command_text <- paste("/jinx", Sys.getenv("COMMAND"))
+              cmd <- jinx::parse_command(command_text)
+              ctx <- list(
+                source = "slack",
+                user = Sys.getenv("SLACK_USER"),
+                channel = Sys.getenv("SLACK_CHANNEL"),
+                response_url = response_url
+              )
+              jinx::execute_command(cmd, ctx)
+              reply("\u2705 Done!")
+            }, error = function(e) {
+              run_url <- Sys.getenv("RUN_URL")
+              reply(paste0(
+                "\U0001f63f Oops! Something went wrong: ", e$message,
+                "\n\n<", run_url, "|View logs>"
+              ))
+            })
           '
