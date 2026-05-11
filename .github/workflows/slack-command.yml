@@ -59,3 +59,14 @@ jobs:
               channel = Sys.getenv("SLACK_CHANNEL")
             )
           '
+
+      - name: Notify Slack on failure
+        if: failure()
+        env:
+          SLACK_RESPONSE_URL: ${{ github.event.client_payload.response_url }}
+        run: |
+          if [ -n "$SLACK_RESPONSE_URL" ]; then
+            curl -sS -X POST "$SLACK_RESPONSE_URL" \
+              -H "Content-Type: application/json" \
+              -d '{"response_type":"ephemeral","text":"😿 Something went wrong running that command. Check the workflow logs: https://github.com/rladies/jinx/actions/runs/${{ github.run_id }}"}'
+          fi
