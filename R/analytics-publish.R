@@ -37,12 +37,14 @@ generate_analytics_dashboard <- function(
 #' @param dashboard_data Data from [generate_analytics_dashboard()].
 #' @param org GitHub organization.
 #' @param target_repo Repository to publish to.
+#' @param slack_channel Optional Slack channel to post a summary to.
 #' @return Issue URL (invisibly).
 #' @export
 publish_analytics_dashboard <- function(
   dashboard_data,
   org = "rladies",
-  target_repo = "global-team"
+  target_repo = "global-team",
+  slack_channel = NULL
 ) {
   body <- dashboard_data$markdown %||% "No analytics data available."
 
@@ -56,5 +58,36 @@ publish_analytics_dashboard <- function(
   )
 
   cli::cli_alert_success("Analytics dashboard published: {issue$html_url}")
+
+  if (!is.null(slack_channel)) {
+    slack_body <- format_analytics_slack(dashboard_data, issue$html_url)
+    post_slack_message(slack_body, channel = slack_channel)
+  }
+
   invisible(issue$html_url)
+}
+
+format_analytics_slack <- function(dashboard_data, issue_url) {
+  trends <- dashboard_data$trends
+  growth <- dashboard_data$growth
+
+  lines <- character(0)
+  lines <- c(lines, glue::glue(":bar_chart: *Analytics Dashboard - {Sys.Date()}*"))
+
+  if (nrow(trends) > 0) {
+    total <- sum(trends$total_commits)
+    latest <- trends$total_commits[nrow(trends)]
+    sparkline <- paste(trends$sparkline, collapse = "")
+    lines <- c(lines, "", glue::glue("Commits: *{total}* total ({latest} last month) {sparkline}"))
+  }
+
+  if (nrow(growth) > 0) {
+    latest_g <- growth[nrow(growth), ]
+    lines <- c(lines, glue::glue(
+      "Contributors: *{latest_g$total_contributors}* total ({latest_g$new_contributors} new)"
+    ))
+  }
+
+  lines <- c(lines, "", glue::glue("<{issue_url}|View full report>"))
+  paste(lines, collapse = "\n")
 }

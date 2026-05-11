@@ -21,6 +21,7 @@ parse_command <- function(body) {
     return(NULL)
   }
 
+  parts <- normalize_command(parts)
   action <- tolower(parts[1])
 
   switch(
@@ -40,6 +41,7 @@ parse_command <- function(body) {
     contributors = parse_contributors_command(parts),
     events = parse_events_command(parts),
     analytics = list(action = "analytics"),
+    "website-analytics" = parse_website_analytics_command(parts),
     cfp = parse_cfp_command(parts),
     translate = parse_translate_command(parts),
     help = list(action = "help"),
@@ -195,6 +197,20 @@ parse_cfp_command <- function(parts) {
       message = "Usage: `/jinx cfp list|add|recommend`"
     )
   )
+}
+
+parse_website_analytics_command <- function(parts) {
+  period <- if (length(parts) >= 2) parts[2] else "30d"
+  valid <- c("7d", "30d", "month", "6mo", "12mo")
+  if (!period %in% valid) {
+    return(list(
+      action = "error",
+      message = glue::glue(
+        "Usage: `/jinx website-analytics [period]` where period is one of: {paste(valid, collapse = ', ')}"
+      )
+    ))
+  }
+  list(action = "website-analytics", period = period)
 }
 
 parse_translate_command <- function(parts) {
@@ -505,14 +521,34 @@ execute_command <- function(command, context) {
         context$issue,
         "Generating analytics dashboard..."
       )
+      slack_ch <- slack_analytics_channel()
       data <- generate_analytics_dashboard()
-      url <- publish_analytics_dashboard(data)
+      url <- publish_analytics_dashboard(data, slack_channel = slack_ch)
       post_reply(
         owner,
         repo,
         context$issue,
         glue::glue(
           "Analytics dashboard published: {url}"
+        )
+      )
+    },
+    "website-analytics" = {
+      post_reply(
+        owner,
+        repo,
+        context$issue,
+        "Generating website analytics report..."
+      )
+      slack_ch <- slack_analytics_channel()
+      data <- generate_website_report(period = command$period)
+      url <- publish_website_report(data, slack_channel = slack_ch)
+      post_reply(
+        owner,
+        repo,
+        context$issue,
+        glue::glue(
+          "Website analytics report published: {url}"
         )
       )
     },
@@ -638,6 +674,40 @@ execute_command <- function(command, context) {
   )
 
   invisible()
+}
+
+normalize_command <- function(parts) {
+  phrases <- list(
+    list(c("generate", "website", "analytics"), "website-analytics"),
+    list(c("website", "analytics"), "website-analytics"),
+    list(c("generate", "analytics"), "analytics"),
+    list(c("generate", "report"), "report"),
+    list(c("generate", "dashboard"), "gha-dashboard"),
+    list(c("check", "blog", "links"), "blog-check-links"),
+    list(c("check", "chapter", "health"), "chapter-health"),
+    list(c("validate", "directory"), "validate-directory"),
+    list(c("setup", "chapter"), "chapter-setup"),
+    list(c("update", "chapter"), "chapter-update"),
+    list(c("add", "blog"), "blog-add"),
+    list(c("check", "links"), "blog-check-links"),
+    list(c("remind", "stale"), "remind")
+  )
+
+  lower <- tolower(parts)
+  for (phrase in phrases) {
+    words <- phrase[[1]]
+    action <- phrase[[2]]
+    n <- length(words)
+    if (length(lower) >= n && identical(lower[seq_len(n)], words)) {
+      return(c(action, parts[-seq_len(n)]))
+    }
+  }
+  parts
+}
+
+slack_analytics_channel <- function() {
+  ch <- Sys.getenv("SLACK_ANALYTICS_CHANNEL", "")
+  if (nzchar(ch)) ch else NULL
 }
 
 read_help_text <- function() {
