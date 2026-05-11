@@ -7,7 +7,8 @@
 publish_analytics_dashboard(
   dashboard_data,
   org = "rladies",
-  target_repo = "global-team"
+  target_repo = "global-team",
+  slack_channel = NULL
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ publish_analytics_dashboard(
 \item{org}{GitHub organization.}
 
 \item{target_repo}{Repository to publish to.}
+
+\item{slack_channel}{Optional Slack channel to post a summary to.}
 }
 \value{
 Issue URL (invisibly).
