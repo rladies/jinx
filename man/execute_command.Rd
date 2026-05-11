@@ -4,14 +4,16 @@
 \alias{execute_command}
 \title{Execute a parsed jinx command}
 \usage{
-execute_command(command, context)
+execute_command(command)
 }
 \arguments{
 \item{command}{Parsed command list from \code{\link[=parse_command]{parse_command()}}.}
-
-\item{context}{Named list with \code{repo} (e.g. "rladies/jinx") and
-\code{issue} (integer issue number).}
+}
+\value{
+Character string with the response message.
 }
 \description{
-Execute a parsed jinx command
+Returns the response message as a character string. The caller is
+responsible for routing the message to the right destination (GitHub
+issue comment, Slack, R console, etc.).
 }

@@ -3,13 +3,25 @@ name: Jinx Commands
 on:
   issue_comment:
     types: [created]
+  repository_dispatch:
+    types: [slack-command]
 
 jobs:
   handle:
-    if: startsWith(github.event.comment.body, '/jinx ')
+    if: >-
+      github.event_name == 'repository_dispatch' ||
+      startsWith(github.event.comment.body, '/jinx ')
     runs-on: ubuntu-latest
 
     steps:
+      - name: Mask Slack metadata
+        if: github.event_name == 'repository_dispatch'
+        run: |
+          echo "::add-mask::${{ github.event.client_payload.channel_id }}"
+          echo "::add-mask::${{ github.event.client_payload.response_url }}"
+          echo "::add-mask::${{ github.event.client_payload.user_name }}"
+          echo "::add-mask::${{ github.event.client_payload.user_id }}"
+
       - uses: actions/checkout@v4
 
       - uses: actions/create-github-app-token@v1
@@ -27,18 +39,74 @@ jobs:
         with:
           extra-packages: local::.
 
-      - name: Handle command
+      - name: Run command
+        id: run
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          COMMENT_BODY: ${{ github.event.comment.body }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
-          REPO: ${{ github.repository }}
+          COMMAND_SOURCE: ${{ github.event_name == 'repository_dispatch' && 'slack' || 'github' }}
+          COMMAND_TEXT: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.command || github.event.comment.body }}
         run: |
           Rscript -e '
-            cmd <- jinx::parse_command(Sys.getenv("COMMENT_BODY"))
-            ctx <- list(
-              repo = Sys.getenv("REPO"),
-              issue = as.integer(Sys.getenv("ISSUE_NUMBER"))
-            )
-            jinx::execute_command(cmd, ctx)
+            source <- Sys.getenv("COMMAND_SOURCE")
+            text <- Sys.getenv("COMMAND_TEXT")
+            if (source == "slack") text <- paste("/jinx", text)
+            cmd <- jinx::parse_command(text)
+            result <- jinx::execute_command(cmd)
+            if (is.null(result)) result <- "\u2705 Done!"
+            writeLines(result, "jinx_response.txt")
           '
+
+      - name: Reply to GitHub issue
+        if: always() && github.event_name == 'issue_comment'
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          RUN_URL: https://github.com/rladies/jinx/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -f jinx_response.txt ]; then
+            MSG=$(cat jinx_response.txt)
+          else
+            MSG="😿 Something went wrong. [View logs](${RUN_URL})"
+          fi
+          gh issue comment "$ISSUE_NUMBER" --body "$MSG"
+
+      - name: Reply to Slack
+        if: always() && github.event_name == 'repository_dispatch'
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
+          SLACK_CHANNEL: ${{ github.event.client_payload.channel_id }}
+          SLACK_RESPONSE_URL: ${{ github.event.client_payload.response_url }}
+          RUN_URL: https://github.com/rladies/jinx/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -f jinx_response.txt ]; then
+            MSG=$(cat jinx_response.txt)
+          else
+            MSG="😿 Something went wrong. <${RUN_URL}|View logs>"
+          fi
+
+          # Try post_slack_message, fall back to response_url
+          Rscript -e '
+            msg <- readLines("jinx_response.txt", warn = FALSE) |> paste(collapse = "\n")
+            tryCatch(
+              jinx::post_slack_message(
+                text = msg,
+                channel = Sys.getenv("SLACK_CHANNEL")
+              ),
+              error = function(e) {
+                cli::cli_alert_warning("post_slack_message failed: {e$message}, using response_url")
+                response_url <- Sys.getenv("SLACK_RESPONSE_URL")
+                if (nzchar(response_url)) {
+                  httr2::request(response_url) |>
+                    httr2::req_body_json(list(response_type = "ephemeral", text = msg)) |>
+                    httr2::req_perform()
+                }
+              }
+            )
+          ' || {
+            if [ -n "$SLACK_RESPONSE_URL" ]; then
+              curl -sS -X POST "$SLACK_RESPONSE_URL" \
+                -H "Content-Type: application/json" \
+                -d "{\"response_type\":\"ephemeral\",\"text\":\"😿 Something went wrong. <${RUN_URL}|View logs>\"}"
+            fi
+          }
