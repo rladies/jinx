@@ -24,12 +24,14 @@ and architecture details, see
 **Programmatically:**
 
 ``` r
+
 gt_invite("octocat", "website")
 ```
 
 **Checking pending invitations:**
 
 ``` r
+
 gt_check_invitations()
 ```
 
@@ -52,6 +54,7 @@ gt_check_invitations()
 **Programmatically:**
 
 ``` r
+
 gt_create_offboarding("octocat", "blog")
 ```
 
@@ -94,6 +97,7 @@ gt_create_offboarding("octocat", "blog")
 **Outreach to inactive chapters:**
 
 ``` r
+
 statuses <- monitor_chapter_status()
 prepare_inactivity_emails(statuses)
 ```
@@ -166,6 +170,7 @@ others.
 **Programmatically:**
 
 ``` r
+
 report <- generate_report(type = "weekly")
 publish_report(report)
 ```
@@ -175,6 +180,7 @@ publish_report(report)
     /jinx report chapters
 
 ``` r
+
 url <- report_chapter_health()
 ```
 
@@ -198,6 +204,7 @@ url <- report_chapter_health()
 **Programmatically:**
 
 ``` r
+
 sync_directory_airtable()
 sync_global_team_airtable()
 ```
@@ -208,6 +215,7 @@ GitHub. Creates PRs for any changes detected.
 ## Slack onboarding
 
 ``` r
+
 send_slack_invites(dry_run = TRUE)
 ```
 
@@ -218,6 +226,7 @@ sending.
 **RSS feed integration:**
 
 ``` r
+
 subscribe_slack_rss()
 ```
 

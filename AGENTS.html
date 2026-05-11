@@ -56,19 +56,19 @@
 <div class="section level2">
 <h2 id="secrets">Secrets<a class="anchor" aria-label="anchor" href="#secrets"></a></h2>
 <p>All workflows use <code>actions/create-github-app-token@v1</code> with these <strong>repo secrets</strong> (not variables):</p>
-<table class="table"><colgroup><col width="47%"><col width="52%"></colgroup><thead><tr class="header"><th>Secret</th>
+<table class="table"><colgroup><col width="47%"><col width="52%"></colgroup><thead><tr><th>Secret</th>
 <th>Purpose</th>
-</tr></thead><tbody><tr class="odd"><td><code>JINX_APP_ID</code></td>
+</tr></thead><tbody><tr><td><code>JINX_APP_ID</code></td>
 <td>GitHub App ID</td>
-</tr><tr class="even"><td><code>JINX_PRIVATE_KEY</code></td>
+</tr><tr><td><code>JINX_PRIVATE_KEY</code></td>
 <td>GitHub App private key (.pem)</td>
-</tr><tr class="odd"><td><code>MEETUPR_JWT_TOKEN</code></td>
+</tr><tr><td><code>MEETUPR_JWT_TOKEN</code></td>
 <td>Meetup Pro JWT token for meetupr (event-sync.yml)</td>
-</tr><tr class="even"><td><code>MEETUPR_CLIENT_ID</code></td>
+</tr><tr><td><code>MEETUPR_CLIENT_ID</code></td>
 <td>Meetup Pro OAuth client ID for meetupr (event-sync.yml)</td>
-</tr><tr class="odd"><td><code>MEETUPR_JWT_ISSUER</code></td>
+</tr><tr><td><code>MEETUPR_JWT_ISSUER</code></td>
 <td>Meetup Pro JWT issuer for meetupr (event-sync.yml)</td>
-</tr><tr class="even"><td><code>AIRTABLE_API_KEY</code></td>
+</tr><tr><td><code>AIRTABLE_API_KEY</code></td>
 <td>Airtable API key (airtable-sync.yml)</td>
 </tr></tbody></table><p>Always reference as <code>secrets.JINX_APP_ID</code>, never <code>vars.JINX_APP_ID</code>.</p>
 </div>
@@ -100,62 +100,62 @@ vignettes/            # getting-started.Rmd, workflows.Rmd</code></pre>
 </div>
 <div class="section level2">
 <h2 id="modules">Modules<a class="anchor" aria-label="anchor" href="#modules"></a></h2>
-<table class="table"><colgroup><col width="33%"><col width="29%"><col width="37%"></colgroup><thead><tr class="header"><th>Module</th>
+<table class="table"><colgroup><col width="33%"><col width="29%"><col width="37%"></colgroup><thead><tr><th>Module</th>
 <th>Files</th>
 <th>Purpose</th>
-</tr></thead><tbody><tr class="odd"><td>Commands</td>
+</tr></thead><tbody><tr><td>Commands</td>
 <td>commands.R</td>
 <td>
 <code>/jinx</code> command parsing and execution</td>
-</tr><tr class="even"><td>Team management</td>
+</tr><tr><td>Team management</td>
 <td>global-team-*.R</td>
 <td>Onboarding, offboarding, invitations</td>
-</tr><tr class="odd"><td>Announcements</td>
+</tr><tr><td>Announcements</td>
 <td>announce*.R</td>
 <td>Cross-platform blog announcements (Bluesky, Mastodon, LinkedIn, newsletter)</td>
-</tr><tr class="even"><td>Directory</td>
+</tr><tr><td>Directory</td>
 <td>directory-*.R</td>
 <td>Directory entry validation, images, social handles</td>
-</tr><tr class="odd"><td>Blogs</td>
+</tr><tr><td>Blogs</td>
 <td>blog-*.R</td>
 <td>Blog entry management and link checking</td>
-</tr><tr class="even"><td>Chapters</td>
+</tr><tr><td>Chapters</td>
 <td>chapter-*.R</td>
 <td>Chapter creation, setup, health checks</td>
-</tr><tr class="odd"><td>Reports</td>
+</tr><tr><td>Reports</td>
 <td>report-*.R</td>
 <td>Weekly/monthly activity reports</td>
-</tr><tr class="even"><td>PR review</td>
+</tr><tr><td>PR review</td>
 <td>review-*.R</td>
 <td>Auto-assign, label, checklist</td>
-</tr><tr class="odd"><td>Airtable sync</td>
+</tr><tr><td>Airtable sync</td>
 <td>airtable-sync.R</td>
 <td>Bidirectional sync with Airtable</td>
-</tr><tr class="even"><td>Website</td>
+</tr><tr><td>Website</td>
 <td>website-automation.R</td>
 <td>Auto-merge pending PRs, greet contributors</td>
-</tr><tr class="odd"><td>Chapter monitoring</td>
+</tr><tr><td>Chapter monitoring</td>
 <td>chapter-monitor.R</td>
 <td>Inactivity detection and outreach</td>
-</tr><tr class="even"><td>Slack</td>
+</tr><tr><td>Slack</td>
 <td>slack-manage.R</td>
 <td>Invite automation, RSS subscriptions</td>
-</tr><tr class="odd"><td>GHA dashboard</td>
+</tr><tr><td>GHA dashboard</td>
 <td>gha-dashboard.R</td>
 <td>Workflow status overview</td>
-</tr><tr class="even"><td>Contributors</td>
+</tr><tr><td>Contributors</td>
 <td>contributors.R</td>
 <td>Tracking, recognition, welcome/thank</td>
-</tr><tr class="odd"><td>Events</td>
+</tr><tr><td>Events</td>
 <td>event-meetup.R, event-manage.R</td>
 <td>Meetup Pro integration, event sync</td>
-</tr><tr class="even"><td>Analytics</td>
+</tr><tr><td>Analytics</td>
 <td>analytics-*.R</td>
 <td>Activity trends, contributor growth, sparklines</td>
-</tr><tr class="odd"><td>Conferences</td>
+</tr><tr><td>Conferences</td>
 <td>conference-*.R</td>
 <td>CFP tracking, speaker recommendations</td>
-</tr><tr class="even"><td>i18n</td>
+</tr><tr><td>i18n</td>
 <td>i18n.R, i18n-validate.R</td>
 <td>Template translations with English fallback</td>
 </tr></tbody></table></div>

@@ -18,14 +18,14 @@ GitHub App (`jinx[bot]`) via GitHub Actions workflows.
 All workflows use `actions/create-github-app-token@v1` with these **repo
 secrets** (not variables):
 
-| Secret               | Purpose                                                 |
-|----------------------|---------------------------------------------------------|
-| `JINX_APP_ID`        | GitHub App ID                                           |
-| `JINX_PRIVATE_KEY`   | GitHub App private key (.pem)                           |
-| `MEETUPR_JWT_TOKEN`  | Meetup Pro JWT token for meetupr (event-sync.yml)       |
-| `MEETUPR_CLIENT_ID`  | Meetup Pro OAuth client ID for meetupr (event-sync.yml) |
-| `MEETUPR_JWT_ISSUER` | Meetup Pro JWT issuer for meetupr (event-sync.yml)      |
-| `AIRTABLE_API_KEY`   | Airtable API key (airtable-sync.yml)                    |
+| Secret | Purpose |
+|----|----|
+| `JINX_APP_ID` | GitHub App ID |
+| `JINX_PRIVATE_KEY` | GitHub App private key (.pem) |
+| `MEETUPR_JWT_TOKEN` | Meetup Pro JWT token for meetupr (event-sync.yml) |
+| `MEETUPR_CLIENT_ID` | Meetup Pro OAuth client ID for meetupr (event-sync.yml) |
+| `MEETUPR_JWT_ISSUER` | Meetup Pro JWT issuer for meetupr (event-sync.yml) |
+| `AIRTABLE_API_KEY` | Airtable API key (airtable-sync.yml) |
 
 Always reference as `secrets.JINX_APP_ID`, never `vars.JINX_APP_ID`.
 
@@ -61,26 +61,26 @@ Always reference as `secrets.JINX_APP_ID`, never `vars.JINX_APP_ID`.
 
 ## Modules
 
-| Module             | Files                          | Purpose                                                                     |
-|--------------------|--------------------------------|-----------------------------------------------------------------------------|
-| Commands           | commands.R                     | `/jinx` command parsing and execution                                       |
-| Team management    | global-team-\*.R               | Onboarding, offboarding, invitations                                        |
-| Announcements      | announce\*.R                   | Cross-platform blog announcements (Bluesky, Mastodon, LinkedIn, newsletter) |
-| Directory          | directory-\*.R                 | Directory entry validation, images, social handles                          |
-| Blogs              | blog-\*.R                      | Blog entry management and link checking                                     |
-| Chapters           | chapter-\*.R                   | Chapter creation, setup, health checks                                      |
-| Reports            | report-\*.R                    | Weekly/monthly activity reports                                             |
-| PR review          | review-\*.R                    | Auto-assign, label, checklist                                               |
-| Airtable sync      | airtable-sync.R                | Bidirectional sync with Airtable                                            |
-| Website            | website-automation.R           | Auto-merge pending PRs, greet contributors                                  |
-| Chapter monitoring | chapter-monitor.R              | Inactivity detection and outreach                                           |
-| Slack              | slack-manage.R                 | Invite automation, RSS subscriptions                                        |
-| GHA dashboard      | gha-dashboard.R                | Workflow status overview                                                    |
-| Contributors       | contributors.R                 | Tracking, recognition, welcome/thank                                        |
-| Events             | event-meetup.R, event-manage.R | Meetup Pro integration, event sync                                          |
-| Analytics          | analytics-\*.R                 | Activity trends, contributor growth, sparklines                             |
-| Conferences        | conference-\*.R                | CFP tracking, speaker recommendations                                       |
-| i18n               | i18n.R, i18n-validate.R        | Template translations with English fallback                                 |
+| Module | Files | Purpose |
+|----|----|----|
+| Commands | commands.R | `/jinx` command parsing and execution |
+| Team management | global-team-\*.R | Onboarding, offboarding, invitations |
+| Announcements | announce\*.R | Cross-platform blog announcements (Bluesky, Mastodon, LinkedIn, newsletter) |
+| Directory | directory-\*.R | Directory entry validation, images, social handles |
+| Blogs | blog-\*.R | Blog entry management and link checking |
+| Chapters | chapter-\*.R | Chapter creation, setup, health checks |
+| Reports | report-\*.R | Weekly/monthly activity reports |
+| PR review | review-\*.R | Auto-assign, label, checklist |
+| Airtable sync | airtable-sync.R | Bidirectional sync with Airtable |
+| Website | website-automation.R | Auto-merge pending PRs, greet contributors |
+| Chapter monitoring | chapter-monitor.R | Inactivity detection and outreach |
+| Slack | slack-manage.R | Invite automation, RSS subscriptions |
+| GHA dashboard | gha-dashboard.R | Workflow status overview |
+| Contributors | contributors.R | Tracking, recognition, welcome/thank |
+| Events | event-meetup.R, event-manage.R | Meetup Pro integration, event sync |
+| Analytics | analytics-\*.R | Activity trends, contributor growth, sparklines |
+| Conferences | conference-\*.R | CFP tracking, speaker recommendations |
+| i18n | i18n.R, i18n-validate.R | Template translations with English fallback |
 
 ## Template system
 
@@ -91,6 +91,7 @@ templates in `inst/translations/{lang}/` that fall back to English.
 ## Testing
 
 ``` r
+
 devtools::test()    # 330+ tests
 devtools::check()   # must pass with 0 errors, 0 warnings
 ```
@@ -102,6 +103,7 @@ Run via zsh to ensure PATH includes `/opt/homebrew/bin` (pandoc, gh).
 `_pkgdown.yml` defines reference sections grouped by module. Build with:
 
 ``` r
+
 pkgdown::build_site()
 ```
 
