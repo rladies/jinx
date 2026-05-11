@@ -1,4 +1,4 @@
-name: Deploy Cloudflare Worker
+name: Cloudflare Worker
 
 on:
   push:
@@ -6,9 +6,29 @@ on:
     paths:
       - 'worker/**'
       - 'wrangler.jsonc'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'worker/**'
+      - 'wrangler.jsonc'
 
 jobs:
+  validate:
+    name: Validate worker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dry-run deploy (syntax + bundle check)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: deploy --dry-run
+
   deploy:
+    name: Deploy worker
+    needs: validate
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,4 +37,3 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          workingDirectory: .
