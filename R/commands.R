@@ -433,7 +433,7 @@ execute_command <- function(command) {
     remind = {
       stale <- gt_remind_stale()
       if (length(stale) == 0) {
-        "No stale issues found — all caught up! \U0001f389"
+        "No stale issues found - all caught up! \U0001f389"
       } else {
         links <- vapply(stale, function(s) {
           glue::glue("- <{s$url}|{s$title}> ({s$days} days)")
