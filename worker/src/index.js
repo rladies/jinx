@@ -95,9 +95,11 @@ const ACKS = [
   "🐈‍⬛ *purrs approvingly* — on it with `/jinx {cmd}`...",
 ];
 
+const WAIT_NOTE = "\n_This may take a couple of minutes — Jinx will reply here when done._";
+
 function randomAck(command) {
   const template = ACKS[Math.floor(Math.random() * ACKS.length)];
-  return template.replace(/\{cmd\}/g, command);
+  return template.replace(/\{cmd\}/g, command) + WAIT_NOTE;
 }
 
 const HELP_URL =
