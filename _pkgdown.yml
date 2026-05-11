@@ -1,6 +1,7 @@
 url: https://rladies.github.io/jinx/
 
 template:
+  package: cloak
   bootstrap: 5
 
 navbar:

@@ -105,6 +105,16 @@ management.
 * `generate_analytics_dashboard()`, `publish_analytics_dashboard()` for
   monthly org-wide analytics.
 
+## Website analytics
+
+* `collect_website_analytics()` fetches visitor, pageview, and engagement
+  metrics from Plausible Analytics API.
+* `format_website_analytics()` renders analytics as markdown with traffic
+  trends, top pages, and referral sources.
+* `generate_website_report()`, `publish_website_report()` for periodic
+  website performance reports.
+* `/jinx website-analytics [period]` command with configurable time periods.
+
 ## Conference coordination
 
 * `list_open_cfps()`, `create_cfp_issue()`, `check_cfp_deadlines()` for

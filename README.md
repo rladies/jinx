@@ -1,6 +1,6 @@
 # jinx
 
-R-Ladies GitHub organization management bot. An R package deployed via GitHub Actions with a registered GitHub App identity (`jinx[bot]`).
+RLadies+ GitHub organization management bot. An R package deployed via GitHub Actions with a registered GitHub App identity (`jinx[bot]`).
 
 ## Features
 
@@ -35,7 +35,7 @@ abstract-review, blog, campaigns, chapter-activity, chapter-onboarding, coc, com
    - Repository: Issues (R/W), Pull Requests (R/W), Contents (Read)
    - Organization: Members (R/W), Administration (Read)
 4. Events: `issue_comment`, `issues`, `pull_request`
-5. Install on the R-Ladies org
+5. Install on the RLadies+ org
 
 ### 2. Configure secrets
 
@@ -46,7 +46,7 @@ In the jinx repo (or org-wide):
 
 ### 3. Cross-repo PR review
 
-Add this workflow to any R-Ladies repo that wants PR review automation:
+Add this workflow to any RLadies+ repo that wants PR review automation:
 
 ```yaml
 # .github/workflows/jinx-review.yml
