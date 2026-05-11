@@ -252,310 +252,132 @@ parse_contributors_command <- function(parts) {
 
 #' Execute a parsed jinx command
 #'
+#' Returns the response message as a character string. The caller is
+#' responsible for routing the message to the right destination (GitHub
+#' issue comment, Slack, R console, etc.).
+#'
 #' @param command Parsed command list from [parse_command()].
-#' @param context Named list with `repo` (e.g. "rladies/jinx") and
-#'   `issue` (integer issue number).
+#' @return Character string with the response message.
 #' @export
-execute_command <- function(command, context) {
+execute_command <- function(command) {
   if (is.null(command)) {
-    return(invisible())
+    return(invisible(NULL))
   }
-
-  owner_repo <- strsplit(context$repo, "/")[[1]]
-  owner <- owner_repo[1]
-  repo <- owner_repo[2]
 
   switch(
     command$action,
-    help = {
-      help_text <- read_help_text()
-      post_reply(owner, repo, context$issue, help_text)
-    },
+    help = read_help_text(),
     invite = {
       config <- load_teams_config()
       if (!command$team %in% team_slugs(config)) {
-        post_reply(
-          owner,
-          repo,
-          context$issue,
-          glue::glue(
-            "Unknown team `{command$team}`. Valid teams: {paste(team_slugs(config), collapse = ', ')}"
-          )
+        glue::glue(
+          "Unknown team `{command$team}`. Valid teams: {paste(team_slugs(config), collapse = ', ')}"
         )
-        return(invisible())
-      }
-      gt_invite(command$username, command$team)
-      post_reply(
-        owner,
-        repo,
-        context$issue,
+      } else {
+        gt_invite(command$username, command$team)
         glue::glue(
           "Invitation sent to @{command$username} for the **{command$team}** team."
         )
-      )
+      }
     },
     offboard = {
       config <- load_teams_config()
       if (!command$team %in% team_slugs(config)) {
-        post_reply(
-          owner,
-          repo,
-          context$issue,
-          glue::glue(
-            "Unknown team `{command$team}`. Valid teams: {paste(team_slugs(config), collapse = ', ')}"
-          )
+        glue::glue(
+          "Unknown team `{command$team}`. Valid teams: {paste(team_slugs(config), collapse = ', ')}"
         )
-        return(invisible())
-      }
-      gt_create_offboarding(command$username, command$team)
-      post_reply(
-        owner,
-        repo,
-        context$issue,
+      } else {
+        gt_create_offboarding(command$username, command$team)
         glue::glue(
           "Offboarding initiated for @{command$username} from the **{command$team}** team."
         )
-      )
+      }
     },
     report = {
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "Generating **{command$type}** report... I'll post it when ready."
-        )
-      )
       report <- generate_report(type = command$type)
       publish_report(report)
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "**{command$type}** report published."
-        )
-      )
+      glue::glue("**{command$type}** report published.")
     },
     announce = {
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "Announcing post: {command$url}"
-        )
-      )
+      glue::glue("Announcing post: {command$url}")
     },
-    "validate-directory" = {
-      post_reply(owner, repo, context$issue, "Running directory validation...")
-    },
-    "chapter-health" = {
-      post_reply(owner, repo, context$issue, "Checking chapter health...")
-    },
+    "validate-directory" = "Running directory validation...",
+    "chapter-health" = "Checking chapter health...",
     "blog-add" = {
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "Creating blog entry for: {command$url}"
-        )
-      )
+      glue::glue("Creating blog entry for: {command$url}")
     },
-    "blog-check-links" = {
-      post_reply(owner, repo, context$issue, "Checking blog links...")
-    },
+    "blog-check-links" = "Checking blog links...",
     "chapter-setup" = {
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "Creating chapter setup issue for **{command$city}, {command$country}**..."
-        )
-      )
       url <- create_chapter_setup(
         command$city,
         command$country,
         organizers = character(0)
       )
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "Chapter setup issue created: {url}"
-        )
-      )
+      glue::glue("Chapter setup issue created: {url}")
     },
     "chapter-update" = {
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "Creating chapter update issue for **{command$city}, {command$country}**..."
-        )
-      )
       url <- create_chapter_update(command$city, command$country)
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "Chapter update issue created: {url}"
-        )
-      )
+      glue::glue("Chapter update issue created: {url}")
     },
     "report-chapters" = {
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        "Generating chapter health report..."
-      )
       url <- report_chapter_health()
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "Chapter health report published: {url}"
-        )
-      )
+      glue::glue("Chapter health report published: {url}")
     },
     "gha-dashboard" = {
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        "Generating GitHub Actions dashboard..."
-      )
       data <- generate_gha_dashboard()
       url <- publish_gha_dashboard(data)
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "GHA dashboard published: {url}"
-        )
-      )
+      glue::glue("GHA dashboard published: {url}")
     },
     "contributors-list" = {
-      target <- command$repo %||% repo
-      contribs <- list_contributors(owner, target)
-      body <- format_contributors(contribs, format = "table")
-      post_reply(owner, repo, context$issue, body)
+      target <- command$repo %||% "jinx"
+      contribs <- list_contributors("rladies", target)
+      format_contributors(contribs, format = "table")
     },
     "contributors-update" = {
-      target <- command$repo %||% repo
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "Updating contributors list for **{target}**..."
-        )
-      )
-      url <- update_contributors_list(owner, target)
-      msg <- if (!is.null(url)) {
+      target <- command$repo %||% "jinx"
+      url <- update_contributors_list("rladies", target)
+      if (!is.null(url)) {
         glue::glue("Contributors PR created: {url}")
       } else {
         "Contributors list is already up to date."
       }
-      post_reply(owner, repo, context$issue, msg)
     },
     "contributors-org" = {
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        "Collecting org-wide contributors..."
-      )
       contribs <- list_org_contributors()
       top <- if (nrow(contribs) > 20) contribs[1:20, ] else contribs
-      body <- paste0(
+      paste0(
         "## Top Contributors (org-wide)\n\n",
         format_contributors(top, format = "table"),
-        "\n_Showing top ",
-        nrow(top),
-        " of ",
-        nrow(contribs),
-        " total_"
+        "\n_Showing top ", nrow(top),
+        " of ", nrow(contribs), " total_"
       )
-      post_reply(owner, repo, context$issue, body)
     },
     events = {
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "Fetching events for **{command$chapter}**..."
-        )
-      )
       events <- list_chapter_events(command$chapter)
-      summary <- create_event_summary(events, "weekly")
-      post_reply(owner, repo, context$issue, summary)
+      create_event_summary(events, "weekly")
     },
     "events-sync" = {
-      post_reply(owner, repo, context$issue, "Syncing chapter events...")
       events <- sync_chapter_events(dry_run = FALSE)
       summary <- create_event_summary(events, "weekly")
       url <- publish_event_summary(summary)
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "Event summary published: {url}"
-        )
-      )
+      glue::glue("Event summary published: {url}")
     },
     analytics = {
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        "Generating analytics dashboard..."
-      )
       slack_ch <- slack_analytics_channel()
       data <- generate_analytics_dashboard()
       url <- publish_analytics_dashboard(data, slack_channel = slack_ch)
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "Analytics dashboard published: {url}"
-        )
-      )
+      glue::glue("Analytics dashboard published: {url}")
     },
     "website-analytics" = {
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        "Generating website analytics report..."
-      )
       slack_ch <- slack_analytics_channel()
       data <- generate_website_report(period = command$period)
       url <- publish_website_report(data, slack_channel = slack_ch)
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "Website analytics report published: {url}"
-        )
-      )
+      glue::glue("Website analytics report published: {url}")
     },
     "cfp-list" = {
       cfps <- list_open_cfps()
       if (nrow(cfps) == 0) {
-        post_reply(owner, repo, context$issue, "No open CFPs found.")
+        "No open CFPs found."
       } else {
         lines <- vapply(
           seq_len(nrow(cfps)),
@@ -566,45 +388,17 @@ execute_command <- function(command, context) {
           },
           character(1)
         )
-        post_reply(
-          owner,
-          repo,
-          context$issue,
-          paste(
-            "## Open CFPs\n",
-            paste(lines, collapse = "\n")
-          )
-        )
+        paste("## Open CFPs\n", paste(lines, collapse = "\n"))
       }
     },
     "cfp-add" = {
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "Creating CFP issue for **{command$conference}**..."
-        )
-      )
       url <- create_cfp_issue(command$conference, command$deadline, command$url)
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "CFP issue created: {url}"
-        )
-      )
+      glue::glue("CFP issue created: {url}")
     },
     "cfp-recommend" = {
       recommend_speaker(command$conference, command$speaker)
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "Speaker recommendation for @{command$speaker} added to **{command$conference}**."
-        )
+      glue::glue(
+        "Speaker recommendation for @{command$speaker} added to **{command$conference}**."
       )
     },
     "translate-status" = {
@@ -618,21 +412,13 @@ execute_command <- function(command, context) {
         },
         character(1)
       )
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        paste(
-          "## Translation Coverage\n",
-          paste(lines, collapse = "\n")
-        )
-      )
+      paste("## Translation Coverage\n", paste(lines, collapse = "\n"))
     },
     "translate-validate" = {
       results <- validate_translations(language = command$language)
       issues <- results[results$status != "ok", ]
       if (nrow(issues) == 0) {
-        post_reply(owner, repo, context$issue, "All translations are valid.")
+        "All translations are valid."
       } else {
         lines <- vapply(
           seq_len(nrow(issues)),
@@ -643,37 +429,20 @@ execute_command <- function(command, context) {
           },
           character(1)
         )
-        post_reply(
-          owner,
-          repo,
-          context$issue,
-          paste(
-            "## Translation Issues\n",
-            paste(lines, collapse = "\n")
-          )
-        )
+        paste("## Translation Issues\n", paste(lines, collapse = "\n"))
       }
     },
     remind = {
       gt_remind_stale()
-      post_reply(owner, repo, context$issue, "Stale issue reminders sent.")
+      "Stale issue reminders sent."
     },
-    error = {
-      post_reply(owner, repo, context$issue, command$message)
-    },
+    error = command$message,
     unknown = {
-      post_reply(
-        owner,
-        repo,
-        context$issue,
-        glue::glue(
-          "Unknown command: `{command$raw}`. Try `/jinx help` for usage."
-        )
+      glue::glue(
+        "Unknown command: `{command$raw}`. Try `/jinx help` for usage."
       )
     }
   )
-
-  invisible()
 }
 
 normalize_command <- function(parts) {
