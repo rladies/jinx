@@ -48,7 +48,7 @@ export default {
       text: `🔮 Jinx is on it! Running \`/jinx ${command}\`...`,
     });
 
-    // Fire-and-forget: dispatch to GitHub
+    // Dispatch to GitHub, notify Slack if it fails
     const dispatchPromise = dispatchToGitHub(env, {
       command,
       user_id: userId,
@@ -56,6 +56,18 @@ export default {
       channel_id: channelId,
       channel_name: channelName,
       response_url: responseUrl,
+    }).catch(async (err) => {
+      console.error("Dispatch failed:", err);
+      if (responseUrl) {
+        await fetch(responseUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            response_type: "ephemeral",
+            text: `😿 Oops! Jinx couldn't start that command. The GitHub dispatch failed — please try again in a moment or let a maintainer know.\n\n_Error: ${err.message}_`,
+          }),
+        });
+      }
     });
 
     // Let the dispatch complete after responding to Slack
