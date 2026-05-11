@@ -295,8 +295,8 @@ execute_command <- function(command) {
     },
     report = {
       report <- generate_report(type = command$type)
-      publish_report(report)
-      glue::glue("**{command$type}** report published.")
+      url <- publish_report(report)
+      glue::glue("**{command$type}** report published: {url}")
     },
     announce = {
       glue::glue("Announcing post: {command$url}")
