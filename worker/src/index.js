@@ -26,21 +26,27 @@ export default {
       return Response.json({ challenge: params.get("challenge") });
     }
 
-    const command = params.get("text") || "";
+    const command = (params.get("text") || "").trim();
     const userId = params.get("user_id") || "";
     const userName = params.get("user_name") || "";
     const channelId = params.get("channel_id") || "";
     const channelName = params.get("channel_name") || "";
     const responseUrl = params.get("response_url") || "";
 
-    // Respond immediately to Slack (must be within 3 seconds)
-    const ack = new Response(
-      JSON.stringify({
+    // Handle help directly — no need for the full R pipeline
+    if (!command || command === "help") {
+      const helpText = await fetchHelpText();
+      return Response.json({
         response_type: "ephemeral",
-        text: `🔮 Jinx is on it! Running \`/jinx ${command}\`...`,
-      }),
-      { headers: { "Content-Type": "application/json" } }
-    );
+        text: helpText,
+      });
+    }
+
+    // Respond immediately to Slack (must be within 3 seconds)
+    const ack = Response.json({
+      response_type: "ephemeral",
+      text: `🔮 Jinx is on it! Running \`/jinx ${command}\`...`,
+    });
 
     // Fire-and-forget: dispatch to GitHub
     const dispatchPromise = dispatchToGitHub(env, {
@@ -58,6 +64,23 @@ export default {
     return ack;
   },
 };
+
+const HELP_URL =
+  "https://raw.githubusercontent.com/rladies/jinx/main/inst/commands/help.md";
+
+async function fetchHelpText() {
+  try {
+    const res = await fetch(HELP_URL, {
+      headers: { "User-Agent": "rladies-jinx" },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const md = await res.text();
+    return "🔮 " + md.replace(/\|/g, "│").replace(/---/g, "———");
+  } catch (e) {
+    console.error("Failed to fetch help text:", e);
+    return "🔮 *Jinx* — I couldn't load the help text right now. Try `/jinx help` again in a moment, or check https://github.com/rladies/jinx";
+  }
+}
 
 async function dispatchToGitHub(env, payload) {
   const token = await mintInstallationToken(env);
