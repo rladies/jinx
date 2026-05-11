@@ -36,7 +36,7 @@ gt_finalize_onboarding <- function(
   }
 
   body <- gt_build_onboarding_body(team, username, name)
-  title <- glue::glue("Onboarding {name} to {team_def$name} team")
+  title <- cli::format_inline("Onboarding {name} to {team_def$name} team")
 
   issue <- gh::gh(
     "POST /repos/{owner}/{repo}/issues",
@@ -47,11 +47,41 @@ gt_finalize_onboarding <- function(
     labels = list("onboarding", team)
   )
 
-  assignees <- config$default_assignees
+  notify_teams <- config$default_assignees
   if (!is.null(team_def$notify_teams)) {
-    assignees <- unique(c(assignees, team_def$notify_teams))
+    notify_teams <- unique(c(notify_teams, team_def$notify_teams))
   }
+  notify_issue_teams(org, "global-team", issue$number, notify_teams)
 
   cli::cli_alert_success("Created onboarding issue: {issue$html_url}")
   invisible(issue$html_url)
+}
+
+#' Notify teams by commenting on an issue with @-mentions
+#' @param org GitHub organization.
+#' @param repo Repository name.
+#' @param issue_number Issue number.
+#' @param teams Character vector of team slugs to mention.
+#' @keywords internal
+#' @noRd
+notify_issue_teams <- function(org, repo, issue_number, teams) {
+  if (length(teams) == 0) {
+    return(invisible())
+  }
+
+  mentions <- paste(
+    vapply(teams, function(t) cli::format_inline("@{org}/{t}"), character(1)),
+    collapse = " "
+  )
+
+  gh::gh(
+    "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
+    owner = org,
+    repo = repo,
+    issue_number = issue_number,
+    body = cli::format_inline("cc {mentions}")
+  )
+
+  cli::cli_alert_info("Notified teams: {paste(teams, collapse = ', ')}")
+  invisible()
 }

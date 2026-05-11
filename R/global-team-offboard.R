@@ -20,7 +20,7 @@ gt_create_offboarding <- function(
   }
 
   body <- gt_build_offboarding_body(team, username, name)
-  title <- glue::glue("Offboarding {name} from {team_def$name} team")
+  title <- cli::format_inline("Offboarding {name} from {team_def$name} team")
 
   issue <- gh::gh(
     "POST /repos/{owner}/{repo}/issues",
@@ -30,6 +30,12 @@ gt_create_offboarding <- function(
     body = body,
     labels = list("offboarding", team)
   )
+
+  notify_teams <- config$default_assignees
+  if (!is.null(team_def$notify_teams)) {
+    notify_teams <- unique(c(notify_teams, team_def$notify_teams))
+  }
+  notify_issue_teams(org, "global-team", issue$number, notify_teams)
 
   cli::cli_alert_success("Created offboarding issue: {issue$html_url}")
   invisible(issue$html_url)
