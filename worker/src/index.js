@@ -42,10 +42,10 @@ export default {
       });
     }
 
-    // Respond immediately to Slack (must be within 3 seconds)
+    // Respond immediately to Slack with a random quip
     const ack = Response.json({
       response_type: "ephemeral",
-      text: `🔮 Jinx is on it! Running \`/jinx ${command}\`...`,
+      text: randomAck(command),
     });
 
     // Dispatch to GitHub, notify Slack if it fails
@@ -76,6 +76,29 @@ export default {
     return ack;
   },
 };
+
+const ACKS = [
+  "🔮 On it! Casting `/jinx {cmd}`...",
+  "✨ One moment — conjuring `/jinx {cmd}` for you...",
+  "🐈‍⬛ Jinx stretches, yawns, and gets to work on `/jinx {cmd}`...",
+  "💜 Say no more! Running `/jinx {cmd}`...",
+  "🧹 Sweeping into action with `/jinx {cmd}`...",
+  "📮 Message received! Working on `/jinx {cmd}`...",
+  "🪄 Abracadabra... running `/jinx {cmd}`!",
+  "🐾 Padding over to handle `/jinx {cmd}`...",
+  "⚡ Zap! On it — `/jinx {cmd}` coming right up...",
+  "🌙 Jinx heard you! Running `/jinx {cmd}`...",
+  "🎀 Consider it done (well, almost) — running `/jinx {cmd}`...",
+  "☕ Jinx grabs a coffee and gets to work on `/jinx {cmd}`...",
+  "🔧 Tinkering away on `/jinx {cmd}`...",
+  "💫 Your wish is my command! Running `/jinx {cmd}`...",
+  "🐈‍⬛ *purrs approvingly* — on it with `/jinx {cmd}`...",
+];
+
+function randomAck(command) {
+  const template = ACKS[Math.floor(Math.random() * ACKS.length)];
+  return template.replace(/\{cmd\}/g, command);
+}
 
 const HELP_URL =
   "https://raw.githubusercontent.com/rladies/jinx/main/inst/commands/help.md";
