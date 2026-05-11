@@ -7,3 +7,9 @@
 *.Rcheck/
 docs/
 inst/doc
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
