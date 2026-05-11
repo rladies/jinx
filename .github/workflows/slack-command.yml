@@ -1,0 +1,61 @@
+name: Slack Command
+
+on:
+  repository_dispatch:
+    types: [slack-command]
+
+jobs:
+  handle:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+          owner: rladies
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: local::.
+
+      - name: Handle command
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          SLACK_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
+          COMMAND: ${{ github.event.client_payload.command }}
+          SLACK_USER: ${{ github.event.client_payload.user_name }}
+          SLACK_CHANNEL: ${{ github.event.client_payload.channel_id }}
+          SLACK_RESPONSE_URL: ${{ github.event.client_payload.response_url }}
+        run: |
+          Rscript -e '
+            command_text <- paste("/jinx", Sys.getenv("COMMAND"))
+            cmd <- jinx::parse_command(command_text)
+            ctx <- list(
+              source = "slack",
+              user = Sys.getenv("SLACK_USER"),
+              channel = Sys.getenv("SLACK_CHANNEL"),
+              response_url = Sys.getenv("SLACK_RESPONSE_URL")
+            )
+            result <- tryCatch(
+              jinx::execute_command(cmd, ctx),
+              error = function(e) e$message
+            )
+            # Post result back to Slack
+            msg <- if (is.character(result)) {
+              paste0("❌ Oops! Something went wrong: ", result)
+            } else {
+              "✅ Done!"
+            }
+            jinx::post_slack_message(
+              text = msg,
+              channel = Sys.getenv("SLACK_CHANNEL")
+            )
+          '
