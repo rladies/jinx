@@ -3,8 +3,28 @@ name: R-CMD-check
 on:
   pull_request:
     branches: [main]
+    paths:
+      - 'R/**'
+      - 'src/**'
+      - 'tests/**'
+      - 'man/**'
+      - 'vignettes/**'
+      - 'inst/**'
+      - 'DESCRIPTION'
+      - 'NAMESPACE'
+      - '.Rbuildignore'
   push:
     branches: [main]
+    paths:
+      - 'R/**'
+      - 'src/**'
+      - 'tests/**'
+      - 'man/**'
+      - 'vignettes/**'
+      - 'inst/**'
+      - 'DESCRIPTION'
+      - 'NAMESPACE'
+      - '.Rbuildignore'
 
 jobs:
   R-CMD-check:
