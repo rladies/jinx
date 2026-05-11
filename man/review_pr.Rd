@@ -13,6 +13,10 @@ review_pr(owner, repo, pr_number)
 
 \item{pr_number}{Pull request number.}
 }
+\value{
+Invisibly returns \code{NULL}. Called for its side effects of
+assigning reviewers, labelling the PR, and posting a checklist comment.
+}
 \description{
 Assigns reviewers, labels the PR, and posts a checklist comment.
 }

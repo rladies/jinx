@@ -86,7 +86,7 @@ describe("format_contributors_grid", {
     )
     result <- format_contributors_grid(df, cols = 3)
     lines <- strsplit(result, "\n\n")[[1]]
-    expect_equal(length(lines), 2)
+    expect_length(lines, 2)
   })
 })
 

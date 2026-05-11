@@ -9,7 +9,7 @@ describe("translate_template", {
       language = "en",
       variables = list()
     )
-    expect_true(nchar(result) > 0)
+    expect_gt(nchar(result), 0)
     expect_true(grepl("Slack", result))
   })
 
@@ -30,7 +30,7 @@ describe("list_supported_languages", {
     expect_true(all(
       c("code", "name", "native_name", "direction") %in% names(result)
     ))
-    expect_true(nrow(result) > 0)
+    expect_gt(nrow(result), 0)
     expect_true("en" %in% result$code)
   })
 })

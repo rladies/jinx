@@ -42,7 +42,7 @@ describe("validate_blog_entry", {
     result <- validate_blog_entry(tmp)
     expect_equal(nrow(result), 2)
     expect_true(any(result$valid))
-    expect_true(any(!result$valid))
+    expect_false(all(result$valid))
   })
 
   it("handles invalid JSON gracefully", {

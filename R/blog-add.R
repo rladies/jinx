@@ -86,7 +86,7 @@ detect_rss_feed <- function(html, base_url) {
   if (length(match) >= 2) {
     feed <- match[2]
     if (!grepl("^https?://", feed)) {
-      feed <- paste0(sub("/$", "", base_url), "/", sub("^/", "", feed))
+      feed <- sprintf("%s/%s", sub("/$", "", base_url), sub("^/", "", feed))
     }
     feed
   } else {

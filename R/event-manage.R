@@ -172,7 +172,7 @@ publish_event_summary <- function(
 #' Load events configuration
 #'
 #' @return Named list from `inst/config/events.yml`.
-#' @keywords internal
+#' @noRd
 load_events_config <- function() {
   path <- system.file("config", "events.yml", package = "jinx")
   if (!nzchar(path)) {
@@ -184,7 +184,7 @@ load_events_config <- function() {
 #' Create an empty events data frame
 #'
 #' @return Data frame with 0 rows and standard event columns.
-#' @keywords internal
+#' @noRd
 empty_event_df <- function() {
   data.frame(
     title = character(0),

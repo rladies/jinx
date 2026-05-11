@@ -37,8 +37,8 @@ describe("empty_event_df", {
     result <- empty_event_df()
     expect_s3_class(result, "data.frame")
     expect_equal(nrow(result), 0)
-    expect_equal(
-      names(result),
+    expect_named(
+      result,
       c("title", "date", "url", "rsvp_count", "source", "chapter")
     )
   })

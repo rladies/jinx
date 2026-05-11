@@ -1,9 +1,7 @@
 describe("render_template", {
   it("replaces placeholders", {
     tmp <- withr::local_tempfile(
-      lines = c(
-        "Welcome <NAME> (@<GH_USER>) to <TEAM>!"
-      )
+      lines = "Welcome <NAME> (@<GH_USER>) to <TEAM>!"
     )
     result <- render_template(
       tmp,
@@ -18,9 +16,7 @@ describe("render_template", {
 
   it("handles multiple occurrences of same placeholder", {
     tmp <- withr::local_tempfile(
-      lines = c(
-        "Hi <NAME>, welcome <NAME>!"
-      )
+      lines = "Hi <NAME>, welcome <NAME>!"
     )
     result <- render_template(tmp, list(NAME = "Ada"))
     expect_equal(result, "Hi Ada, welcome Ada!")
@@ -28,9 +24,7 @@ describe("render_template", {
 
   it("leaves unknown placeholders untouched", {
     tmp <- withr::local_tempfile(
-      lines = c(
-        "Hello <NAME>, your role is <ROLE>"
-      )
+      lines = "Hello <NAME>, your role is <ROLE>"
     )
     result <- render_template(tmp, list(NAME = "Ada"))
     expect_equal(result, "Hello Ada, your role is <ROLE>")
@@ -72,7 +66,7 @@ describe("inject_before_second_header", {
 
     section2_idx <- grep("^### Section 2", lines)
     extra_idx <- grep("Extra task", lines)
-    expect_true(extra_idx < section2_idx)
+    expect_lt(extra_idx, section2_idx)
   })
 
   it("appends if fewer than two headers", {
@@ -105,7 +99,7 @@ describe("combine_templates", {
     lines <- strsplit(result, "\n")[[1]]
     extra_idx <- grep("Team-specific task", lines)
     section2_idx <- grep("^### What you need to do", lines)
-    expect_true(extra_idx < section2_idx)
+    expect_lt(extra_idx, section2_idx)
   })
 
   it("concatenates when no extras comment", {

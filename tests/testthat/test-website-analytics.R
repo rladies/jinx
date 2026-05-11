@@ -245,7 +245,7 @@ describe("normalize_command", {
 
   it("passes through unrecognized phrases unchanged", {
     expect_equal(normalize_command(c("invite", "@user", "to", "blog")), c("invite", "@user", "to", "blog"))
-    expect_equal(normalize_command(c("help")), "help")
+    expect_equal(normalize_command("help"), "help")
   })
 
   it("matches longest phrase first", {

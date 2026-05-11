@@ -40,7 +40,7 @@ recommend_speaker <- function(
   }
 
   expertise_str <- if (length(expertise) > 0) {
-    paste(expertise, collapse = ", ")
+    toString(expertise)
   } else {
     "Not specified"
   }

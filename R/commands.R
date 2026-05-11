@@ -269,27 +269,27 @@ execute_command <- function(command) {
     help = read_help_text(),
     invite = {
       config <- load_teams_config()
-      if (!command$team %in% team_slugs(config)) {
-        glue::glue(
-          "Unknown team `{command$team}`. Valid teams: {paste(team_slugs(config), collapse = ', ')}"
-        )
-      } else {
+      if (command$team %in% team_slugs(config)) {
         gt_invite(command$username, command$team)
         glue::glue(
           "Invitation sent to @{command$username} for the **{command$team}** team."
+        )
+      } else {
+        glue::glue(
+          "Unknown team `{command$team}`. Valid teams: {paste(team_slugs(config), collapse = ', ')}"
         )
       }
     },
     offboard = {
       config <- load_teams_config()
-      if (!command$team %in% team_slugs(config)) {
-        glue::glue(
-          "Unknown team `{command$team}`. Valid teams: {paste(team_slugs(config), collapse = ', ')}"
-        )
-      } else {
+      if (command$team %in% team_slugs(config)) {
         gt_create_offboarding(command$username, command$team)
         glue::glue(
           "Offboarding initiated for @{command$username} from the **{command$team}** team."
+        )
+      } else {
+        glue::glue(
+          "Unknown team `{command$team}`. Valid teams: {paste(team_slugs(config), collapse = ', ')}"
         )
       }
     },

@@ -4,7 +4,7 @@ describe("load_teams_config", {
     expect_type(config, "list")
     expect_equal(config$organization, "rladies")
     expect_equal(config$global_team_id, 3388327)
-    expect_true(length(config$teams) >= 15)
+    expect_gte(length(config$teams), 15)
   })
 
   it("contains all expected teams", {

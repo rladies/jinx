@@ -22,7 +22,7 @@ create_chapter_setup <- function(
     list(
       CITY = city,
       COUNTRY = country,
-      ORGANIZERS = paste(organizers, collapse = ", ")
+      ORGANIZERS = toString(organizers)
     )
   )
 

@@ -24,15 +24,16 @@ welcome_contributor <- function(
     return(invisible(NULL))
   }
 
-  is_member <- is_team_member(author, org)
+  if (is_team_member(author, org)) {
+    return(invisible(NULL))
+  }
+
   first_time <- is_first_time_contributor(owner, repo, author, is_pr)
 
-  message <- if (first_time && !is_member) {
+  message <- if (first_time) {
     welcome_first_time_message(author, repo, is_pr)
-  } else if (!is_member) {
-    welcome_returning_message(author, is_pr)
   } else {
-    return(invisible(NULL))
+    welcome_returning_message(author, is_pr)
   }
 
   comment <- gh::gh(

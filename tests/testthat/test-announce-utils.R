@@ -5,15 +5,15 @@ describe("tags2hash", {
 
   it("converts standalone R to rstats", {
     expect_equal(tags2hash(c("R", "Python")), "#rstats #Python")
-    expect_equal(tags2hash(c("r")), "#rstats")
+    expect_equal(tags2hash("r"), "#rstats")
   })
 
   it("removes spaces in tags", {
-    expect_equal(tags2hash(c("Health data")), "#Healthdata")
+    expect_equal(tags2hash("Health data"), "#Healthdata")
   })
 
   it("removes hyphens in tags", {
-    expect_equal(tags2hash(c("open-source")), "#opensource")
+    expect_equal(tags2hash("open-source"), "#opensource")
   })
 
   it("handles single tag", {
@@ -30,7 +30,7 @@ describe("random_emoji", {
 
   it("returns different values (probabilistic)", {
     emojis <- vapply(seq_len(20), function(i) random_emoji(), character(1))
-    expect_true(length(unique(emojis)) > 1)
+    expect_gt(length(unique(emojis)), 1)
   })
 })
 

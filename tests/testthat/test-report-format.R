@@ -102,7 +102,7 @@ describe("format_report_markdown", {
     result <- format_report_markdown(report)
     big_pos <- regexpr("big", result)
     small_pos <- regexpr("small", result)
-    expect_true(big_pos < small_pos)
+    expect_lt(big_pos, small_pos)
   })
 })
 
@@ -147,7 +147,7 @@ describe("format_chapter_report", {
     bravo_pos <- regexpr("Bravo", result)
     charlie_pos <- regexpr("Charlie", result)
     alpha_pos <- regexpr("Alpha", result)
-    expect_true(bravo_pos < charlie_pos)
-    expect_true(charlie_pos < alpha_pos)
+    expect_lt(bravo_pos, charlie_pos)
+    expect_lt(charlie_pos, alpha_pos)
   })
 })

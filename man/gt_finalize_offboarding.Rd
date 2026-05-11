@@ -13,6 +13,10 @@ gt_finalize_offboarding(username, team, org = "rladies")
 
 \item{org}{GitHub organization. Defaults to \code{"rladies"}.}
 }
+\value{
+Invisibly returns \code{NULL}. Called for its side effect of removing
+the user from the specified teams.
+}
 \description{
 Finalize global team offboarding by removing user from teams
 }
