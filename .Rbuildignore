@@ -11,3 +11,5 @@
 ^\.lintr$
 ^\.claude$
 ^\.wrangler$
+^PRIVACY\.md$
+^indexer$
