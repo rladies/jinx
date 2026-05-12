@@ -67,8 +67,9 @@ monitor_chapter_status <- function(
   ]
 
   n_inactive <- sum(chapters$status == "inactive")
+  n_active <- sum(grepl("active", chapters$status, fixed = TRUE))
   cli::cli_alert_info(
-    "Chapter status: {sum(grepl('active', chapters$status))} active, {n_inactive} inactive"
+    "Chapter status: {n_active} active, {n_inactive} inactive"
   )
 
   chapters

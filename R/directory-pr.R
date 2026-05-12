@@ -53,7 +53,8 @@ validate_directory_pr <- function(owner, repo, pr_number) {
       report_lines <- c(
         report_lines,
         glue::glue(
-          "**{fname}** - filename issues: {paste(fn_check$issues, collapse = ', ')}"
+          "**{fname}** - filename issues:",
+          " {paste(fn_check$issues, collapse = ', ')}"
         )
       )
     }

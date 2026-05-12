@@ -72,20 +72,35 @@ format_analytics_slack <- function(dashboard_data, issue_url) {
   growth <- dashboard_data$growth
 
   lines <- character(0)
-  lines <- c(lines, glue::glue(":bar_chart: *Analytics Dashboard - {Sys.Date()}*"))
+  lines <- c(
+    lines,
+    glue::glue(
+      ":bar_chart: *Analytics Dashboard - {Sys.Date()}*"
+    )
+  )
 
   if (nrow(trends) > 0) {
     total <- sum(trends$total_commits)
     latest <- trends$total_commits[nrow(trends)]
     sparkline <- paste(trends$sparkline, collapse = "")
-    lines <- c(lines, "", glue::glue("Commits: *{total}* total ({latest} last month) {sparkline}"))
+    lines <- c(
+      lines,
+      "",
+      glue::glue(
+        "Commits: *{total}* total ({latest} last month) {sparkline}"
+      )
+    )
   }
 
   if (nrow(growth) > 0) {
     latest_g <- growth[nrow(growth), ]
-    lines <- c(lines, glue::glue(
-      "Contributors: *{latest_g$total_contributors}* total ({latest_g$new_contributors} new)"
-    ))
+    lines <- c(
+      lines,
+      glue::glue(
+        "Contributors: *{latest_g$total_contributors}* total",
+        " ({latest_g$new_contributors} new)"
+      )
+    )
   }
 
   lines <- c(lines, "", glue::glue("<{issue_url}|View full report>"))

@@ -73,7 +73,10 @@ describe("airtable_to_directory_entry", {
 describe("extract_airtable_photo", {
   it("extracts URL from photo field", {
     photo <- list(list(url = "https://example.com/photo.jpg"))
-    expect_identical(extract_airtable_photo(photo), "https://example.com/photo.jpg")
+    expect_identical(
+      extract_airtable_photo(photo),
+      "https://example.com/photo.jpg"
+    )
   })
 
   it("returns NULL for empty field", {

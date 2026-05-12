@@ -462,9 +462,13 @@ execute_command <- function(command) {
       if (length(stale) == 0) {
         "No stale issues found - all caught up! \U0001f389"
       } else {
-        links <- vapply(stale, function(s) {
-          glue::glue("- <{s$url}|{s$title}> ({s$days} days)")
-        }, character(1))
+        links <- vapply(
+          stale,
+          function(s) {
+            glue::glue("- <{s$url}|{s$title}> ({s$days} days)")
+          },
+          character(1)
+        )
         paste(
           glue::glue("Reminded {length(stale)} stale issue(s):"),
           paste(links, collapse = "\n"),
@@ -495,7 +499,9 @@ normalize_command <- function(parts) {
     list(c("update", "chapter"), "chapter-update"),
     list(c("add", "blog"), "blog-add"),
     list(c("check", "links"), "blog-check-links"),
-    list(c("remind", "stale"), "remind")
+    list(c("remind", "stale"), "remind"),
+    list(c("invite", "slack"), "slack-invite"),
+    list(c("send", "slack", "invite"), "slack-invite")
   )
 
   lower <- tolower(parts)

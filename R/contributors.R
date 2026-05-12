@@ -458,7 +458,10 @@ welcome_returning_message <- function(author, is_pr) {
 }
 
 format_contributors_table <- function(contributors) {
-  header <- "| Avatar | Contributor | Contributions |\n|--------|-------------|---------------|\n"
+  header <- paste0(
+    "| Avatar | Contributor | Contributions |\n",
+    "|--------|-------------|---------------|\n"
+  )
   rows <- vapply(
     seq_len(nrow(contributors)),
     function(i) {

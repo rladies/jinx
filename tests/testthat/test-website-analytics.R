@@ -22,25 +22,33 @@ describe("format_website_analytics", {
     analytics <- list(
       site_id = "rladies.org",
       period = "30d",
-      aggregate = list(results = list(
-        visitors = list(value = 1250),
-        pageviews = list(value = 3400),
-        bounce_rate = list(value = 42),
-        visit_duration = list(value = 185)
-      )),
-      timeseries = list(results = list(
-        list(date = "2024-01-01", visitors = 40L, pageviews = 100L),
-        list(date = "2024-01-02", visitors = 55L, pageviews = 130L),
-        list(date = "2024-01-03", visitors = 38L, pageviews = 90L)
-      )),
-      top_pages = list(results = list(
-        list(page = "/", visitors = 800L, pageviews = 1200L),
-        list(page = "/about", visitors = 200L, pageviews = 300L)
-      )),
-      top_sources = list(results = list(
-        list(source = "Google", visitors = 500L),
-        list(source = "Twitter", visitors = 300L)
-      ))
+      aggregate = list(
+        results = list(
+          visitors = list(value = 1250),
+          pageviews = list(value = 3400),
+          bounce_rate = list(value = 42),
+          visit_duration = list(value = 185)
+        )
+      ),
+      timeseries = list(
+        results = list(
+          list(date = "2024-01-01", visitors = 40L, pageviews = 100L),
+          list(date = "2024-01-02", visitors = 55L, pageviews = 130L),
+          list(date = "2024-01-03", visitors = 38L, pageviews = 90L)
+        )
+      ),
+      top_pages = list(
+        results = list(
+          list(page = "/", visitors = 800L, pageviews = 1200L),
+          list(page = "/about", visitors = 200L, pageviews = 300L)
+        )
+      ),
+      top_sources = list(
+        results = list(
+          list(source = "Google", visitors = 500L),
+          list(source = "Twitter", visitors = 300L)
+        )
+      )
     )
 
     result <- format_website_analytics(analytics)
@@ -59,12 +67,14 @@ describe("format_website_analytics", {
     analytics <- list(
       site_id = "rladies.org",
       period = "7d",
-      aggregate = list(results = list(
-        visitors = list(value = 0),
-        pageviews = list(value = 0),
-        bounce_rate = list(value = 0),
-        visit_duration = list(value = 0)
-      )),
+      aggregate = list(
+        results = list(
+          visitors = list(value = 0),
+          pageviews = list(value = 0),
+          bounce_rate = list(value = 0),
+          visit_duration = list(value = 0)
+        )
+      ),
       timeseries = list(results = list()),
       top_pages = list(results = list()),
       top_sources = list(results = list())
@@ -80,17 +90,21 @@ describe("format_website_analytics", {
     analytics <- list(
       site_id = "rladies.org",
       period = "7d",
-      aggregate = list(results = list(
-        visitors = list(value = 10),
-        pageviews = list(value = 20),
-        bounce_rate = list(value = 50),
-        visit_duration = list(value = 30)
-      )),
+      aggregate = list(
+        results = list(
+          visitors = list(value = 10),
+          pageviews = list(value = 20),
+          bounce_rate = list(value = 50),
+          visit_duration = list(value = 30)
+        )
+      ),
       timeseries = list(results = list()),
       top_pages = list(results = list()),
-      top_sources = list(results = list(
-        list(source = NULL, visitors = 10L)
-      ))
+      top_sources = list(
+        results = list(
+          list(source = NULL, visitors = 10L)
+        )
+      )
     )
 
     result <- format_website_analytics(analytics)
@@ -139,21 +153,27 @@ describe("format_website_slack", {
       analytics = list(
         site_id = "rladies.org",
         period = "30d",
-        aggregate = list(results = list(
-          visitors = list(value = 1250),
-          pageviews = list(value = 3400),
-          bounce_rate = list(value = 42),
-          visit_duration = list(value = 185)
-        )),
-        timeseries = list(results = list(
-          list(date = "2024-01-01", visitors = 40L, pageviews = 100L),
-          list(date = "2024-01-02", visitors = 55L, pageviews = 130L)
-        )),
-        top_pages = list(results = list(
-          list(page = "/", visitors = 800L, pageviews = 1200L),
-          list(page = "/about", visitors = 200L, pageviews = 300L),
-          list(page = "/events", visitors = 100L, pageviews = 150L)
-        ))
+        aggregate = list(
+          results = list(
+            visitors = list(value = 1250),
+            pageviews = list(value = 3400),
+            bounce_rate = list(value = 42),
+            visit_duration = list(value = 185)
+          )
+        ),
+        timeseries = list(
+          results = list(
+            list(date = "2024-01-01", visitors = 40L, pageviews = 100L),
+            list(date = "2024-01-02", visitors = 55L, pageviews = 130L)
+          )
+        ),
+        top_pages = list(
+          results = list(
+            list(page = "/", visitors = 800L, pageviews = 1200L),
+            list(page = "/about", visitors = 200L, pageviews = 300L),
+            list(page = "/events", visitors = 100L, pageviews = 150L)
+          )
+        )
       ),
       markdown = "full report"
     )
@@ -173,12 +193,14 @@ describe("format_website_slack", {
       analytics = list(
         site_id = "rladies.org",
         period = "7d",
-        aggregate = list(results = list(
-          visitors = list(value = 0),
-          pageviews = list(value = 0),
-          bounce_rate = list(value = 0),
-          visit_duration = list(value = 0)
-        )),
+        aggregate = list(
+          results = list(
+            visitors = list(value = 0),
+            pageviews = list(value = 0),
+            bounce_rate = list(value = 0),
+            visit_duration = list(value = 0)
+          )
+        ),
         timeseries = list(results = list()),
         top_pages = list(results = list())
       ),
@@ -211,7 +233,10 @@ describe("format_analytics_slack", {
       markdown = "full report"
     )
 
-    result <- format_analytics_slack(dashboard_data, "https://github.com/issue/3")
+    result <- format_analytics_slack(
+      dashboard_data,
+      "https://github.com/issue/3"
+    )
     expect_true(grepl("Analytics Dashboard", result, fixed = TRUE))
     expect_true(grepl("38", result, fixed = TRUE))
     expect_true(grepl("23", result, fixed = TRUE))
@@ -237,9 +262,18 @@ describe("slack_analytics_channel", {
 
 describe("normalize_command", {
   it("collapses multi-word phrases to canonical actions", {
-    expect_identical(normalize_command(c("generate", "report", "weekly")), c("report", "weekly"))
-    expect_identical(normalize_command(c("check", "blog", "links")), "blog-check-links")
-    expect_identical(normalize_command(c("validate", "directory")), "validate-directory")
+    expect_identical(
+      normalize_command(c("generate", "report", "weekly")),
+      c("report", "weekly")
+    )
+    expect_identical(
+      normalize_command(c("check", "blog", "links")),
+      "blog-check-links"
+    )
+    expect_identical(
+      normalize_command(c("validate", "directory")),
+      "validate-directory"
+    )
     expect_identical(
       normalize_command(c("setup", "chapter", "oslo", "norway")),
       c("chapter-setup", "oslo", "norway")

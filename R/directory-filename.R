@@ -20,7 +20,7 @@ validate_entry_filename <- function(filename) {
     issues <- c(issues, "Must be lowercase")
   }
 
-  if (grepl("#", name)) {
+  if (grepl("#", name, fixed = TRUE)) {
     issues <- c(issues, "Must not contain hash (#)")
   }
 
