@@ -48,18 +48,18 @@ jobs:
             ))
 
             results <- goodpractice::results(gp_result)
-            failed <- results[!vapply(results, function(r) r$result, logical(1)), ]
+            failed <- results[!results$passed, , drop = FALSE]
 
-            if (length(failed) == 0) {
+            if (nrow(failed) == 0) {
               msg <- "\U0001f389 **Good Practice Check**\n\nAll checks passed!"
             } else {
-              lines <- vapply(failed, function(r) {
-                paste0("- **", r$check, "**: ", r$message)
-              }, character(1))
+              detail <- capture.output(print(gp_result))
               msg <- paste0(
                 "\U0001f50d **Good Practice Check**\n\n",
-                "Found ", length(failed), " suggestion(s):\n\n",
-                paste(lines, collapse = "\n")
+                "Found ", nrow(failed), " suggestion(s):\n\n",
+                "```\n",
+                paste(detail, collapse = "\n"),
+                "\n```"
               )
             }
             writeLines(msg, "gp_report.md")
