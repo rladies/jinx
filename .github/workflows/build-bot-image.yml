@@ -5,10 +5,23 @@ on:
     branches: [main]
     paths:
       - ".github/images/jinx-bot/**"
+      - ".github/workflows/build-bot-image.yml"
       - "DESCRIPTION"
       - "NAMESPACE"
+      - "LICENSE"
       - "R/**"
       - "inst/**"
+      - "man/**"
+  pull_request:
+    paths:
+      - ".github/images/jinx-bot/**"
+      - ".github/workflows/build-bot-image.yml"
+      - "DESCRIPTION"
+      - "NAMESPACE"
+      - "LICENSE"
+      - "R/**"
+      - "inst/**"
+      - "man/**"
   workflow_dispatch: {}
 
 permissions:
@@ -31,8 +44,8 @@ jobs:
 
           mapfile -t files < <(
             {
-              printf '%s\n' DESCRIPTION NAMESPACE .github/images/jinx-bot/Dockerfile
-              for dir in R inst; do
+              printf '%s\n' DESCRIPTION NAMESPACE LICENSE .github/images/jinx-bot/Dockerfile
+              for dir in R inst man; do
                 if [ -d "${dir}" ]; then
                   find "${dir}" -type f
                 fi
@@ -68,6 +81,7 @@ jobs:
 
       - name: Check image tag
         id: check
+        if: github.event_name != 'pull_request'
         run: |
           if docker manifest inspect "${{ steps.meta.outputs.image }}" >/dev/null 2>&1; then
             echo "exists=true" >> "${GITHUB_OUTPUT}"
@@ -75,22 +89,22 @@ jobs:
             echo "exists=false" >> "${GITHUB_OUTPUT}"
           fi
 
-      - name: Build and push image
-        if: steps.check.outputs.exists != 'true'
+      - name: Build image
+        if: github.event_name == 'pull_request' || steps.check.outputs.exists != 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
           file: .github/images/jinx-bot/Dockerfile
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=registry,ref=ghcr.io/rladies/jinx-bot:buildcache
-          cache-to: type=registry,ref=ghcr.io/rladies/jinx-bot:buildcache,mode=max
+          cache-to: ${{ github.event_name != 'pull_request' && 'type=registry,ref=ghcr.io/rladies/jinx-bot:buildcache,mode=max' || '' }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.description=Prebuilt R runtime for the jinx bot workflows
 
       - name: Refresh latest tag
-        if: steps.check.outputs.exists == 'true' && github.ref == 'refs/heads/main'
+        if: github.event_name != 'pull_request' && steps.check.outputs.exists == 'true' && github.ref == 'refs/heads/main'
         run: |
           docker buildx imagetools create \
             --tag "${IMAGE_BASE}:latest" \
