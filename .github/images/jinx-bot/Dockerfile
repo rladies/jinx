@@ -15,7 +15,16 @@ COPY R ./R
 COPY inst ./inst
 COPY man ./man
 
-RUN Rscript -e 'install.packages("pak", repos = "https://r-lib.github.io/p/pak/stable/")'
-RUN Rscript -e 'pak::pak("local::.", ask = FALSE)'
+RUN for attempt in 1 2 3; do \
+      Rscript -e 'install.packages("pak", repos = "https://r-lib.github.io/p/pak/stable/")' && break; \
+      if [ "${attempt}" -eq 3 ]; then exit 1; fi; \
+      sleep 10; \
+    done
+
+RUN for attempt in 1 2 3; do \
+      Rscript -e 'pak::pak("local::.", ask = FALSE, upgrade = FALSE)' && break; \
+      if [ "${attempt}" -eq 3 ]; then exit 1; fi; \
+      sleep 10; \
+    done
 
 WORKDIR /work
