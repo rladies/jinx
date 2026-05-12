@@ -1,10 +1,20 @@
 import { dispatchToGitHub } from "./github-dispatch.js";
+import { isAllowedTeam } from "./slack-api.js";
 
 export async function handleSlashCommand(env, ctx, body) {
   const params = new URLSearchParams(body);
 
   if (params.get("type") === "url_verification") {
     return Response.json({ challenge: params.get("challenge") });
+  }
+
+  const teamId = params.get("team_id") || "";
+  if (!isAllowedTeam(env, teamId)) {
+    console.warn(`Rejected slash command from team ${teamId}`);
+    return Response.json({
+      response_type: "ephemeral",
+      text: workspaceNotSupportedMessage(),
+    });
   }
 
   const command = (params.get("text") || "").trim();
@@ -88,4 +98,12 @@ async function fetchHelpText() {
     console.error("Failed to fetch help text:", e);
     return "🔮 *Jinx* — I couldn't load the help text right now. Try `/jinx help` again in a moment, or check https://github.com/rladies/jinx";
   }
+}
+
+function workspaceNotSupportedMessage() {
+  return (
+    "🐈‍⬛ Jinx only runs in the RLadies+ organisers and community workspaces. " +
+    "If you think you should have access, ping the RLadies+ global team in " +
+    "https://github.com/rladies/jinx."
+  );
 }

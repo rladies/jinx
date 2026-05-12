@@ -1,3 +1,5 @@
+import { isAllowedTeam } from "./slack-api.js";
+
 export async function handleSlackInstall(env, url) {
   const scopes = "chat:write,chat:write.public,commands";
   const redirectUri = `${url.origin}/slack/oauth`;
@@ -56,19 +58,31 @@ export async function handleSlackOAuthCallback(request, env) {
   }
 
   const teamId = data.team?.id;
+  const teamName = data.team?.name || "unknown";
+
+  if (!isAllowedTeam(env, teamId)) {
+    console.warn(
+      `Rejected install attempt from team ${teamName} (${teamId}) — not in allowlist`
+    );
+    return new Response(
+      "🚫 Jinx is only installable in the RLadies+ organisers and community workspaces.",
+      { status: 403, headers: { "Content-Type": "text/plain" } }
+    );
+  }
+
   const tokenData = {
     bot_token: data.access_token,
     team_id: teamId,
-    team_name: data.team?.name || "unknown",
+    team_name: teamName,
     bot_user_id: data.bot_user_id,
     installed_at: new Date().toISOString(),
   };
 
   await env.SLACK_TOKENS.put(`team:${teamId}`, JSON.stringify(tokenData));
-  console.log(`Slack app installed in ${tokenData.team_name} (${teamId})`);
+  console.log(`Slack app installed in ${teamName} (${teamId})`);
 
   return new Response(
-    `🔮 Jinx installed successfully in ${tokenData.team_name}! You can close this tab.`,
+    `🔮 Jinx installed successfully in ${teamName}! You can close this tab.`,
     { status: 200, headers: { "Content-Type": "text/plain" } }
   );
 }

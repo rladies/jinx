@@ -70,26 +70,31 @@ Each KV entry is JSON written by the `/slack/oauth` callback after a successful 
 
 No manual seeding needed — install the app into each workspace via `/slack/install` and the callback writes the entry. To revoke, delete the `team:<id>` key from KV.
 
-While OAuth is being verified, `SLACK_ORGANIZER_TOKEN` is set as a worker secret and acts as a fallback whenever `getSlackToken()` misses on KV. `postSlackMessage()` (used by the RAG bot in `slack-events.js`) reads the same secret directly. Remove the secret once every workspace has installed via OAuth and KV is the source of truth.
+There is **no token fallback**. If `getSlackToken(env, teamId)` doesn't find a KV entry for `team:<teamId>`, it throws. Install via OAuth or it doesn't work.
+
+### Workspace allowlist
+
+Jinx is distribution-enabled in Slack so it can OAuth into RLadies+'s two workspaces (organisers + community), **but it is not a public app**. `handleSlackOAuthCallback` runs `isAllowedTeam(env, teamId)` against `SLACK_ORGANIZER_TEAM_ID` and `SLACK_COMMUNITY_TEAM_ID`. Any other team's install attempt is rejected with HTTP 403 and never reaches KV.
+
+To add a workspace: set its team ID as a worker var, redeploy, run `/slack/install` from that workspace.
 
 ### Worker secrets (via `wrangler secret put`)
 
-| Secret                    | Purpose                                                          |
-| ------------------------- | ---------------------------------------------------------------- |
-| `SLACK_SIGNING_SECRET`    | Verify Slack request authenticity (app-global)                   |
-| `SLACK_CLIENT_ID`         | OAuth client ID (app-global)                                     |
-| `SLACK_CLIENT_SECRET`     | OAuth client secret (app-global)                                 |
-| `SLACK_ORGANIZER_TOKEN`   | Bot token for the organisers workspace; KV fallback during setup |
-| `AIRTABLE_WEBHOOK_SECRET` | Verify Airtable webhook requests                                 |
-| `AIRTABLE_API_KEY`        | Airtable API access                                              |
+| Secret                    | Purpose                                        |
+| ------------------------- | ---------------------------------------------- |
+| `SLACK_SIGNING_SECRET`    | Verify Slack request authenticity (app-global) |
+| `SLACK_CLIENT_ID`         | OAuth client ID (app-global)                   |
+| `SLACK_CLIENT_SECRET`     | OAuth client secret (app-global)               |
+| `AIRTABLE_WEBHOOK_SECRET` | Verify Airtable webhook requests               |
+| `AIRTABLE_API_KEY`        | Airtable API access                            |
 
 ### Worker vars (in `wrangler.jsonc`)
 
-| Var                       | Purpose                                                    |
-| ------------------------- | ---------------------------------------------------------- |
-| `GITHUB_REPO`             | Target repo for GitHub dispatches                          |
-| `SLACK_COMMUNITY_TEAM_ID` | Community workspace team ID (for Airtable webhook routing) |
-| `SLACK_ORGANIZER_TEAM_ID` | Organizer workspace team ID                                |
+| Var                       | Purpose                                                                 |
+| ------------------------- | ----------------------------------------------------------------------- |
+| `GITHUB_REPO`             | Target repo for GitHub dispatches                                       |
+| `SLACK_COMMUNITY_TEAM_ID` | Community workspace team ID — required for allowlist + Airtable webhook |
+| `SLACK_ORGANIZER_TEAM_ID` | Organiser workspace team ID — required for allowlist + RAG bot          |
 
 ## Code style
 

@@ -1,4 +1,4 @@
-import { getSlackToken } from "./slack-api.js";
+import { getSlackToken, isAllowedTeam } from "./slack-api.js";
 
 export async function handleAirtableWebhook(request, env) {
   const secret = env.AIRTABLE_WEBHOOK_SECRET;
@@ -65,12 +65,32 @@ export async function handleSlackInteraction(env, ctx, body) {
     return new Response("OK", { status: 200 });
   }
 
+  const teamId = interaction.team?.id;
+  const responseUrl = interaction.response_url;
+  if (!isAllowedTeam(env, teamId)) {
+    console.warn(`Rejected interaction from team ${teamId}`);
+    if (responseUrl) {
+      ctx.waitUntil(
+        fetch(responseUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            response_type: "ephemeral",
+            text:
+              "🐈‍⬛ Jinx only runs in the RLadies+ organisers and community " +
+              "workspaces.",
+          }),
+        }).catch((e) => console.error("Refusal post failed:", e))
+      );
+    }
+    return new Response("", { status: 200 });
+  }
+
   const action = interaction.actions?.[0];
   if (!action) return new Response("OK", { status: 200 });
 
   const actionData = JSON.parse(action.value);
   const adminUser = interaction.user?.username || "unknown";
-  const responseUrl = interaction.response_url;
 
   if (action.action_id === "invite_approve") {
     ctx.waitUntil(processApproval(env, actionData, adminUser, responseUrl));

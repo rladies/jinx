@@ -3,6 +3,17 @@ name: pkgdown
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - "R/**"
+      - "man/**"
+      - "vignettes/**"
+      - "DESCRIPTION"
+      - "README.md"
+      - "PRIVACY.md"
+      - "_pkgdown.yml"
+      - ".github/workflows/pkgdown.yml"
   release:
     types: [published]
   workflow_dispatch:

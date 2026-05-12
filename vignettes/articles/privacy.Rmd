@@ -1,0 +1,17 @@
+---
+title: "Privacy policy"
+---
+
+```{r}
+#| include: false
+knitr::opts_chunk$set(echo = FALSE, results = "asis")
+```
+
+```{r}
+privacy_path <- file.path(rprojroot::find_root("DESCRIPTION"), "PRIVACY.md")
+lines <- readLines(privacy_path, warn = FALSE)
+if (length(lines) > 0 && grepl("^#\\s", lines[1])) {
+  lines <- lines[-1]
+}
+cat(lines, sep = "\n")
+```
