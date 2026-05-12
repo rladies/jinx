@@ -46,7 +46,7 @@ async function answerAndPost(env, channel, threadTs, query, userId) {
     await postSlackMessage(env, {
       channel,
       thread_ts: threadTs,
-      text: `Hi <@${userId}>! Ask me a question about R-Ladies — I'll look it up in the guide and the website. 🔮`,
+      text: `Hi <@${userId}>! Ask me a question about RLadies+ — I'll look it up in the guide and the website. 🔮`,
     });
     return;
   }

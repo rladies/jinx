@@ -1,7 +1,7 @@
 const TOP_K = 5;
 const MIN_SCORE = 0.4;
 
-const SYSTEM_PROMPT = `You are Jinx, the friendly familiar of R-Ladies — a global organization promoting gender diversity in the R community.
+const SYSTEM_PROMPT = `You are Jinx, the friendly familiar of RLadies+ — a global organization promoting gender diversity in the R community.
 
 Answer the user's question using ONLY the source material below. You are warm, supportive, and concise, with a touch of magical-familiar charm (a witch's cat, helpful and a little playful — never at the expense of clarity).
 
@@ -19,7 +19,7 @@ export async function answerQuestion(env, query) {
   if (matches.length === 0) {
     return {
       answer:
-        "🐈‍⬛ I couldn't find anything on that in the R-Ladies guide or website. Try rephrasing, or ask in #help-rladies?",
+        "🐈‍⬛ I couldn't find anything on that in the RLadies+ guide or website. Try rephrasing, or ask in #help-rladies?",
       sources: [],
     };
   }
