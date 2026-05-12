@@ -160,6 +160,20 @@ management.
   [`publish_analytics_dashboard()`](https://rladies.github.io/jinx/reference/publish_analytics_dashboard.md)
   for monthly org-wide analytics.
 
+### Website analytics
+
+- [`collect_website_analytics()`](https://rladies.github.io/jinx/reference/collect_website_analytics.md)
+  fetches visitor, pageview, and engagement metrics from Plausible
+  Analytics API.
+- [`format_website_analytics()`](https://rladies.github.io/jinx/reference/format_website_analytics.md)
+  renders analytics as markdown with traffic trends, top pages, and
+  referral sources.
+- [`generate_website_report()`](https://rladies.github.io/jinx/reference/generate_website_report.md),
+  [`publish_website_report()`](https://rladies.github.io/jinx/reference/publish_website_report.md)
+  for periodic website performance reports.
+- `/jinx website-analytics [period]` command with configurable time
+  periods.
+
 ### Conference coordination
 
 - [`list_open_cfps()`](https://rladies.github.io/jinx/reference/list_open_cfps.md),

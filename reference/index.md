@@ -153,10 +153,12 @@ Chapter activity monitoring and outreach
 - [`prepare_inactivity_emails()`](https://rladies.github.io/jinx/reference/prepare_inactivity_emails.md)
   : Send inactivity warning emails
 
-## Slack management
+## Slack
 
-Community Slack automation
+Slack messaging and automation
 
+- [`post_slack_message()`](https://rladies.github.io/jinx/reference/post_slack_message.md)
+  : Post a message to a Slack channel
 - [`send_slack_invites()`](https://rladies.github.io/jinx/reference/send_slack_invites.md)
   : Send pending Slack invitations
 - [`subscribe_slack_rss()`](https://rladies.github.io/jinx/reference/subscribe_slack_rss.md)
@@ -217,6 +219,19 @@ Org-wide activity analytics
   : Generate analytics dashboard
 - [`publish_analytics_dashboard()`](https://rladies.github.io/jinx/reference/publish_analytics_dashboard.md)
   : Publish analytics dashboard as a GitHub issue
+
+## Website analytics
+
+Plausible website performance reports
+
+- [`collect_website_analytics()`](https://rladies.github.io/jinx/reference/collect_website_analytics.md)
+  : Collect website analytics from Plausible
+- [`format_website_analytics()`](https://rladies.github.io/jinx/reference/format_website_analytics.md)
+  : Format website analytics as markdown
+- [`generate_website_report()`](https://rladies.github.io/jinx/reference/generate_website_report.md)
+  : Generate a website analytics report
+- [`publish_website_report()`](https://rladies.github.io/jinx/reference/publish_website_report.md)
+  : Publish website analytics as a GitHub issue
 
 ## Conference coordination
 

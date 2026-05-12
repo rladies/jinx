@@ -1,6 +1,6 @@
 # jinx
 
-R-Ladies GitHub organization management bot. An R package deployed via
+RLadies+ GitHub organization management bot. An R package deployed via
 GitHub Actions with a registered GitHub App identity (`jinx[bot]`).
 
 ## Features
@@ -41,7 +41,7 @@ meetup-pro, mentoring, rocur, translation, website
     - Repository: Issues (R/W), Pull Requests (R/W), Contents (Read)
     - Organization: Members (R/W), Administration (Read)
 4.  Events: `issue_comment`, `issues`, `pull_request`
-5.  Install on the R-Ladies org
+5.  Install on the RLadies+ org
 
 ### 2. Configure secrets
 
@@ -52,7 +52,7 @@ In the jinx repo (or org-wide):
 
 ### 3. Cross-repo PR review
 
-Add this workflow to any R-Ladies repo that wants PR review automation:
+Add this workflow to any RLadies+ repo that wants PR review automation:
 
 ``` yaml
 # .github/workflows/jinx-review.yml
@@ -88,9 +88,16 @@ automatically via the `GITHUB_TOKEN` environment variable. When using a
 GitHub App token (via `actions/create-github-app-token`), API calls and
 comments appear as `jinx[bot]`.
 
+Bot-facing workflows use the prebuilt `ghcr.io/rladies/jinx-bot:latest`
+image so they can start with R and the current package version already
+installed. The image is refreshed automatically by
+`.github/workflows/build-bot-image.yml` when the runtime package files
+change, and it can also be rebuilt manually with the workflow dispatch
+trigger.
+
     Issue comment (/jinx invite ...)
       → issue_comment workflow triggers
-        → installs jinx R package
+        → starts jinx bot image
           → calls jinx::parse_command() + jinx::execute_command()
             → gh::gh() API calls as jinx[bot]
               → reply comment posted

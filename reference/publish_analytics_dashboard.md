@@ -8,7 +8,8 @@ Publish analytics dashboard as a GitHub issue
 publish_analytics_dashboard(
   dashboard_data,
   org = "rladies",
-  target_repo = "global-team"
+  target_repo = "global-team",
+  slack_channel = NULL
 )
 ```
 
@@ -26,6 +27,10 @@ publish_analytics_dashboard(
 - target_repo:
 
   Repository to publish to.
+
+- slack_channel:
+
+  Optional Slack channel to post a summary to.
 
 ## Value
 

@@ -6,19 +6,39 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>R-Ladies GitHub Organization Management • jinx</title>
-<script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<script src="lightswitch.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/Poppins-0.4.10/font.css" rel="stylesheet">
+<link href="deps/Inconsolata-0.4.10/font.css" rel="stylesheet">
+<link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="R-Ladies GitHub Organization Management">
 <meta name="description" content="GitHub App for managing the R-Ladies organization. Handles onboarding and offboarding of global team members, chapter onboarding, PR review automation, org-wide reporting, Airtable sync, website automation, chapter monitoring, and interactive issue commands.">
 <meta property="og:description" content="GitHub App for managing the R-Ladies organization. Handles onboarding and offboarding of global team members, chapter onboarding, PR review automation, org-wide reporting, Airtable sync, website automation, chapter monitoring, and interactive issue commands.">
+<link rel="icon" href="favicon-purple.svg" type="image/svg+xml">
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  var brand = document.querySelector(".navbar-brand");
+  if (brand) {
+    var light = document.createElement("img");
+    light.src = "rladies-submark.svg";
+    light.alt = "R-Ladies";
+    light.className = "rladies-logo rladies-logo-light";
+    var dark = document.createElement("img");
+    dark.src = "rladies-submark-white.svg";
+    dark.alt = "R-Ladies";
+    dark.className = "rladies-logo rladies-logo-dark";
+    brand.prepend(dark);
+    brand.prepend(light);
+  }
+});
+</script>
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
+    <nav class="navbar navbar-expand-lg fixed-top " aria-label="Site navigation"><div class="container">
 
     <a class="navbar-brand me-2" href="index.html">jinx</a>
 
@@ -55,7 +75,7 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="jinx">jinx<a class="anchor" aria-label="anchor" href="#jinx"></a>
 </h1></div>
-<p>R-Ladies GitHub organization management bot. An R package deployed via GitHub Actions with a registered GitHub App identity (<code>jinx[bot]</code>).</p>
+<p>RLadies+ GitHub organization management bot. An R package deployed via GitHub Actions with a registered GitHub App identity (<code>jinx[bot]</code>).</p>
 <div class="section level2">
 <h2 id="features">Features<a class="anchor" aria-label="anchor" href="#features"></a>
 </h2>
@@ -131,7 +151,7 @@
 </li>
 <li>Events: <code>issue_comment</code>, <code>issues</code>, <code>pull_request</code>
 </li>
-<li>Install on the R-Ladies org</li>
+<li>Install on the RLadies+ org</li>
 </ol>
 </div>
 <div class="section level3">
@@ -148,7 +168,7 @@
 <div class="section level3">
 <h3 id="id_3-cross-repo-pr-review">3. Cross-repo PR review<a class="anchor" aria-label="anchor" href="#id_3-cross-repo-pr-review"></a>
 </h3>
-<p>Add this workflow to any R-Ladies repo that wants PR review automation:</p>
+<p>Add this workflow to any RLadies+ repo that wants PR review automation:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># .github/workflows/jinx-review.yml</span></span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> PR Review</span></span>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
@@ -177,9 +197,10 @@
 <h2 id="architecture">Architecture<a class="anchor" aria-label="anchor" href="#architecture"></a>
 </h2>
 <p>jinx is a standard R package. GitHub Actions workflows call exported R functions. The <code>gh</code> package handles GitHub API authentication automatically via the <code>GITHUB_TOKEN</code> environment variable. When using a GitHub App token (via <code>actions/create-github-app-token</code>), API calls and comments appear as <code>jinx[bot]</code>.</p>
+<p>Bot-facing workflows use the prebuilt <code>ghcr.io/rladies/jinx-bot:latest</code> image so they can start with R and the current package version already installed. The image is refreshed automatically by <code>.github/workflows/build-bot-image.yml</code> when the runtime package files change, and it can also be rebuilt manually with the workflow dispatch trigger.</p>
 <pre><code>Issue comment (/jinx invite ...)
   → issue_comment workflow triggers
-    → installs jinx R package
+    → starts jinx bot image
       → calls jinx::parse_command() + jinx::execute_command()
         → gh::gh() API calls as jinx[bot]
           → reply comment posted</code></pre>

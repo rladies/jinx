@@ -1,11 +1,13 @@
 # Execute a parsed jinx command
 
-Execute a parsed jinx command
+Returns the response message as a character string. The caller is
+responsible for routing the message to the right destination (GitHub
+issue comment, Slack, R console, etc.).
 
 ## Usage
 
 ``` r
-execute_command(command, context)
+execute_command(command)
 ```
 
 ## Arguments
@@ -15,7 +17,6 @@ execute_command(command, context)
   Parsed command list from
   [`parse_command()`](https://rladies.github.io/jinx/reference/parse_command.md).
 
-- context:
+## Value
 
-  Named list with `repo` (e.g. "rladies/jinx") and `issue` (integer
-  issue number).
+Character string with the response message.
