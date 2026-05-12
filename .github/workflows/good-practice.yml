@@ -37,20 +37,7 @@ jobs:
 
       - name: Run goodpractice
         id: gp
-        run: |
-          Rscript -e '
-            gp_result <- goodpractice::gp(".", checks = c(
-              "cyclocomp",
-              "no_description_depends",
-              "no_import_package_as_a_whole",
-              "lintr_assignment_linter",
-              "lintr_line_length_linter"
-            ))
-            writeLines(
-              jinx:::format_goodpractice_report(gp_result),
-              "gp_report.md"
-            )
-          '
+        run: Rscript .github/scripts/gp-report.R
 
       - name: Post report
         if: always()
