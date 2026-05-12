@@ -5,6 +5,9 @@ on:
     - cron: "10 9 * * 1"
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 jobs:
   remind:
     runs-on: ubuntu-latest

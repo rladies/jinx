@@ -13,6 +13,9 @@ on:
           - directory
           - global-team
 
+permissions:
+  contents: read
+
 jobs:
   sync:
     runs-on: ubuntu-latest

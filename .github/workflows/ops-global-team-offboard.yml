@@ -30,6 +30,9 @@ on:
         description: GitHub username (without @)
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   offboard:
     runs-on: ubuntu-latest

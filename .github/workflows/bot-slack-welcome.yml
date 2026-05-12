@@ -18,6 +18,9 @@ on:
   repository_dispatch:
     types: [slack-team-join]
 
+permissions:
+  contents: read
+
 jobs:
   welcome:
     runs-on: ubuntu-latest

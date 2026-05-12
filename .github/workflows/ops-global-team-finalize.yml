@@ -13,6 +13,9 @@ on:
         description: Team slug
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   finalize:
     runs-on: ubuntu-latest

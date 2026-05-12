@@ -5,6 +5,9 @@ on:
     - cron: "13 10 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   dashboard:
     runs-on: ubuntu-latest

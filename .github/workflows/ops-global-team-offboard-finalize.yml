@@ -4,6 +4,9 @@ on:
   issues:
     types: [closed]
 
+permissions:
+  contents: read
+
 jobs:
   finalize:
     if: contains(github.event.issue.labels.*.name, 'offboarding')

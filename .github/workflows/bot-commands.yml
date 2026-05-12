@@ -6,6 +6,9 @@ on:
   repository_dispatch:
     types: [slack-command]
 
+permissions:
+  contents: read
+
 jobs:
   handle:
     if: >-

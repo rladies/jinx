@@ -12,6 +12,9 @@ on:
       - ".github/scripts/gp-report.R"
       - ".github/workflows/ci-good-practice.yml"
 
+permissions:
+  contents: read
+
 jobs:
   gp:
     name: goodpractice check

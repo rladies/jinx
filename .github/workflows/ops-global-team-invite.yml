@@ -34,6 +34,9 @@ concurrency:
   group: global-team-${{ inputs.username }}-${{ inputs.team }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   invite:
     runs-on: ubuntu-latest

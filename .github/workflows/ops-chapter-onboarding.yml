@@ -17,6 +17,9 @@ on:
         description: Chapter country
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   onboard:
     runs-on: ubuntu-latest
