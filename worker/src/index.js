@@ -4,8 +4,14 @@ import {
   handleAirtableWebhook,
   handleSlackInteraction,
 } from "./airtable-invite.js";
+import { handleSlashCommand } from "./slash-command.js";
 import { verifySlackSignature } from "./slack-api.js";
-import { dispatchToGitHub } from "./github-dispatch.js";
+
+const SLACK_ROUTES = {
+  "/slack/command": handleSlashCommand,
+  "/slack/events": handleSlackEvent,
+  "/slack/interact": handleSlackInteraction,
+};
 
 export default {
   async fetch(request, env, ctx) {
@@ -28,118 +34,27 @@ export default {
       return handleAirtableWebhook(request, env);
     }
 
+    const slackHandler = SLACK_ROUTES[url.pathname];
+    if (!slackHandler) {
+      return new Response("Not found", { status: 404 });
+    }
+
     const body = await request.text();
     const timestamp = request.headers.get("x-slack-request-timestamp");
     const signature = request.headers.get("x-slack-signature");
 
     if (
-      !(await verifySlackSignature(env.SLACK_SIGNING_SECRET, timestamp, body, signature))
+      !(await verifySlackSignature(
+        env.SLACK_SIGNING_SECRET,
+        timestamp,
+        body,
+        signature
+      ))
     ) {
       console.log("Signature verification failed");
       return new Response("Invalid signature", { status: 401 });
     }
 
-    if (url.pathname === "/slack/interact") {
-      return handleSlackInteraction(request, env, ctx, body);
-    }
-
-    const contentType = request.headers.get("content-type") || "";
-    if (contentType.includes("application/json")) {
-      return handleSlackEvent(env, ctx, body);
-    }
-
-    const params = new URLSearchParams(body);
-
-    if (params.get("type") === "url_verification") {
-      return Response.json({ challenge: params.get("challenge") });
-    }
-
-    const command = (params.get("text") || "").trim();
-    const userId = params.get("user_id") || "";
-    const userName = params.get("user_name") || "";
-    const channelId = params.get("channel_id") || "";
-    const channelName = params.get("channel_name") || "";
-    const responseUrl = params.get("response_url") || "";
-
-    if (!command || command === "help") {
-      const helpText = await fetchHelpText();
-      return Response.json({
-        response_type: "ephemeral",
-        text: helpText,
-      });
-    }
-
-    const ack = Response.json({
-      response_type: "ephemeral",
-      text: randomAck(command),
-    });
-
-    const dispatchPromise = dispatchToGitHub(env, {
-      command,
-      user_id: userId,
-      user_name: userName,
-      channel_id: channelId,
-      channel_name: channelName,
-      response_url: responseUrl,
-    }).catch(async (err) => {
-      console.error("Dispatch failed:", err);
-      if (responseUrl) {
-        await fetch(responseUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            response_type: "ephemeral",
-            text: `😿 Oops! Jinx couldn't start that command. The GitHub dispatch failed — please try again in a moment or let a maintainer know.\n\n_Error: ${err.message}_`,
-          }),
-        });
-      }
-    });
-
-    ctx.waitUntil(dispatchPromise);
-
-    return ack;
+    return slackHandler(env, ctx, body);
   },
 };
-
-const ACKS = [
-  "🔮 On it! Casting `/jinx {cmd}`...",
-  "✨ One moment — conjuring `/jinx {cmd}` for you...",
-  "🐈‍⬛ Jinx stretches, yawns, and gets to work on `/jinx {cmd}`...",
-  "💜 Say no more! Running `/jinx {cmd}`...",
-  "🧹 Sweeping into action with `/jinx {cmd}`...",
-  "📮 Message received! Working on `/jinx {cmd}`...",
-  "🪄 Abracadabra... running `/jinx {cmd}`!",
-  "🐾 Padding over to handle `/jinx {cmd}`...",
-  "⚡ Zap! On it — `/jinx {cmd}` coming right up...",
-  "🌙 Jinx heard you! Running `/jinx {cmd}`...",
-  "🎀 Consider it done (well, almost) — running `/jinx {cmd}`...",
-  "☕ Jinx grabs a coffee and gets to work on `/jinx {cmd}`...",
-  "🔧 Tinkering away on `/jinx {cmd}`...",
-  "💫 Your wish is my command! Running `/jinx {cmd}`...",
-  "🐈‍⬛ *purrs approvingly* — on it with `/jinx {cmd}`...",
-];
-
-const WAIT_NOTE =
-  "\n_This may take a couple of minutes — Jinx will reply here when done._";
-
-function randomAck(command) {
-  const template = ACKS[Math.floor(Math.random() * ACKS.length)];
-  return template.replace(/\{cmd\}/g, command) + WAIT_NOTE;
-}
-
-const HELP_URL =
-  "https://raw.githubusercontent.com/rladies/jinx/main/inst/commands/help.md";
-
-async function fetchHelpText() {
-  try {
-    const res = await fetch(HELP_URL, {
-      headers: { "User-Agent": "rladies-jinx" },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const md = await res.text();
-    return "🔮 " + md.replace(/\|/g, "│").replace(/---/g, "———");
-  } catch (e) {
-    console.error("Failed to fetch help text:", e);
-    return "🔮 *Jinx* — I couldn't load the help text right now. Try `/jinx help` again in a moment, or check https://github.com/rladies/jinx";
-  }
-}

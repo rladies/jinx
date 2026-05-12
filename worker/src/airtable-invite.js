@@ -1,5 +1,4 @@
 import { getSlackToken } from "./slack-api.js";
-import { dispatchToGitHub } from "./github-dispatch.js";
 
 export async function handleAirtableWebhook(request, env) {
   const secret = env.AIRTABLE_WEBHOOK_SECRET;
@@ -26,40 +25,7 @@ export async function handleAirtableWebhook(request, env) {
     return new Response("Missing email", { status: 400 });
   }
 
-  const blocks = [
-    {
-      type: "header",
-      text: { type: "plain_text", text: "💜 New Slack invite request", emoji: true },
-    },
-    {
-      type: "section",
-      fields: [
-        { type: "mrkdwn", text: `*Name:*\n${name || "_not provided_"}` },
-        { type: "mrkdwn", text: `*Email:*\n${email}` },
-        { type: "mrkdwn", text: `*Chapter:*\n${chapter || "_not provided_"}` },
-        { type: "mrkdwn", text: `*Airtable ID:*\n\`${recordId || "n/a"}\`` },
-      ],
-    },
-    {
-      type: "actions",
-      elements: [
-        {
-          type: "button",
-          text: { type: "plain_text", text: "✓ Approve", emoji: true },
-          style: "primary",
-          action_id: "invite_approve",
-          value: JSON.stringify({ email, name, record_id: recordId }),
-        },
-        {
-          type: "button",
-          text: { type: "plain_text", text: "✗ Deny", emoji: true },
-          style: "danger",
-          action_id: "invite_deny",
-          value: JSON.stringify({ email, name, record_id: recordId }),
-        },
-      ],
-    },
-  ];
+  const blocks = inviteRequestBlocks({ email, name, chapter, recordId });
 
   const token = await getSlackToken(env, env.SLACK_COMMUNITY_TEAM_ID);
 
@@ -85,7 +51,7 @@ export async function handleAirtableWebhook(request, env) {
   return new Response("OK", { status: 200 });
 }
 
-export async function handleSlackInteraction(request, env, ctx, body) {
+export async function handleSlackInteraction(env, ctx, body) {
   const params = new URLSearchParams(body);
 
   let interaction;
@@ -117,14 +83,6 @@ export async function handleSlackInteraction(request, env, ctx, body) {
 
 async function processApproval(env, data, adminUser, responseUrl) {
   try {
-    await dispatchToGitHub(env, {
-      command: `slack-invite ${data.email}`,
-      user_name: adminUser,
-      channel_id: env.SLACK_INVITE_CHANNEL,
-      channel_name: "invite-requests",
-      response_url: responseUrl,
-    });
-
     if (data.record_id && env.AIRTABLE_API_KEY) {
       await updateAirtableRecord(env, data.record_id, { invited: true });
     }
@@ -134,7 +92,8 @@ async function processApproval(env, data, adminUser, responseUrl) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         replace_original: true,
-        text: `✅ *Approved* by @${adminUser} — invite dispatched to ${data.email}`,
+        blocks: approvalChecklistBlocks(data.email, adminUser),
+        text: `Approved by @${adminUser} - invite ${data.email} manually`,
       }),
     });
   } catch (err) {
@@ -185,4 +144,78 @@ async function updateAirtableRecord(env, recordId, fields) {
     const text = await res.text();
     throw new Error(`Airtable update failed (${res.status}): ${text}`);
   }
+}
+
+function inviteRequestBlocks({ email, name, chapter, recordId }) {
+  return [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "💜 New Slack invite request",
+        emoji: true,
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Name:*\n${name || "_not provided_"}` },
+        { type: "mrkdwn", text: `*Email:*\n${email}` },
+        { type: "mrkdwn", text: `*Chapter:*\n${chapter || "_not provided_"}` },
+        { type: "mrkdwn", text: `*Airtable ID:*\n\`${recordId || "n/a"}\`` },
+      ],
+    },
+    {
+      type: "actions",
+      elements: [
+        {
+          type: "button",
+          text: { type: "plain_text", text: "✓ Approve", emoji: true },
+          style: "primary",
+          action_id: "invite_approve",
+          value: JSON.stringify({ email, name, record_id: recordId }),
+        },
+        {
+          type: "button",
+          text: { type: "plain_text", text: "✗ Deny", emoji: true },
+          style: "danger",
+          action_id: "invite_deny",
+          value: JSON.stringify({ email, name, record_id: recordId }),
+        },
+      ],
+    },
+  ];
+}
+
+function approvalChecklistBlocks(email, adminUser) {
+  return [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "✅ Approved — invite this person",
+        emoji: true,
+      },
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `Approved by *@${adminUser}*. Now send the invite manually:\n\n  1. Open the workspace menu (top-left).\n  2. Choose *Invite people to RLadies+*.\n  3. Paste this email and send:`,
+      },
+    },
+    {
+      type: "section",
+      text: { type: "mrkdwn", text: `\`${email}\`` },
+    },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: "React :white_check_mark: on this message once the invite is sent so we know it is done.",
+        },
+      ],
+    },
+  ];
 }

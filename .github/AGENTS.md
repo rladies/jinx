@@ -32,18 +32,33 @@ The Slack bridge runs as a Cloudflare Worker at `https://jinx.rladies.workers.de
 ### Endpoint conventions
 
 ```
-/                   POST   Slack slash commands + Events API (routed by content-type)
+/slack/command      POST   Slash commands from Slack
+/slack/events       POST   Events API (app_mention, etc.)
 /slack/interact     POST   Block Kit button clicks from Slack
 /slack/install      GET    Start OAuth install flow
 /slack/oauth        GET    OAuth callback
 /airtable/webhook   POST   Form submissions from Airtable
 ```
 
-The root URL accepts both slash commands (form-encoded) and Events API callbacks (JSON); it disambiguates by `Content-Type`. New service-specific endpoints follow `/<service>/<action>` — never flat paths like `/slack-interact` or `/airtable-webhook`.
+Routes follow `/<service>/<action>` — never flat paths like `/slack-interact` or `/airtable-webhook`. Slack-side endpoints all run through `verifySlackSignature()` in the router; `/airtable/webhook` uses its own `x-airtable-secret` header.
 
 ### Token management
 
 Slack workspace tokens are managed via OAuth, stored in Cloudflare KV (`SLACK_TOKENS` namespace) keyed by `team:<team_id>`. Use `getSlackToken(env, teamId)` to look up tokens — never hardcode workspace-specific tokens.
+
+Each KV entry is JSON written by the `/slack/oauth` callback after a successful install:
+
+```json
+{
+  "bot_token": "xoxb-...",
+  "team_id": "T012345",
+  "team_name": "RLadies+ Community",
+  "bot_user_id": "U012345",
+  "installed_at": "2026-05-12T12:34:56.789Z"
+}
+```
+
+No manual seeding needed — install the app into each workspace via `/slack/install` and the callback writes the entry. To revoke, delete the `team:<id>` key from KV.
 
 ### Worker secrets (via `wrangler secret put`)
 
