@@ -4,11 +4,11 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'R/**'
-      - 'tests/**'
-      - 'man/**'
-      - 'DESCRIPTION'
-      - 'NAMESPACE'
+      - "R/**"
+      - "tests/**"
+      - "man/**"
+      - "DESCRIPTION"
+      - "NAMESPACE"
 
 jobs:
   gp:
@@ -44,10 +44,7 @@ jobs:
               "no_description_depends",
               "no_import_package_as_a_whole",
               "lintr_assignment_linter",
-              "lintr_line_length_linter",
-              "lintr_trailing_blank_lines_linter",
-              "lintr_trailing_whitespace_linter",
-              "lintr_T_and_F_symbol_linter"
+              "lintr_line_length_linter"
             ))
 
             results <- goodpractice::results(gp_result)
