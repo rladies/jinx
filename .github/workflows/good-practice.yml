@@ -46,29 +46,10 @@ jobs:
               "lintr_assignment_linter",
               "lintr_line_length_linter"
             ))
-
-            statuses <- vapply(
-              gp_result$checks,
-              function(c) {
-                if (is.list(c)) isTRUE(c$status) else isTRUE(c)
-              },
-              logical(1)
+            writeLines(
+              jinx:::format_goodpractice_report(gp_result),
+              "gp_report.md"
             )
-            n_failed <- sum(!statuses)
-
-            if (n_failed == 0) {
-              msg <- "\U0001f389 **Good Practice Check**\n\nAll checks passed!"
-            } else {
-              detail <- capture.output(print(gp_result))
-              msg <- paste0(
-                "\U0001f50d **Good Practice Check**\n\n",
-                "Found ", n_failed, " suggestion(s):\n\n",
-                "```\n",
-                paste(detail, collapse = "\n"),
-                "\n```"
-              )
-            }
-            writeLines(msg, "gp_report.md")
           '
 
       - name: Post report

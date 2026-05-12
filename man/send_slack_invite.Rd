@@ -2,32 +2,38 @@
 % Please edit documentation in R/slack-manage.R
 \name{send_slack_invite}
 \alias{send_slack_invite}
-\title{Send a single Slack invitation}
+\title{Request a Slack invitation for someone not yet on the workspace}
 \usage{
 send_slack_invite(
   email,
-  invite_link = Sys.getenv("SLACK_INVITE_LINK"),
-  base_id = "appJZFYABfCIdPYMR",
+  channel = Sys.getenv("SLACK_INVITE_REQUEST_CHANNEL"),
+  base_id = slack_invitees_base_id(),
   api_key = Sys.getenv("AIRTABLE_API_KEY"),
   token = Sys.getenv("SLACK_TOKEN")
 )
 }
 \arguments{
-\item{email}{Email address to invite.}
+\item{email}{Email address to request an invite for.}
 
-\item{invite_link}{Active Slack invite URL. Defaults to
-\code{SLACK_INVITE_LINK} env var.}
+\item{channel}{Slack channel where the request is posted. Defaults
+to \code{SLACK_INVITE_REQUEST_CHANNEL} env var, falling back to
+\code{"global-team"}.}
 
 \item{base_id}{Airtable base ID for Slack invitees.}
 
-\item{api_key}{Airtable API key.}
+\item{api_key}{Airtable API key. If unset, the Airtable audit step
+is skipped.}
 
-\item{token}{Slack API token for posting confirmation.}
+\item{token}{Slack bot token (\code{chat:write} scope is enough).}
 }
 \value{
-Response message (character string).
+A single status string suitable for posting back as a PR
+comment.
 }
 \description{
-Sends a personalised Slack invite email to one person using the
-active invite link stored in \code{SLACK_INVITE_LINK}.
+The bot cannot invite users directly (Slack admin scopes are not
+available to community apps). Instead, this function posts a
+message to an organisers' Slack channel with the email address and
+instructions for a workspace admin to action the invite manually,
+then flips the matching Airtable record's \code{invited} flag for audit.
 }

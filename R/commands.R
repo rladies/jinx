@@ -81,7 +81,7 @@ parse_offboard_command <- function(parts) {
 }
 
 parse_slack_invite_command <- function(parts) {
-  if (length(parts) < 2) {
+  if (length(parts) != 2 || !nzchar(parts[2])) {
     return(list(
       action = "error",
       message = "Usage: `/jinx slack-invite <email>`"
@@ -399,15 +399,9 @@ execute_command <- function(command) {
       if (nrow(cfps) == 0) {
         "No open CFPs found."
       } else {
-        lines <- vapply(
-          seq_len(nrow(cfps)),
-          function(i) {
-            glue::glue(
-              "- **{cfps$conference[i]}**",
-              " (deadline: {cfps$deadline[i]}) - {cfps$url[i]}"
-            )
-          },
-          character(1)
+        lines <- glue::glue_data(
+          cfps,
+          "- **{conference}** (deadline: {deadline}) - {url}"
         )
         paste("## Open CFPs\n", paste(lines, collapse = "\n"))
       }
@@ -425,16 +419,12 @@ execute_command <- function(command) {
     },
     "translate-status" = {
       coverage <- check_translation_coverage()
-      lines <- vapply(
-        seq_len(nrow(coverage)),
-        function(i) {
-          glue::glue(paste0(
-            "- **{coverage$language[i]}**: ",
-            "{coverage$translated[i]}/{coverage$total_templates[i]} ",
-            "({coverage$coverage_pct[i]}%)"
-          ))
-        },
-        character(1)
+      lines <- glue::glue_data(
+        coverage,
+        paste0(
+          "- **{language}**: {translated}/{total_templates}",
+          " ({coverage_pct}%)"
+        )
       )
       paste("## Translation Coverage\n", paste(lines, collapse = "\n"))
     },
@@ -444,15 +434,9 @@ execute_command <- function(command) {
       if (nrow(issues) == 0) {
         "All translations are valid."
       } else {
-        lines <- vapply(
-          seq_len(nrow(issues)),
-          function(i) {
-            glue::glue(
-              "- {issues$template[i]}",
-              " ({issues$language[i]}): {issues$status[i]}"
-            )
-          },
-          character(1)
+        lines <- glue::glue_data(
+          issues,
+          "- {template} ({language}): {status}"
         )
         paste("## Translation Issues\n", paste(lines, collapse = "\n"))
       }
@@ -500,7 +484,7 @@ normalize_command <- function(parts) {
     list(c("add", "blog"), "blog-add"),
     list(c("check", "links"), "blog-check-links"),
     list(c("remind", "stale"), "remind"),
-    list(c("invite", "slack"), "slack-invite"),
+    list(c("slack", "invite"), "slack-invite"),
     list(c("send", "slack", "invite"), "slack-invite")
   )
 
