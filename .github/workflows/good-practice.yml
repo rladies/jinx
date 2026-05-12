@@ -9,6 +9,8 @@ on:
       - "man/**"
       - "DESCRIPTION"
       - "NAMESPACE"
+      - ".github/scripts/gp-report.R"
+      - ".github/workflows/good-practice.yml"
 
 jobs:
   gp:
