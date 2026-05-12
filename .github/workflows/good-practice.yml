@@ -49,7 +49,9 @@ jobs:
 
             statuses <- vapply(
               gp_result$checks,
-              function(c) isTRUE(c$status),
+              function(c) {
+                if (is.list(c)) isTRUE(c$status) else isTRUE(c)
+              },
               logical(1)
             )
             n_failed <- sum(!statuses)
