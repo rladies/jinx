@@ -1,0 +1,20 @@
+.jinx-sprite {
+  display: inline-block;
+  padding: 1rem;
+  filter: drop-shadow(0 0 24px rgba(204, 153, 204, 0.55));
+}
+
+.jinx-sprite img {
+  display: block;
+}
+
+[data-bs-theme="dark"] .jinx-sprite,
+.theme-dark .jinx-sprite {
+  filter: drop-shadow(0 0 28px rgba(204, 153, 204, 0.85));
+}
+
+@media (prefers-color-scheme: dark) {
+  .jinx-sprite {
+    filter: drop-shadow(0 0 28px rgba(204, 153, 204, 0.75));
+  }
+}

@@ -27,3 +27,8 @@ announce_post(
 - newsletter:
 
   Logical, whether to also send a newsletter. Defaults to `TRUE`.
+
+## Value
+
+Invisibly returns a named list with the posting result for each
+platform.

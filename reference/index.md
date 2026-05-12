@@ -159,10 +159,18 @@ Slack messaging and automation
 
 - [`post_slack_message()`](https://rladies.github.io/jinx/reference/post_slack_message.md)
   : Post a message to a Slack channel
+- [`send_slack_invite()`](https://rladies.github.io/jinx/reference/send_slack_invite.md)
+  : Request a Slack invitation for someone not yet on the workspace
 - [`send_slack_invites()`](https://rladies.github.io/jinx/reference/send_slack_invites.md)
   : Send pending Slack invitations
 - [`subscribe_slack_rss()`](https://rladies.github.io/jinx/reference/subscribe_slack_rss.md)
   : Subscribe an RSS feed to a Slack channel
+- [`welcome_slack_member()`](https://rladies.github.io/jinx/reference/welcome_slack_member.md)
+  : Welcome a new member to an RLadies+ Slack workspace
+- [`common_welcome_channels()`](https://rladies.github.io/jinx/reference/common_welcome_channels.md)
+  : Channels common to both RLadies+ Slack workspaces
+- [`default_welcome_channels()`](https://rladies.github.io/jinx/reference/default_welcome_channels.md)
+  : Default starter channels for the RLadies+ Slack welcome
 
 ## GHA dashboard
 

@@ -1,58 +1,69 @@
-# jinx
+# jinx ![Jinx the cat, sitting at a laptop, working](reference/figures/sprites/working.svg)
 
-RLadies+ GitHub organization management bot. An R package deployed via
-GitHub Actions with a registered GitHub App identity (`jinx[bot]`).
+RLadies+ operations bot — an R package deployed via GitHub Actions with
+a registered GitHub App identity (`jinx[bot]`), plus a Cloudflare Worker
+that bridges Slack to that machinery.
 
-## Features
+Use Jinx to onboard organisers, generate org-wide reports, validate
+directory PRs, schedule social posts, sync events, run translation
+checks, and — via the Slack app — to invite new community members and
+ask questions of the [RLadies+ Guide](https://guide.rladies.org/).
 
-- **Onboarding/Offboarding** - Automate adding/removing global team
-  members across org repos
-- **PR Review Automation** - Auto-assign reviewers, label PRs, enforce
-  conventions
-- **Report Generation** - Org-wide activity and health reports
-- **Issue Commands** - Interactive `/jinx` commands in issue comments
+## Slack app
 
-## Commands
+[![Add to
+Slack](https://platform.slack-edge.com/img/add_to_slack.png)](https://jinx.rladies.workers.dev/slack/install)
 
-Use these in any issue comment in a repo where jinx is installed:
+Jinx is only installable in the RLadies+ organisers and community
+workspaces. The full landing page — slash commands, `@Jinx` mentions,
+Airtable invite approval flow, scopes, troubleshooting — lives at [**the
+Slack app
+vignette**](https://rladies.github.io/jinx/articles/slack-app.html).
 
-| Command                            | Description                          |
-|------------------------------------|--------------------------------------|
-| `/jinx invite @user to <team>`     | Invite a user to the org and a team  |
-| `/jinx offboard @user from <team>` | Start offboarding a user from a team |
-| `/jinx report weekly\|monthly`     | Generate an activity report          |
-| `/jinx remind stale`               | Send reminders on stale issues       |
-| `/jinx help`                       | Show help message                    |
+See [PRIVACY.md](https://rladies.github.io/jinx/PRIVACY.md) for the
+data-handling policy.
 
-## Teams
+## What Jinx does
 
-abstract-review, blog, campaigns, chapter-activity, chapter-onboarding,
-coc, communications, community-slack, conference-liaison, directory,
-meetup-pro, mentoring, rocur, translation, website
+| Area | Highlights |
+|----|----|
+| Team management | [`gt_invite()`](https://rladies.github.io/jinx/reference/gt_invite.md), [`gt_create_offboarding()`](https://rladies.github.io/jinx/reference/gt_create_offboarding.md), [`gt_finalize_offboarding()`](https://rladies.github.io/jinx/reference/gt_finalize_offboarding.md), [`gt_remind_stale()`](https://rladies.github.io/jinx/reference/gt_remind_stale.md) |
+| Chapters | [`create_chapter()`](https://rladies.github.io/jinx/reference/create_chapter.md), [`create_chapter_setup()`](https://rladies.github.io/jinx/reference/create_chapter_setup.md), [`monitor_chapter_status()`](https://rladies.github.io/jinx/reference/monitor_chapter_status.md), [`report_chapter_health()`](https://rladies.github.io/jinx/reference/report_chapter_health.md) |
+| Directory | [`validate_directory_pr()`](https://rladies.github.io/jinx/reference/validate_directory_pr.md), [`validate_entry_filename()`](https://rladies.github.io/jinx/reference/validate_entry_filename.md), [`verify_social_handles()`](https://rladies.github.io/jinx/reference/verify_social_handles.md), [`optimize_image()`](https://rladies.github.io/jinx/reference/optimize_image.md) |
+| Blog | [`create_blog_entry()`](https://rladies.github.io/jinx/reference/create_blog_entry.md), [`check_blog_links()`](https://rladies.github.io/jinx/reference/check_blog_links.md), [`auto_merge_pending()`](https://rladies.github.io/jinx/reference/auto_merge_pending.md) |
+| Announcements | [`announce_post()`](https://rladies.github.io/jinx/reference/announce_post.md) cross-posts to Bluesky, LinkedIn, Mastodon + newsletter |
+| Reports | [`generate_report()`](https://rladies.github.io/jinx/reference/generate_report.md), [`format_analytics_markdown()`](https://rladies.github.io/jinx/reference/format_analytics_markdown.md), [`collect_website_analytics()`](https://rladies.github.io/jinx/reference/collect_website_analytics.md) |
+| Events | [`list_chapter_events()`](https://rladies.github.io/jinx/reference/list_chapter_events.md), [`sync_chapter_events()`](https://rladies.github.io/jinx/reference/sync_chapter_events.md), [`create_event_summary()`](https://rladies.github.io/jinx/reference/create_event_summary.md) |
+| Conferences | `add_cfp()`, [`check_cfp_deadlines()`](https://rladies.github.io/jinx/reference/check_cfp_deadlines.md), [`recommend_speaker()`](https://rladies.github.io/jinx/reference/recommend_speaker.md) |
+| Contributors | [`welcome_contributor()`](https://rladies.github.io/jinx/reference/welcome_contributor.md), [`list_org_contributors()`](https://rladies.github.io/jinx/reference/list_org_contributors.md), `update_contributors_md()` |
+| i18n | [`validate_translations()`](https://rladies.github.io/jinx/reference/validate_translations.md), [`check_translation_coverage()`](https://rladies.github.io/jinx/reference/check_translation_coverage.md) |
+| Slack | [`send_slack_invite()`](https://rladies.github.io/jinx/reference/send_slack_invite.md), [`post_slack_message()`](https://rladies.github.io/jinx/reference/post_slack_message.md), [`welcome_slack_member()`](https://rladies.github.io/jinx/reference/welcome_slack_member.md) |
+
+`/jinx help` in Slack or any issue comment prints the full slash-command
+reference. The same list lives in
+[`inst/commands/help.md`](https://rladies.github.io/jinx/inst/commands/help.md).
 
 ## Setup
 
-### 1. Register the GitHub App
+### GitHub App (the `jinx[bot]` identity)
 
-1.  Go to
-    [github.com/organizations/rladies/settings/apps/new](https://github.com/organizations/rladies/settings/apps/new)
-2.  Name: `jinx`
-3.  Permissions:
+1.  Register the app at
+    [`rladies/settings/apps/new`](https://github.com/organizations/rladies/settings/apps/new)
+    with the name `jinx`.
+2.  Permissions:
     - Repository: Issues (R/W), Pull Requests (R/W), Contents (Read)
     - Organization: Members (R/W), Administration (Read)
-4.  Events: `issue_comment`, `issues`, `pull_request`
-5.  Install on the RLadies+ org
+3.  Events: `issue_comment`, `issues`, `pull_request`.
+4.  Install on the RLadies+ org.
+5.  Repo variables/secrets: set `JINX_APP_ID` (variable) and
+    `JINX_PRIVATE_KEY` (secret).
 
-### 2. Configure secrets
+Detailed conventions, secrets, and workflow-by-workflow notes are in
+[`.github/AGENTS.md`](https://rladies.github.io/jinx/AGENTS.md).
 
-In the jinx repo (or org-wide):
+### Cross-repo PR review
 
-- **Variable** `JINX_APP_ID` - The GitHub App’s ID
-- **Secret** `JINX_PRIVATE_KEY` - The GitHub App’s private key
-
-### 3. Cross-repo PR review
-
-Add this workflow to any RLadies+ repo that wants PR review automation:
+Other RLadies+ repos opt into Jinx’s PR review by adding:
 
 ``` yaml
 # .github/workflows/jinx-review.yml
@@ -66,38 +77,72 @@ jobs:
     secrets: inherit
 ```
 
+### Cloudflare Worker (Slack bridge)
+
+The worker at `https://jinx.rladies.workers.dev` handles the OAuth
+install flow, slash commands, `@`-mention events, and the Airtable
+invite approval pipeline. Worker source is in
+[`worker/src/`](https://rladies.github.io/jinx/worker/src/); deploy via
+`.github/workflows/deploy-worker.yml`. Required worker secrets and KV
+bindings are documented in
+[`.github/AGENTS.md`](https://rladies.github.io/jinx/AGENTS.html#cloudflare-worker).
+
 ## Development
 
 ``` r
 
-# Install dependencies
-install.packages(c("gh", "yaml", "cli", "glue", "testthat", "httptest2", "withr"))
+# Install dev dependencies
+install.packages(c("devtools", "testthat", "httptest2", "withr"))
 
-# Run tests
+# Load + test the package
+devtools::load_all()
 devtools::test()
 
-# Check package
+# Full R CMD check
 devtools::check()
 ```
 
+Worker:
+
+``` sh
+# Validate the bundle without deploying
+npx --yes wrangler@4 deploy --dry-run --outdir /tmp/worker-dist
+```
+
+Vignettes:
+
+- [Getting
+  started](https://rladies.github.io/jinx/articles/getting-started.html)
+- [Workflows](https://rladies.github.io/jinx/articles/workflows.html)
+- [Slack app](https://rladies.github.io/jinx/articles/slack-app.html)
+
 ## Architecture
 
-jinx is a standard R package. GitHub Actions workflows call exported R
-functions. The `gh` package handles GitHub API authentication
-automatically via the `GITHUB_TOKEN` environment variable. When using a
-GitHub App token (via `actions/create-github-app-token`), API calls and
-comments appear as `jinx[bot]`.
+Jinx is a regular R package. GitHub Actions workflows call exported
+functions; the `gh` package authenticates via the App-minted
+`GITHUB_TOKEN` and posts back as `jinx[bot]`.
 
 Bot-facing workflows use the prebuilt `ghcr.io/rladies/jinx-bot:latest`
-image so they can start with R and the current package version already
-installed. The image is refreshed automatically by
-`.github/workflows/build-bot-image.yml` when the runtime package files
-change, and it can also be rebuilt manually with the workflow dispatch
-trigger.
+image so they boot with the current package already installed. The image
+is rebuilt by `.github/workflows/build-bot-image.yml` when the runtime
+files change.
 
-    Issue comment (/jinx invite ...)
-      → issue_comment workflow triggers
-        → starts jinx bot image
-          → calls jinx::parse_command() + jinx::execute_command()
-            → gh::gh() API calls as jinx[bot]
-              → reply comment posted
+    Slack / issue comment / cron
+            │
+            ▼
+    GitHub Actions workflow
+            │  (jinx[bot] App-token authed)
+            ▼
+    jinx::parse_command() ─► jinx::execute_command()
+            │
+            ▼
+    gh::gh() API call as jinx[bot]
+            │
+            ▼
+    reply posted (Slack response_url / issue comment)
+
+For the Slack path, the Cloudflare Worker sits in front of GitHub
+Actions, OAuthing into each workspace, verifying Slack request
+signatures, and dispatching slash commands via `repository_dispatch`.
+Full diagram + endpoint reference in
+[`.github/AGENTS.md`](https://rladies.github.io/jinx/AGENTS.html#cloudflare-worker).

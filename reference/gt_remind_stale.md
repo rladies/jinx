@@ -22,3 +22,8 @@ gt_remind_stale(org = "rladies", days = 30, repo = "global-team")
 - repo:
 
   Repository to check. Defaults to `"global-team"`.
+
+## Value
+
+Invisibly returns `NULL`. Called for its side effect of posting reminder
+comments on stale issues.

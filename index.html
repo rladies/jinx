@@ -5,16 +5,17 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>R-Ladies GitHub Organization Management • jinx</title>
+<title>RLadies+ GitHub Organisation Management • jinx</title>
 <script src="lightswitch.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/Poppins-0.4.10/font.css" rel="stylesheet">
 <link href="deps/Inconsolata-0.4.10/font.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="R-Ladies GitHub Organization Management">
-<meta name="description" content="GitHub App for managing the R-Ladies organization. Handles onboarding and offboarding of global team members, chapter onboarding, PR review automation, org-wide reporting, Airtable sync, website automation, chapter monitoring, and interactive issue commands.">
-<meta property="og:description" content="GitHub App for managing the R-Ladies organization. Handles onboarding and offboarding of global team members, chapter onboarding, PR review automation, org-wide reporting, Airtable sync, website automation, chapter monitoring, and interactive issue commands.">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><link href="extra.css" rel="stylesheet">
+<meta property="og:title" content="RLadies+ GitHub Organisation Management">
+<meta name="description" content="GitHub App for managing the RLadies+ organisation. Handles onboarding and offboarding of global team members, chapter onboarding, PR review automation, org-wide reporting, Airtable sync, website automation, chapter monitoring, and interactive issue commands.">
+<meta property="og:description" content="GitHub App for managing the RLadies+ organisation. Handles onboarding and offboarding of global team members, chapter onboarding, PR review automation, org-wide reporting, Airtable sync, website automation, chapter monitoring, and interactive issue commands.">
 <link rel="icon" href="favicon-purple.svg" type="image/svg+xml">
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -56,6 +57,8 @@ document.addEventListener("DOMContentLoaded", function() {
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="articles/getting-started.html">Getting Started with jinx</a></li>
+    <li><a class="dropdown-item" href="articles/privacy.html">Privacy policy</a></li>
+    <li><a class="dropdown-item" href="articles/slack-app.html">The Jinx Slack app</a></li>
     <li><a class="dropdown-item" href="articles/workflows.html">Workflow Reference for R-Ladies Org Admins</a></li>
   </ul>
 </li>
@@ -73,102 +76,127 @@ document.addEventListener("DOMContentLoaded", function() {
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="jinx">jinx<a class="anchor" aria-label="anchor" href="#jinx"></a>
+<div class="page-header"><h1 id="jinx-">jinx <span class="jinx-sprite"><img src="reference/figures/sprites/working.svg" align="right" height="160" alt="Jinx the cat, sitting at a laptop, working"></span>
+<a class="anchor" aria-label="anchor" href="#jinx-"></a>
 </h1></div>
-<p>RLadies+ GitHub organization management bot. An R package deployed via GitHub Actions with a registered GitHub App identity (<code>jinx[bot]</code>).</p>
+<p>RLadies+ operations bot — an R package deployed via GitHub Actions with a registered GitHub App identity (<code>jinx[bot]</code>), plus a Cloudflare Worker that bridges Slack to that machinery.</p>
+<p>Use Jinx to onboard organisers, generate org-wide reports, validate directory PRs, schedule social posts, sync events, run translation checks, and — via the Slack app — to invite new community members and ask questions of the <a href="https://guide.rladies.org/" class="external-link">RLadies+ Guide</a>.</p>
 <div class="section level2">
-<h2 id="features">Features<a class="anchor" aria-label="anchor" href="#features"></a>
+<h2 id="slack-app">Slack app<a class="anchor" aria-label="anchor" href="#slack-app"></a>
 </h2>
-<ul>
-<li>
-<strong>Onboarding/Offboarding</strong> - Automate adding/removing global team members across org repos</li>
-<li>
-<strong>PR Review Automation</strong> - Auto-assign reviewers, label PRs, enforce conventions</li>
-<li>
-<strong>Report Generation</strong> - Org-wide activity and health reports</li>
-<li>
-<strong>Issue Commands</strong> - Interactive <code>/jinx</code> commands in issue comments</li>
-</ul>
+<p>
+<a href="https://jinx.rladies.workers.dev/slack/install" class="external-link"> <img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x,
+                 https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"></a>
+</p>
+<p>Jinx is only installable in the RLadies+ organisers and community workspaces. The full landing page — slash commands, <code>@Jinx</code> mentions, Airtable invite approval flow, scopes, troubleshooting — lives at <a href="https://rladies.github.io/jinx/articles/slack-app.html"><strong>the Slack app vignette</strong></a>.</p>
+<p>See <a href="PRIVACY.html">PRIVACY.md</a> for the data-handling policy.</p>
 </div>
 <div class="section level2">
-<h2 id="commands">Commands<a class="anchor" aria-label="anchor" href="#commands"></a>
+<h2 id="what-jinx-does">What Jinx does<a class="anchor" aria-label="anchor" href="#what-jinx-does"></a>
 </h2>
-<p>Use these in any issue comment in a repo where jinx is installed:</p>
 <table class="table">
 <colgroup>
-<col width="50%">
-<col width="50%">
+<col width="12%">
+<col width="87%">
 </colgroup>
 <thead><tr>
-<th>Command</th>
-<th>Description</th>
+<th>Area</th>
+<th>Highlights</th>
 </tr></thead>
 <tbody>
 <tr>
-<td><code>/jinx invite @user to &lt;team&gt;</code></td>
-<td>Invite a user to the org and a team</td>
+<td>Team management</td>
+<td>
+<code><a href="reference/gt_invite.html">gt_invite()</a></code>, <code><a href="reference/gt_create_offboarding.html">gt_create_offboarding()</a></code>, <code><a href="reference/gt_finalize_offboarding.html">gt_finalize_offboarding()</a></code>, <code><a href="reference/gt_remind_stale.html">gt_remind_stale()</a></code>
+</td>
 </tr>
 <tr>
-<td><code>/jinx offboard @user from &lt;team&gt;</code></td>
-<td>Start offboarding a user from a team</td>
+<td>Chapters</td>
+<td>
+<code><a href="reference/create_chapter.html">create_chapter()</a></code>, <code><a href="reference/create_chapter_setup.html">create_chapter_setup()</a></code>, <code><a href="reference/monitor_chapter_status.html">monitor_chapter_status()</a></code>, <code><a href="reference/report_chapter_health.html">report_chapter_health()</a></code>
+</td>
 </tr>
 <tr>
-<td><code>/jinx report weekly\|monthly</code></td>
-<td>Generate an activity report</td>
+<td>Directory</td>
+<td>
+<code><a href="reference/validate_directory_pr.html">validate_directory_pr()</a></code>, <code><a href="reference/validate_entry_filename.html">validate_entry_filename()</a></code>, <code><a href="reference/verify_social_handles.html">verify_social_handles()</a></code>, <code><a href="reference/optimize_image.html">optimize_image()</a></code>
+</td>
 </tr>
 <tr>
-<td><code>/jinx remind stale</code></td>
-<td>Send reminders on stale issues</td>
+<td>Blog</td>
+<td>
+<code><a href="reference/create_blog_entry.html">create_blog_entry()</a></code>, <code><a href="reference/check_blog_links.html">check_blog_links()</a></code>, <code><a href="reference/auto_merge_pending.html">auto_merge_pending()</a></code>
+</td>
 </tr>
 <tr>
-<td><code>/jinx help</code></td>
-<td>Show help message</td>
+<td>Announcements</td>
+<td>
+<code><a href="reference/announce_post.html">announce_post()</a></code> cross-posts to Bluesky, LinkedIn, Mastodon + newsletter</td>
+</tr>
+<tr>
+<td>Reports</td>
+<td>
+<code><a href="reference/generate_report.html">generate_report()</a></code>, <code><a href="reference/format_analytics_markdown.html">format_analytics_markdown()</a></code>, <code><a href="reference/collect_website_analytics.html">collect_website_analytics()</a></code>
+</td>
+</tr>
+<tr>
+<td>Events</td>
+<td>
+<code><a href="reference/list_chapter_events.html">list_chapter_events()</a></code>, <code><a href="reference/sync_chapter_events.html">sync_chapter_events()</a></code>, <code><a href="reference/create_event_summary.html">create_event_summary()</a></code>
+</td>
+</tr>
+<tr>
+<td>Conferences</td>
+<td>
+<code>add_cfp()</code>, <code><a href="reference/check_cfp_deadlines.html">check_cfp_deadlines()</a></code>, <code><a href="reference/recommend_speaker.html">recommend_speaker()</a></code>
+</td>
+</tr>
+<tr>
+<td>Contributors</td>
+<td>
+<code><a href="reference/welcome_contributor.html">welcome_contributor()</a></code>, <code><a href="reference/list_org_contributors.html">list_org_contributors()</a></code>, <code>update_contributors_md()</code>
+</td>
+</tr>
+<tr>
+<td>i18n</td>
+<td>
+<code><a href="reference/validate_translations.html">validate_translations()</a></code>, <code><a href="reference/check_translation_coverage.html">check_translation_coverage()</a></code>
+</td>
+</tr>
+<tr>
+<td>Slack</td>
+<td>
+<code><a href="reference/send_slack_invite.html">send_slack_invite()</a></code>, <code><a href="reference/post_slack_message.html">post_slack_message()</a></code>, <code><a href="reference/welcome_slack_member.html">welcome_slack_member()</a></code>
+</td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section level2">
-<h2 id="teams">Teams<a class="anchor" aria-label="anchor" href="#teams"></a>
-</h2>
-<p>abstract-review, blog, campaigns, chapter-activity, chapter-onboarding, coc, communications, community-slack, conference-liaison, directory, meetup-pro, mentoring, rocur, translation, website</p>
+<p><code>/jinx help</code> in Slack or any issue comment prints the full slash-command reference. The same list lives in <a href="inst/commands/help.html"><code>inst/commands/help.md</code></a>.</p>
 </div>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h2>
 <div class="section level3">
-<h3 id="id_1-register-the-github-app">1. Register the GitHub App<a class="anchor" aria-label="anchor" href="#id_1-register-the-github-app"></a>
+<h3 id="github-app-the-jinxbot-identity">GitHub App (the <code>jinx[bot]</code> identity)<a class="anchor" aria-label="anchor" href="#github-app-the-jinxbot-identity"></a>
 </h3>
 <ol style="list-style-type: decimal">
-<li>Go to <a href="https://github.com/organizations/rladies/settings/apps/new" class="external-link">github.com/organizations/rladies/settings/apps/new</a>
-</li>
-<li>Name: <code>jinx</code>
-</li>
+<li>Register the app at <a href="https://github.com/organizations/rladies/settings/apps/new" class="external-link"><code>rladies/settings/apps/new</code></a> with the name <code>jinx</code>.</li>
 <li>Permissions:
 <ul>
 <li>Repository: Issues (R/W), Pull Requests (R/W), Contents (Read)</li>
 <li>Organization: Members (R/W), Administration (Read)</li>
 </ul>
 </li>
-<li>Events: <code>issue_comment</code>, <code>issues</code>, <code>pull_request</code>
-</li>
-<li>Install on the RLadies+ org</li>
+<li>Events: <code>issue_comment</code>, <code>issues</code>, <code>pull_request</code>.</li>
+<li>Install on the RLadies+ org.</li>
+<li>Repo variables/secrets: set <code>JINX_APP_ID</code> (variable) and <code>JINX_PRIVATE_KEY</code> (secret).</li>
 </ol>
+<p>Detailed conventions, secrets, and workflow-by-workflow notes are in <a href="AGENTS.html"><code>.github/AGENTS.md</code></a>.</p>
 </div>
 <div class="section level3">
-<h3 id="id_2-configure-secrets">2. Configure secrets<a class="anchor" aria-label="anchor" href="#id_2-configure-secrets"></a>
+<h3 id="cross-repo-pr-review">Cross-repo PR review<a class="anchor" aria-label="anchor" href="#cross-repo-pr-review"></a>
 </h3>
-<p>In the jinx repo (or org-wide):</p>
-<ul>
-<li>
-<strong>Variable</strong> <code>JINX_APP_ID</code> - The GitHub App’s ID</li>
-<li>
-<strong>Secret</strong> <code>JINX_PRIVATE_KEY</code> - The GitHub App’s private key</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="id_3-cross-repo-pr-review">3. Cross-repo PR review<a class="anchor" aria-label="anchor" href="#id_3-cross-repo-pr-review"></a>
-</h3>
-<p>Add this workflow to any RLadies+ repo that wants PR review automation:</p>
+<p>Other RLadies+ repos opt into Jinx’s PR review by adding:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># .github/workflows/jinx-review.yml</span></span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> PR Review</span></span>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
@@ -179,31 +207,54 @@ document.addEventListener("DOMContentLoaded", function() {
 <span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="at">    </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> rladies/jinx/.github/workflows/pr-review.yml@main</span></span>
 <span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="at">    </span><span class="fu">secrets</span><span class="kw">:</span><span class="at"> inherit</span></span></code></pre></div>
 </div>
+<div class="section level3">
+<h3 id="cloudflare-worker-slack-bridge">Cloudflare Worker (Slack bridge)<a class="anchor" aria-label="anchor" href="#cloudflare-worker-slack-bridge"></a>
+</h3>
+<p>The worker at <code>https://jinx.rladies.workers.dev</code> handles the OAuth install flow, slash commands, <code>@</code>-mention events, and the Airtable invite approval pipeline. Worker source is in <a href="worker/src/"><code>worker/src/</code></a>; deploy via <code>.github/workflows/deploy-worker.yml</code>. Required worker secrets and KV bindings are documented in <a href="AGENTS.html#cloudflare-worker"><code>.github/AGENTS.md</code></a>.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="development">Development<a class="anchor" aria-label="anchor" href="#development"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install dependencies</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"gh"</span>, <span class="st">"yaml"</span>, <span class="st">"cli"</span>, <span class="st">"glue"</span>, <span class="st">"testthat"</span>, <span class="st">"httptest2"</span>, <span class="st">"withr"</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Install dev dependencies</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"devtools"</span>, <span class="st">"testthat"</span>, <span class="st">"httptest2"</span>, <span class="st">"withr"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Run tests</span></span>
+<span><span class="co"># Load + test the package</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">load_all</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">test</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Check package</span></span>
+<span><span class="co"># Full R CMD check</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">check</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>Worker:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Validate the bundle without deploying</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="ex">npx</span> <span class="at">--yes</span> wrangler@4 deploy <span class="at">--dry-run</span> <span class="at">--outdir</span> /tmp/worker-dist</span></code></pre></div>
+<p>Vignettes:</p>
+<ul>
+<li><a href="https://rladies.github.io/jinx/articles/getting-started.html">Getting started</a></li>
+<li><a href="https://rladies.github.io/jinx/articles/workflows.html">Workflows</a></li>
+<li><a href="https://rladies.github.io/jinx/articles/slack-app.html">Slack app</a></li>
+</ul>
 </div>
 <div class="section level2">
 <h2 id="architecture">Architecture<a class="anchor" aria-label="anchor" href="#architecture"></a>
 </h2>
-<p>jinx is a standard R package. GitHub Actions workflows call exported R functions. The <code>gh</code> package handles GitHub API authentication automatically via the <code>GITHUB_TOKEN</code> environment variable. When using a GitHub App token (via <code>actions/create-github-app-token</code>), API calls and comments appear as <code>jinx[bot]</code>.</p>
-<p>Bot-facing workflows use the prebuilt <code>ghcr.io/rladies/jinx-bot:latest</code> image so they can start with R and the current package version already installed. The image is refreshed automatically by <code>.github/workflows/build-bot-image.yml</code> when the runtime package files change, and it can also be rebuilt manually with the workflow dispatch trigger.</p>
-<pre><code>Issue comment (/jinx invite ...)
-  → issue_comment workflow triggers
-    → starts jinx bot image
-      → calls jinx::parse_command() + jinx::execute_command()
-        → gh::gh() API calls as jinx[bot]
-          → reply comment posted</code></pre>
+<p>Jinx is a regular R package. GitHub Actions workflows call exported functions; the <code>gh</code> package authenticates via the App-minted <code>GITHUB_TOKEN</code> and posts back as <code>jinx[bot]</code>.</p>
+<p>Bot-facing workflows use the prebuilt <code>ghcr.io/rladies/jinx-bot:latest</code> image so they boot with the current package already installed. The image is rebuilt by <code>.github/workflows/build-bot-image.yml</code> when the runtime files change.</p>
+<pre><code>Slack / issue comment / cron
+        │
+        ▼
+GitHub Actions workflow
+        │  (jinx[bot] App-token authed)
+        ▼
+jinx::parse_command() ─► jinx::execute_command()
+        │
+        ▼
+gh::gh() API call as jinx[bot]
+        │
+        ▼
+reply posted (Slack response_url / issue comment)</code></pre>
+<p>For the Slack path, the Cloudflare Worker sits in front of GitHub Actions, OAuthing into each workspace, verifying Slack request signatures, and dispatching slash commands via <code>repository_dispatch</code>. Full diagram + endpoint reference in <a href="AGENTS.html#cloudflare-worker"><code>.github/AGENTS.md</code></a>.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
@@ -234,7 +285,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>R-Ladies Global <br><small class="roles"> Author, maintainer </small>  <a href="https://ror.org/https://ror.org/05wpb1k41" class="external-link"><img src="https://raw.githubusercontent.com/ror-community/ror-logos/main/ror-icon-rgb.svg" class="ror" alt="ROR"></a> </li>
+<li>RLadies+ <br><small class="roles"> Author, maintainer, copyright holder </small>  <a href="https://ror.org/https://ror.org/05wpb1k41" class="external-link"><img src="https://raw.githubusercontent.com/ror-community/ror-logos/main/ror-icon-rgb.svg" class="ror" alt="ROR"></a> </li>
 </ul>
 </div>
 
@@ -245,7 +296,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by R-Ladies Global.</p>
+  <p>Developed by RLadies+.</p>
 </div>
 
 <div class="pkgdown-footer-right">

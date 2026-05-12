@@ -26,3 +26,8 @@ gt_invite(username, team, name = username, org = "rladies")
 - org:
 
   GitHub organization. Defaults to `"rladies"`.
+
+## Value
+
+Invisibly returns `NULL`. Called for its side effect of sending the
+invitation and adding the user to the specified team.

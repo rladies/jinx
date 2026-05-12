@@ -21,3 +21,8 @@ review_pr(owner, repo, pr_number)
 - pr_number:
 
   Pull request number.
+
+## Value
+
+Invisibly returns `NULL`. Called for its side effects of assigning
+reviewers, labelling the PR, and posting a checklist comment.

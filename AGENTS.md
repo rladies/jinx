@@ -29,6 +29,102 @@ secrets** (not variables):
 
 Always reference as `secrets.JINX_APP_ID`, never `vars.JINX_APP_ID`.
 
+## Cloudflare Worker
+
+The Slack bridge runs as a Cloudflare Worker at
+`https://jinx.rladies.workers.dev`.
+
+### Endpoint conventions
+
+    /slack/command      POST   Slash commands from Slack
+    /slack/events       POST   Events API (app_mention, etc.)
+    /slack/interact     POST   Block Kit button clicks from Slack
+    /slack/install      GET    Start OAuth install flow
+    /slack/oauth        GET    OAuth callback
+    /airtable/webhook   POST   Form submissions from Airtable
+
+Routes follow `/<service>/<action>` — never flat paths like
+`/slack-interact` or `/airtable-webhook`. Slack-side endpoints all run
+through `verifySlackSignature()` in the router; `/airtable/webhook` uses
+its own `x-airtable-secret` header.
+
+### Airtable invite-approval flow
+
+1.  Airtable webhook fires on a new invitee row → worker posts a Block
+    Kit card with **Approve** / **Deny** buttons in
+    `SLACK_INVITE_CHANNEL`.
+2.  Click **Deny**: Airtable record marked `denied = true`, card
+    replaced with a denial note. Done.
+3.  Click **Approve**: card replaced in place with the manual-invite
+    checklist (workspace menu → *Invite people* → paste email) and a
+    single **Mark invite sent** button. *No Airtable change yet.*
+4.  The organiser sends the invite via Slack workspace settings, then
+    clicks **Mark invite sent** on the same card.
+5.  That flip is what writes `invited = true` to Airtable, then replaces
+    the card with a final “✅ Invite sent by @user — approved by
+    @approver” message.
+
+The Airtable `invited` field must mean *the invite was actually sent*,
+not *approved*. Don’t flip it on Approve — wait for the **Mark invite
+sent** click.
+
+### Token management
+
+Slack workspace tokens are managed via OAuth, stored in Cloudflare KV
+(`SLACK_TOKENS` namespace) keyed by `team:<team_id>`. Use
+`getSlackToken(env, teamId)` to look up tokens — never hardcode
+workspace-specific tokens.
+
+Each KV entry is JSON written by the `/slack/oauth` callback after a
+successful install:
+
+``` json
+{
+  "bot_token": "xoxb-...",
+  "team_id": "T012345",
+  "team_name": "RLadies+ Community",
+  "bot_user_id": "U012345",
+  "installed_at": "2026-05-12T12:34:56.789Z"
+}
+```
+
+No manual seeding needed — install the app into each workspace via
+`/slack/install` and the callback writes the entry. To revoke, delete
+the `team:<id>` key from KV.
+
+There is **no token fallback**. If `getSlackToken(env, teamId)` doesn’t
+find a KV entry for `team:<teamId>`, it throws. Install via OAuth or it
+doesn’t work.
+
+### Workspace allowlist
+
+Jinx is distribution-enabled in Slack so it can OAuth into RLadies+’s
+two workspaces (organisers + community), **but it is not a public app**.
+`handleSlackOAuthCallback` runs `isAllowedTeam(env, teamId)` against
+`SLACK_ORGANIZER_TEAM_ID` and `SLACK_COMMUNITY_TEAM_ID`. Any other
+team’s install attempt is rejected with HTTP 403 and never reaches KV.
+
+To add a workspace: set its team ID as a worker var, redeploy, run
+`/slack/install` from that workspace.
+
+### Worker secrets (via `wrangler secret put`)
+
+| Secret                    | Purpose                                        |
+|---------------------------|------------------------------------------------|
+| `SLACK_SIGNING_SECRET`    | Verify Slack request authenticity (app-global) |
+| `SLACK_CLIENT_ID`         | OAuth client ID (app-global)                   |
+| `SLACK_CLIENT_SECRET`     | OAuth client secret (app-global)               |
+| `AIRTABLE_WEBHOOK_SECRET` | Verify Airtable webhook requests               |
+| `AIRTABLE_API_KEY`        | Airtable API access                            |
+
+### Worker vars (in `wrangler.jsonc`)
+
+| Var | Purpose |
+|----|----|
+| `GITHUB_REPO` | Target repo for GitHub dispatches |
+| `SLACK_COMMUNITY_TEAM_ID` | Community workspace team ID — required for allowlist + Airtable webhook |
+| `SLACK_ORGANIZER_TEAM_ID` | Organiser workspace team ID — required for allowlist + RAG bot |
+
 ## Code style
 
 - No code comments except workaround explanations

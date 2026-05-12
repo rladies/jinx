@@ -22,3 +22,7 @@ validate_directory_pr(owner, repo, pr_number)
 - pr_number:
 
   PR number.
+
+## Value
+
+Invisibly returns the URL of the posted PR comment.

@@ -21,3 +21,8 @@ gt_finalize_offboarding(username, team, org = "rladies")
 - org:
 
   GitHub organization. Defaults to `"rladies"`.
+
+## Value
+
+Invisibly returns `NULL`. Called for its side effect of removing the
+user from the specified teams.
