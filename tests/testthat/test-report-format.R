@@ -32,11 +32,11 @@ describe("format_report_markdown", {
       )
     )
     result <- format_report_markdown(report)
-    expect_true(grepl("Weekly Activity Report", result))
-    expect_true(grepl("2024-03-01", result))
-    expect_true(grepl("Active repositories \\| 3", result))
-    expect_true(grepl("jinx", result))
-    expect_true(grepl("website", result))
+    expect_true(grepl("Weekly Activity Report", result, fixed = TRUE))
+    expect_true(grepl("2024-03-01", result, fixed = TRUE))
+    expect_true(grepl("Active repositories | 3", result, fixed = TRUE))
+    expect_true(grepl("jinx", result, fixed = TRUE))
+    expect_true(grepl("website", result, fixed = TRUE))
   })
 
   it("handles empty repo activity", {
@@ -64,7 +64,7 @@ describe("format_report_markdown", {
       )
     )
     result <- format_report_markdown(report)
-    expect_true(grepl("No activity", result))
+    expect_true(grepl("No activity", result, fixed = TRUE))
   })
 
   it("sorts repos by commit count", {
@@ -100,8 +100,8 @@ describe("format_report_markdown", {
       )
     )
     result <- format_report_markdown(report)
-    big_pos <- regexpr("big", result)
-    small_pos <- regexpr("small", result)
+    big_pos <- regexpr("big", result, fixed = TRUE)
+    small_pos <- regexpr("small", result, fixed = TRUE)
     expect_lt(big_pos, small_pos)
   })
 })
@@ -116,10 +116,10 @@ describe("format_chapter_report", {
       stringsAsFactors = FALSE
     )
     result <- format_chapter_report(health, months = 6)
-    expect_true(grepl("Chapter Health Report", result))
+    expect_true(grepl("Chapter Health Report", result, fixed = TRUE))
     expect_true(grepl("Active chapters.*2", result))
     expect_true(grepl("Inactive chapters.*1", result))
-    expect_true(grepl("London", result))
+    expect_true(grepl("London", result, fixed = TRUE))
     expect_false(grepl("Buenos Aires.*\\|", result))
   })
 
@@ -132,7 +132,7 @@ describe("format_chapter_report", {
       stringsAsFactors = FALSE
     )
     result <- format_chapter_report(health, months = 6)
-    expect_true(grepl("All chapters are active", result))
+    expect_true(grepl("All chapters are active", result, fixed = TRUE))
   })
 
   it("sorts inactive chapters by months inactive", {
@@ -144,9 +144,9 @@ describe("format_chapter_report", {
       stringsAsFactors = FALSE
     )
     result <- format_chapter_report(health, months = 6)
-    bravo_pos <- regexpr("Bravo", result)
-    charlie_pos <- regexpr("Charlie", result)
-    alpha_pos <- regexpr("Alpha", result)
+    bravo_pos <- regexpr("Bravo", result, fixed = TRUE)
+    charlie_pos <- regexpr("Charlie", result, fixed = TRUE)
+    alpha_pos <- regexpr("Alpha", result, fixed = TRUE)
     expect_lt(bravo_pos, charlie_pos)
     expect_lt(charlie_pos, alpha_pos)
   })

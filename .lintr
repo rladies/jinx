@@ -1,0 +1,3 @@
+linters:
+  line_length_linter:
+    length: 100

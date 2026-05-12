@@ -40,7 +40,7 @@ describe("validate_blog_entry", {
     jsonlite::write_json(bad, file.path(tmp, "bad.json"), auto_unbox = TRUE)
 
     result <- validate_blog_entry(tmp)
-    expect_equal(nrow(result), 2)
+    expect_identical(nrow(result), 2L)
     expect_true(any(result$valid))
     expect_false(all(result$valid))
   })

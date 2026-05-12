@@ -10,7 +10,7 @@ describe("translate_template", {
       variables = list()
     )
     expect_gt(nchar(result), 0)
-    expect_true(grepl("Slack", result))
+    expect_true(grepl("Slack", result, fixed = TRUE))
   })
 
   it("falls back to English when translation is missing", {
@@ -19,7 +19,7 @@ describe("translate_template", {
       language = "xx",
       variables = list()
     )
-    expect_true(grepl("Slack", result))
+    expect_true(grepl("Slack", result, fixed = TRUE))
   })
 })
 
@@ -42,7 +42,7 @@ describe("extract_placeholder_keys", {
     on.exit(unlink(path))
 
     result <- extract_placeholder_keys(path)
-    expect_equal(sort(result), c("NAME", "TEAM"))
+    expect_identical(sort(result), c("NAME", "TEAM"))
   })
 
   it("returns empty for no placeholders", {
@@ -60,7 +60,7 @@ describe("extract_placeholder_keys", {
     on.exit(unlink(path))
 
     result <- extract_placeholder_keys(path)
-    expect_equal(result, "NAME")
+    expect_identical(result, "NAME")
   })
 })
 
@@ -78,23 +78,23 @@ describe("check_translation_coverage", {
 describe("translate command parsing", {
   it("parses /jinx translate status", {
     cmd <- parse_command("/jinx translate status")
-    expect_equal(cmd$action, "translate-status")
+    expect_identical(cmd$action, "translate-status")
   })
 
   it("parses /jinx translate validate es", {
     cmd <- parse_command("/jinx translate validate es")
-    expect_equal(cmd$action, "translate-validate")
-    expect_equal(cmd$language, "es")
+    expect_identical(cmd$action, "translate-validate")
+    expect_identical(cmd$language, "es")
   })
 
   it("parses /jinx translate validate without language", {
     cmd <- parse_command("/jinx translate validate")
-    expect_equal(cmd$action, "translate-validate")
+    expect_identical(cmd$action, "translate-validate")
     expect_null(cmd$language)
   })
 
   it("returns error for bare translate", {
     cmd <- parse_command("/jinx translate")
-    expect_equal(cmd$action, "error")
+    expect_identical(cmd$action, "error")
   })
 })

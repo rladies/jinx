@@ -2,8 +2,8 @@ describe("load_teams_config", {
   it("loads and parses teams.yml", {
     config <- load_teams_config()
     expect_type(config, "list")
-    expect_equal(config$organization, "rladies")
-    expect_equal(config$global_team_id, 3388327)
+    expect_identical(config$organization, "rladies")
+    expect_identical(config$global_team_id, 3388327L)
     expect_gte(length(config$teams), 15)
   })
 
@@ -43,8 +43,8 @@ describe("load_teams_config", {
 describe("team_by_slug", {
   it("returns team definition for valid slug", {
     team <- team_by_slug("website")
-    expect_equal(team$name, "Website")
-    expect_equal(team$role, "maintainer")
+    expect_identical(team$name, "Website")
+    expect_identical(team$role, "maintainer")
   })
 
   it("returns NULL for unknown slug", {

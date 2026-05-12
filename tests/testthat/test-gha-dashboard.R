@@ -34,17 +34,17 @@ describe("format_gha_dashboard", {
       )
     )
     result <- format_gha_dashboard(data)
-    expect_true(grepl("GitHub Actions Status Report", result))
-    expect_true(grepl("jinx", result))
-    expect_true(grepl("website", result))
-    expect_true(grepl("CI", result))
-    expect_true(grepl("Deploy", result))
-    expect_true(grepl("2024-03-15", result))
-    expect_true(grepl("N/A", result))
+    expect_true(grepl("GitHub Actions Status Report", result, fixed = TRUE))
+    expect_true(grepl("jinx", result, fixed = TRUE))
+    expect_true(grepl("website", result, fixed = TRUE))
+    expect_true(grepl("CI", result, fixed = TRUE))
+    expect_true(grepl("Deploy", result, fixed = TRUE))
+    expect_true(grepl("2024-03-15", result, fixed = TRUE))
+    expect_true(grepl("N/A", result, fixed = TRUE))
   })
 
   it("handles empty data", {
-    expect_equal(format_gha_dashboard(list()), "No workflow data found.")
+    expect_identical(format_gha_dashboard(list()), "No workflow data found.")
   })
 
   it("uses state when badge is NULL", {
@@ -63,6 +63,6 @@ describe("format_gha_dashboard", {
       )
     )
     result <- format_gha_dashboard(data)
-    expect_true(grepl("disabled", result))
+    expect_true(grepl("disabled", result, fixed = TRUE))
   })
 })
