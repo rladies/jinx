@@ -1,4 +1,6 @@
-export async function postSlackMessage(env, { channel, thread_ts, text, blocks }) {
+export async function postSlackMessage(env, teamId, { channel, thread_ts, text, blocks }) {
+  const token = await getSlackToken(env, teamId);
+
   const body = { channel, text };
   if (thread_ts) body.thread_ts = thread_ts;
   if (blocks) body.blocks = blocks;
@@ -6,7 +8,7 @@ export async function postSlackMessage(env, { channel, thread_ts, text, blocks }
   const res = await fetch("https://slack.com/api/chat.postMessage", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${env.SLACK_ORGANIZER_TOKEN}`,
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json; charset=utf-8",
     },
     body: JSON.stringify(body),
@@ -20,20 +22,31 @@ export async function postSlackMessage(env, { channel, thread_ts, text, blocks }
 }
 
 export async function getSlackToken(env, teamId) {
-  if (teamId && env.SLACK_TOKENS) {
-    const data = await env.SLACK_TOKENS.get(`team:${teamId}`, "json");
-    if (data?.bot_token) return data.bot_token;
+  if (!teamId) {
+    throw new Error("getSlackToken requires a team id");
   }
-
-  if (env.SLACK_ORGANIZER_TOKEN) {
-    console.warn(
-      "Using SLACK_ORGANIZER_TOKEN fallback — finish OAuth install for team " +
-        `${teamId || "(unspecified)"} to remove this`
+  if (!env.SLACK_TOKENS) {
+    throw new Error("SLACK_TOKENS KV binding not configured");
+  }
+  const data = await env.SLACK_TOKENS.get(`team:${teamId}`, "json");
+  if (!data?.bot_token) {
+    throw new Error(
+      `No bot token for team ${teamId}. Install via /slack/install.`
     );
-    return env.SLACK_ORGANIZER_TOKEN;
   }
+  return data.bot_token;
+}
 
-  throw new Error(`No Slack token found for team ${teamId}`);
+export function isAllowedTeam(env, teamId) {
+  if (!teamId) return false;
+  const allowed = [env.SLACK_ORGANIZER_TEAM_ID, env.SLACK_COMMUNITY_TEAM_ID]
+    .filter(Boolean);
+  if (allowed.length === 0) {
+    throw new Error(
+      "Neither SLACK_ORGANIZER_TEAM_ID nor SLACK_COMMUNITY_TEAM_ID set; refusing all installs"
+    );
+  }
+  return allowed.includes(teamId);
 }
 
 export async function verifySlackSignature(signingSecret, timestamp, body, expected) {

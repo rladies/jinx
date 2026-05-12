@@ -22,28 +22,31 @@ export async function handleSlackEvent(env, ctx, body) {
     return new Response("", { status: 200 });
   }
 
+  const teamId = payload.team_id;
   const channel = event.channel;
   const threadTs = event.thread_ts || event.ts;
   const query = stripMention(event.text);
   const userId = event.user;
 
   ctx.waitUntil(
-    answerAndPost(env, channel, threadTs, query, userId).catch(async (err) => {
-      console.error("RAG answer failed:", err);
-      await postSlackMessage(env, {
-        channel,
-        thread_ts: threadTs,
-        text: "🐈‍⬛ Sorry — Jinx couldn't fetch an answer right now. Try again in a moment?",
-      }).catch((e) => console.error("Fallback post failed:", e));
-    })
+    answerAndPost(env, teamId, channel, threadTs, query, userId).catch(
+      async (err) => {
+        console.error("RAG answer failed:", err);
+        await postSlackMessage(env, teamId, {
+          channel,
+          thread_ts: threadTs,
+          text: "🐈‍⬛ Sorry — Jinx couldn't fetch an answer right now. Try again in a moment?",
+        }).catch((e) => console.error("Fallback post failed:", e));
+      }
+    )
   );
 
   return new Response("", { status: 200 });
 }
 
-async function answerAndPost(env, channel, threadTs, query, userId) {
+async function answerAndPost(env, teamId, channel, threadTs, query, userId) {
   if (!query) {
-    await postSlackMessage(env, {
+    await postSlackMessage(env, teamId, {
       channel,
       thread_ts: threadTs,
       text: `Hi <@${userId}>! Ask me a question about RLadies+ — I'll look it up in the guide and the website. 🔮`,
@@ -54,7 +57,7 @@ async function answerAndPost(env, channel, threadTs, query, userId) {
   const { answer, sources } = await answerQuestion(env, query);
   const text = formatAnswer(answer, sources);
 
-  await postSlackMessage(env, { channel, thread_ts: threadTs, text });
+  await postSlackMessage(env, teamId, { channel, thread_ts: threadTs, text });
 }
 
 function stripMention(text) {
