@@ -60,15 +60,18 @@ Each KV entry is JSON written by the `/slack/oauth` callback after a successful 
 
 No manual seeding needed — install the app into each workspace via `/slack/install` and the callback writes the entry. To revoke, delete the `team:<id>` key from KV.
 
+While OAuth is being verified, `SLACK_ORGANIZER_TOKEN` is set as a worker secret and acts as a fallback whenever `getSlackToken()` misses on KV. `postSlackMessage()` (used by the RAG bot in `slack-events.js`) reads the same secret directly. Remove the secret once every workspace has installed via OAuth and KV is the source of truth.
+
 ### Worker secrets (via `wrangler secret put`)
 
-| Secret                    | Purpose                                        |
-| ------------------------- | ---------------------------------------------- |
-| `SLACK_SIGNING_SECRET`    | Verify Slack request authenticity (app-global) |
-| `SLACK_CLIENT_ID`         | OAuth client ID (app-global)                   |
-| `SLACK_CLIENT_SECRET`     | OAuth client secret (app-global)               |
-| `AIRTABLE_WEBHOOK_SECRET` | Verify Airtable webhook requests               |
-| `AIRTABLE_API_KEY`        | Airtable API access                            |
+| Secret                    | Purpose                                                          |
+| ------------------------- | ---------------------------------------------------------------- |
+| `SLACK_SIGNING_SECRET`    | Verify Slack request authenticity (app-global)                   |
+| `SLACK_CLIENT_ID`         | OAuth client ID (app-global)                                     |
+| `SLACK_CLIENT_SECRET`     | OAuth client secret (app-global)                                 |
+| `SLACK_ORGANIZER_TOKEN`   | Bot token for the organisers workspace; KV fallback during setup |
+| `AIRTABLE_WEBHOOK_SECRET` | Verify Airtable webhook requests                                 |
+| `AIRTABLE_API_KEY`        | Airtable API access                                              |
 
 ### Worker vars (in `wrangler.jsonc`)
 

@@ -6,7 +6,7 @@ export async function postSlackMessage(env, { channel, thread_ts, text, blocks }
   const res = await fetch("https://slack.com/api/chat.postMessage", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${env.SLACK_ORGANISER_TOKEN}`,
+      Authorization: `Bearer ${env.SLACK_ORGANIZER_TOKEN}`,
       "Content-Type": "application/json; charset=utf-8",
     },
     body: JSON.stringify(body),
@@ -25,11 +25,12 @@ export async function getSlackToken(env, teamId) {
     if (data?.bot_token) return data.bot_token;
   }
 
-  if (env.SLACK_COMMUNITY_TOKEN) {
+  if (env.SLACK_ORGANIZER_TOKEN) {
     console.warn(
-      "Using legacy SLACK_COMMUNITY_TOKEN — complete OAuth install to remove this fallback"
+      "Using SLACK_ORGANIZER_TOKEN fallback — finish OAuth install for team " +
+        `${teamId || "(unspecified)"} to remove this`
     );
-    return env.SLACK_COMMUNITY_TOKEN;
+    return env.SLACK_ORGANIZER_TOKEN;
   }
 
   throw new Error(`No Slack token found for team ${teamId}`);
