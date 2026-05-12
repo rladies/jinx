@@ -76,34 +76,51 @@ export async function handleSlackInteraction(env, ctx, body) {
     ctx.waitUntil(processApproval(env, actionData, adminUser, responseUrl));
   } else if (action.action_id === "invite_deny") {
     ctx.waitUntil(processDenial(env, actionData, adminUser, responseUrl));
+  } else if (action.action_id === "invite_mark_sent") {
+    ctx.waitUntil(processInviteSent(env, actionData, adminUser, responseUrl));
   }
 
   return new Response("", { status: 200 });
 }
 
-async function processApproval(env, data, adminUser, responseUrl) {
+async function processApproval(env, data, approver, responseUrl) {
+  await fetch(responseUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      replace_original: true,
+      blocks: approvalChecklistBlocks(data.email, approver, data.record_id),
+      text: `Approved by @${approver} - invite ${data.email} manually`,
+    }),
+  });
+}
+
+async function processInviteSent(env, data, sender, responseUrl) {
   try {
     if (data.record_id && env.AIRTABLE_API_KEY) {
       await updateAirtableRecord(env, data.record_id, { invited: true });
     }
+
+    const approverLine = data.approver
+      ? ` — approved by @${data.approver}`
+      : "";
 
     await fetch(responseUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         replace_original: true,
-        blocks: approvalChecklistBlocks(data.email, adminUser),
-        text: `Approved by @${adminUser} - invite ${data.email} manually`,
+        text: `✅ Invite sent to ${data.email} by @${sender}${approverLine}`,
       }),
     });
   } catch (err) {
-    console.error("Approval processing failed:", err);
+    console.error("Mark-sent processing failed:", err);
     await fetch(responseUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         replace_original: false,
-        text: `😿 Approval failed for ${data.email}: ${err.message}`,
+        text: `😿 Failed to mark ${data.email} as invited in Airtable: ${err.message}`,
       }),
     });
   }
@@ -187,7 +204,7 @@ function inviteRequestBlocks({ email, name, chapter, recordId }) {
   ];
 }
 
-function approvalChecklistBlocks(email, adminUser) {
+function approvalChecklistBlocks(email, approver, recordId) {
   return [
     {
       type: "header",
@@ -201,7 +218,7 @@ function approvalChecklistBlocks(email, adminUser) {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `Approved by *@${adminUser}*. Now send the invite manually:\n\n  1. Open the workspace menu (top-left).\n  2. Choose *Invite people to RLadies+*.\n  3. Paste this email and send:`,
+        text: `Approved by *@${approver}*. Send the invite manually:\n\n  1. Open the workspace menu (top-left).\n  2. Choose *Invite people to RLadies+*.\n  3. Paste this email and send:`,
       },
     },
     {
@@ -209,11 +226,27 @@ function approvalChecklistBlocks(email, adminUser) {
       text: { type: "mrkdwn", text: `\`${email}\`` },
     },
     {
+      type: "actions",
+      elements: [
+        {
+          type: "button",
+          text: { type: "plain_text", text: "✓ Mark invite sent", emoji: true },
+          style: "primary",
+          action_id: "invite_mark_sent",
+          value: JSON.stringify({
+            email,
+            record_id: recordId,
+            approver,
+          }),
+        },
+      ],
+    },
+    {
       type: "context",
       elements: [
         {
           type: "mrkdwn",
-          text: "React :white_check_mark: on this message once the invite is sent so we know it is done.",
+          text: "Click *Mark invite sent* once the invite has been delivered — that flips the Airtable record.",
         },
       ],
     },

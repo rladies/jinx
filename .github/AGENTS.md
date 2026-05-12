@@ -42,6 +42,16 @@ The Slack bridge runs as a Cloudflare Worker at `https://jinx.rladies.workers.de
 
 Routes follow `/<service>/<action>` — never flat paths like `/slack-interact` or `/airtable-webhook`. Slack-side endpoints all run through `verifySlackSignature()` in the router; `/airtable/webhook` uses its own `x-airtable-secret` header.
 
+### Airtable invite-approval flow
+
+1. Airtable webhook fires on a new invitee row → worker posts a Block Kit card with **Approve** / **Deny** buttons in `SLACK_INVITE_CHANNEL`.
+2. Click **Deny**: Airtable record marked `denied = true`, card replaced with a denial note. Done.
+3. Click **Approve**: card replaced in place with the manual-invite checklist (workspace menu → _Invite people_ → paste email) and a single **Mark invite sent** button. _No Airtable change yet._
+4. The organiser sends the invite via Slack workspace settings, then clicks **Mark invite sent** on the same card.
+5. That flip is what writes `invited = true` to Airtable, then replaces the card with a final "✅ Invite sent by @user — approved by @approver" message.
+
+The Airtable `invited` field must mean _the invite was actually sent_, not _approved_. Don't flip it on Approve — wait for the **Mark invite sent** click.
+
 ### Token management
 
 Slack workspace tokens are managed via OAuth, stored in Cloudflare KV (`SLACK_TOKENS` namespace) keyed by `team:<team_id>`. Use `getSlackToken(env, teamId)` to look up tokens — never hardcode workspace-specific tokens.
