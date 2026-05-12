@@ -1,14 +1,14 @@
 Package: jinx
-Title: R-Ladies GitHub Organization Management
+Title: RLadies+ GitHub Organisation Management
 Version: 0.1.0
 Authors@R:
-    person("R-Ladies Global", email = "info@rladies.org", role = c("aut", "cre"),
+    person("RLadies+", email = "info@rladies.org", role = c("aut", "cre", "cph"),
            comment = c(ROR = "https://ror.org/05wpb1k41"))
-Description: GitHub App for managing the R-Ladies organization. Handles
+Description: GitHub App for managing the RLadies+ organisation. Handles
     onboarding and offboarding of global team members, chapter onboarding,
     PR review automation, org-wide reporting, Airtable sync, website
     automation, chapter monitoring, and interactive issue commands.
-Depends: R (>= 4.1.0)
+Depends: R (>= 4.4.0)
 License: MIT + file LICENSE
 URL: https://github.com/rladies/jinx,
     https://rladies.github.io/jinx/

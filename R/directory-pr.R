@@ -6,6 +6,7 @@
 #' @param owner Repository owner.
 #' @param repo Repository name.
 #' @param pr_number PR number.
+#' @return Invisibly returns the URL of the posted PR comment.
 #' @export
 validate_directory_pr <- function(owner, repo, pr_number) {
   files <- gh::gh(
@@ -40,19 +41,20 @@ validate_directory_pr <- function(owner, repo, pr_number) {
     fname <- basename(f$filename)
 
     fn_check <- validate_entry_filename(fname)
-    if (!fn_check$valid) {
-      all_valid <- FALSE
-      report_lines <- c(
-        report_lines,
-        glue::glue(
-          "**{fname}** - filename issues: {paste(fn_check$issues, collapse = ', ')}"
-        )
-      )
-    } else {
+    if (fn_check$valid) {
       report_lines <- c(
         report_lines,
         glue::glue(
           "**{fname}** - filename OK"
+        )
+      )
+    } else {
+      all_valid <- FALSE
+      report_lines <- c(
+        report_lines,
+        glue::glue(
+          "**{fname}** - filename issues:",
+          " {paste(fn_check$issues, collapse = ', ')}"
         )
       )
     }

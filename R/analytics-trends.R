@@ -54,23 +54,18 @@ format_analytics_markdown <- function(trends, contributor_growth) {
   }
 
   chapter_lines <- if (nrow(trends) > 0) {
+    trends$change_str <- ifelse(
+      is.na(trends$change),
+      "-",
+      sprintf("%+.1f%%", trends$change)
+    )
     paste(
       "| Month | Commits | Change | Trend |",
       "|-------|---------|--------|-------|",
       paste(
-        vapply(
-          seq_len(nrow(trends)),
-          function(i) {
-            change_str <- if (is.na(trends$change[i])) {
-              "-"
-            } else {
-              sprintf("%+.1f%%", trends$change[i])
-            }
-            cli::format_inline(
-              "| {trends$month[i]} | {trends$total_commits[i]} | {change_str} | {trends$sparkline[i]} |"
-            )
-          },
-          character(1)
+        glue::glue_data(
+          trends,
+          "| {month} | {total_commits} | {change_str} | {sparkline} |"
         ),
         collapse = "\n"
       ),
@@ -85,14 +80,12 @@ format_analytics_markdown <- function(trends, contributor_growth) {
       "| Month | New | Total |",
       "|-------|-----|-------|",
       paste(
-        vapply(
-          seq_len(nrow(contributor_growth)),
-          function(i) {
-            cli::format_inline(
-              "| {contributor_growth$month[i]} | {contributor_growth$new_contributors[i]} | {contributor_growth$total_contributors[i]} |"
-            )
-          },
-          character(1)
+        glue::glue_data(
+          contributor_growth,
+          paste0(
+            "| {month} | {new_contributors}",
+            " | {total_contributors} |"
+          )
         ),
         collapse = "\n"
       ),

@@ -6,7 +6,7 @@
 \usage{
 send_slack_invites(
   invite_link,
-  base_id = "appJZFYABfCIdPYMR",
+  base_id = slack_invitees_base_id(),
   api_key = Sys.getenv("AIRTABLE_API_KEY"),
   sender_name = "R-Ladies Global",
   sender_email = "info@rladies.org",

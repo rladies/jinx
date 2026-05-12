@@ -57,9 +57,11 @@ generate_report <- function(
     summary = summarize_stats(repo_stats)
   )
 
-  cli::cli_alert_success(
-    "Report generated: {report$summary$total_commits} commits, {report$summary$total_prs} PRs, {report$summary$total_issues} issues"
-  )
+  cli::cli_alert_success(paste0(
+    "Report generated: {report$summary$total_commits} commits, ",
+    "{report$summary$total_prs} PRs, ",
+    "{report$summary$total_issues} issues"
+  ))
   invisible(report)
 }
 

@@ -7,87 +7,87 @@ describe("parse_command", {
 
   it("parses help command", {
     cmd <- parse_command("/jinx help")
-    expect_equal(cmd$action, "help")
+    expect_identical(cmd$action, "help")
   })
 
   it("parses invite command", {
     cmd <- parse_command("/jinx invite @octocat to website")
-    expect_equal(cmd$action, "invite")
-    expect_equal(cmd$username, "octocat")
-    expect_equal(cmd$team, "website")
+    expect_identical(cmd$action, "invite")
+    expect_identical(cmd$username, "octocat")
+    expect_identical(cmd$team, "website")
   })
 
   it("strips @ from username in invite", {
     cmd <- parse_command("/jinx invite @octocat to blog")
-    expect_equal(cmd$username, "octocat")
+    expect_identical(cmd$username, "octocat")
   })
 
   it("handles username without @ in invite", {
     cmd <- parse_command("/jinx invite octocat to blog")
-    expect_equal(cmd$username, "octocat")
+    expect_identical(cmd$username, "octocat")
   })
 
   it("returns error for malformed invite", {
     cmd <- parse_command("/jinx invite @octocat")
-    expect_equal(cmd$action, "error")
-    expect_true(grepl("Usage", cmd$message))
+    expect_identical(cmd$action, "error")
+    expect_true(grepl("Usage", cmd$message, fixed = TRUE))
   })
 
   it("parses offboard command", {
     cmd <- parse_command("/jinx offboard @octocat from website")
-    expect_equal(cmd$action, "offboard")
-    expect_equal(cmd$username, "octocat")
-    expect_equal(cmd$team, "website")
+    expect_identical(cmd$action, "offboard")
+    expect_identical(cmd$username, "octocat")
+    expect_identical(cmd$team, "website")
   })
 
   it("returns error for malformed offboard", {
     cmd <- parse_command("/jinx offboard @octocat")
-    expect_equal(cmd$action, "error")
-    expect_true(grepl("Usage", cmd$message))
+    expect_identical(cmd$action, "error")
+    expect_true(grepl("Usage", cmd$message, fixed = TRUE))
   })
 
   it("parses report command with type", {
     cmd <- parse_command("/jinx report weekly")
-    expect_equal(cmd$action, "report")
-    expect_equal(cmd$type, "weekly")
+    expect_identical(cmd$action, "report")
+    expect_identical(cmd$type, "weekly")
 
     cmd <- parse_command("/jinx report monthly")
-    expect_equal(cmd$type, "monthly")
+    expect_identical(cmd$type, "monthly")
   })
 
   it("defaults report type to weekly", {
     cmd <- parse_command("/jinx report")
-    expect_equal(cmd$action, "report")
-    expect_equal(cmd$type, "weekly")
+    expect_identical(cmd$action, "report")
+    expect_identical(cmd$type, "weekly")
   })
 
   it("returns error for invalid report type", {
     cmd <- parse_command("/jinx report yearly")
-    expect_equal(cmd$action, "error")
+    expect_identical(cmd$action, "error")
   })
 
   it("parses remind command", {
     cmd <- parse_command("/jinx remind")
-    expect_equal(cmd$action, "remind")
+    expect_identical(cmd$action, "remind")
   })
 
   it("returns unknown for unrecognized commands", {
     cmd <- parse_command("/jinx foobar baz")
-    expect_equal(cmd$action, "unknown")
-    expect_true(grepl("foobar", cmd$raw))
+    expect_identical(cmd$action, "unknown")
+    expect_true(grepl("foobar", cmd$raw, fixed = TRUE))
   })
 
   it("handles leading/trailing whitespace", {
     cmd <- parse_command("  /jinx help  ")
-    expect_equal(cmd$action, "help")
+    expect_identical(cmd$action, "help")
   })
 
   it("is case-insensitive for action", {
     cmd <- parse_command("/jinx HELP")
-    expect_equal(cmd$action, "help")
+    expect_identical(cmd$action, "help")
 
     cmd <- parse_command("/jinx Invite @user to website")
-    expect_equal(cmd$action, "invite")
+    expect_identical(cmd$action, "invite")
   })
 
   it("parses website-analytics with default period", {

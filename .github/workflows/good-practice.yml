@@ -4,11 +4,13 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'R/**'
-      - 'tests/**'
-      - 'man/**'
-      - 'DESCRIPTION'
-      - 'NAMESPACE'
+      - "R/**"
+      - "tests/**"
+      - "man/**"
+      - "DESCRIPTION"
+      - "NAMESPACE"
+      - ".github/scripts/gp-report.R"
+      - ".github/workflows/good-practice.yml"
 
 jobs:
   gp:
@@ -37,36 +39,7 @@ jobs:
 
       - name: Run goodpractice
         id: gp
-        run: |
-          Rscript -e '
-            gp_result <- goodpractice::gp(".", checks = c(
-              "cyclocomp",
-              "no_description_depends",
-              "no_import_package_as_a_whole",
-              "lintr_assignment_linter",
-              "lintr_line_length_linter",
-              "lintr_trailing_blank_lines_linter",
-              "lintr_trailing_whitespace_linter",
-              "lintr_T_and_F_symbol_linter"
-            ))
-
-            results <- goodpractice::results(gp_result)
-            failed <- results[!vapply(results, function(r) r$result, logical(1)), ]
-
-            if (length(failed) == 0) {
-              msg <- "\U0001f389 **Good Practice Check**\n\nAll checks passed!"
-            } else {
-              lines <- vapply(failed, function(r) {
-                paste0("- **", r$check, "**: ", r$message)
-              }, character(1))
-              msg <- paste0(
-                "\U0001f50d **Good Practice Check**\n\n",
-                "Found ", length(failed), " suggestion(s):\n\n",
-                paste(lines, collapse = "\n")
-              )
-            }
-            writeLines(msg, "gp_report.md")
-          '
+        run: Rscript .github/scripts/gp-report.R
 
       - name: Post report
         if: always()

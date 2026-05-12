@@ -13,6 +13,9 @@ validate_directory_pr(owner, repo, pr_number)
 
 \item{pr_number}{PR number.}
 }
+\value{
+Invisibly returns the URL of the posted PR comment.
+}
 \description{
 Runs all directory validations (schema, filenames, social handles)
 on changed files in a PR and posts a summary comment.

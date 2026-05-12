@@ -5,7 +5,7 @@
 #' @param api_key Meetup Pro API key. Defaults to `MEETUP_API_KEY` env var.
 #' @return Data frame with columns: title, date, url, rsvp_count, source,
 #'   chapter.
-#' @keywords internal
+#' @noRd
 meetup_list_events <- function(
   group_urlname,
   months = 3,
@@ -64,7 +64,7 @@ meetup_list_events <- function(
 #' @param node List from Meetup GraphQL response.
 #' @param group_urlname Group URL name used as chapter identifier.
 #' @return Single-row data frame, or `NULL` if node is invalid.
-#' @keywords internal
+#' @noRd
 meetup_event_to_df <- function(node, group_urlname) {
   if (is.null(node) || is.null(node$title)) {
     return(NULL)

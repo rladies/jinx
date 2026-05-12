@@ -82,9 +82,12 @@ create_cfp_issue <- function(
     )
   }
 
-  meta_block <- cli::format_inline(
-    "\n\n<!-- cfp-meta\nconference: {conference}\ndeadline: {deadline}\nurl: {url}\n-->"
-  )
+  meta_block <- cli::format_inline(paste0(
+    "\n\n<!-- cfp-meta\n",
+    "conference: {conference}\n",
+    "deadline: {deadline}\n",
+    "url: {url}\n-->"
+  ))
 
   labels <- list("cfp")
   if (days_left <= 7) {
@@ -134,9 +137,12 @@ check_cfp_deadlines <- function(
   }
 
   for (i in seq_len(nrow(approaching))) {
-    reminder <- cli::format_inline(
-      "Reminder: The CFP for **{approaching$conference[i]}** closes in **{approaching$days_left[i]} days** ({approaching$deadline[i]}).\n\n{approaching$url[i]}"
-    )
+    reminder <- cli::format_inline(paste0(
+      "Reminder: The CFP for **{approaching$conference[i]}** ",
+      "closes in **{approaching$days_left[i]} days** ",
+      "({approaching$deadline[i]}).\n\n",
+      "{approaching$url[i]}"
+    ))
 
     gh::gh(
       "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
@@ -154,9 +160,10 @@ check_cfp_deadlines <- function(
       .send_body = list("deadline-approaching")
     )
 
-    cli::cli_alert_success(
-      "Reminded about {approaching$conference[i]} ({approaching$days_left[i]} days left)"
-    )
+    cli::cli_alert_success(paste0(
+      "Reminded about {approaching$conference[i]}",
+      " ({approaching$days_left[i]} days left)"
+    ))
   }
 
   invisible(approaching)

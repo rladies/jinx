@@ -31,17 +31,15 @@ The Slack bridge runs as a Cloudflare Worker at `https://jinx.rladies.workers.de
 
 ### Endpoint conventions
 
-Routes are grouped by service under `/<service>/<action>`:
-
 ```
-/slack/command      POST   Slash commands from Slack
+/                   POST   Slack slash commands + Events API (routed by content-type)
 /slack/interact     POST   Block Kit button clicks from Slack
 /slack/install      GET    Start OAuth install flow
 /slack/oauth        GET    OAuth callback
 /airtable/webhook   POST   Form submissions from Airtable
 ```
 
-New endpoints must follow this pattern: `/<service>/<action>`. Never use flat paths like `/slack-interact` or `/airtable-webhook`.
+The root URL accepts both slash commands (form-encoded) and Events API callbacks (JSON); it disambiguates by `Content-Type`. New service-specific endpoints follow `/<service>/<action>` — never flat paths like `/slack-interact` or `/airtable-webhook`.
 
 ### Token management
 

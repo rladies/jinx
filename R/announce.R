@@ -8,6 +8,8 @@
 #'   Defaults to all: `"bluesky"`, `"linkedin"`, `"mastodon"`.
 #' @param newsletter Logical, whether to also send a newsletter. Defaults
 #'   to `TRUE`.
+#' @return Invisibly returns a named list with the posting result for each
+#'   platform.
 #' @export
 announce_post <- function(
   post,

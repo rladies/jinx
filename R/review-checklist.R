@@ -42,7 +42,8 @@ build_checklist <- function(file_paths, repo) {
     paste0(
       "## Review Checklist\n",
       "- [ ] Changes are consistent with the PR description\n",
-      "- [ ] No sensitive information (credentials, tokens, emails) is included\n"
+      "- [ ] No sensitive information ",
+      "(credentials, tokens, emails) is included\n"
     )
   )
 

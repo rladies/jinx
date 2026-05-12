@@ -8,86 +8,85 @@
 #'   missing_keys, extra_keys.
 #' @export
 validate_translations <- function(language = NULL) {
-  config <- load_languages_config()
-  languages <- if (!is.null(language)) {
-    language
-  } else {
-    vapply(config$supported, function(l) l$code, character(1))
-  }
-
-  languages <- setdiff(languages, "en")
-
-  base_dir <- system.file("translations", "en", package = "jinx")
-  if (!nzchar(base_dir)) {
-    base_dir <- system.file("templates", package = "jinx")
-  }
-
+  languages <- translation_languages(language)
+  base_dir <- translation_base_dir()
   base_templates <- list.files(base_dir, pattern = "\\.md$")
+
   if (length(base_templates) == 0) {
-    return(data.frame(
-      template = character(0),
-      language = character(0),
-      status = character(0),
-      missing_keys = character(0),
-      extra_keys = character(0),
-      stringsAsFactors = FALSE
-    ))
+    return(empty_validation_df())
   }
 
-  results <- list()
+  pairs <- expand.grid(
+    lang = languages,
+    tmpl = base_templates,
+    stringsAsFactors = FALSE
+  )
 
-  for (lang in languages) {
-    for (tmpl in base_templates) {
-      base_path <- file.path(base_dir, tmpl)
-      trans_path <- system.file("translations", lang, tmpl, package = "jinx")
-
-      if (!nzchar(trans_path)) {
-        results[[length(results) + 1]] <- data.frame(
-          template = tmpl,
-          language = lang,
-          status = "missing",
-          missing_keys = "",
-          extra_keys = "",
-          stringsAsFactors = FALSE
-        )
-        next
-      }
-
-      base_keys <- extract_placeholder_keys(base_path)
-      trans_keys <- extract_placeholder_keys(trans_path)
-
-      missing <- setdiff(base_keys, trans_keys)
-      extra <- setdiff(trans_keys, base_keys)
-
-      status <- if (length(missing) == 0 && length(extra) == 0) {
-        "ok"
-      } else {
-        "mismatch"
-      }
-
-      results[[length(results) + 1]] <- data.frame(
-        template = tmpl,
-        language = lang,
-        status = status,
-        missing_keys = paste(missing, collapse = ", "),
-        extra_keys = paste(extra, collapse = ", "),
-        stringsAsFactors = FALSE
-      )
-    }
+  if (nrow(pairs) == 0) {
+    return(empty_validation_df())
   }
 
-  if (length(results) == 0) {
-    return(data.frame(
-      template = character(0),
-      language = character(0),
-      status = character(0),
-      missing_keys = character(0),
-      extra_keys = character(0),
-      stringsAsFactors = FALSE
-    ))
-  }
+  results <- mapply(
+    validate_one_translation,
+    pairs$lang,
+    pairs$tmpl,
+    MoreArgs = list(base_dir = base_dir),
+    SIMPLIFY = FALSE
+  )
 
   do.call(rbind, results)
+}
+
+translation_languages <- function(language) {
+  langs <- if (is.null(language)) {
+    config <- load_languages_config()
+    vapply(config$supported, function(l) l$code, character(1))
+  } else {
+    language
+  }
+  setdiff(langs, "en")
+}
+
+translation_base_dir <- function() {
+  dir <- system.file("translations", "en", package = "jinx")
+  if (nzchar(dir)) dir else system.file("templates", package = "jinx")
+}
+
+validate_one_translation <- function(lang, tmpl, base_dir) {
+  trans_path <- system.file("translations", lang, tmpl, package = "jinx")
+  if (!nzchar(trans_path)) {
+    return(validation_row(tmpl, lang, "missing", "", ""))
+  }
+
+  base_keys <- extract_placeholder_keys(file.path(base_dir, tmpl))
+  trans_keys <- extract_placeholder_keys(trans_path)
+  missing <- setdiff(base_keys, trans_keys)
+  extra <- setdiff(trans_keys, base_keys)
+
+  status <- if (length(missing) == 0 && length(extra) == 0) "ok" else "mismatch"
+  validation_row(tmpl, lang, status, toString(missing), toString(extra))
+}
+
+validation_row <- function(tmpl, lang, status, missing, extra) {
+  data.frame(
+    template = tmpl,
+    language = lang,
+    status = status,
+    missing_keys = missing,
+    extra_keys = extra,
+    stringsAsFactors = FALSE
+  )
+}
+
+empty_validation_df <- function() {
+  data.frame(
+    template = character(0),
+    language = character(0),
+    status = character(0),
+    missing_keys = character(0),
+    extra_keys = character(0),
+    stringsAsFactors = FALSE
+  )
 }
 
 #' Check translation coverage across languages

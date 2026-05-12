@@ -49,8 +49,10 @@ optimize_image <- function(path, max_width = 800, quality = 85, output = path) {
   magick::image_write(img, output, quality = quality)
 
   new_info <- magick::image_info(magick::image_read(output))
-  cli::cli_alert_success(
-    "Optimized {.path {basename(path)}}: {info$width}x{info$height} -> {new_info$width}x{new_info$height}"
-  )
+  cli::cli_alert_success(paste0(
+    "Optimized {.path {basename(path)}}: ",
+    "{info$width}x{info$height} -> ",
+    "{new_info$width}x{new_info$height}"
+  ))
   invisible(output)
 }
