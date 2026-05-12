@@ -116,16 +116,12 @@ create_event_summary <- function(events, period = c("weekly", "monthly")) {
     return(format_event_summary_inline(events, period))
   }
 
-  event_lines <- vapply(
-    seq_len(nrow(events)),
-    function(i) {
-      e <- events[i, ]
-      cli::format_inline(paste0(
-        "| {e$chapter} | [{e$title}]({e$url})",
-        " | {e$date} | {e$rsvp_count} | {e$source} |"
-      ))
-    },
-    character(1)
+  event_lines <- glue::glue_data(
+    events,
+    paste0(
+      "| {chapter} | [{title}]({url})",
+      " | {date} | {rsvp_count} | {source} |"
+    )
   )
 
   event_list <- paste(
@@ -201,16 +197,12 @@ empty_event_df <- function() {
 }
 
 format_event_summary_inline <- function(events, period) {
-  event_lines <- vapply(
-    seq_len(nrow(events)),
-    function(i) {
-      e <- events[i, ]
-      cli::format_inline(paste0(
-        "- **{e$chapter}**: [{e$title}]({e$url})",
-        " ({e$date}, {e$rsvp_count} RSVPs)"
-      ))
-    },
-    character(1)
+  event_lines <- glue::glue_data(
+    events,
+    paste0(
+      "- **{chapter}**: [{title}]({url})",
+      " ({date}, {rsvp_count} RSVPs)"
+    )
   )
 
   cli::format_inline(paste0(

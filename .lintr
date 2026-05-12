@@ -1,3 +1,0 @@
-linters: linters_with_defaults(
-    line_length_linter(length = 100L)
-  )

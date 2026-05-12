@@ -138,7 +138,8 @@ format_gha_dashboard <- function(dashboard_data) {
       rows <- c(
         rows,
         glue::glue(
-          "| {repo_data$repository} | [{wf$name}]({wf$url}) | {run_date} | {badge} |"
+          "| {repo_data$repository} | [{wf$name}]({wf$url})",
+          " | {run_date} | {badge} |"
         )
       )
     }
