@@ -1,4 +1,4 @@
-# jinx <img src="man/figures/sprites/working.svg" align="right" height="160" alt="Jinx the cat, sitting at a laptop, working" />
+# jinx <span class="jinx-sprite"><img src="man/figures/sprites/working.svg" align="right" height="160" alt="Jinx the cat, sitting at a laptop, working" /></span>
 
 RLadies+ operations bot — an R package deployed via GitHub Actions
 with a registered GitHub App identity (`jinx[bot]`), plus a Cloudflare
@@ -30,19 +30,19 @@ See [PRIVACY.md](PRIVACY.md) for the data-handling policy.
 
 ## What Jinx does
 
-| Area | Highlights |
-|------|------------|
-| Team management | `gt_invite()`, `gt_create_offboarding()`, `gt_finalize_offboarding()`, `gt_remind_stale()` |
-| Chapters | `create_chapter()`, `create_chapter_setup()`, `monitor_chapter_status()`, `report_chapter_health()` |
-| Directory | `validate_directory_pr()`, `validate_entry_filename()`, `verify_social_handles()`, `optimize_image()` |
-| Blog | `create_blog_entry()`, `check_blog_links()`, `auto_merge_pending()` |
-| Announcements | `announce_post()` cross-posts to Bluesky, LinkedIn, Mastodon + newsletter |
-| Reports | `generate_report()`, `format_analytics_markdown()`, `collect_website_analytics()` |
-| Events | `list_chapter_events()`, `sync_chapter_events()`, `create_event_summary()` |
-| Conferences | `add_cfp()`, `check_cfp_deadlines()`, `recommend_speaker()` |
-| Contributors | `welcome_contributor()`, `list_org_contributors()`, `update_contributors_md()` |
-| i18n | `validate_translations()`, `check_translation_coverage()` |
-| Slack | `send_slack_invite()`, `post_slack_message()`, `welcome_slack_member()` |
+| Area            | Highlights                                                                                            |
+| --------------- | ----------------------------------------------------------------------------------------------------- |
+| Team management | `gt_invite()`, `gt_create_offboarding()`, `gt_finalize_offboarding()`, `gt_remind_stale()`            |
+| Chapters        | `create_chapter()`, `create_chapter_setup()`, `monitor_chapter_status()`, `report_chapter_health()`   |
+| Directory       | `validate_directory_pr()`, `validate_entry_filename()`, `verify_social_handles()`, `optimize_image()` |
+| Blog            | `create_blog_entry()`, `check_blog_links()`, `auto_merge_pending()`                                   |
+| Announcements   | `announce_post()` cross-posts to Bluesky, LinkedIn, Mastodon + newsletter                             |
+| Reports         | `generate_report()`, `format_analytics_markdown()`, `collect_website_analytics()`                     |
+| Events          | `list_chapter_events()`, `sync_chapter_events()`, `create_event_summary()`                            |
+| Conferences     | `add_cfp()`, `check_cfp_deadlines()`, `recommend_speaker()`                                           |
+| Contributors    | `welcome_contributor()`, `list_org_contributors()`, `update_contributors_md()`                        |
+| i18n            | `validate_translations()`, `check_translation_coverage()`                                             |
+| Slack           | `send_slack_invite()`, `post_slack_message()`, `welcome_slack_member()`                               |
 
 `/jinx help` in Slack or any issue comment prints the full slash-command
 reference. The same list lives in
