@@ -38,9 +38,10 @@ review_pr <- function(owner, repo, pr_number) {
   )
   post_checklist(owner, repo, pr_number, file_paths)
 
-  cli::cli_alert_success(
-    "PR #{pr_number}: {length(labels)} labels, {length(reviewers)} reviewers assigned"
-  )
+  cli::cli_alert_success(paste0(
+    "PR #{pr_number}: {length(labels)} labels,",
+    " {length(reviewers)} reviewers assigned"
+  ))
   invisible(list(labels = labels, reviewers = reviewers))
 }
 

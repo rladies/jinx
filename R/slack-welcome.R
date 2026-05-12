@@ -86,7 +86,7 @@ default_help_channel <- function(workspace = c("community", "organisers")) {
 #'
 #' The function is stateless: jinx does not persist any user
 #' identifiers. The Slack `team_join` event is the source of truth
-#' for who to welcome — see the `slack-welcome.yml` GitHub Actions
+#' for who to welcome -- see the `slack-welcome.yml` GitHub Actions
 #' workflow (`workflow_dispatch` / `repository_dispatch` triggered by
 #' the Slack event handler) for the wiring.
 #'
@@ -175,7 +175,7 @@ render_slack_welcome <- function(
   starter_lines <- vapply(
     starter_channels,
     function(c) {
-      sprintf("  - <#%s> — %s", c$name, c$desc)
+      sprintf("  - <#%s> \u2014 %s", c$name, c$desc)
     },
     character(1)
   )

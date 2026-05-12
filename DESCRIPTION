@@ -8,7 +8,7 @@ Description: GitHub App for managing the RLadies+ organisation. Handles
     onboarding and offboarding of global team members, chapter onboarding,
     PR review automation, org-wide reporting, Airtable sync, website
     automation, chapter monitoring, and interactive issue commands.
-Depends: R (>= 4.1.0)
+Depends: R (>= 4.4.0)
 License: MIT + file LICENSE
 URL: https://github.com/rladies/jinx,
     https://rladies.github.io/jinx/

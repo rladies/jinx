@@ -48,8 +48,10 @@ format_report_markdown <- function(report) {
 
     details <- paste0(
       "### Repository Details\n",
-      "| Repository | Commits | PRs Opened | PRs Merged | Issues Opened | Issues Closed |\n",
-      "|------------|---------|------------|------------|---------------|---------------|\n",
+      "| Repository | Commits | PRs Opened | PRs Merged",
+      " | Issues Opened | Issues Closed |\n",
+      "|------------|---------|------------|------------",
+      "|---------------|---------------|\n",
       paste(rows, collapse = "\n"),
       "\n"
     )

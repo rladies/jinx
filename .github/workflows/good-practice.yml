@@ -9,6 +9,8 @@ on:
       - "man/**"
       - "DESCRIPTION"
       - "NAMESPACE"
+      - ".github/scripts/gp-report.R"
+      - ".github/workflows/good-practice.yml"
 
 jobs:
   gp:
@@ -37,39 +39,7 @@ jobs:
 
       - name: Run goodpractice
         id: gp
-        run: |
-          Rscript -e '
-            gp_result <- goodpractice::gp(".", checks = c(
-              "cyclocomp",
-              "no_description_depends",
-              "no_import_package_as_a_whole",
-              "lintr_assignment_linter",
-              "lintr_line_length_linter"
-            ))
-
-            statuses <- vapply(
-              gp_result$checks,
-              function(c) {
-                if (is.list(c)) isTRUE(c$status) else isTRUE(c)
-              },
-              logical(1)
-            )
-            n_failed <- sum(!statuses)
-
-            if (n_failed == 0) {
-              msg <- "\U0001f389 **Good Practice Check**\n\nAll checks passed!"
-            } else {
-              detail <- capture.output(print(gp_result))
-              msg <- paste0(
-                "\U0001f50d **Good Practice Check**\n\n",
-                "Found ", n_failed, " suggestion(s):\n\n",
-                "```\n",
-                paste(detail, collapse = "\n"),
-                "\n```"
-              )
-            }
-            writeLines(msg, "gp_report.md")
-          '
+        run: Rscript .github/scripts/gp-report.R
 
       - name: Post report
         if: always()

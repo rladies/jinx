@@ -17,25 +17,23 @@ generate_conference_report <- function(org = "rladies", repo = "global-team") {
   }
 
   cfps$days_left <- as.integer(as.Date(cfps$deadline) - Sys.Date())
+  cfps$status <- ifelse(
+    !is.na(cfps$days_left) & cfps$days_left <= 7,
+    "URGENT",
+    ifelse(
+      !is.na(cfps$days_left) & cfps$days_left <= 14,
+      "Soon",
+      "Open"
+    )
+  )
   cli::cli_alert_success("Found {nrow(cfps)} active CFP{?s}")
 
-  lines <- vapply(
-    seq_len(nrow(cfps)),
-    function(i) {
-      status <- if (!is.na(cfps$days_left[i]) && cfps$days_left[i] <= 7) {
-        "URGENT"
-      } else if (!is.na(cfps$days_left[i]) && cfps$days_left[i] <= 14) {
-        "Soon"
-      } else {
-        "Open"
-      }
-      cli::format_inline(paste0(
-        "| {cfps$conference[i]} | {cfps$deadline[i]}",
-        " | {cfps$days_left[i]} days | {status}",
-        " | [#{cfps$number[i]}]({cfps$url[i]}) |"
-      ))
-    },
-    character(1)
+  lines <- glue::glue_data(
+    cfps,
+    paste0(
+      "| {conference} | {deadline} | {days_left} days",
+      " | {status} | [#{number}]({url}) |"
+    )
   )
 
   paste(

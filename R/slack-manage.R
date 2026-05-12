@@ -1,3 +1,7 @@
+slack_invitees_base_id <- function() {
+  Sys.getenv("RLADIES_SLACK_INVITEES_BASE_ID", "appJZFYABfCIdPYMR")
+}
+
 #' Send pending Slack invitations
 #'
 #' Fetches pending invitees from Airtable and prepares invite emails
@@ -13,7 +17,7 @@
 #' @export
 send_slack_invites <- function(
   invite_link,
-  base_id = "appJZFYABfCIdPYMR",
+  base_id = slack_invitees_base_id(),
   api_key = Sys.getenv("AIRTABLE_API_KEY"),
   sender_name = "R-Ladies Global",
   sender_email = "info@rladies.org",
@@ -75,76 +79,87 @@ send_slack_invites <- function(
   invisible(emails)
 }
 
-#' Send a single Slack invitation
+#' Request a Slack invitation for someone not yet on the workspace
 #'
-#' Sends a personalised Slack invite email to one person using the
-#' active invite link stored in `SLACK_INVITE_LINK`.
+#' The bot cannot invite users directly (Slack admin scopes are not
+#' available to community apps). Instead, this function posts a
+#' message to an organisers' Slack channel with the email address and
+#' instructions for a workspace admin to action the invite manually,
+#' then flips the matching Airtable record's `invited` flag for audit.
 #'
-#' @param email Email address to invite.
-#' @param invite_link Active Slack invite URL. Defaults to
-#'   `SLACK_INVITE_LINK` env var.
+#' @param email Email address to request an invite for.
+#' @param channel Slack channel where the request is posted. Defaults
+#'   to `SLACK_INVITE_REQUEST_CHANNEL` env var, falling back to
+#'   `"global-team"`.
 #' @param base_id Airtable base ID for Slack invitees.
-#' @param api_key Airtable API key.
-#' @param token Slack API token for posting confirmation.
-#' @return Response message (character string).
+#' @param api_key Airtable API key. If unset, the Airtable audit step
+#'   is skipped.
+#' @param token Slack bot token (`chat:write` scope is enough).
+#' @return A single status string suitable for posting back as a PR
+#'   comment.
 #' @export
 send_slack_invite <- function(
   email,
-  invite_link = Sys.getenv("SLACK_INVITE_LINK"),
-  base_id = "appJZFYABfCIdPYMR",
+  channel = Sys.getenv("SLACK_INVITE_REQUEST_CHANNEL"),
+  base_id = slack_invitees_base_id(),
   api_key = Sys.getenv("AIRTABLE_API_KEY"),
   token = Sys.getenv("SLACK_TOKEN")
 ) {
-  if (!nzchar(invite_link)) {
-    cli::cli_abort(paste0(
-      "SLACK_INVITE_LINK environment variable is not set.",
-      " Generate a new invite link in Slack workspace settings."
-    ))
+  if (!nzchar(channel)) {
+    channel <- "global-team"
   }
 
-  if (!grepl("@", email, fixed = TRUE)) {
+  if (!nzchar(token)) {
+    cli::cli_abort(
+      "SLACK_TOKEN environment variable is not set; cannot post invite request."
+    )
+  }
+
+  if (!is_valid_email(email)) {
     return(glue::glue("Invalid email address: `{email}`"))
   }
 
-  template <- system.file("templates", "slack-invite.md", package = "jinx")
-  template_text <- paste(readLines(template, warn = FALSE), collapse = "\n")
-  expire_date <- format(Sys.Date() + 30, "%B %d, %Y")
+  text <- invite_request_message(email)
+  resp <- post_slack_message(text, channel, token)
 
-  body <- glue::glue(
-    template_text,
-    link = invite_link,
-    date = expire_date,
-    sender = "R-Ladies Global",
-    .open = "{{",
-    .close = "}}"
-  )
-
-  resp <- httr2::request("https://slack.com/api/chat.postMessage") |>
-    httr2::req_headers(Authorization = paste("Bearer", token)) |>
-    httr2::req_body_json(list(
-      channel = email,
-      text = body,
-      unfurl_links = FALSE
-    )) |>
-    httr2::req_perform() |>
-    httr2::resp_body_json()
-
-  if (!isTRUE(resp$ok) || resp$error == "channel_not_found") {
-    cli::cli_alert_info(
-      "Recipient not on Slack yet, sending invite email via Airtable workflow"
-    )
+  if (!isTRUE(resp$ok)) {
+    cli::cli_abort(c(
+      "Could not post invite request to #{channel}.",
+      i = "Slack API error: {resp$error %||% 'unknown'}"
+    ))
   }
 
   if (nzchar(api_key)) {
     airtable_mark_invited(email, base_id, api_key)
   }
 
-  glue::glue("Slack invite sent to {email}")
+  glue::glue(
+    "Invite request for {email} posted to #{channel}; an admin will action it."
+  )
+}
+
+is_valid_email <- function(email) {
+  isTRUE(grepl(
+    "^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+$",
+    email
+  ))
+}
+
+invite_request_message <- function(email) {
+  glue::glue(
+    ":wave: *Slack invite requested* for `{email}`.\n",
+    "An admin needs to send the invite:\n",
+    " 1. Open the workspace menu (RLadies+ name, top-left).\n",
+    " 2. Choose *Invite people to RLadies+*.\n",
+    " 3. Paste the email above and send.\n",
+    "Once sent, react with :white_check_mark: so we know it's done.",
+    .trim = FALSE
+  )
 }
 
 airtable_mark_invited <- function(
   email,
-  base_id = "appJZFYABfCIdPYMR",
+  base_id = slack_invitees_base_id(),
   api_key = Sys.getenv("AIRTABLE_API_KEY")
 ) {
   records <- airtable_list_records(base_id, "Table 1", api_key)
@@ -154,7 +169,7 @@ airtable_mark_invited <- function(
   )
   if (length(match) == 0) {
     cli::cli_alert_warning("No Airtable record found for {email}")
-    return(invisible(NULL))
+    return(FALSE)
   }
 
   record_id <- match[[1]]$id
@@ -167,6 +182,7 @@ airtable_mark_invited <- function(
     httr2::req_perform()
 
   cli::cli_alert_success("Airtable record {record_id} marked as invited")
+  TRUE
 }
 
 #' Subscribe an RSS feed to a Slack channel

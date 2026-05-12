@@ -33,27 +33,13 @@ monitor_chapter_status <- function(
   chapters$last_event <- as.Date(chapters$last_event)
   chapters$founded_date <- as.Date(chapters$founded_date)
 
-  chapters$status <- vapply(
-    seq_len(nrow(chapters)),
-    function(i) {
-      r <- chapters[i, ]
-      if (!is.na(r$upcoming_events) && r$upcoming_events >= 1) {
-        "active with upcoming events"
-      } else if (!is.na(r$last_event) && r$last_event >= cutoff) {
-        "active in the past 6 months"
-      } else if (!is.na(r$last_event) && r$last_event < cutoff) {
-        "inactive"
-      } else if (
-        is.na(r$last_event) &&
-          !is.na(r$founded_date) &&
-          r$founded_date >= cutoff
-      ) {
-        "unbegun, but founded during last six months"
-      } else {
-        "unbegun"
-      }
-    },
-    character(1)
+  chapters$status <- mapply(
+    classify_chapter_status,
+    chapters$upcoming_events,
+    chapters$last_event,
+    chapters$founded_date,
+    MoreArgs = list(cutoff = cutoff),
+    USE.NAMES = FALSE
   )
 
   chapters <- chapters[
@@ -133,6 +119,22 @@ prepare_inactivity_emails <- function(
   }
 
   invisible(emails)
+}
+
+classify_chapter_status <- function(upcoming, last, founded, cutoff) {
+  if (isTRUE(upcoming >= 1)) {
+    return("active with upcoming events")
+  }
+  if (isTRUE(last >= cutoff)) {
+    return("active in the past 6 months")
+  }
+  if (isTRUE(last < cutoff)) {
+    return("inactive")
+  }
+  if (isTRUE(founded >= cutoff)) {
+    return("unbegun, but founded during last six months")
+  }
+  "unbegun"
 }
 
 fetch_chapter_data_from_archive <- function(org) {

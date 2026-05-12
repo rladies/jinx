@@ -47,7 +47,7 @@ RLadies+ Organisers Slack.
 \details{
 The function is stateless: jinx does not persist any user
 identifiers. The Slack \code{team_join} event is the source of truth
-for who to welcome — see the \code{slack-welcome.yml} GitHub Actions
+for who to welcome -- see the \code{slack-welcome.yml} GitHub Actions
 workflow (\code{workflow_dispatch} / \code{repository_dispatch} triggered by
 the Slack event handler) for the wiring.
 }

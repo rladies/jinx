@@ -8,22 +8,7 @@
 #' @return Character vector of merged PR URLs (invisibly).
 #' @export
 auto_merge_pending <- function(org = "rladies", repo = "rladies.github.io") {
-  prs <- gh::gh(
-    "GET /repos/{owner}/{repo}/pulls",
-    owner = org,
-    repo = repo,
-    state = "open",
-    .limit = Inf
-  )
-
-  pending <- Filter(
-    function(pr) {
-      labels <- vapply(pr$labels, function(l) l$name, character(1))
-      "pending" %in% labels && !isTRUE(pr$draft)
-    },
-    prs
-  )
-
+  pending <- fetch_pending_prs(org, repo)
   if (length(pending) == 0) {
     cli::cli_alert_info("No pending PRs found")
     return(invisible(character(0)))
@@ -33,74 +18,91 @@ auto_merge_pending <- function(org = "rladies", repo = "rladies.github.io") {
   merged <- character(0)
 
   for (pr in pending) {
-    files <- gh::gh(
-      "GET /repos/{owner}/{repo}/pulls/{pr_number}/files",
-      owner = org,
-      repo = repo,
-      pr_number = pr$number,
-      .limit = Inf
-    )
-
-    content_files <- Filter(
-      function(f) {
-        grepl("^content/.*/index(\\.[a-zA-Z]+)?\\.md$", f$filename)
-      },
-      files
-    )
-
-    if (length(content_files) == 0) {
-      next
-    }
-
-    should_merge <- FALSE
-    for (f in content_files) {
-      content <- tryCatch(
-        {
-          resp <- gh::gh(
-            "GET /repos/{owner}/{repo}/contents/{path}",
-            owner = org,
-            repo = repo,
-            path = f$filename,
-            ref = pr$head$ref
-          )
-          rawToChar(jsonlite::base64_dec(resp$content))
-        },
-        error = function(e) NULL
-      )
-
-      if (is.null(content)) {
-        next
-      }
-
-      yaml_date <- extract_yaml_date(content)
-      if (!is.null(yaml_date) && yaml_date == today) {
-        should_merge <- TRUE
-        break
-      }
-    }
-
-    if (should_merge) {
-      tryCatch(
-        {
-          gh::gh(
-            "PUT /repos/{owner}/{repo}/pulls/{pr_number}/merge",
-            owner = org,
-            repo = repo,
-            pr_number = pr$number,
-            merge_method = "squash"
-          )
-          cli::cli_alert_success("Merged PR #{pr$number}: {pr$title}")
-          merged <- c(merged, pr$html_url)
-        },
-        error = function(e) {
-          cli::cli_alert_danger("Failed to merge PR #{pr$number}: {e$message}")
-          post_merge_failure_comment(org, repo, pr$number, e$message)
-        }
-      )
+    if (pr_due_today(pr, today, org, repo)) {
+      merged <- c(merged, try_squash_merge(pr, org, repo))
     }
   }
 
   invisible(merged)
+}
+
+fetch_pending_prs <- function(org, repo) {
+  prs <- gh::gh(
+    "GET /repos/{owner}/{repo}/pulls",
+    owner = org,
+    repo = repo,
+    state = "open",
+    .limit = Inf
+  )
+  Filter(
+    function(pr) {
+      labels <- vapply(pr$labels, function(l) l$name, character(1))
+      "pending" %in% labels && !isTRUE(pr$draft)
+    },
+    prs
+  )
+}
+
+pr_due_today <- function(pr, today, org, repo) {
+  files <- gh::gh(
+    "GET /repos/{owner}/{repo}/pulls/{pr_number}/files",
+    owner = org,
+    repo = repo,
+    pr_number = pr$number,
+    .limit = Inf
+  )
+  content_files <- Filter(
+    function(f) grepl("^content/.*/index(\\.[a-zA-Z]+)?\\.md$", f$filename),
+    files
+  )
+  if (length(content_files) == 0) {
+    return(FALSE)
+  }
+
+  for (f in content_files) {
+    if (identical(file_yaml_date(f, pr, org, repo), today)) {
+      return(TRUE)
+    }
+  }
+  FALSE
+}
+
+file_yaml_date <- function(f, pr, org, repo) {
+  content <- tryCatch(
+    {
+      resp <- gh::gh(
+        "GET /repos/{owner}/{repo}/contents/{path}",
+        owner = org,
+        repo = repo,
+        path = f$filename,
+        ref = pr$head$ref
+      )
+      rawToChar(jsonlite::base64_dec(resp$content))
+    },
+    error = function(e) NULL
+  )
+  if (is.null(content)) NULL else extract_yaml_date(content)
+}
+
+try_squash_merge <- function(pr, org, repo) {
+  tryCatch(
+    {
+      gh::gh(
+        "PUT /repos/{owner}/{repo}/pulls/{pr_number}/merge",
+        owner = org,
+        repo = repo,
+        pr_number = pr$number,
+        merge_method = "squash"
+      )
+      cli::cli_alert_success("Merged PR #{pr$number}: {pr$title}")
+      pr$html_url
+    },
+    error = function(e) {
+      cli::cli_alert_danger("Failed to merge PR #{pr$number}: {e$message}")
+      post_merge_failure_comment(org, repo, pr$number, e$message)
+      character(0)
+    }
+  )
 }
 
 #' Post blog PR checklist
@@ -121,23 +123,35 @@ post_blog_checklist <- function(owner, repo, pr_number) {
     "- [ ] Ensure the title is appropriate for publication.",
     "- [ ] Ensure all links are working and point to correct destinations.",
     "- [ ] Ensure internal cross-references (if any) are correct.",
-    "- [ ] If the main document is a `qmd` or `rmd`, make sure the knitted `md` is committed.",
+    paste0(
+      "- [ ] If the main document is a `qmd` or `rmd`,",
+      " make sure the knitted `md` is committed."
+    ),
     "- [ ] Ensure no sensitive or confidential information is included.",
     "- [ ] Check grammar and spelling.",
     "- [ ] Ensure all images have alt text `![alt goes here](image.png)`.",
     "",
     "### Review ready",
-    "- [ ] Remove draft mode for the PR, reviewers will be automatically assigned.",
+    paste0(
+      "- [ ] Remove draft mode for the PR,",
+      " reviewers will be automatically assigned."
+    ),
     "",
     "### Reviewers",
     "- [ ] Verify the title is appropriate for publication.",
     "- [ ] Verify all links are working.",
     "- [ ] Verify all images have alt text.",
-    "- [ ] If the main document is a `qmd` or `rmd`, verify the `md` is up to date.",
+    paste0(
+      "- [ ] If the main document is a `qmd` or `rmd`,",
+      " verify the `md` is up to date."
+    ),
     "",
     "### Publication",
     '- [ ] Set a date for publication.',
-    '- [ ] Change label to "pending" - publication will happen automatically on that day.',
+    paste0(
+      '- [ ] Change label to "pending" - publication',
+      " will happen automatically on that day."
+    ),
     "",
     "_Generated by jinx_",
     sep = "\n"
