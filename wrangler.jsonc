@@ -10,7 +10,9 @@
     "nodejs_compat"
   ],
   "vars": {
-    "GITHUB_REPO": "rladies/jinx"
+    "GITHUB_REPO": "rladies/jinx",
+    "SLACK_COMMUNITY_TEAM_ID": "",
+    "SLACK_ORGANIZER_TEAM_ID": ""
   },
   "ai": {
     "binding": "AI"
@@ -19,6 +21,12 @@
     {
       "binding": "RAG_INDEX",
       "index_name": "rladies-content"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "SLACK_TOKENS",
+      "id": "5614aacb7982413e807c2ae2126a4b3b"
     }
   ]
 }
