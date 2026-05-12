@@ -1,0 +1,57 @@
+name: Slack - Welcome New Member
+
+on:
+  workflow_dispatch:
+    inputs:
+      user_id:
+        description: "Slack user ID of the new member (e.g. U12345)"
+        required: true
+        type: string
+      workspace:
+        description: "Which Slack workspace the member joined"
+        required: true
+        type: choice
+        options:
+          - community
+          - organisers
+        default: community
+  repository_dispatch:
+    types: [slack-team-join]
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: local::.
+
+      - name: Resolve event inputs
+        id: inputs
+        env:
+          DISPATCH_USER_ID: ${{ github.event.client_payload.user_id }}
+          DISPATCH_WORKSPACE: ${{ github.event.client_payload.workspace }}
+          INPUT_USER_ID: ${{ github.event.inputs.user_id }}
+          INPUT_WORKSPACE: ${{ github.event.inputs.workspace }}
+        run: |
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "user_id=${DISPATCH_USER_ID}" >> "$GITHUB_OUTPUT"
+            echo "workspace=${DISPATCH_WORKSPACE:-community}" >> "$GITHUB_OUTPUT"
+          else
+            echo "user_id=${INPUT_USER_ID}" >> "$GITHUB_OUTPUT"
+            echo "workspace=${INPUT_WORKSPACE:-community}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Welcome new Slack member
+        env:
+          SLACK_TOKEN: ${{ steps.inputs.outputs.workspace == 'organisers' && secrets.SLACK_TOKEN_ORGANISERS || secrets.SLACK_TOKEN_COMMUNITY }}
+          USER_ID: ${{ steps.inputs.outputs.user_id }}
+          WORKSPACE: ${{ steps.inputs.outputs.workspace }}
+        run: |
+          Rscript -e 'jinx::welcome_slack_member(user_id = Sys.getenv("USER_ID"), workspace = Sys.getenv("WORKSPACE"))'

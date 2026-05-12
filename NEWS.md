@@ -5,139 +5,145 @@ management.
 
 ## Team management
 
-* `gt_invite()`, `gt_check_invitations()`, `gt_finalize_onboarding()` for
+- `gt_invite()`, `gt_check_invitations()`, `gt_finalize_onboarding()` for
   onboarding new global team members.
-* `gt_create_offboarding()`, `gt_finalize_offboarding()` for offboarding.
-* `gt_remind_stale()` for stale issue reminders.
+- `gt_create_offboarding()`, `gt_finalize_offboarding()` for offboarding.
+- `gt_remind_stale()` for stale issue reminders.
 
 ## Announcements
 
-* `announce_post()` cross-posts blog announcements to Bluesky, LinkedIn,
+- `announce_post()` cross-posts blog announcements to Bluesky, LinkedIn,
   Mastodon, and newsletter.
-* Platform integrations: `post_bluesky()`, `post_mastodon()`,
+- Platform integrations: `post_bluesky()`, `post_mastodon()`,
   `li_post_write()`, `send_newsletter()`.
-* Utilities: `create_announcement_message()`, `short_url()`, `tags2hash()`,
+- Utilities: `create_announcement_message()`, `short_url()`, `tags2hash()`,
   `random_emoji()`.
 
 ## Directory
 
-* `validate_directory_pr()`, `validate_directory_entries()`,
+- `validate_directory_pr()`, `validate_directory_entries()`,
   `validate_entry_filename()` for directory entry validation.
-* `verify_social_handles()` for social media handle verification.
-* `crop_directory_image()`, `optimize_image()` for image processing.
+- `verify_social_handles()` for social media handle verification.
+- `crop_directory_image()`, `optimize_image()` for image processing.
 
 ## Blogs
 
-* `create_blog_entry()`, `validate_blog_entry()` for blog content management.
-* `check_blog_links()` for link validation.
-* `post_blog_checklist()` for automated PR review checklists.
+- `create_blog_entry()`, `validate_blog_entry()` for blog content management.
+- `check_blog_links()` for link validation.
+- `post_blog_checklist()` for automated PR review checklists.
 
 ## Chapters
 
-* `create_chapter()`, `create_chapter_setup()`, `create_chapter_update()` for
+- `create_chapter()`, `create_chapter_setup()`, `create_chapter_update()` for
   chapter lifecycle management.
-* `create_chapter_json_pr()` for directory integration.
-* `check_chapter_health()` for activity monitoring.
+- `create_chapter_json_pr()` for directory integration.
+- `check_chapter_health()` for activity monitoring.
 
 ## Reports
 
-* `generate_report()`, `publish_report()` for activity reports.
-* `report_chapter_health()` for chapter-specific reporting.
-* `format_report_markdown()` for report rendering.
+- `generate_report()`, `publish_report()` for activity reports.
+- `report_chapter_health()` for chapter-specific reporting.
+- `format_report_markdown()` for report rendering.
 
 ## PR review
 
-* `review_pr()`, `check_pr_naming()` for automated PR review.
-* Configurable rules via `inst/config/review-rules.yml`.
+- `review_pr()`, `check_pr_naming()` for automated PR review.
+- Configurable rules via `inst/config/review-rules.yml`.
 
 ## Airtable sync
 
-* `sync_directory_airtable()`, `sync_global_team_airtable()` for
+- `sync_directory_airtable()`, `sync_global_team_airtable()` for
   bidirectional sync between Airtable and GitHub.
 
 ## Website automation
 
-* `auto_merge_pending()` for date-based PR auto-merge.
-* `greet_contributor()` for contributor interaction.
+- `auto_merge_pending()` for date-based PR auto-merge.
+- `greet_contributor()` for contributor interaction.
 
 ## Chapter monitoring
 
-* `monitor_chapter_status()` for activity classification.
-* `prepare_inactivity_emails()` for outreach to inactive chapters.
+- `monitor_chapter_status()` for activity classification.
+- `prepare_inactivity_emails()` for outreach to inactive chapters.
 
 ## Slack management
 
-* `send_slack_invites()` for community Slack onboarding.
-* `subscribe_slack_rss()` for blog feed integration.
+- `send_slack_invites()` for community Slack onboarding.
+- `subscribe_slack_rss()` for blog feed integration.
+- `welcome_slack_member()` sends a workspace-aware welcome DM to a new
+  member, with separate templates for the RLadies+ community and
+  organisers Slack workspaces. Stateless: triggered by a Slack
+  `team_join` event via the `slack-welcome.yml` workflow
+  (`workflow_dispatch` / `repository_dispatch`) — jinx does not
+  persist any user identifiers.
 
 ## GHA dashboard
 
-* `generate_gha_dashboard()`, `publish_gha_dashboard()` for org-wide
+- `generate_gha_dashboard()`, `publish_gha_dashboard()` for org-wide
   GitHub Actions workflow status reporting.
 
 ## Contributors
 
-* `list_contributors()`, `list_org_contributors()` for contributor tracking.
-* `format_contributors()`, `update_contributors_list()` for display and
+- `list_contributors()`, `list_org_contributors()` for contributor tracking.
+- `format_contributors()`, `update_contributors_list()` for display and
   maintenance.
-* `welcome_contributor()`, `thank_contributor()` for automated greetings.
+- `welcome_contributor()`, `thank_contributor()` for automated greetings.
 
 ## Commands
 
-* `/jinx` issue comment interface via `parse_command()` and
+- `/jinx` issue comment interface via `parse_command()` and
   `execute_command()`.
-* 16 commands: invite, offboard, announce, validate-directory, chapter-health,
+- 16 commands: invite, offboard, announce, validate-directory, chapter-health,
   blog-add, blog-check-links, report, chapter-setup, chapter-update,
   gha-dashboard, contributors, remind, help.
 
 ## Event management
 
-* `list_chapter_events()` queries Meetup Pro for chapter events.
-* `sync_chapter_events()` fetches events across all configured chapters.
-* `create_event_summary()`, `publish_event_summary()` for reporting.
-* Meetup GraphQL API integration via Meetup Pro.
+- `list_chapter_events()` queries Meetup Pro for chapter events.
+- `sync_chapter_events()` fetches events across all configured chapters.
+- `create_event_summary()`, `publish_event_summary()` for reporting.
+- Meetup GraphQL API integration via Meetup Pro.
 
 ## Analytics dashboard
 
-* `collect_chapter_activity()`, `collect_contributor_growth()` for data
+- `collect_chapter_activity()`, `collect_contributor_growth()` for data
   collection.
-* `compute_activity_trends()` with ASCII sparklines for trend visualization.
-* `generate_analytics_dashboard()`, `publish_analytics_dashboard()` for
+- `compute_activity_trends()` with ASCII sparklines for trend visualization.
+- `generate_analytics_dashboard()`, `publish_analytics_dashboard()` for
   monthly org-wide analytics.
 
 ## Website analytics
 
-* `collect_website_analytics()` fetches visitor, pageview, and engagement
+- `collect_website_analytics()` fetches visitor, pageview, and engagement
   metrics from Plausible Analytics API.
-* `format_website_analytics()` renders analytics as markdown with traffic
+- `format_website_analytics()` renders analytics as markdown with traffic
   trends, top pages, and referral sources.
-* `generate_website_report()`, `publish_website_report()` for periodic
+- `generate_website_report()`, `publish_website_report()` for periodic
   website performance reports.
-* `/jinx website-analytics [period]` command with configurable time periods.
+- `/jinx website-analytics [period]` command with configurable time periods.
 
 ## Conference coordination
 
-* `list_open_cfps()`, `create_cfp_issue()`, `check_cfp_deadlines()` for
+- `list_open_cfps()`, `create_cfp_issue()`, `check_cfp_deadlines()` for
   CFP tracking via GitHub Issues.
-* `recommend_speaker()`, `list_speaker_recommendations()` for speaker
+- `recommend_speaker()`, `list_speaker_recommendations()` for speaker
   management.
-* `generate_conference_report()` for coordination summaries.
+- `generate_conference_report()` for coordination summaries.
 
 ## Internationalization
 
-* `translate_template()` with automatic fallback to English.
-* `list_supported_languages()`, `get_chapter_language()` for language
+- `translate_template()` with automatic fallback to English.
+- `list_supported_languages()`, `get_chapter_language()` for language
   management.
-* `validate_translations()`, `check_translation_coverage()` for
+- `validate_translations()`, `check_translation_coverage()` for
   translation quality assurance.
-* Starter translations for Spanish, Portuguese, and French.
+- Starter translations for Spanish, Portuguese, and French.
 
 ## Infrastructure
 
-* ROR identifier for R-Ladies Global (`https://ror.org/05wpb1k41`).
-* 24 GitHub Actions workflows for automated operations.
-* JSON schemas for directory entries, blog entries, chapters, team data,
+- ROR identifier for R-Ladies Global (`https://ror.org/05wpb1k41`).
+- 24 GitHub Actions workflows for automated operations.
+- JSON schemas for directory entries, blog entries, chapters, team data,
   events, and CFPs.
-* Template system with team-specific extras and i18n support.
-* pkgdown documentation site at `https://rladies.github.io/jinx/`.
-* Getting Started and Workflow Reference vignettes.
+- Template system with team-specific extras and i18n support.
+- pkgdown documentation site at `https://rladies.github.io/jinx/`.
+- Getting Started and Workflow Reference vignettes.
