@@ -1,0 +1,13 @@
+{
+  "name": "jinx-indexer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Indexer for the Jinx RAG bot — chunks and embeds rladiesguide + rladies.github.io content into Cloudflare Vectorize.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "index": "node index.mjs"
+  }
+}
