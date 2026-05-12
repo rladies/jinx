@@ -10,7 +10,7 @@ This document describes what data Jinx receives, how it is used, where it goes, 
 
 Jinx is operated by the RLadies+ Global Team. The technical maintainers are the contributors listed in the [rladies/jinx](https://github.com/rladies/jinx) repository on GitHub.
 
-Contact: **info@rladies.org** or open an issue at <https://github.com/rladies/jinx/issues>.
+Contact: open an issue at <https://github.com/rladies/jinx/issues>.
 
 ## What data Jinx receives
 
