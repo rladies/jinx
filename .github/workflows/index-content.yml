@@ -1,0 +1,43 @@
+name: Index RAG content
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * 0"
+
+permissions:
+  contents: read
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout jinx
+        uses: actions/checkout@v4
+
+      - name: Checkout rladiesguide
+        uses: actions/checkout@v4
+        with:
+          repository: rladies/rladiesguide
+          path: _sources/rladiesguide
+
+      - name: Checkout rladies.github.io
+        uses: actions/checkout@v4
+        with:
+          repository: rladies/rladies.github.io
+          path: _sources/rladies.github.io
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run indexer
+        working-directory: indexer
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          VECTORIZE_INDEX: rladies-content
+          RLADIESGUIDE_PATH: ${{ github.workspace }}/_sources/rladiesguide
+          RLADIES_SITE_PATH: ${{ github.workspace }}/_sources/rladies.github.io
+        run: node index.mjs

@@ -1,3 +1,5 @@
+import { handleSlackEvent } from "./slack-events.js";
+
 export default {
   async fetch(request, env, ctx) {
     if (request.method !== "POST") {
@@ -7,7 +9,6 @@ export default {
     }
 
     const body = await request.text();
-    const params = new URLSearchParams(body);
 
     // Verify Slack request signature
     const timestamp = request.headers.get("x-slack-request-timestamp");
@@ -21,7 +22,15 @@ export default {
 
     console.log("Signature verified");
 
-    // Handle Slack URL verification challenge
+    // Events API (app_mention, etc.) sends JSON; slash commands send form-encoded
+    const contentType = request.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      return handleSlackEvent(env, ctx, body);
+    }
+
+    const params = new URLSearchParams(body);
+
+    // Legacy URL verification path (Events API now handled above)
     if (params.get("type") === "url_verification") {
       return Response.json({ challenge: params.get("challenge") });
     }
