@@ -69,8 +69,8 @@ validate_translations <- function(language = NULL) {
         template = tmpl,
         language = lang,
         status = status,
-        missing_keys = paste(missing, collapse = ", "),
-        extra_keys = paste(extra, collapse = ", "),
+        missing_keys = toString(missing),
+        extra_keys = toString(extra),
         stringsAsFactors = FALSE
       )
     }

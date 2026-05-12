@@ -8,7 +8,7 @@ describe("compute_sparkline", {
   it("handles constant values", {
     result <- compute_sparkline(c(5, 5, 5))
     expect_length(result, 3)
-    expect_true(length(unique(result)) == 1)
+    expect_length(unique(result), 1)
   })
 
   it("returns empty for empty input", {
@@ -28,11 +28,11 @@ describe("compute_activity_trends", {
     )
     result <- compute_activity_trends(data)
     expect_s3_class(result, "data.frame")
-    expect_equal(nrow(result), 2)
+    expect_identical(nrow(result), 2L)
     expect_true("total_commits" %in% names(result))
-    expect_equal(result$total_commits, c(15L, 23L))
+    expect_identical(result$total_commits, c(15L, 23L))
     expect_true(is.na(result$change[1]))
-    expect_true(!is.na(result$change[2]))
+    expect_false(is.na(result$change[2]))
   })
 
   it("handles empty data", {
@@ -45,17 +45,17 @@ describe("compute_activity_trends", {
       stringsAsFactors = FALSE
     )
     result <- compute_activity_trends(empty)
-    expect_equal(nrow(result), 0)
+    expect_identical(nrow(result), 0L)
   })
 })
 
 describe("compute_growth_rate", {
   it("computes percentage growth", {
-    expect_equal(compute_growth_rate(c(100, 150)), 50)
+    expect_identical(compute_growth_rate(c(100, 150)), 50)
   })
 
   it("returns NA for single value", {
-    expect_true(is.na(compute_growth_rate(c(100))))
+    expect_true(is.na(compute_growth_rate(100)))
   })
 })
 
@@ -76,9 +76,9 @@ describe("format_analytics_markdown", {
       stringsAsFactors = FALSE
     )
     result <- format_analytics_markdown(trends, growth)
-    expect_true(grepl("Analytics Dashboard", result))
-    expect_true(grepl("2024-01", result))
-    expect_true(grepl("2024-02", result))
+    expect_true(grepl("Analytics Dashboard", result, fixed = TRUE))
+    expect_true(grepl("2024-01", result, fixed = TRUE))
+    expect_true(grepl("2024-02", result, fixed = TRUE))
   })
 
   it("handles empty data", {
@@ -97,13 +97,13 @@ describe("format_analytics_markdown", {
       stringsAsFactors = FALSE
     )
     result <- format_analytics_markdown(empty_t, empty_g)
-    expect_true(grepl("No data", result))
+    expect_true(grepl("No data", result, fixed = TRUE))
   })
 })
 
 describe("analytics command parsing", {
   it("parses /jinx analytics", {
     cmd <- parse_command("/jinx analytics")
-    expect_equal(cmd$action, "analytics")
+    expect_identical(cmd$action, "analytics")
   })
 })

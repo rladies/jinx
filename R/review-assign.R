@@ -5,6 +5,8 @@
 #' @param owner Repository owner.
 #' @param repo Repository name.
 #' @param pr_number Pull request number.
+#' @return Invisibly returns `NULL`. Called for its side effects of
+#'   assigning reviewers, labelling the PR, and posting a checklist comment.
 #' @export
 review_pr <- function(owner, repo, pr_number) {
   cli::cli_h2("Reviewing PR #{pr_number} in {owner}/{repo}")

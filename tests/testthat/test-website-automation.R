@@ -8,7 +8,7 @@ describe("extract_yaml_date", {
       "Post body",
       sep = "\n"
     )
-    expect_equal(extract_yaml_date(content), "2024-03-15")
+    expect_identical(extract_yaml_date(content), "2024-03-15")
   })
 
   it("handles quoted dates", {
@@ -19,7 +19,7 @@ describe("extract_yaml_date", {
       "---",
       sep = "\n"
     )
-    expect_equal(extract_yaml_date(content), "2024-03-15")
+    expect_identical(extract_yaml_date(content), "2024-03-15")
   })
 
   it("handles double-quoted dates", {
@@ -30,7 +30,7 @@ describe("extract_yaml_date", {
       "---",
       sep = "\n"
     )
-    expect_equal(extract_yaml_date(content), "2024-03-15")
+    expect_identical(extract_yaml_date(content), "2024-03-15")
   })
 
   it("returns NULL when no YAML front matter", {
@@ -59,6 +59,6 @@ describe("extract_yaml_date", {
       "---",
       sep = "\n"
     )
-    expect_equal(extract_yaml_date(content), "2024-03-15")
+    expect_identical(extract_yaml_date(content), "2024-03-15")
   })
 })

@@ -28,6 +28,7 @@
 | `/jinx cfp recommend <conf> @speaker` | Recommend a speaker |
 | `/jinx translate status` | Check translation coverage |
 | `/jinx translate validate [lang]` | Validate translation placeholders |
+| `/jinx slack-invite <email>` | Send a Slack workspace invite to an email |
 | `/jinx remind stale` | Send reminders on stale issues |
 | `/jinx help` | Show this help message |
 

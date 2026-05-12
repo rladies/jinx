@@ -46,6 +46,8 @@ gt_create_offboarding <- function(
 #' @param username GitHub username.
 #' @param team Team slug.
 #' @param org GitHub organization. Defaults to `"rladies"`.
+#' @return Invisibly returns `NULL`. Called for its side effect of removing
+#'   the user from the specified teams.
 #' @export
 gt_finalize_offboarding <- function(username, team, org = "rladies") {
   teams_to_remove <- c("global", team)

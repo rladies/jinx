@@ -108,5 +108,5 @@ load_languages_config <- function() {
 }
 
 base64_decode <- function(x) {
-  rawToChar(jsonlite::base64_dec(gsub("\n", "", x)))
+  rawToChar(jsonlite::base64_dec(gsub("\n", "", x, fixed = TRUE)))
 }

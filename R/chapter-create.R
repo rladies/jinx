@@ -28,7 +28,7 @@ create_chapter <- function(
   slug <- gsub("^-|-$", "", slug)
 
   chapter <- list(
-    urlname = paste0("rladies-", tolower(gsub(" ", "-", city))),
+    urlname = paste0("rladies-", tolower(gsub(" ", "-", city, fixed = TRUE))),
     status = status,
     country = country,
     city = city,

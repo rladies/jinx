@@ -40,7 +40,7 @@ recommend_speaker <- function(
   }
 
   expertise_str <- if (length(expertise) > 0) {
-    paste(expertise, collapse = ", ")
+    toString(expertise)
   } else {
     "Not specified"
   }
@@ -55,9 +55,12 @@ recommend_speaker <- function(
       )
     )
   } else {
-    cli::format_inline(
-      "### Speaker Recommendation\n\n**Speaker**: {speaker_ref}\n**Expertise**: {expertise_str}\n**Conference**: {matched$conference[1]}"
-    )
+    cli::format_inline(paste0(
+      "### Speaker Recommendation\n\n",
+      "**Speaker**: {speaker_ref}\n",
+      "**Expertise**: {expertise_str}\n",
+      "**Conference**: {matched$conference[1]}"
+    ))
   }
 
   comment <- gh::gh(
@@ -107,7 +110,7 @@ list_speaker_recommendations <- function(
   )
 
   recs <- Filter(
-    function(c) grepl("Speaker Recommendation", c$body %||% ""),
+    function(c) grepl("Speaker Recommendation", c$body %||% "", fixed = TRUE),
     comments
   )
 

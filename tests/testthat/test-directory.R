@@ -8,25 +8,25 @@ describe("validate_entry_filename", {
   it("rejects uppercase", {
     result <- validate_entry_filename("Jane-Doe.json")
     expect_false(result$valid)
-    expect_true(any(grepl("lowercase", result$issues)))
+    expect_true(any(grepl("lowercase", result$issues, fixed = TRUE)))
   })
 
   it("rejects missing .json extension", {
     result <- validate_entry_filename("jane-doe.txt")
     expect_false(result$valid)
-    expect_true(any(grepl("json", result$issues)))
+    expect_true(any(grepl("json", result$issues, fixed = TRUE)))
   })
 
   it("rejects hash characters", {
     result <- validate_entry_filename("jane#doe.json")
     expect_false(result$valid)
-    expect_true(any(grepl("hash", result$issues)))
+    expect_true(any(grepl("hash", result$issues, fixed = TRUE)))
   })
 
   it("rejects non-ASCII characters", {
     result <- validate_entry_filename("jané-doe.json")
     expect_false(result$valid)
-    expect_true(any(grepl("ASCII", result$issues)))
+    expect_true(any(grepl("ASCII", result$issues, fixed = TRUE)))
   })
 
   it("rejects leading/trailing hyphens", {

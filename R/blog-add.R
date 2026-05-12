@@ -81,12 +81,15 @@ extract_html_title <- function(html) {
 }
 
 detect_rss_feed <- function(html, base_url) {
-  pattern <- '<link[^>]*type=["\']application/(?:rss|atom)\\+xml["\'][^>]*href=["\']([^"\']*)["\']'
+  pattern <- paste0(
+    '<link[^>]*type=["\']application/(?:rss|atom)\\+xml["\']',
+    '[^>]*href=["\']([^"\']*)["\']'
+  )
   match <- regmatches(html, regexec(pattern, html, perl = TRUE))[[1]]
   if (length(match) >= 2) {
     feed <- match[2]
     if (!grepl("^https?://", feed)) {
-      feed <- paste0(sub("/$", "", base_url), "/", sub("^/", "", feed))
+      feed <- sprintf("%s/%s", sub("/$", "", base_url), sub("^/", "", feed))
     }
     feed
   } else {
