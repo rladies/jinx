@@ -47,16 +47,20 @@ jobs:
               "lintr_line_length_linter"
             ))
 
-            results <- goodpractice::results(gp_result)
-            failed <- results[!results$passed, , drop = FALSE]
+            statuses <- vapply(
+              gp_result$checks,
+              function(c) isTRUE(c$status),
+              logical(1)
+            )
+            n_failed <- sum(!statuses)
 
-            if (nrow(failed) == 0) {
+            if (n_failed == 0) {
               msg <- "\U0001f389 **Good Practice Check**\n\nAll checks passed!"
             } else {
               detail <- capture.output(print(gp_result))
               msg <- paste0(
                 "\U0001f50d **Good Practice Check**\n\n",
-                "Found ", nrow(failed), " suggestion(s):\n\n",
+                "Found ", n_failed, " suggestion(s):\n\n",
                 "```\n",
                 paste(detail, collapse = "\n"),
                 "\n```"
