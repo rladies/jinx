@@ -1,5 +1,5 @@
 import { answerQuestion } from "./rag.js";
-import { postSlackMessage } from "./slack-api.js";
+import { postSlackMessage, isAllowedTeam } from "./slack-api.js";
 
 export async function handleSlackEvent(env, ctx, body) {
   let payload;
@@ -27,6 +27,21 @@ export async function handleSlackEvent(env, ctx, body) {
   const threadTs = event.thread_ts || event.ts;
   const query = stripMention(event.text);
   const userId = event.user;
+
+  if (!isAllowedTeam(env, teamId)) {
+    console.warn(`Rejected app_mention from team ${teamId}`);
+    ctx.waitUntil(
+      postSlackMessage(env, teamId, {
+        channel,
+        thread_ts: threadTs,
+        text:
+          "🐈‍⬛ Jinx only runs in the RLadies+ organisers and community " +
+          "workspaces. If you think you should have access, ping the " +
+          "RLadies+ global team in https://github.com/rladies/jinx.",
+      }).catch((e) => console.error("Refusal post failed:", e))
+    );
+    return new Response("", { status: 200 });
+  }
 
   ctx.waitUntil(
     answerAndPost(env, teamId, channel, threadTs, query, userId).catch(
