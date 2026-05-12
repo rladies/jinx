@@ -32,7 +32,11 @@ jobs:
           mapfile -t files < <(
             {
               printf '%s\n' DESCRIPTION NAMESPACE .github/images/jinx-bot/Dockerfile
-              find R inst -type f
+              for dir in R inst; do
+                if [ -d "${dir}" ]; then
+                  find "${dir}" -type f
+                fi
+              done
             } | sort
           )
 
