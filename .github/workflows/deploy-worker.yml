@@ -6,11 +6,13 @@ on:
     paths:
       - "worker/**"
       - "wrangler.jsonc"
+      - ".github/workflows/deploy-worker.yml"
   pull_request:
     branches: [main]
     paths:
       - "worker/**"
       - "wrangler.jsonc"
+      - ".github/workflows/deploy-worker.yml"
 
 jobs:
   validate:
