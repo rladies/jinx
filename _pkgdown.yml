@@ -107,8 +107,12 @@ reference:
     desc: Slack messaging and automation
     contents:
       - post_slack_message
+      - send_slack_invite
       - send_slack_invites
       - subscribe_slack_rss
+      - welcome_slack_member
+      - common_welcome_channels
+      - default_welcome_channels
 
   - title: GHA dashboard
     desc: GitHub Actions workflow status
