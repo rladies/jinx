@@ -1,4 +1,4 @@
-name: Welcome Contributors
+name: Reusable · Welcome Contributor
 
 on:
   workflow_call:
@@ -41,7 +41,7 @@ jobs:
             } else {
               "${{ github.event.issue.user.login }}"
             }
-            jinx::welcome_contributor(
+            jinx::contributor_welcome(
               owner = "${{ github.repository_owner }}",
               repo = "${{ github.event.repository.name }}",
               number = number,

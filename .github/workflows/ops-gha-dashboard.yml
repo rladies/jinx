@@ -1,12 +1,12 @@
-name: Conference CFP Check
+name: Ops · GitHub Actions Dashboard
 
 on:
   schedule:
-    - cron: "0 9 * * 1"
+    - cron: "13 10 * * *"
   workflow_dispatch:
 
 jobs:
-  check-deadlines:
+  dashboard:
     runs-on: ubuntu-latest
     steps:
       - name: Generate app token
@@ -30,10 +30,11 @@ jobs:
         with:
           extra-packages: local::.
 
-      - name: Check CFP deadlines
+      - name: Generate and publish dashboard
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           Rscript -e '
-            jinx::check_cfp_deadlines(warn_days = 7)
+            data <- jinx::gha_generate_dashboard()
+            jinx::gha_publish_dashboard(data)
           '

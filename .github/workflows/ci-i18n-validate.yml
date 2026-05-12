@@ -1,4 +1,4 @@
-name: Validate Translations
+name: CI · i18n Validate
 
 on:
   pull_request:
@@ -23,7 +23,7 @@ jobs:
       - name: Validate translation placeholders
         run: |
           Rscript -e '
-            results <- jinx::validate_translations()
+            results <- jinx::i18n_translations_validate()
             issues <- results[results$status != "ok", ]
             if (nrow(issues) > 0) {
               cat("Translation issues found:\n")

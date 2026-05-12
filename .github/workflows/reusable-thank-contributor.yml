@@ -1,4 +1,4 @@
-name: PR Review Automation
+name: Reusable · Thank Contributor
 
 on:
   workflow_call:
@@ -9,9 +9,9 @@ on:
         required: true
 
 jobs:
-  review:
+  thank:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: github.event.pull_request.merged == true
     container:
       image: ghcr.io/rladies/jinx-bot:latest
     steps:
@@ -23,14 +23,15 @@ jobs:
           private-key: ${{ secrets.JINX_PRIVATE_KEY }}
           owner: rladies
 
-      - name: Run PR review automation
+      - name: Thank contributor
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           Rscript -e '
-            jinx::review_pr(
+            jinx::contributor_thank(
               owner = "${{ github.repository_owner }}",
               repo = "${{ github.event.repository.name }}",
-              pr_number = ${{ github.event.pull_request.number }}
+              pr_number = ${{ github.event.pull_request.number }},
+              author = "${{ github.event.pull_request.user.login }}"
             )
           '

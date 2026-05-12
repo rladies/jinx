@@ -1,4 +1,4 @@
-name: Global Team - Offboard Finalize
+name: Ops · Global Team · Offboard Finalize
 
 on:
   issues:
@@ -47,7 +47,7 @@ jobs:
             team <- if (length(team_labels) > 0) team_labels[1] else NA_character_
 
             if (!is.na(team) && nzchar(username)) {
-              jinx::gt_finalize_offboarding(username, team)
+              jinx::global_team_finalize_offboarding(username, team)
             } else {
               cli::cli_alert_warning("Could not extract username or team from issue")
             }

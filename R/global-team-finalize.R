@@ -9,7 +9,7 @@
 #' @param org GitHub organization. Defaults to `"rladies"`.
 #' @return The created issue URL (invisibly).
 #' @export
-gt_finalize_onboarding <- function(
+global_team_finalize_onboarding <- function(
   username,
   team,
   name = username,

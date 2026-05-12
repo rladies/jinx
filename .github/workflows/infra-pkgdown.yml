@@ -1,4 +1,4 @@
-name: pkgdown
+name: Infra · Build Docs (pkgdown)
 
 on:
   push:
@@ -13,7 +13,7 @@ on:
       - "README.md"
       - "PRIVACY.md"
       - "_pkgdown.yml"
-      - ".github/workflows/pkgdown.yml"
+      - ".github/workflows/infra-pkgdown.yml"
   release:
     types: [published]
   workflow_dispatch:

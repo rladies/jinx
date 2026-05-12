@@ -9,7 +9,7 @@
 #' @return Invisibly returns `NULL`. Called for its side effect of posting
 #'   reminder comments on stale issues.
 #' @export
-gt_remind_stale <- function(org = "rladies", days = 30, repo = "global-team") {
+global_team_remind_stale <- function(org = "rladies", days = 30, repo = "global-team") {
   cutoff <- format(Sys.Date() - days, "%Y-%m-%d")
   stale <- list()
 

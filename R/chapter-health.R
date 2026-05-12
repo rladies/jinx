@@ -11,7 +11,7 @@
 #' @return A data frame with columns `chapter`, `last_event`, `status`,
 #'   and `months_inactive`.
 #' @export
-check_chapter_health <- function(
+chapter_check_health <- function(
   months = 12,
   org = "rladies",
   data_repo = "meetup_archive"

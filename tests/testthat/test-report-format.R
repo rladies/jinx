@@ -1,4 +1,4 @@
-describe("format_report_markdown", {
+describe("report_format_markdown", {
   it("formats a report with active repos", {
     report <- list(
       type = "Weekly",
@@ -31,7 +31,7 @@ describe("format_report_markdown", {
         )
       )
     )
-    result <- format_report_markdown(report)
+    result <- report_format_markdown(report)
     expect_true(grepl("Weekly Activity Report", result, fixed = TRUE))
     expect_true(grepl("2024-03-01", result, fixed = TRUE))
     expect_true(grepl("Active repositories | 3", result, fixed = TRUE))
@@ -63,7 +63,7 @@ describe("format_report_markdown", {
         )
       )
     )
-    result <- format_report_markdown(report)
+    result <- report_format_markdown(report)
     expect_true(grepl("No activity", result, fixed = TRUE))
   })
 
@@ -99,7 +99,7 @@ describe("format_report_markdown", {
         )
       )
     )
-    result <- format_report_markdown(report)
+    result <- report_format_markdown(report)
     big_pos <- regexpr("big", result, fixed = TRUE)
     small_pos <- regexpr("small", result, fixed = TRUE)
     expect_lt(big_pos, small_pos)

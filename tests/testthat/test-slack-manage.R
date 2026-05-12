@@ -29,13 +29,13 @@ describe("invite_request_message", {
   })
 })
 
-describe("send_slack_invite", {
+describe("slack_invite_send", {
   it("aborts when SLACK_TOKEN is not set", {
     withr::with_envvar(
       c(SLACK_TOKEN = "", AIRTABLE_API_KEY = "key"),
       {
         expect_error(
-          send_slack_invite("ada@example.com"),
+          slack_invite_send("ada@example.com"),
           "SLACK_TOKEN"
         )
       }
@@ -44,14 +44,14 @@ describe("send_slack_invite", {
 
   it("returns an error string for a malformed email", {
     local_mocked_bindings(
-      post_slack_message = function(...) {
+      slack_post_message = function(...) {
         stop("should not be called for invalid email")
       }
     )
     withr::with_envvar(
       c(SLACK_TOKEN = "xoxb-test", AIRTABLE_API_KEY = "key"),
       {
-        result <- send_slack_invite("not-an-email")
+        result <- slack_invite_send("not-an-email")
         expect_match(as.character(result), "Invalid email address")
       }
     )
@@ -61,7 +61,7 @@ describe("send_slack_invite", {
     post_args <- NULL
     airtable_args <- NULL
     local_mocked_bindings(
-      post_slack_message = function(text, channel, token) {
+      slack_post_message = function(text, channel, token) {
         post_args <<- list(text = text, channel = channel, token = token)
         list(ok = TRUE)
       }
@@ -80,7 +80,7 @@ describe("send_slack_invite", {
         SLACK_INVITE_REQUEST_CHANNEL = "organisers"
       ),
       {
-        result <- send_slack_invite("ada@example.com")
+        result <- slack_invite_send("ada@example.com")
         expect_match(
           as.character(result),
           "Invite request for ada@example.com posted to #organisers"
@@ -95,7 +95,7 @@ describe("send_slack_invite", {
   it("defaults to the global-team channel when env var is unset", {
     post_args <- NULL
     local_mocked_bindings(
-      post_slack_message = function(text, channel, token) {
+      slack_post_message = function(text, channel, token) {
         post_args <<- list(channel = channel)
         list(ok = TRUE)
       }
@@ -111,7 +111,7 @@ describe("send_slack_invite", {
         SLACK_INVITE_REQUEST_CHANNEL = ""
       ),
       {
-        send_slack_invite("ada@example.com")
+        slack_invite_send("ada@example.com")
       }
     )
     expect_identical(post_args$channel, "global-team")
@@ -119,7 +119,7 @@ describe("send_slack_invite", {
 
   it("skips Airtable when AIRTABLE_API_KEY is unset", {
     local_mocked_bindings(
-      post_slack_message = function(text, channel, token) list(ok = TRUE)
+      slack_post_message = function(text, channel, token) list(ok = TRUE)
     )
     local_mocked_bindings(
       airtable_mark_invited = function(...) {
@@ -130,7 +130,7 @@ describe("send_slack_invite", {
     withr::with_envvar(
       c(SLACK_TOKEN = "xoxb-test", AIRTABLE_API_KEY = ""),
       {
-        result <- send_slack_invite("ada@example.com")
+        result <- slack_invite_send("ada@example.com")
         expect_match(as.character(result), "posted to #")
       }
     )
@@ -138,7 +138,7 @@ describe("send_slack_invite", {
 
   it("aborts when the Slack post fails and does not mark Airtable", {
     local_mocked_bindings(
-      post_slack_message = function(text, channel, token) {
+      slack_post_message = function(text, channel, token) {
         list(ok = FALSE, error = "channel_not_found")
       }
     )
@@ -152,7 +152,7 @@ describe("send_slack_invite", {
       c(SLACK_TOKEN = "xoxb-test", AIRTABLE_API_KEY = "secret"),
       {
         expect_error(
-          send_slack_invite("ada@example.com"),
+          slack_invite_send("ada@example.com"),
           "channel_not_found"
         )
       }

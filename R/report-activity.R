@@ -7,7 +7,7 @@
 #' @param exclude_pattern Regex to exclude repos. Defaults to `"^meetup-"`.
 #' @return A named list with report data (invisibly).
 #' @export
-generate_report <- function(
+report_generate <- function(
   type = c("weekly", "monthly"),
   org = "rladies",
   exclude_pattern = "^meetup-"
@@ -160,17 +160,17 @@ summarize_stats <- function(repo_stats) {
 
 #' Publish a report as a GitHub issue
 #'
-#' @param report Report data from [generate_report()].
+#' @param report Report data from [report_generate()].
 #' @param target_repo Repository to publish to. Defaults to `"global-team"`.
 #' @param org Organization. Defaults to `"rladies"`.
 #' @return Issue URL (invisibly).
 #' @export
-publish_report <- function(
+report_publish <- function(
   report,
   target_repo = "global-team",
   org = "rladies"
 ) {
-  body <- format_report_markdown(report)
+  body <- report_format_markdown(report)
   title <- glue::glue("{report$type} activity report - {report$period$to}")
 
   issue <- gh::gh(

@@ -50,15 +50,15 @@ describe("create_announcement_message", {
   })
 })
 
-describe("parse_command for announce", {
+describe("command_parse for announce", {
   it("parses announce command", {
-    cmd <- parse_command("/jinx announce https://rladies.org/blog/post")
+    cmd <- command_parse("/jinx announce https://rladies.org/blog/post")
     expect_identical(cmd$action, "announce")
     expect_identical(cmd$url, "https://rladies.org/blog/post")
   })
 
   it("returns error for missing url", {
-    cmd <- parse_command("/jinx announce")
+    cmd <- command_parse("/jinx announce")
     expect_identical(cmd$action, "error")
   })
 })

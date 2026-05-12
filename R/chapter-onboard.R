@@ -10,7 +10,7 @@
 #' @param onboarding_repo Repository for chapter onboarding issues.
 #' @return Issue URL (invisibly).
 #' @export
-create_chapter_setup <- function(
+chapter_create_setup <- function(
   city,
   country,
   organizers,
@@ -51,7 +51,7 @@ create_chapter_setup <- function(
 #' @param onboarding_repo Repository for chapter onboarding issues.
 #' @return Issue URL (invisibly).
 #' @export
-create_chapter_update <- function(
+chapter_create_update <- function(
   city,
   country,
   org = "rladies",

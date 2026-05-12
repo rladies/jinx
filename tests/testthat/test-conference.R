@@ -39,12 +39,12 @@ describe("extract_field", {
 
 describe("cfp command parsing", {
   it("parses /jinx cfp list", {
-    cmd <- parse_command("/jinx cfp list")
+    cmd <- command_parse("/jinx cfp list")
     expect_identical(cmd$action, "cfp-list")
   })
 
   it("parses /jinx cfp add", {
-    cmd <- parse_command(
+    cmd <- command_parse(
       "/jinx cfp add posit::conf 2024-06-15 https://posit.co/cfp"
     )
     expect_identical(cmd$action, "cfp-add")
@@ -54,19 +54,19 @@ describe("cfp command parsing", {
   })
 
   it("parses /jinx cfp recommend", {
-    cmd <- parse_command("/jinx cfp recommend posit::conf @octocat")
+    cmd <- command_parse("/jinx cfp recommend posit::conf @octocat")
     expect_identical(cmd$action, "cfp-recommend")
     expect_identical(cmd$conference, "posit::conf")
     expect_identical(cmd$speaker, "octocat")
   })
 
   it("returns error for bare cfp", {
-    cmd <- parse_command("/jinx cfp")
+    cmd <- command_parse("/jinx cfp")
     expect_identical(cmd$action, "error")
   })
 
   it("returns error for cfp add with missing args", {
-    cmd <- parse_command("/jinx cfp add posit::conf")
+    cmd <- command_parse("/jinx cfp add posit::conf")
     expect_identical(cmd$action, "error")
   })
 })

@@ -138,7 +138,7 @@ classify_chapter_status <- function(upcoming, last, founded, cutoff) {
 }
 
 fetch_chapter_data_from_archive <- function(org) {
-  health <- check_chapter_health(months = 6, org = org)
+  health <- chapter_check_health(months = 6, org = org)
   if (nrow(health) == 0) {
     return(data.frame())
   }

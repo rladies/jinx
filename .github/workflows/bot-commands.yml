@@ -1,4 +1,4 @@
-name: Jinx Commands
+name: Bot · Commands
 
 on:
   issue_comment:
@@ -45,8 +45,8 @@ jobs:
             source <- Sys.getenv("COMMAND_SOURCE")
             text <- Sys.getenv("COMMAND_TEXT")
             if (source == "slack") text <- paste("/jinx", text)
-            cmd <- jinx::parse_command(text)
-            result <- jinx::execute_command(cmd)
+            cmd <- jinx::command_parse(text)
+            result <- jinx::command_execute(cmd)
             if (is.null(result)) result <- "\u2705 Done!"
             writeLines(result, "jinx_response.txt")
           '
@@ -85,16 +85,16 @@ jobs:
             MSG="😿 Something went wrong. <${RUN_URL}|View logs>"
           fi
 
-          # Try post_slack_message, fall back to response_url
+          # Try slack_post_message, fall back to response_url
           Rscript -e '
             msg <- readLines("jinx_response.txt", warn = FALSE) |> paste(collapse = "\n")
             tryCatch(
-              jinx::post_slack_message(
+              jinx::slack_post_message(
                 text = msg,
                 channel = Sys.getenv("SLACK_CHANNEL")
               ),
               error = function(e) {
-                cli::cli_alert_warning("post_slack_message failed: {e$message}, using response_url")
+                cli::cli_alert_warning("slack_post_message failed: {e$message}, using response_url")
                 response_url <- Sys.getenv("SLACK_RESPONSE_URL")
                 if (nzchar(response_url)) {
                   httr2::request(response_url) |>

@@ -10,7 +10,7 @@
 #'   If `NULL`, returns the data without writing.
 #' @return List of workflow data (invisibly).
 #' @export
-generate_gha_dashboard <- function(
+gha_generate_dashboard <- function(
   org = "rladies",
   exclude_pattern = "^meetup-",
   output_path = NULL
@@ -83,12 +83,12 @@ generate_gha_dashboard <- function(
 #'
 #' Creates a summary issue with workflow status badges.
 #'
-#' @param dashboard_data Data from [generate_gha_dashboard()].
+#' @param dashboard_data Data from [gha_generate_dashboard()].
 #' @param org GitHub organization.
 #' @param target_repo Repository to publish to.
 #' @return Issue URL (invisibly).
 #' @export
-publish_gha_dashboard <- function(
+gha_publish_dashboard <- function(
   dashboard_data,
   org = "rladies",
   target_repo = "global-team"

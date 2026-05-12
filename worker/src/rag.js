@@ -12,9 +12,9 @@ Rules:
 - Never invent URLs or facts. Do not include a "Sources" section — those are appended automatically.
 `;
 
-export async function answerQuestion(env, query) {
-  const embedding = await embedQuery(env, query);
-  const matches = await retrieveChunks(env, embedding);
+export async function rag_question_answer(env, query) {
+  const embedding = await rag_query_embed(env, query);
+  const matches = await rag_chunks_retrieve(env, embedding);
 
   if (matches.length === 0) {
     return {
@@ -41,16 +41,16 @@ export async function answerQuestion(env, query) {
 
   return {
     answer: (result.response || "").trim(),
-    sources: uniqueSources(matches),
+    sources: rag_sources_unique(matches),
   };
 }
 
-async function embedQuery(env, text) {
+async function rag_query_embed(env, text) {
   const result = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: [text] });
   return result.data[0];
 }
 
-async function retrieveChunks(env, embedding) {
+async function rag_chunks_retrieve(env, embedding) {
   const results = await env.RAG_INDEX.query(embedding, {
     topK: TOP_K,
     returnMetadata: "all",
@@ -58,7 +58,7 @@ async function retrieveChunks(env, embedding) {
   return (results.matches || []).filter((m) => m.score >= MIN_SCORE);
 }
 
-function uniqueSources(matches) {
+function rag_sources_unique(matches) {
   const seen = new Set();
   const out = [];
   for (const m of matches) {

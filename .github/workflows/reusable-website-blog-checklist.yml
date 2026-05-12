@@ -1,4 +1,4 @@
-name: Thank Contributor on Merge
+name: Reusable · Website Blog Checklist
 
 on:
   workflow_call:
@@ -9,9 +9,8 @@ on:
         required: true
 
 jobs:
-  thank:
+  checklist:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
     container:
       image: ghcr.io/rladies/jinx-bot:latest
     steps:
@@ -23,15 +22,14 @@ jobs:
           private-key: ${{ secrets.JINX_PRIVATE_KEY }}
           owner: rladies
 
-      - name: Thank contributor
+      - name: Post blog checklist
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           Rscript -e '
-            jinx::thank_contributor(
+            jinx::blog_post_checklist(
               owner = "${{ github.repository_owner }}",
               repo = "${{ github.event.repository.name }}",
-              pr_number = ${{ github.event.pull_request.number }},
-              author = "${{ github.event.pull_request.user.login }}"
+              pr_number = ${{ github.event.pull_request.number }}
             )
           '

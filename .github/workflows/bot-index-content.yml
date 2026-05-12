@@ -1,4 +1,4 @@
-name: Index RAG content
+name: Bot · Index Content
 
 on:
   workflow_dispatch:

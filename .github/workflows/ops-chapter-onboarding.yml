@@ -1,4 +1,4 @@
-name: Chapter Onboarding
+name: Ops · Chapter Onboarding
 
 on:
   workflow_dispatch:
@@ -48,13 +48,13 @@ jobs:
         run: |
           Rscript -e '
             if ("${{ inputs.action }}" == "setup") {
-              jinx::create_chapter_setup(
+              jinx::chapter_create_setup(
                 city = "${{ inputs.city }}",
                 country = "${{ inputs.country }}",
                 organizers = character(0)
               )
             } else {
-              jinx::create_chapter_update(
+              jinx::chapter_create_update(
                 city = "${{ inputs.city }}",
                 country = "${{ inputs.country }}"
               )

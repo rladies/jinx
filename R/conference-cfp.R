@@ -4,7 +4,7 @@
 #' @param repo Repository where CFP issues are tracked.
 #' @return Data frame with columns: conference, deadline, url, number, status.
 #' @export
-list_open_cfps <- function(org = "rladies", repo = "global-team") {
+cfp_list_open <- function(org = "rladies", repo = "global-team") {
   issues <- gh::gh(
     "GET /repos/{owner}/{repo}/issues",
     owner = org,
@@ -50,7 +50,7 @@ list_open_cfps <- function(org = "rladies", repo = "global-team") {
 #' @param repo Repository to create the issue in.
 #' @return Issue URL (invisibly).
 #' @export
-create_cfp_issue <- function(
+cfp_create_issue <- function(
   conference,
   deadline,
   url,
@@ -114,12 +114,12 @@ create_cfp_issue <- function(
 #' @param warn_days Number of days before deadline to warn.
 #' @return Data frame of approaching CFPs (invisibly).
 #' @export
-check_cfp_deadlines <- function(
+cfp_check_deadlines <- function(
   org = "rladies",
   repo = "global-team",
   warn_days = 7
 ) {
-  cfps <- list_open_cfps(org = org, repo = repo)
+  cfps <- cfp_list_open(org = org, repo = repo)
 
   if (nrow(cfps) == 0) {
     cli::cli_alert_info("No open CFPs")

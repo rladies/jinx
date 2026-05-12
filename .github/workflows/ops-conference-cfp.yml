@@ -1,12 +1,12 @@
-name: Chapter Health Report
+name: Ops · Conference CFP Check
 
 on:
   schedule:
-    - cron: "0 10 1 * *"
+    - cron: "0 9 * * 1"
   workflow_dispatch:
 
 jobs:
-  report:
+  check-deadlines:
     runs-on: ubuntu-latest
     steps:
       - name: Generate app token
@@ -30,8 +30,10 @@ jobs:
         with:
           extra-packages: local::.
 
-      - name: Generate and publish chapter report
+      - name: Check CFP deadlines
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          Rscript -e 'jinx::report_chapter_health()'
+          Rscript -e '
+            jinx::cfp_check_deadlines(warn_days = 7)
+          '

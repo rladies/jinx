@@ -1,4 +1,4 @@
-name: Global Team - 02 - Check Invitations
+name: Ops · Global Team · 02 Check Invitations
 
 on:
   schedule:
@@ -33,7 +33,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           Rscript -e '
-            accepted <- jinx::gt_check_invitations()
+            accepted <- jinx::global_team_check_invitations()
             if (length(accepted) > 0) {
               for (user in accepted) {
                 artifacts <- gh::gh(
@@ -51,7 +51,7 @@ jobs:
                     gh::gh(
                       "POST /repos/{repo}/actions/workflows/{workflow_id}/dispatches",
                       repo = Sys.getenv("GH_REPO"),
-                      workflow_id = "global-team-finalize.yml",
+                      workflow_id = "ops-global-team-finalize.yml",
                       ref = "main",
                       inputs = list(
                         username = details$username,

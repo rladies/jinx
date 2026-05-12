@@ -7,7 +7,7 @@
 #' @param repo Repository name.
 #' @return Character vector of merged PR URLs (invisibly).
 #' @export
-auto_merge_pending <- function(org = "rladies", repo = "rladies.github.io") {
+website_merge_pending <- function(org = "rladies", repo = "rladies.github.io") {
   pending <- fetch_pending_prs(org, repo)
   if (length(pending) == 0) {
     cli::cli_alert_info("No pending PRs found")
@@ -114,7 +114,7 @@ try_squash_merge <- function(pr, org, repo) {
 #' @param pr_number PR number.
 #' @return Comment URL (invisibly).
 #' @export
-post_blog_checklist <- function(owner, repo, pr_number) {
+blog_post_checklist <- function(owner, repo, pr_number) {
   checklist <- paste(
     "Thank you for submitting a blogpost to R-Ladies!",
     "",
@@ -170,7 +170,7 @@ post_blog_checklist <- function(owner, repo, pr_number) {
 
 #' Post a greeting on new PRs/issues from non-team members
 #'
-#' Delegates to [welcome_contributor()] for first-time detection.
+#' Delegates to [contributor_welcome()] for first-time detection.
 #'
 #' @param owner Repository owner.
 #' @param repo Repository name.
@@ -180,7 +180,7 @@ post_blog_checklist <- function(owner, repo, pr_number) {
 #' @return Comment URL or `NULL` if author is a team member (invisibly).
 #' @export
 greet_contributor <- function(owner, repo, number, author, org = "rladies") {
-  welcome_contributor(owner, repo, number, author, is_pr = TRUE, org = org)
+  contributor_welcome(owner, repo, number, author, is_pr = TRUE, org = org)
 }
 
 extract_yaml_date <- function(content) {

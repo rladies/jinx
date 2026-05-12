@@ -274,7 +274,7 @@ publish_website_report <- function(
 
   if (!is.null(slack_channel)) {
     slack_body <- format_website_slack(report_data, issue$html_url)
-    post_slack_message(slack_body, channel = slack_channel)
+    slack_post_message(slack_body, channel = slack_channel)
   }
 
   invisible(issue$html_url)

@@ -21,5 +21,5 @@ greet_contributor(owner, repo, number, author, org = "rladies")
 Comment URL or \code{NULL} if author is a team member (invisibly).
 }
 \description{
-Delegates to \code{\link[=welcome_contributor]{welcome_contributor()}} for first-time detection.
+Delegates to \code{\link[=contributor_welcome]{contributor_welcome()}} for first-time detection.
 }

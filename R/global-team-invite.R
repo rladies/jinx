@@ -10,7 +10,7 @@
 #' @return Invisibly returns `NULL`. Called for its side effect of sending
 #'   the invitation and adding the user to the specified team.
 #' @export
-gt_invite <- function(username, team, name = username, org = "rladies") {
+global_team_invite <- function(username, team, name = username, org = "rladies") {
   config <- load_teams_config()
 
   if (!team %in% team_slugs(config)) {

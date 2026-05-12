@@ -1,4 +1,4 @@
-name: Slack - Welcome New Member
+name: Bot · Slack Welcome
 
 on:
   workflow_dispatch:
@@ -54,7 +54,7 @@ jobs:
           USER_ID: ${{ steps.inputs.outputs.user_id }}
           WORKSPACE: ${{ steps.inputs.outputs.workspace }}
         run: |
-          Rscript -e 'jinx::welcome_slack_member(
+          Rscript -e 'jinx::slack_welcome_member(
             user_id = Sys.getenv("USER_ID"),
             workspace = Sys.getenv("WORKSPACE")
           )'

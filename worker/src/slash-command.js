@@ -1,7 +1,7 @@
-import { dispatchToGitHub } from "./github-dispatch.js";
-import { isAllowedTeam } from "./slack-api.js";
+import { github_dispatch_send } from "./github-dispatch.js";
+import { slack_team_is_allowed } from "./slack-api.js";
 
-export async function handleSlashCommand(env, ctx, body) {
+export async function slack_command_handle(env, ctx, body) {
   const params = new URLSearchParams(body);
 
   if (params.get("type") === "url_verification") {
@@ -9,7 +9,7 @@ export async function handleSlashCommand(env, ctx, body) {
   }
 
   const teamId = params.get("team_id") || "";
-  if (!isAllowedTeam(env, teamId)) {
+  if (!slack_team_is_allowed(env, teamId)) {
     console.warn(`Rejected slash command from team ${teamId}`);
     return Response.json({
       response_type: "ephemeral",
@@ -32,7 +32,7 @@ export async function handleSlashCommand(env, ctx, body) {
     text: randomAck(command),
   });
 
-  const dispatchPromise = dispatchToGitHub(env, {
+  const dispatchPromise = github_dispatch_send(env, {
     command,
     user_id: params.get("user_id") || "",
     user_name: params.get("user_name") || "",

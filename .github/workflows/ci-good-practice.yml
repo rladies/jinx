@@ -1,4 +1,4 @@
-name: Good Practice
+name: CI · Good Practice
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ on:
       - "DESCRIPTION"
       - "NAMESPACE"
       - ".github/scripts/gp-report.R"
-      - ".github/workflows/good-practice.yml"
+      - ".github/workflows/ci-good-practice.yml"
 
 jobs:
   gp:

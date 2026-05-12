@@ -17,5 +17,5 @@ Channel name and short description shown to new members so they
 have somewhere obvious to head first. The list starts with the
 channels shared by both workspaces (see \code{\link[=common_welcome_channels]{common_welcome_channels()}})
 and then adds workspace-specific extras. Override by passing your
-own list to \code{\link[=welcome_slack_member]{welcome_slack_member()}}.
+own list to \code{\link[=slack_welcome_member]{slack_welcome_member()}}.
 }

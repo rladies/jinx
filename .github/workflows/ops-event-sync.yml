@@ -1,12 +1,12 @@
-name: Auto-Merge Pending Blog Posts
+name: Ops · Event Sync
 
 on:
   schedule:
-    - cron: "58 10 * * *"
+    - cron: "30 9 * * 1"
   workflow_dispatch:
 
 jobs:
-  merge:
+  sync:
     runs-on: ubuntu-latest
     steps:
       - name: Generate app token
@@ -30,8 +30,16 @@ jobs:
         with:
           extra-packages: local::.
 
-      - name: Auto-merge pending PRs
+      - name: Sync and publish events
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          MEETUP_API_KEY: ${{ secrets.MEETUP_API_KEY }}
+          MEETUPR_JWT_TOKEN: ${{ secrets.MEETUPR_JWT_TOKEN }}
+          MEETUPR_CLIENT_ID: ${{ secrets.MEETUPR_CLIENT_ID }}
+          MEETUPR_JWT_ISSUER: ${{ secrets.MEETUPR_JWT_ISSUER }}
         run: |
-          Rscript -e 'jinx::auto_merge_pending()'
+          Rscript -e '
+            events <- jinx::events_sync_chapters(dry_run = FALSE)
+            summary <- jinx::events_create_summary(events, "weekly")
+            jinx::events_publish_summary(summary)
+          '

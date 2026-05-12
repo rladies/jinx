@@ -4,7 +4,7 @@
 #' @return A data frame with columns `file`, `url`, `rss_feed`,
 #'   `url_status`, `rss_status`.
 #' @export
-check_blog_links <- function(blogs_path) {
+blog_check_links <- function(blogs_path) {
   files <- list.files(blogs_path, pattern = "\\.json$", full.names = TRUE)
 
   results <- lapply(files, function(f) {

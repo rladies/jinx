@@ -1,12 +1,12 @@
-name: Weekly Activity Report
+name: Ops · Analytics Dashboard
 
 on:
   schedule:
-    - cron: "0 10 * * 1"
+    - cron: "0 8 1 * *"
   workflow_dispatch:
 
 jobs:
-  report:
+  analytics:
     runs-on: ubuntu-latest
     steps:
       - name: Generate app token
@@ -30,11 +30,11 @@ jobs:
         with:
           extra-packages: local::.
 
-      - name: Generate and publish report
+      - name: Generate and publish analytics
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           Rscript -e '
-            report <- jinx::generate_report(type = "weekly")
-            jinx::publish_report(report)
+            data <- jinx::analytics_generate_dashboard()
+            jinx::analytics_publish_dashboard(data)
           '

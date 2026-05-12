@@ -9,7 +9,7 @@
 generate_conference_report <- function(org = "rladies", repo = "global-team") {
   cli::cli_h2("Generating conference coordination report")
 
-  cfps <- list_open_cfps(org = org, repo = repo)
+  cfps <- cfp_list_open(org = org, repo = repo)
 
   if (nrow(cfps) == 0) {
     cli::cli_alert_info("No active CFPs found")

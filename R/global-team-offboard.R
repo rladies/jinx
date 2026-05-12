@@ -6,7 +6,7 @@
 #' @param org GitHub organization. Defaults to `"rladies"`.
 #' @return The created issue URL (invisibly).
 #' @export
-gt_create_offboarding <- function(
+global_team_create_offboarding <- function(
   username,
   team,
   name = username,
@@ -49,7 +49,7 @@ gt_create_offboarding <- function(
 #' @return Invisibly returns `NULL`. Called for its side effect of removing
 #'   the user from the specified teams.
 #' @export
-gt_finalize_offboarding <- function(username, team, org = "rladies") {
+global_team_finalize_offboarding <- function(username, team, org = "rladies") {
   teams_to_remove <- c("global", team)
 
   for (team_slug in teams_to_remove) {
