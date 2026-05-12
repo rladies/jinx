@@ -11,5 +11,14 @@
   ],
   "vars": {
     "GITHUB_REPO": "rladies/jinx"
-  }
+  },
+  "ai": {
+    "binding": "AI"
+  },
+  "vectorize": [
+    {
+      "binding": "RAG_INDEX",
+      "index_name": "rladies-content"
+    }
+  ]
 }
