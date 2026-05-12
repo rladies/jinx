@@ -1,0 +1,109 @@
+name: Good Practice
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'R/**'
+      - 'tests/**'
+      - 'man/**'
+      - 'DESCRIPTION'
+      - 'NAMESPACE'
+
+jobs:
+  gp:
+    name: goodpractice check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+          owner: rladies
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::goodpractice
+            any::rcmdcheck
+            local::.
+
+      - name: Run goodpractice
+        id: gp
+        run: |
+          Rscript -e '
+            gp_result <- goodpractice::gp(".", checks = c(
+              "cyclocomp",
+              "no_description_depends",
+              "no_import_package_as_a_whole",
+              "lintr_assignment_linter",
+              "lintr_line_length_linter",
+              "lintr_trailing_blank_lines_linter",
+              "lintr_trailing_whitespace_linter",
+              "lintr_T_and_F_symbol_linter"
+            ))
+
+            results <- goodpractice::results(gp_result)
+            failed <- results[!vapply(results, function(r) r$result, logical(1)), ]
+
+            if (length(failed) == 0) {
+              msg <- "\U0001f389 **Good Practice Check**\n\nAll checks passed!"
+            } else {
+              lines <- vapply(failed, function(r) {
+                paste0("- **", r$check, "**: ", r$message)
+              }, character(1))
+              msg <- paste0(
+                "\U0001f50d **Good Practice Check**\n\n",
+                "Found ", length(failed), " suggestion(s):\n\n",
+                paste(lines, collapse = "\n")
+              )
+            }
+            writeLines(msg, "gp_report.md")
+          '
+
+      - name: Post report
+        if: always()
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const fs = require('fs');
+            let report;
+            if (fs.existsSync('gp_report.md')) {
+              report = fs.readFileSync('gp_report.md', 'utf8');
+            } else {
+              report = '⚠️ **Good Practice Check**\n\ngoodpractice failed to run — check the workflow logs.';
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const marker = '**Good Practice Check**';
+            const existing = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes(marker)
+            );
+            const body = report + '\n\n*Updated: ' + new Date().toISOString() + '*';
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

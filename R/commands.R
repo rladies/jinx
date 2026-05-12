@@ -295,8 +295,7 @@ execute_command <- function(command) {
     },
     report = {
       report <- generate_report(type = command$type)
-      publish_report(report)
-      glue::glue("**{command$type}** report published.")
+      format_report_markdown(report)
     },
     announce = {
       glue::glue("Announcing post: {command$url}")
@@ -320,13 +319,16 @@ execute_command <- function(command) {
       glue::glue("Chapter update issue created: {url}")
     },
     "report-chapters" = {
-      url <- report_chapter_health()
-      glue::glue("Chapter health report published: {url}")
+      health <- check_chapter_health()
+      if (nrow(health) == 0) {
+        "No chapter data available."
+      } else {
+        format_chapter_report(health, months = 6)
+      }
     },
     "gha-dashboard" = {
       data <- generate_gha_dashboard()
-      url <- publish_gha_dashboard(data)
-      glue::glue("GHA dashboard published: {url}")
+      format_gha_dashboard(data)
     },
     "contributors-list" = {
       target <- command$repo %||% "jinx"
@@ -363,16 +365,12 @@ execute_command <- function(command) {
       glue::glue("Event summary published: {url}")
     },
     analytics = {
-      slack_ch <- slack_analytics_channel()
       data <- generate_analytics_dashboard()
-      url <- publish_analytics_dashboard(data, slack_channel = slack_ch)
-      glue::glue("Analytics dashboard published: {url}")
+      data$markdown %||% "No analytics data available."
     },
     "website-analytics" = {
-      slack_ch <- slack_analytics_channel()
       data <- generate_website_report(period = command$period)
-      url <- publish_website_report(data, slack_channel = slack_ch)
-      glue::glue("Website analytics report published: {url}")
+      format_website_analytics(data)
     },
     "cfp-list" = {
       cfps <- list_open_cfps()
@@ -433,8 +431,19 @@ execute_command <- function(command) {
       }
     },
     remind = {
-      gt_remind_stale()
-      "Stale issue reminders sent."
+      stale <- gt_remind_stale()
+      if (length(stale) == 0) {
+        "No stale issues found - all caught up! \U0001f389"
+      } else {
+        links <- vapply(stale, function(s) {
+          glue::glue("- <{s$url}|{s$title}> ({s$days} days)")
+        }, character(1))
+        paste(
+          glue::glue("Reminded {length(stale)} stale issue(s):"),
+          paste(links, collapse = "\n"),
+          sep = "\n"
+        )
+      }
     },
     error = command$message,
     unknown = {

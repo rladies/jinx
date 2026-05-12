@@ -103,9 +103,10 @@ reference:
       - monitor_chapter_status
       - prepare_inactivity_emails
 
-  - title: Slack management
-    desc: Community Slack automation
+  - title: Slack
+    desc: Slack messaging and automation
     contents:
+      - post_slack_message
       - send_slack_invites
       - subscribe_slack_rss
 
@@ -142,6 +143,14 @@ reference:
       - format_analytics_markdown
       - generate_analytics_dashboard
       - publish_analytics_dashboard
+
+  - title: Website analytics
+    desc: Plausible website performance reports
+    contents:
+      - collect_website_analytics
+      - format_website_analytics
+      - generate_website_report
+      - publish_website_report
 
   - title: Conference coordination
     desc: CFP tracking and speaker recommendations
