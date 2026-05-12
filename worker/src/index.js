@@ -1,15 +1,43 @@
 export default {
   async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+
+    // GET /slack/install — start OAuth flow
+    // GET /slack/oauth — OAuth callback
+    if (url.pathname === "/slack/install") {
+      return handleSlackInstall(env, url);
+    }
+    if (url.pathname === "/slack/oauth") {
+      return handleSlackOAuthCallback(request, env);
+    }
+
     if (request.method !== "POST") {
       return new Response("Hi! I'm the Jinx Slack bridge. Nothing to see here. 🔮", {
         status: 200,
       });
     }
 
+    // POST /slack/command — slash commands from Slack
+    // POST /slack/interact — button clicks from Slack
+    // POST /airtable/webhook — form submissions from Airtable
+    if (url.pathname === "/slack/command") {
+      return handleSlashCommand(request, env, ctx);
+    }
+    if (url.pathname === "/slack/interact") {
+      return handleSlackInteraction(request, env, ctx);
+    }
+    if (url.pathname === "/airtable/webhook") {
+      return handleAirtableWebhook(request, env);
+    }
+
+    return new Response("Not found", { status: 404 });
+  },
+};
+
+async function handleSlashCommand(request, env, ctx) {
     const body = await request.text();
     const params = new URLSearchParams(body);
 
-    // Verify Slack request signature
     const timestamp = request.headers.get("x-slack-request-timestamp");
     const signature = request.headers.get("x-slack-signature");
     console.log("Received request", { timestamp: !!timestamp, signature: !!signature, hasSecret: !!env.SLACK_SIGNING_SECRET });
@@ -21,7 +49,6 @@ export default {
 
     console.log("Signature verified");
 
-    // Handle Slack URL verification challenge
     if (params.get("type") === "url_verification") {
       return Response.json({ challenge: params.get("challenge") });
     }
@@ -33,7 +60,6 @@ export default {
     const channelName = params.get("channel_name") || "";
     const responseUrl = params.get("response_url") || "";
 
-    // Handle help directly — no need for the full R pipeline
     if (!command || command === "help") {
       const helpText = await fetchHelpText();
       return Response.json({
@@ -42,13 +68,11 @@ export default {
       });
     }
 
-    // Respond immediately to Slack with a random quip
     const ack = Response.json({
       response_type: "ephemeral",
       text: randomAck(command),
     });
 
-    // Dispatch to GitHub, notify Slack if it fails
     const dispatchPromise = dispatchToGitHub(env, {
       command,
       user_id: userId,
@@ -70,12 +94,10 @@ export default {
       }
     });
 
-    // Let the dispatch complete after responding to Slack
     ctx.waitUntil(dispatchPromise);
 
     return ack;
-  },
-};
+}
 
 const ACKS = [
   "🔮 On it! Casting `/jinx {cmd}`...",
@@ -256,6 +278,308 @@ async function importPrivateKey(pem) {
       "Private key import failed. Ensure JINX_PRIVATE_KEY is in PEM format (PKCS8). " +
       "Convert with: openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in key.pem -out key-pkcs8.pem"
     );
+  }
+}
+
+// --- Slack OAuth flow ---
+
+async function handleSlackInstall(env, url) {
+  const scopes = "chat:write,chat:write.public,commands";
+  const redirectUri = `${url.origin}/slack/oauth`;
+
+  const ts = Date.now().toString();
+  const state = await hmacState(env.SLACK_CLIENT_SECRET, ts);
+
+  const authUrl = new URL("https://slack.com/oauth/v2/authorize");
+  authUrl.searchParams.set("client_id", env.SLACK_CLIENT_ID);
+  authUrl.searchParams.set("scope", scopes);
+  authUrl.searchParams.set("redirect_uri", redirectUri);
+  authUrl.searchParams.set("state", `${ts}:${state}`);
+
+  return Response.redirect(authUrl.toString(), 302);
+}
+
+async function handleSlackOAuthCallback(request, env) {
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code");
+  const state = url.searchParams.get("state");
+  const error = url.searchParams.get("error");
+
+  if (error) {
+    return new Response(`Installation cancelled: ${error}`, { status: 400 });
+  }
+  if (!code || !state) {
+    return new Response("Missing code or state", { status: 400 });
+  }
+
+  const [ts, hmac] = state.split(":");
+  const expectedHmac = await hmacState(env.SLACK_CLIENT_SECRET, ts);
+  if (hmac !== expectedHmac) {
+    return new Response("Invalid state parameter", { status: 403 });
+  }
+  if (Date.now() - parseInt(ts) > 600_000) {
+    return new Response("State expired", { status: 403 });
+  }
+
+  const redirectUri = `${url.origin}/slack/oauth`;
+
+  const tokenRes = await fetch("https://slack.com/api/oauth.v2.access", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: env.SLACK_CLIENT_ID,
+      client_secret: env.SLACK_CLIENT_SECRET,
+      code,
+      redirect_uri: redirectUri,
+    }),
+  });
+
+  const data = await tokenRes.json();
+  if (!data.ok) {
+    console.error("OAuth token exchange failed:", data.error);
+    return new Response(`OAuth failed: ${data.error}`, { status: 502 });
+  }
+
+  const teamId = data.team?.id;
+  const tokenData = {
+    bot_token: data.access_token,
+    team_id: teamId,
+    team_name: data.team?.name || "unknown",
+    bot_user_id: data.bot_user_id,
+    installed_at: new Date().toISOString(),
+  };
+
+  await env.SLACK_TOKENS.put(`team:${teamId}`, JSON.stringify(tokenData));
+  console.log(`Slack app installed in ${tokenData.team_name} (${teamId})`);
+
+  return new Response(
+    `🔮 Jinx installed successfully in ${tokenData.team_name}! You can close this tab.`,
+    { status: 200, headers: { "Content-Type": "text/plain" } }
+  );
+}
+
+async function hmacState(secret, timestamp) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(timestamp));
+  return btoa(String.fromCharCode(...new Uint8Array(sig)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+async function getSlackToken(env, teamId) {
+  if (teamId) {
+    const data = await env.SLACK_TOKENS.get(`team:${teamId}`, "json");
+    if (data?.bot_token) return data.bot_token;
+  }
+
+  if (env.SLACK_COMMUNITY_TOKEN) {
+    console.warn("Using legacy SLACK_COMMUNITY_TOKEN — complete OAuth install to remove this fallback");
+    return env.SLACK_COMMUNITY_TOKEN;
+  }
+
+  throw new Error(`No Slack token found for team ${teamId}`);
+}
+
+// --- Airtable → Slack invite approval flow ---
+
+async function handleAirtableWebhook(request, env) {
+  const secret = env.AIRTABLE_WEBHOOK_SECRET;
+  if (secret) {
+    const provided = request.headers.get("x-airtable-secret");
+    if (provided !== secret) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return new Response("Invalid JSON", { status: 400 });
+  }
+
+  const email = payload.email || "";
+  const name = payload.name || "";
+  const chapter = payload.chapter || "";
+  const recordId = payload.record_id || "";
+
+  if (!email) {
+    return new Response("Missing email", { status: 400 });
+  }
+
+  const blocks = [
+    {
+      type: "header",
+      text: { type: "plain_text", text: "💜 New Slack invite request", emoji: true },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Name:*\n${name || "_not provided_"}` },
+        { type: "mrkdwn", text: `*Email:*\n${email}` },
+        { type: "mrkdwn", text: `*Chapter:*\n${chapter || "_not provided_"}` },
+        { type: "mrkdwn", text: `*Airtable ID:*\n\`${recordId || "n/a"}\`` },
+      ],
+    },
+    {
+      type: "actions",
+      elements: [
+        {
+          type: "button",
+          text: { type: "plain_text", text: "✓ Approve", emoji: true },
+          style: "primary",
+          action_id: "invite_approve",
+          value: JSON.stringify({ email, name, record_id: recordId }),
+        },
+        {
+          type: "button",
+          text: { type: "plain_text", text: "✗ Deny", emoji: true },
+          style: "danger",
+          action_id: "invite_deny",
+          value: JSON.stringify({ email, name, record_id: recordId }),
+        },
+      ],
+    },
+  ];
+
+  const token = await getSlackToken(env, env.SLACK_COMMUNITY_TEAM_ID);
+
+  const res = await fetch("https://slack.com/api/chat.postMessage", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      channel: env.SLACK_INVITE_CHANNEL,
+      text: `New Slack invite request from ${name || email}`,
+      blocks,
+    }),
+  });
+
+  const result = await res.json();
+  if (!result.ok) {
+    console.error("Failed to post invite request to Slack:", result.error);
+    return new Response(`Slack error: ${result.error}`, { status: 502 });
+  }
+
+  return new Response("OK", { status: 200 });
+}
+
+async function handleSlackInteraction(request, env, ctx) {
+  const body = await request.text();
+  const params = new URLSearchParams(body);
+
+  const timestamp = request.headers.get("x-slack-request-timestamp");
+  const signature = request.headers.get("x-slack-signature");
+
+  if (!await verifySlackSignature(env.SLACK_SIGNING_SECRET, timestamp, body, signature)) {
+    return new Response("Invalid signature", { status: 401 });
+  }
+
+  let interaction;
+  try {
+    interaction = JSON.parse(params.get("payload"));
+  } catch {
+    return new Response("Invalid payload", { status: 400 });
+  }
+
+  if (interaction.type !== "block_actions") {
+    return new Response("OK", { status: 200 });
+  }
+
+  const action = interaction.actions?.[0];
+  if (!action) return new Response("OK", { status: 200 });
+
+  const actionData = JSON.parse(action.value);
+  const adminUser = interaction.user?.username || "unknown";
+  const responseUrl = interaction.response_url;
+
+  if (action.action_id === "invite_approve") {
+    ctx.waitUntil(processApproval(env, actionData, adminUser, responseUrl));
+  } else if (action.action_id === "invite_deny") {
+    ctx.waitUntil(processDenial(env, actionData, adminUser, responseUrl));
+  }
+
+  return new Response("", { status: 200 });
+}
+
+async function processApproval(env, data, adminUser, responseUrl) {
+  try {
+    await dispatchToGitHub(env, {
+      command: `slack-invite ${data.email}`,
+      user_name: adminUser,
+      channel_id: env.SLACK_INVITE_CHANNEL,
+      channel_name: "invite-requests",
+      response_url: responseUrl,
+    });
+
+    if (data.record_id && env.AIRTABLE_API_KEY) {
+      await updateAirtableRecord(env, data.record_id, { invited: true });
+    }
+
+    await fetch(responseUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        replace_original: true,
+        text: `✅ *Approved* by @${adminUser} — invite dispatched to ${data.email}`,
+      }),
+    });
+  } catch (err) {
+    console.error("Approval processing failed:", err);
+    await fetch(responseUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        replace_original: false,
+        text: `😿 Approval failed for ${data.email}: ${err.message}`,
+      }),
+    });
+  }
+}
+
+async function processDenial(env, data, adminUser, responseUrl) {
+  if (data.record_id && env.AIRTABLE_API_KEY) {
+    await updateAirtableRecord(env, data.record_id, { denied: true }).catch(
+      (err) => console.error("Airtable update failed:", err)
+    );
+  }
+
+  await fetch(responseUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      replace_original: true,
+      text: `❌ *Denied* by @${adminUser} — ${data.email} will not be invited`,
+    }),
+  });
+}
+
+async function updateAirtableRecord(env, recordId, fields) {
+  const res = await fetch(
+    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${encodeURIComponent(env.AIRTABLE_TABLE_NAME || "Table 1")}/${recordId}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${env.AIRTABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ fields }),
+    }
+  );
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Airtable update failed (${res.status}): ${text}`);
   }
 }
 
