@@ -77,10 +77,12 @@ devtools::check()
 
 jinx is a standard R package. GitHub Actions workflows call exported R functions. The `gh` package handles GitHub API authentication automatically via the `GITHUB_TOKEN` environment variable. When using a GitHub App token (via `actions/create-github-app-token`), API calls and comments appear as `jinx[bot]`.
 
+Bot-facing workflows use the prebuilt `ghcr.io/rladies/jinx-bot:latest` image so they can start with R and the current package version already installed. The image is refreshed automatically by `.github/workflows/build-bot-image.yml` when the runtime package files change, and it can also be rebuilt manually with the workflow dispatch trigger.
+
 ```
 Issue comment (/jinx invite ...)
   → issue_comment workflow triggers
-    → installs jinx R package
+    → starts jinx bot image
       → calls jinx::parse_command() + jinx::execute_command()
         → gh::gh() API calls as jinx[bot]
           → reply comment posted
