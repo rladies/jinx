@@ -1,0 +1,114 @@
+name: Build Jinx Bot Image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/images/jinx-bot/**"
+      - ".github/workflows/build-bot-image.yml"
+      - "DESCRIPTION"
+      - "NAMESPACE"
+      - "LICENSE"
+      - "R/**"
+      - "inst/**"
+      - "man/**"
+  pull_request:
+    paths:
+      - ".github/images/jinx-bot/**"
+      - ".github/workflows/build-bot-image.yml"
+      - "DESCRIPTION"
+      - "NAMESPACE"
+      - "LICENSE"
+      - "R/**"
+      - "inst/**"
+      - "man/**"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_BASE: ghcr.io/rladies/jinx-bot
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          set -euo pipefail
+
+          mapfile -t files < <(
+            {
+              printf '%s\n' DESCRIPTION NAMESPACE LICENSE .github/images/jinx-bot/Dockerfile
+              for dir in R inst man; do
+                if [ -d "${dir}" ]; then
+                  find "${dir}" -type f
+                fi
+              done
+            } | sort
+          )
+
+          hash="$(
+            printf '%s\0' "${files[@]}" |
+              xargs -0 sha256sum |
+              sha256sum |
+              cut -c1-12
+          )"
+
+          {
+            echo "tag=${hash}"
+            echo "image=${IMAGE_BASE}:${hash}"
+            echo "tags<<EOF"
+            echo "${IMAGE_BASE}:${hash}"
+            if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+              echo "${IMAGE_BASE}:latest"
+            fi
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Check image tag
+        id: check
+        if: github.event_name != 'pull_request'
+        run: |
+          if docker manifest inspect "${{ steps.meta.outputs.image }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "exists=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Build image
+        if: github.event_name == 'pull_request' || steps.check.outputs.exists != 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: .github/images/jinx-bot/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=registry,ref=ghcr.io/rladies/jinx-bot:buildcache
+          cache-to: ${{ github.event_name != 'pull_request' && 'type=registry,ref=ghcr.io/rladies/jinx-bot:buildcache,mode=max' || '' }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.description=Prebuilt R runtime for the jinx bot workflows
+
+      - name: Refresh latest tag
+        if: github.event_name != 'pull_request' && steps.check.outputs.exists == 'true' && github.ref == 'refs/heads/main'
+        run: |
+          docker buildx imagetools create \
+            --tag "${IMAGE_BASE}:latest" \
+            "${{ steps.meta.outputs.image }}"
+
+      - name: Summarize image
+        run: echo "Using ${IMAGE_BASE}:${{ steps.meta.outputs.tag }}" >> "${GITHUB_STEP_SUMMARY}"
