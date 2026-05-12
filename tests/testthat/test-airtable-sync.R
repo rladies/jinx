@@ -9,11 +9,11 @@ describe("airtable_to_directory_entry", {
       )
     )
     result <- airtable_to_directory_entry(record)
-    expect_equal(result$slug, "jane-doe")
-    expect_equal(result$data$name, "Jane Doe")
-    expect_equal(result$data$github, "janedoe")
-    expect_equal(result$data$twitter, "jane_doe")
-    expect_equal(result$airtable_id, "rec123")
+    expect_identical(result$slug, "jane-doe")
+    expect_identical(result$data$name, "Jane Doe")
+    expect_identical(result$data$github, "janedoe")
+    expect_identical(result$data$twitter, "jane_doe")
+    expect_identical(result$airtable_id, "rec123")
   })
 
   it("returns NULL for record without name", {
@@ -32,7 +32,7 @@ describe("airtable_to_directory_entry", {
       fields = list(Name = "Maria del Carmen")
     )
     result <- airtable_to_directory_entry(record)
-    expect_equal(result$slug, "maria-del-carmen")
+    expect_identical(result$slug, "maria-del-carmen")
   })
 
   it("omits empty social fields", {
@@ -42,7 +42,7 @@ describe("airtable_to_directory_entry", {
     )
     result <- airtable_to_directory_entry(record)
     expect_null(result$data$github)
-    expect_equal(result$data$twitter, "testuser")
+    expect_identical(result$data$twitter, "testuser")
   })
 
   it("handles all social media fields", {
@@ -60,20 +60,23 @@ describe("airtable_to_directory_entry", {
       )
     )
     result <- airtable_to_directory_entry(record)
-    expect_equal(result$data$twitter, "tw")
-    expect_equal(result$data$github, "gh")
-    expect_equal(result$data$linkedin, "li")
-    expect_equal(result$data$mastodon, "ma")
-    expect_equal(result$data$bluesky, "bs")
-    expect_equal(result$data$website, "ws")
-    expect_equal(result$data$orcid, "or")
+    expect_identical(result$data$twitter, "tw")
+    expect_identical(result$data$github, "gh")
+    expect_identical(result$data$linkedin, "li")
+    expect_identical(result$data$mastodon, "ma")
+    expect_identical(result$data$bluesky, "bs")
+    expect_identical(result$data$website, "ws")
+    expect_identical(result$data$orcid, "or")
   })
 })
 
 describe("extract_airtable_photo", {
   it("extracts URL from photo field", {
     photo <- list(list(url = "https://example.com/photo.jpg"))
-    expect_equal(extract_airtable_photo(photo), "https://example.com/photo.jpg")
+    expect_identical(
+      extract_airtable_photo(photo),
+      "https://example.com/photo.jpg"
+    )
   })
 
   it("returns NULL for empty field", {

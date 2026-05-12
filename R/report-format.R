@@ -38,7 +38,9 @@ format_report_markdown <- function(report) {
       active,
       function(r) {
         glue::glue(
-          "| {r$repo} | {r$commits} | {r$prs_opened} | {r$prs_merged} | {r$issues_opened} | {r$issues_closed} |"
+          "| {r$repo} | {r$commits}",
+          " | {r$prs_opened} | {r$prs_merged}",
+          " | {r$issues_opened} | {r$issues_closed} |"
         )
       },
       character(1)

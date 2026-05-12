@@ -1,9 +1,7 @@
 describe("render_template", {
   it("replaces placeholders", {
     tmp <- withr::local_tempfile(
-      lines = c(
-        "Welcome <NAME> (@<GH_USER>) to <TEAM>!"
-      )
+      lines = "Welcome <NAME> (@<GH_USER>) to <TEAM>!"
     )
     result <- render_template(
       tmp,
@@ -13,27 +11,23 @@ describe("render_template", {
         TEAM = "website"
       )
     )
-    expect_equal(result, "Welcome Ada Lovelace (@adalovelace) to website!")
+    expect_identical(result, "Welcome Ada Lovelace (@adalovelace) to website!")
   })
 
   it("handles multiple occurrences of same placeholder", {
     tmp <- withr::local_tempfile(
-      lines = c(
-        "Hi <NAME>, welcome <NAME>!"
-      )
+      lines = "Hi <NAME>, welcome <NAME>!"
     )
     result <- render_template(tmp, list(NAME = "Ada"))
-    expect_equal(result, "Hi Ada, welcome Ada!")
+    expect_identical(result, "Hi Ada, welcome Ada!")
   })
 
   it("leaves unknown placeholders untouched", {
     tmp <- withr::local_tempfile(
-      lines = c(
-        "Hello <NAME>, your role is <ROLE>"
-      )
+      lines = "Hello <NAME>, your role is <ROLE>"
     )
     result <- render_template(tmp, list(NAME = "Ada"))
-    expect_equal(result, "Hello Ada, your role is <ROLE>")
+    expect_identical(result, "Hello Ada, your role is <ROLE>")
   })
 })
 
@@ -49,8 +43,8 @@ describe("extract_extras", {
       sep = "\n"
     )
     extras <- extract_extras(content)
-    expect_true(grepl("Do something special", extras))
-    expect_true(grepl("Another task", extras))
+    expect_true(grepl("Do something special", extras, fixed = TRUE))
+    expect_true(grepl("Another task", extras, fixed = TRUE))
   })
 
   it("returns NULL when no extras found", {
@@ -71,14 +65,14 @@ describe("inject_before_second_header", {
     lines <- strsplit(result, "\n")[[1]]
 
     section2_idx <- grep("^### Section 2", lines)
-    extra_idx <- grep("Extra task", lines)
-    expect_true(extra_idx < section2_idx)
+    extra_idx <- grep("Extra task", lines, fixed = TRUE)
+    expect_lt(extra_idx, section2_idx)
   })
 
   it("appends if fewer than two headers", {
     base <- "### Only one header\nContent"
     result <- inject_before_second_header(base, "- [ ] Extra")
-    expect_true(grepl("Extra", result))
+    expect_true(grepl("Extra", result, fixed = TRUE))
   })
 })
 
@@ -100,19 +94,19 @@ describe("combine_templates", {
       sep = "\n"
     )
     result <- combine_templates(base, team)
-    expect_true(grepl("Team-specific task", result))
+    expect_true(grepl("Team-specific task", result, fixed = TRUE))
 
     lines <- strsplit(result, "\n")[[1]]
-    extra_idx <- grep("Team-specific task", lines)
+    extra_idx <- grep("Team-specific task", lines, fixed = TRUE)
     section2_idx <- grep("^### What you need to do", lines)
-    expect_true(extra_idx < section2_idx)
+    expect_lt(extra_idx, section2_idx)
   })
 
   it("concatenates when no extras comment", {
     base <- "Base content"
     team <- "Team content"
     result <- combine_templates(base, team)
-    expect_true(grepl("Base content", result))
-    expect_true(grepl("Team content", result))
+    expect_true(grepl("Base content", result, fixed = TRUE))
+    expect_true(grepl("Team content", result, fixed = TRUE))
   })
 })

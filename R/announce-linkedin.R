@@ -149,9 +149,8 @@ li_post_write <- function(author, text, image = NULL, image_alt = "") {
     httr2::req_perform() |>
     httr2::resp_header("x-restli-id")
 
-  cli::cli_alert_success(
-    "Posted to LinkedIn: {.url {file.path('https://www.linkedin.com/feed/update/', resp)}}"
-  )
+  post_url <- file.path("https://www.linkedin.com/feed/update/", resp)
+  cli::cli_alert_success("Posted to LinkedIn: {.url {post_url}}")
   invisible(resp)
 }
 

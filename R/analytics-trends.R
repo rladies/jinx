@@ -66,9 +66,10 @@ format_analytics_markdown <- function(trends, contributor_growth) {
             } else {
               sprintf("%+.1f%%", trends$change[i])
             }
-            cli::format_inline(
-              "| {trends$month[i]} | {trends$total_commits[i]} | {change_str} | {trends$sparkline[i]} |"
-            )
+            cli::format_inline(paste0(
+              "| {trends$month[i]} | {trends$total_commits[i]}",
+              " | {change_str} | {trends$sparkline[i]} |"
+            ))
           },
           character(1)
         ),
@@ -88,9 +89,11 @@ format_analytics_markdown <- function(trends, contributor_growth) {
         vapply(
           seq_len(nrow(contributor_growth)),
           function(i) {
-            cli::format_inline(
-              "| {contributor_growth$month[i]} | {contributor_growth$new_contributors[i]} | {contributor_growth$total_contributors[i]} |"
-            )
+            cli::format_inline(paste0(
+              "| {contributor_growth$month[i]}",
+              " | {contributor_growth$new_contributors[i]}",
+              " | {contributor_growth$total_contributors[i]} |"
+            ))
           },
           character(1)
         ),

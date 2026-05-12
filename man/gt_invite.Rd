@@ -15,6 +15,10 @@ gt_invite(username, team, name = username, org = "rladies")
 
 \item{org}{GitHub organization. Defaults to \code{"rladies"}.}
 }
+\value{
+Invisibly returns \code{NULL}. Called for its side effect of sending
+the invitation and adding the user to the specified team.
+}
 \description{
 Sends an organization membership invitation and adds the user to the
 global team.

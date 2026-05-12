@@ -33,7 +33,7 @@ verify_social_handles <- function(entry) {
       if (grepl("^https?://", h)) {
         return(h)
       }
-      parts <- strsplit(sub("^@", "", h), "@")[[1]]
+      parts <- strsplit(sub("^@", "", h, fixed = TRUE), "@")[[1]]
       if (length(parts) == 2) {
         paste0("https://", parts[2], "/@", parts[1])
       } else {

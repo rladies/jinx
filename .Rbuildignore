@@ -8,3 +8,6 @@
 ^pkgdown$
 ^worker$
 ^wrangler\.jsonc$
+^\.lintr$
+^\.claude$
+^\.wrangler$

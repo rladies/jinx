@@ -29,9 +29,11 @@ generate_conference_report <- function(org = "rladies", repo = "global-team") {
       } else {
         "Open"
       }
-      cli::format_inline(
-        "| {cfps$conference[i]} | {cfps$deadline[i]} | {cfps$days_left[i]} days | {status} | [#{cfps$number[i]}]({cfps$url[i]}) |"
-      )
+      cli::format_inline(paste0(
+        "| {cfps$conference[i]} | {cfps$deadline[i]}",
+        " | {cfps$days_left[i]} days | {status}",
+        " | [#{cfps$number[i]}]({cfps$url[i]}) |"
+      ))
     },
     character(1)
   )

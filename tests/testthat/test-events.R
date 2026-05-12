@@ -8,12 +8,12 @@ describe("meetup_event_to_df", {
     )
     result <- meetup_event_to_df(node, "rladies-berlin")
     expect_s3_class(result, "data.frame")
-    expect_equal(nrow(result), 1)
-    expect_equal(result$title, "Intro to R")
-    expect_equal(result$date, as.Date("2024-03-15"))
-    expect_equal(result$rsvp_count, 25L)
-    expect_equal(result$source, "meetup")
-    expect_equal(result$chapter, "rladies-berlin")
+    expect_identical(nrow(result), 1L)
+    expect_identical(result$title, "Intro to R")
+    expect_identical(result$date, as.Date("2024-03-15"))
+    expect_identical(result$rsvp_count, 25L)
+    expect_identical(result$source, "meetup")
+    expect_identical(result$chapter, "rladies-berlin")
   })
 
   it("returns NULL for NULL node", {
@@ -27,7 +27,7 @@ describe("meetup_event_to_df", {
   it("handles missing optional fields", {
     node <- list(title = "Test Event", dateTime = "2024-06-01T10:00:00")
     result <- meetup_event_to_df(node, "rladies-oslo")
-    expect_equal(result$rsvp_count, 0L)
+    expect_identical(result$rsvp_count, 0L)
     expect_true(is.na(result$url))
   })
 })
@@ -36,9 +36,9 @@ describe("empty_event_df", {
   it("returns a data frame with 0 rows and correct columns", {
     result <- empty_event_df()
     expect_s3_class(result, "data.frame")
-    expect_equal(nrow(result), 0)
-    expect_equal(
-      names(result),
+    expect_identical(nrow(result), 0L)
+    expect_named(
+      result,
       c("title", "date", "url", "rsvp_count", "source", "chapter")
     )
   })
@@ -57,32 +57,32 @@ describe("create_event_summary", {
     )
     result <- create_event_summary(events, "weekly")
     expect_true(grepl("weekly", result, ignore.case = TRUE))
-    expect_true(grepl("2 events", result))
-    expect_true(grepl("2 chapters", result))
-    expect_true(grepl("Intro to R", result))
-    expect_true(grepl("ggplot2 Workshop", result))
+    expect_true(grepl("2 events", result, fixed = TRUE))
+    expect_true(grepl("2 chapters", result, fixed = TRUE))
+    expect_true(grepl("Intro to R", result, fixed = TRUE))
+    expect_true(grepl("ggplot2 Workshop", result, fixed = TRUE))
   })
 
   it("handles empty events", {
     result <- create_event_summary(empty_event_df(), "monthly")
-    expect_true(grepl("No events found", result))
+    expect_true(grepl("No events found", result, fixed = TRUE))
   })
 })
 
 describe("event command parsing", {
   it("parses /jinx events <chapter>", {
     cmd <- parse_command("/jinx events rladies-berlin")
-    expect_equal(cmd$action, "events")
-    expect_equal(cmd$chapter, "rladies-berlin")
+    expect_identical(cmd$action, "events")
+    expect_identical(cmd$chapter, "rladies-berlin")
   })
 
   it("parses /jinx events sync", {
     cmd <- parse_command("/jinx events sync")
-    expect_equal(cmd$action, "events-sync")
+    expect_identical(cmd$action, "events-sync")
   })
 
   it("returns error for bare events command", {
     cmd <- parse_command("/jinx events")
-    expect_equal(cmd$action, "error")
+    expect_identical(cmd$action, "error")
   })
 })

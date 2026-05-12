@@ -19,6 +19,10 @@ Defaults to all: \code{"bluesky"}, \code{"linkedin"}, \code{"mastodon"}.}
 \item{newsletter}{Logical, whether to also send a newsletter. Defaults
 to \code{TRUE}.}
 }
+\value{
+Invisibly returns a named list with the posting result for each
+platform.
+}
 \description{
 Reads YAML front matter from a blog post, creates an announcement
 message, and posts to selected platforms.

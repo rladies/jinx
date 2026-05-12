@@ -35,6 +35,7 @@ parse_command <- function(body) {
     "chapter-health" = list(action = "chapter-health"),
     "chapter-setup" = parse_chapter_setup_command(parts),
     "chapter-update" = parse_chapter_update_command(parts),
+    "slack-invite" = parse_slack_invite_command(parts),
     "blog-add" = parse_blog_add_command(parts),
     "blog-check-links" = list(action = "blog-check-links"),
     "gha-dashboard" = list(action = "gha-dashboard"),
@@ -77,6 +78,16 @@ parse_offboard_command <- function(parts) {
     username = sub("^@", "", parts[2]),
     team = tolower(parts[4])
   )
+}
+
+parse_slack_invite_command <- function(parts) {
+  if (length(parts) < 2) {
+    return(list(
+      action = "error",
+      message = "Usage: `/jinx slack-invite <email>`"
+    ))
+  }
+  list(action = "slack-invite", email = parts[2])
 }
 
 parse_announce_command <- function(parts) {
@@ -206,7 +217,8 @@ parse_website_analytics_command <- function(parts) {
     return(list(
       action = "error",
       message = glue::glue(
-        "Usage: `/jinx website-analytics [period]` where period is one of: {paste(valid, collapse = ', ')}"
+        "Usage: `/jinx website-analytics [period]`",
+        " where period is one of: {paste(valid, collapse = ', ')}"
       )
     ))
   }
@@ -269,29 +281,36 @@ execute_command <- function(command) {
     help = read_help_text(),
     invite = {
       config <- load_teams_config()
-      if (!command$team %in% team_slugs(config)) {
-        glue::glue(
-          "Unknown team `{command$team}`. Valid teams: {paste(team_slugs(config), collapse = ', ')}"
-        )
-      } else {
+      if (command$team %in% team_slugs(config)) {
         gt_invite(command$username, command$team)
         glue::glue(
-          "Invitation sent to @{command$username} for the **{command$team}** team."
+          "Invitation sent to @{command$username}",
+          " for the **{command$team}** team."
+        )
+      } else {
+        glue::glue(
+          "Unknown team `{command$team}`.",
+          " Valid teams: {paste(team_slugs(config), collapse = ', ')}"
         )
       }
     },
     offboard = {
       config <- load_teams_config()
-      if (!command$team %in% team_slugs(config)) {
-        glue::glue(
-          "Unknown team `{command$team}`. Valid teams: {paste(team_slugs(config), collapse = ', ')}"
-        )
-      } else {
+      if (command$team %in% team_slugs(config)) {
         gt_create_offboarding(command$username, command$team)
         glue::glue(
-          "Offboarding initiated for @{command$username} from the **{command$team}** team."
+          "Offboarding initiated for @{command$username}",
+          " from the **{command$team}** team."
+        )
+      } else {
+        glue::glue(
+          "Unknown team `{command$team}`.",
+          " Valid teams: {paste(team_slugs(config), collapse = ', ')}"
         )
       }
+    },
+    "slack-invite" = {
+      send_slack_invite(command$email)
     },
     report = {
       report <- generate_report(type = command$type)
@@ -350,8 +369,11 @@ execute_command <- function(command) {
       paste0(
         "## Top Contributors (org-wide)\n\n",
         format_contributors(top, format = "table"),
-        "\n_Showing top ", nrow(top),
-        " of ", nrow(contribs), " total_"
+        "\n_Showing top ",
+        nrow(top),
+        " of ",
+        nrow(contribs),
+        " total_"
       )
     },
     events = {
@@ -381,7 +403,8 @@ execute_command <- function(command) {
           seq_len(nrow(cfps)),
           function(i) {
             glue::glue(
-              "- **{cfps$conference[i]}** (deadline: {cfps$deadline[i]}) - {cfps$url[i]}"
+              "- **{cfps$conference[i]}**",
+              " (deadline: {cfps$deadline[i]}) - {cfps$url[i]}"
             )
           },
           character(1)
@@ -396,7 +419,8 @@ execute_command <- function(command) {
     "cfp-recommend" = {
       recommend_speaker(command$conference, command$speaker)
       glue::glue(
-        "Speaker recommendation for @{command$speaker} added to **{command$conference}**."
+        "Speaker recommendation for @{command$speaker}",
+        " added to **{command$conference}**."
       )
     },
     "translate-status" = {
@@ -404,9 +428,11 @@ execute_command <- function(command) {
       lines <- vapply(
         seq_len(nrow(coverage)),
         function(i) {
-          glue::glue(
-            "- **{coverage$language[i]}**: {coverage$translated[i]}/{coverage$total_templates[i]} ({coverage$coverage_pct[i]}%)"
-          )
+          glue::glue(paste0(
+            "- **{coverage$language[i]}**: ",
+            "{coverage$translated[i]}/{coverage$total_templates[i]} ",
+            "({coverage$coverage_pct[i]}%)"
+          ))
         },
         character(1)
       )
@@ -422,7 +448,8 @@ execute_command <- function(command) {
           seq_len(nrow(issues)),
           function(i) {
             glue::glue(
-              "- {issues$template[i]} ({issues$language[i]}): {issues$status[i]}"
+              "- {issues$template[i]}",
+              " ({issues$language[i]}): {issues$status[i]}"
             )
           },
           character(1)
@@ -435,9 +462,13 @@ execute_command <- function(command) {
       if (length(stale) == 0) {
         "No stale issues found - all caught up! \U0001f389"
       } else {
-        links <- vapply(stale, function(s) {
-          glue::glue("- <{s$url}|{s$title}> ({s$days} days)")
-        }, character(1))
+        links <- vapply(
+          stale,
+          function(s) {
+            glue::glue("- <{s$url}|{s$title}> ({s$days} days)")
+          },
+          character(1)
+        )
         paste(
           glue::glue("Reminded {length(stale)} stale issue(s):"),
           paste(links, collapse = "\n"),
@@ -468,7 +499,9 @@ normalize_command <- function(parts) {
     list(c("update", "chapter"), "chapter-update"),
     list(c("add", "blog"), "blog-add"),
     list(c("check", "links"), "blog-check-links"),
-    list(c("remind", "stale"), "remind")
+    list(c("remind", "stale"), "remind"),
+    list(c("invite", "slack"), "slack-invite"),
+    list(c("send", "slack", "invite"), "slack-invite")
   )
 
   lower <- tolower(parts)

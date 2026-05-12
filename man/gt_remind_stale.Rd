@@ -13,6 +13,10 @@ gt_remind_stale(org = "rladies", days = 30, repo = "global-team")
 
 \item{repo}{Repository to check. Defaults to \code{"global-team"}.}
 }
+\value{
+Invisibly returns \code{NULL}. Called for its side effect of posting
+reminder comments on stale issues.
+}
 \description{
 Finds open issues with onboarding or offboarding labels that haven't
 been updated in \code{days} days, and posts a reminder comment.
