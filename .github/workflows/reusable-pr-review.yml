@@ -8,6 +8,10 @@ on:
       JINX_PRIVATE_KEY:
         required: true
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   review:
     runs-on: ubuntu-latest
