@@ -1,0 +1,44 @@
+{
+  "bookmarks": [
+    {
+      "title": "RLadies+ Guide",
+      "link": "https://guide.rladies.org",
+      "emoji": ":sparkles:"
+    },
+    {
+      "title": "Code of Conduct",
+      "link": "https://rladies.org/coc/",
+      "emoji": ":scales:"
+    },
+    {
+      "title": "RLadies+ Events",
+      "link": "https://rladies.org/events/",
+      "emoji": ":calendar:"
+    },
+    {
+      "title": "Chapters",
+      "link": "https://rladies.org/chapters/",
+      "emoji": ":globe_with_meridians:"
+    },
+    {
+      "title": "Directory",
+      "link": "https://rladies.org/directory/",
+      "emoji": ":busts_in_silhouette:"
+    },
+    {
+      "title": "Programs",
+      "link": "https://rladies.org/programs/",
+      "emoji": ":books:"
+    },
+    {
+      "title": "FAQ",
+      "link": "https://rladies.org/about-us/faq/",
+      "emoji": ":grey_question:"
+    },
+    {
+      "title": "Jinx (GitHub)",
+      "link": "https://github.com/rladies/jinx",
+      "emoji": ":crystal_ball:"
+    }
+  ]
+}

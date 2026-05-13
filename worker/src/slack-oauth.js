@@ -1,9 +1,34 @@
-import { slack_team_is_allowed } from "./slack-api.js";
+import { slack_team_info_fetch, slack_team_is_allowed } from "./slack-api.js";
 
 const NONCE_COOKIE = "jinx_install_nonce";
 
 export async function slack_oauth_install_handle(env, url) {
-  const scopes = "chat:write,chat:write.public,commands";
+  const scopes = [
+    "app_mentions:read",
+    "assistant:write",
+    "bookmarks:read",
+    "bookmarks:write",
+    "channels:join",
+    "channels:read",
+    "chat:write",
+    "chat:write.public",
+    "commands",
+    "files:write",
+    "groups:read",
+    "im:history",
+    "im:read",
+    "im:write",
+    "incoming-webhook",
+    "mpim:read",
+    "mpim:write",
+    "reactions:read",
+    "reactions:write",
+    "reminders:write",
+    "team:read",
+    "users:read",
+    "users:read.email",
+    "users.profile:read",
+  ].join(",");
   const redirectUri = `${url.origin}/slack/oauth`;
 
   const ts = Date.now().toString();
@@ -92,10 +117,20 @@ export async function slack_oauth_callback_handle(request, env) {
     );
   }
 
+  let teamInfo = null;
+  try {
+    teamInfo = await slack_team_info_fetch(data.access_token);
+  } catch (e) {
+    console.warn(`team.info fetch failed for ${teamId}:`, e.message);
+  }
+
   const tokenData = {
     bot_token: data.access_token,
     team_id: teamId,
-    team_name: teamName,
+    team_name: teamInfo?.team?.name || teamName,
+    team_domain: teamInfo?.team?.domain || null,
+    team_icon: teamInfo?.team?.icon?.image_132 || null,
+    team_email_domain: teamInfo?.team?.email_domain || null,
     bot_user_id: data.bot_user_id,
     installed_at: new Date().toISOString(),
   };

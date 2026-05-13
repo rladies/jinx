@@ -69,12 +69,6 @@ management.
 
 - `slack_invites_send()` for community Slack onboarding.
 - `subscribe_slack_rss()` for blog feed integration.
-- `slack_welcome_member()` sends a workspace-aware welcome DM to a new
-  member, with separate templates for the RLadies+ community and
-  organisers Slack workspaces. Stateless: triggered by a Slack
-  `team_join` event via the `slack-welcome.yml` workflow
-  (`workflow_dispatch` / `repository_dispatch`) — jinx does not
-  persist any user identifiers.
 
 ## GHA dashboard
 

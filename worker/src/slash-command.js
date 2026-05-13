@@ -1,5 +1,6 @@
 import { github_dispatch_send } from "./github-dispatch.js";
 import { slack_team_is_allowed } from "./slack-api.js";
+import { slash_is_local, slash_local_handle } from "./slash-local.js";
 
 export async function slack_command_handle(env, ctx, body) {
   const params = new URLSearchParams(body);
@@ -24,6 +25,18 @@ export async function slack_command_handle(env, ctx, body) {
     return Response.json({
       response_type: "ephemeral",
       text: await fetchHelpText(),
+    });
+  }
+
+  if (slash_is_local(command)) {
+    ctx.waitUntil(
+      slash_local_handle(env, teamId, command, params, responseUrl).catch((err) =>
+        console.error("Local slash handler failed:", err)
+      )
+    );
+    return Response.json({
+      response_type: "ephemeral",
+      text: `🔮 On it — running \`/jinx ${command}\`...`,
     });
   }
 

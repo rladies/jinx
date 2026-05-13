@@ -162,6 +162,22 @@ async function slack_invite_process_sent(env, data, sender, responseUrl) {
       await airtable_record_update(env, data.base_id, data.table_id, data.record_id, { invited: true });
     }
 
+    if (data.email && env.SLACK_TOKENS) {
+      await env.SLACK_TOKENS.put(
+        pending_link_key(data.email),
+        JSON.stringify({
+          email: data.email,
+          record_id: data.record_id || null,
+          base_id: data.base_id || null,
+          table_id: data.table_id || null,
+          approver: data.approver || null,
+          marked_sent_by: sender,
+          marked_sent_at: new Date().toISOString(),
+        }),
+        { expirationTtl: 90 * 24 * 60 * 60 }
+      ).catch((err) => console.error("pending_link write failed:", err));
+    }
+
     const approverLine = data.approver
       ? ` — approved by @${data.approver}`
       : "";
@@ -202,6 +218,10 @@ async function slack_invite_process_denial(env, data, adminUser, responseUrl) {
       text: `❌ *Denied* by @${adminUser} — ${data.email} will not be invited`,
     }),
   });
+}
+
+export function pending_link_key(email) {
+  return `pending_link:${email.trim().toLowerCase()}`;
 }
 
 async function airtable_record_update(env, baseId, tableId, recordId, fields) {
