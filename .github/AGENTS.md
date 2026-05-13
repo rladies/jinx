@@ -148,7 +148,7 @@ inst/translations/    # i18n: en, es, pt, fr
 inst/schemas/         # JSON Schema validation (chapter, blog, directory, global-team, cfp, event)
 inst/commands/        # help.md for /jinx help
 .github/workflows/    # 24 workflows
-vignettes/            # getting-started.Rmd, workflows.Rmd
+vignettes/            # jinx.Rmd, workflows.Rmd, slack-app.Rmd, articles/architecture.Rmd, articles/privacy.Rmd
 ```
 
 ## Modules

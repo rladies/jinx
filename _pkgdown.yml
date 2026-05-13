@@ -17,7 +17,7 @@ articles:
   - title: Get started
     navbar: ~
     contents:
-      - getting-started
+      - jinx
   - title: Using Jinx
     navbar: For users
     contents:
