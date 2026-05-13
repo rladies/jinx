@@ -27,11 +27,16 @@ jobs:
         run: |
           Rscript -e '
             results <- jinx::i18n_translations_validate()
-            issues <- results[results$status != "ok", ]
-            if (nrow(issues) > 0) {
-              cat("Translation issues found:\n")
-              print(issues)
+            mismatches <- results[results$status == "mismatch", ]
+            missing <- results[results$status == "missing", ]
+            if (nrow(missing) > 0) {
+              cat("Missing translations (warning, tracked by i18n_coverage_check):\n")
+              print(missing)
+            }
+            if (nrow(mismatches) > 0) {
+              cat("Placeholder mismatches (fatal):\n")
+              print(mismatches)
               quit(status = 1)
             }
-            cat("All translations valid.\n")
+            cat("All translation placeholders consistent.\n")
           '
