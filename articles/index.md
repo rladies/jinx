@@ -1,11 +1,22 @@
 # Articles
 
-### All vignettes
+### Get started
 
 - [Getting Started with
   jinx](https://rladies.github.io/jinx/articles/getting-started.md):
-- [Privacy policy](https://rladies.github.io/jinx/articles/privacy.md):
+
+### Using Jinx
+
 - [The Jinx Slack
   app](https://rladies.github.io/jinx/articles/slack-app.md):
-- [Workflow Reference for R-Ladies Org
+
+### Operating Jinx
+
+- [How Jinx is
+  built](https://rladies.github.io/jinx/articles/architecture.md):
+- [Workflow Reference for RLadies+ Org
   Admins](https://rladies.github.io/jinx/articles/workflows.md):
+
+### Policies
+
+- [Privacy policy](https://rladies.github.io/jinx/articles/privacy.md):

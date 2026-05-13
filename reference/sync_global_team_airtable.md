@@ -12,6 +12,7 @@ sync_global_team_airtable(
   org = "rladies",
   website_repo = "rladies.github.io"
 )
+
 sync_gt_airtable(
   base_id = "appZjaV7eM0Y9FsHZ",
   api_key = Sys.getenv("AIRTABLE_API_KEY"),

@@ -1,6 +1,6 @@
 # Getting Started with jinx
 
-jinx is the R-Ladies GitHub organization management bot. It is an R
+jinx is the RLadies+ GitHub organization management bot. It is an R
 package deployed via GitHub Actions with a registered GitHub App
 identity (`jinx[bot]`).
 
@@ -30,7 +30,7 @@ functions. The `gh` package handles GitHub API authentication via the
     - Repository: Issues (R/W), Pull Requests (R/W), Contents (Read)
     - Organization: Members (R/W), Administration (Read)
 4.  Events: `issue_comment`, `issues`, `pull_request`
-5.  Install on the R-Ladies org
+5.  Install on the RLadies+ org
 
 ### 2. Configure secrets
 
@@ -69,9 +69,9 @@ is installed. Commands start with `/jinx` followed by an action:
     /jinx help
 
 Commands are parsed by
-[`cmd_parse()`](https://rladies.github.io/jinx/reference/parse_command.md)
+[`cmd_parse()`](https://rladies.github.io/jinx/reference/command_parse.md)
 and dispatched by
-[`cmd_execute()`](https://rladies.github.io/jinx/reference/execute_command.md):
+[`cmd_execute()`](https://rladies.github.io/jinx/reference/command_execute.md):
 
 ``` r
 
@@ -93,19 +93,19 @@ jinx is organized into modules, each handling a specific domain:
 
 | Module | Functions |
 |----|----|
-| Team management | [`gt_invite()`](https://rladies.github.io/jinx/reference/gt_invite.md), [`gt_create_offboarding()`](https://rladies.github.io/jinx/reference/gt_create_offboarding.md), [`gt_finalize_onboarding()`](https://rladies.github.io/jinx/reference/gt_finalize_onboarding.md) |
+| Team management | [`gt_invite()`](https://rladies.github.io/jinx/reference/global_team_invite.md), [`gt_create_offboarding()`](https://rladies.github.io/jinx/reference/global_team_create_offboarding.md), [`gt_finalize_onboarding()`](https://rladies.github.io/jinx/reference/global_team_finalize_onboarding.md) |
 | Announcements | [`announce_post()`](https://rladies.github.io/jinx/reference/announce_post.md), [`post_bluesky()`](https://rladies.github.io/jinx/reference/post_bluesky.md), [`post_mastodon()`](https://rladies.github.io/jinx/reference/post_mastodon.md) |
 | Directory | [`validate_directory_pr()`](https://rladies.github.io/jinx/reference/validate_directory_pr.md), [`crop_directory_image()`](https://rladies.github.io/jinx/reference/crop_directory_image.md) |
-| Blogs | [`blog_create_entry()`](https://rladies.github.io/jinx/reference/create_blog_entry.md), [`blog_check_links()`](https://rladies.github.io/jinx/reference/check_blog_links.md) |
-| Chapters | [`create_chapter()`](https://rladies.github.io/jinx/reference/create_chapter.md), [`chapter_check_health()`](https://rladies.github.io/jinx/reference/check_chapter_health.md) |
-| Reports | [`report_generate()`](https://rladies.github.io/jinx/reference/generate_report.md), [`report_publish()`](https://rladies.github.io/jinx/reference/publish_report.md) |
+| Blogs | [`blog_create_entry()`](https://rladies.github.io/jinx/reference/blog_create_entry.md), [`blog_check_links()`](https://rladies.github.io/jinx/reference/blog_check_links.md) |
+| Chapters | [`create_chapter()`](https://rladies.github.io/jinx/reference/create_chapter.md), [`chapter_check_health()`](https://rladies.github.io/jinx/reference/chapter_check_health.md) |
+| Reports | [`report_generate()`](https://rladies.github.io/jinx/reference/report_generate.md), [`report_publish()`](https://rladies.github.io/jinx/reference/report_publish.md) |
 | PR review | [`review_pr()`](https://rladies.github.io/jinx/reference/review_pr.md), [`check_pr_naming()`](https://rladies.github.io/jinx/reference/check_pr_naming.md) |
 | Airtable sync | [`sync_directory_airtable()`](https://rladies.github.io/jinx/reference/sync_directory_airtable.md), [`sync_gt_airtable()`](https://rladies.github.io/jinx/reference/sync_global_team_airtable.md) |
-| Website | [`website_merge_pending()`](https://rladies.github.io/jinx/reference/auto_merge_pending.md), [`greet_contributor()`](https://rladies.github.io/jinx/reference/greet_contributor.md) |
+| Website | [`website_merge_pending()`](https://rladies.github.io/jinx/reference/website_merge_pending.md), [`greet_contributor()`](https://rladies.github.io/jinx/reference/greet_contributor.md) |
 | Chapter monitoring | [`monitor_chapter_status()`](https://rladies.github.io/jinx/reference/monitor_chapter_status.md), [`prepare_inactivity_emails()`](https://rladies.github.io/jinx/reference/prepare_inactivity_emails.md) |
-| Slack | [`slack_invites_send()`](https://rladies.github.io/jinx/reference/send_slack_invites.md), [`subscribe_slack_rss()`](https://rladies.github.io/jinx/reference/subscribe_slack_rss.md) |
-| GHA dashboard | [`gha_generate_dashboard()`](https://rladies.github.io/jinx/reference/generate_gha_dashboard.md), [`gha_publish_dashboard()`](https://rladies.github.io/jinx/reference/publish_gha_dashboard.md) |
-| Contributors | [`list_contributors()`](https://rladies.github.io/jinx/reference/list_contributors.md), [`contributors_update()`](https://rladies.github.io/jinx/reference/update_contributors_list.md) |
+| Slack | [`slack_invites_send()`](https://rladies.github.io/jinx/reference/slack_invites_send.md), [`subscribe_slack_rss()`](https://rladies.github.io/jinx/reference/subscribe_slack_rss.md) |
+| GHA dashboard | [`gha_generate_dashboard()`](https://rladies.github.io/jinx/reference/gha_generate_dashboard.md), [`gha_publish_dashboard()`](https://rladies.github.io/jinx/reference/gha_publish_dashboard.md) |
+| Contributors | [`list_contributors()`](https://rladies.github.io/jinx/reference/list_contributors.md), [`contributors_update()`](https://rladies.github.io/jinx/reference/contributors_update.md) |
 
 ## Configuration
 
@@ -146,7 +146,7 @@ placeholders with values from a named list.
 
 ## Cross-repo PR review
 
-Add this workflow to any R-Ladies repo for automated PR review:
+Add this workflow to any RLadies+ repo for automated PR review:
 
 ``` yaml
 # .github/workflows/jinx-review.yml

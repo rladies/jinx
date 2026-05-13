@@ -1,4 +1,4 @@
-# Workflow Reference for R-Ladies Org Admins
+# Workflow Reference for RLadies+ Org Admins
 
 This vignette walks through each admin workflow jinx supports. For setup
 and architecture details, see
@@ -12,12 +12,12 @@ and architecture details, see
 
 **What happens:**
 
-1.  [`gt_invite()`](https://rladies.github.io/jinx/reference/gt_invite.md)
+1.  [`gt_invite()`](https://rladies.github.io/jinx/reference/global_team_invite.md)
     sends an org invitation to the user
 2.  A tracking issue is created with the team-specific onboarding
     checklist
 3.  Once the user accepts,
-    [`gt_finalize_onboarding()`](https://rladies.github.io/jinx/reference/gt_finalize_onboarding.md)
+    [`gt_finalize_onboarding()`](https://rladies.github.io/jinx/reference/global_team_finalize_onboarding.md)
     adds them to the appropriate team(s) and repos
 4.  The tracking issue is closed
 
@@ -43,12 +43,12 @@ gt_check_invitations()
 
 **What happens:**
 
-1.  [`gt_create_offboarding()`](https://rladies.github.io/jinx/reference/gt_create_offboarding.md)
+1.  [`gt_create_offboarding()`](https://rladies.github.io/jinx/reference/global_team_create_offboarding.md)
     opens an offboarding tracking issue
 2.  The issue lists cleanup steps (remove from team, repos, external
     services)
 3.  Once complete,
-    [`gt_finalize_offboarding()`](https://rladies.github.io/jinx/reference/gt_finalize_offboarding.md)
+    [`gt_finalize_offboarding()`](https://rladies.github.io/jinx/reference/global_team_finalize_offboarding.md)
     removes org access and closes the issue
 
 **Programmatically:**
@@ -66,7 +66,7 @@ gt_create_offboarding("octocat", "blog")
 
 **What happens:**
 
-1.  [`chapter_create_setup()`](https://rladies.github.io/jinx/reference/create_chapter_setup.md)
+1.  [`chapter_create_setup()`](https://rladies.github.io/jinx/reference/chapter_create_setup.md)
     opens a setup tracking issue
 2.  The issue contains a checklist: create repos, add organizers,
     configure Meetup, set up social media
@@ -82,7 +82,7 @@ gt_create_offboarding("octocat", "blog")
 ## Monitoring chapter health
 
 **Scheduled workflow** runs periodically via
-[`chapter_check_health()`](https://rladies.github.io/jinx/reference/check_chapter_health.md).
+[`chapter_check_health()`](https://rladies.github.io/jinx/reference/chapter_check_health.md).
 
 **Via issue comment:**
 
@@ -112,10 +112,10 @@ prepare_inactivity_emails(statuses)
 
 **What happens:**
 
-1.  [`blog_create_entry()`](https://rladies.github.io/jinx/reference/create_blog_entry.md)
+1.  [`blog_create_entry()`](https://rladies.github.io/jinx/reference/blog_create_entry.md)
     fetches metadata from the URL
 2.  Creates a YAML entry and opens a PR to the blog repo
-3.  [`blog_post_checklist()`](https://rladies.github.io/jinx/reference/post_blog_checklist.md)
+3.  [`blog_post_checklist()`](https://rladies.github.io/jinx/reference/blog_post_checklist.md)
     adds a review checklist to the PR
 
 ### Checking blog links
@@ -123,12 +123,12 @@ prepare_inactivity_emails(statuses)
     /jinx blog-check-links
 
 Runs
-[`blog_check_links()`](https://rladies.github.io/jinx/reference/check_blog_links.md)
+[`blog_check_links()`](https://rladies.github.io/jinx/reference/blog_check_links.md)
 to find broken URLs across all blog entries.
 
 ### Auto-merge on publish date
 
-[`website_merge_pending()`](https://rladies.github.io/jinx/reference/auto_merge_pending.md)
+[`website_merge_pending()`](https://rladies.github.io/jinx/reference/website_merge_pending.md)
 runs on a schedule and merges blog PRs whose publish date has arrived.
 This is triggered by the `website-merge-pending.yml` workflow.
 
@@ -190,9 +190,9 @@ url <- chapter_report_health()
 
 **What happens:**
 
-1.  [`gha_generate_dashboard()`](https://rladies.github.io/jinx/reference/generate_gha_dashboard.md)
+1.  [`gha_generate_dashboard()`](https://rladies.github.io/jinx/reference/gha_generate_dashboard.md)
     queries workflow run status across all org repos
-2.  [`gha_publish_dashboard()`](https://rladies.github.io/jinx/reference/publish_gha_dashboard.md)
+2.  [`gha_publish_dashboard()`](https://rladies.github.io/jinx/reference/gha_publish_dashboard.md)
     posts a formatted status table as a GitHub issue
 
 **Scheduled workflow** runs weekly via `gha-dashboard.yml`.
@@ -230,7 +230,7 @@ sending.
 subscribe_slack_rss()
 ```
 
-Subscribes Slack channels to the R-Ladies blog RSS feed.
+Subscribes Slack channels to the RLadies+ blog RSS feed.
 
 ## Directory maintenance
 
@@ -266,9 +266,9 @@ checks:
 
 **Automated greetings:**
 
-- [`contributor_welcome()`](https://rladies.github.io/jinx/reference/welcome_contributor.md)
+- [`contributor_welcome()`](https://rladies.github.io/jinx/reference/contributor_welcome.md)
   posts a welcome comment on first-time PRs
-- [`contributor_thank()`](https://rladies.github.io/jinx/reference/thank_contributor.md)
+- [`contributor_thank()`](https://rladies.github.io/jinx/reference/contributor_thank.md)
   posts a thank-you when PRs are merged
 
 Both are triggered by the `welcome-contributor.yml` and
@@ -295,6 +295,6 @@ for how to add PR review to other repos.
 
     /jinx remind stale
 
-[`gt_remind_stale()`](https://rladies.github.io/jinx/reference/gt_remind_stale.md)
+[`gt_remind_stale()`](https://rladies.github.io/jinx/reference/global_team_remind_stale.md)
 scans for onboarding/offboarding issues that have gone stale and posts
 reminder comments.

@@ -2,19 +2,19 @@
 
 ## jinx 0.1.0
 
-Initial release of the jinx R package for R-Ladies GitHub organization
+Initial release of the jinx R package for RLadies+ GitHub organization
 management.
 
 ### Team management
 
-- [`global_team_invite()`](https://rladies.github.io/jinx/reference/gt_invite.md),
-  [`global_team_check_invitations()`](https://rladies.github.io/jinx/reference/gt_check_invitations.md),
-  [`global_team_finalize_onboarding()`](https://rladies.github.io/jinx/reference/gt_finalize_onboarding.md)
+- [`global_team_invite()`](https://rladies.github.io/jinx/reference/global_team_invite.md),
+  [`global_team_check_invitations()`](https://rladies.github.io/jinx/reference/global_team_check_invitations.md),
+  [`global_team_finalize_onboarding()`](https://rladies.github.io/jinx/reference/global_team_finalize_onboarding.md)
   for onboarding new global team members.
-- [`global_team_create_offboarding()`](https://rladies.github.io/jinx/reference/gt_create_offboarding.md),
-  [`global_team_finalize_offboarding()`](https://rladies.github.io/jinx/reference/gt_finalize_offboarding.md)
+- [`global_team_create_offboarding()`](https://rladies.github.io/jinx/reference/global_team_create_offboarding.md),
+  [`global_team_finalize_offboarding()`](https://rladies.github.io/jinx/reference/global_team_finalize_offboarding.md)
   for offboarding.
-- [`global_team_remind_stale()`](https://rladies.github.io/jinx/reference/gt_remind_stale.md)
+- [`global_team_remind_stale()`](https://rladies.github.io/jinx/reference/global_team_remind_stale.md)
   for stale issue reminders.
 
 ### Announcements
@@ -47,33 +47,33 @@ management.
 
 ### Blogs
 
-- [`blog_create_entry()`](https://rladies.github.io/jinx/reference/create_blog_entry.md),
+- [`blog_create_entry()`](https://rladies.github.io/jinx/reference/blog_create_entry.md),
   [`validate_blog_entry()`](https://rladies.github.io/jinx/reference/validate_blog_entry.md)
   for blog content management.
-- [`blog_check_links()`](https://rladies.github.io/jinx/reference/check_blog_links.md)
+- [`blog_check_links()`](https://rladies.github.io/jinx/reference/blog_check_links.md)
   for link validation.
-- [`blog_post_checklist()`](https://rladies.github.io/jinx/reference/post_blog_checklist.md)
+- [`blog_post_checklist()`](https://rladies.github.io/jinx/reference/blog_post_checklist.md)
   for automated PR review checklists.
 
 ### Chapters
 
 - [`create_chapter()`](https://rladies.github.io/jinx/reference/create_chapter.md),
-  [`chapter_create_setup()`](https://rladies.github.io/jinx/reference/create_chapter_setup.md),
-  [`chapter_create_update()`](https://rladies.github.io/jinx/reference/create_chapter_update.md)
+  [`chapter_create_setup()`](https://rladies.github.io/jinx/reference/chapter_create_setup.md),
+  [`chapter_create_update()`](https://rladies.github.io/jinx/reference/chapter_create_update.md)
   for chapter lifecycle management.
 - [`create_chapter_json_pr()`](https://rladies.github.io/jinx/reference/create_chapter_json_pr.md)
   for directory integration.
-- [`chapter_check_health()`](https://rladies.github.io/jinx/reference/check_chapter_health.md)
+- [`chapter_check_health()`](https://rladies.github.io/jinx/reference/chapter_check_health.md)
   for activity monitoring.
 
 ### Reports
 
-- [`report_generate()`](https://rladies.github.io/jinx/reference/generate_report.md),
-  [`report_publish()`](https://rladies.github.io/jinx/reference/publish_report.md)
+- [`report_generate()`](https://rladies.github.io/jinx/reference/report_generate.md),
+  [`report_publish()`](https://rladies.github.io/jinx/reference/report_publish.md)
   for activity reports.
-- [`chapter_report_health()`](https://rladies.github.io/jinx/reference/report_chapter_health.md)
+- [`chapter_report_health()`](https://rladies.github.io/jinx/reference/chapter_report_health.md)
   for chapter-specific reporting.
-- [`report_format_markdown()`](https://rladies.github.io/jinx/reference/format_report_markdown.md)
+- [`report_format_markdown()`](https://rladies.github.io/jinx/reference/report_format_markdown.md)
   for report rendering.
 
 ### PR review
@@ -91,7 +91,7 @@ management.
 
 ### Website automation
 
-- [`website_merge_pending()`](https://rladies.github.io/jinx/reference/auto_merge_pending.md)
+- [`website_merge_pending()`](https://rladies.github.io/jinx/reference/website_merge_pending.md)
   for date-based PR auto-merge.
 - [`greet_contributor()`](https://rladies.github.io/jinx/reference/greet_contributor.md)
   for contributor interaction.
@@ -105,11 +105,11 @@ management.
 
 ### Slack management
 
-- [`slack_invites_send()`](https://rladies.github.io/jinx/reference/send_slack_invites.md)
+- [`slack_invites_send()`](https://rladies.github.io/jinx/reference/slack_invites_send.md)
   for community Slack onboarding.
 - [`subscribe_slack_rss()`](https://rladies.github.io/jinx/reference/subscribe_slack_rss.md)
   for blog feed integration.
-- [`slack_welcome_member()`](https://rladies.github.io/jinx/reference/welcome_slack_member.md)
+- [`slack_welcome_member()`](https://rladies.github.io/jinx/reference/slack_welcome_member.md)
   sends a workspace-aware welcome DM to a new member, with separate
   templates for the RLadies+ community and organisers Slack workspaces.
   Stateless: triggered by a Slack `team_join` event via the
@@ -118,8 +118,8 @@ management.
 
 ### GHA dashboard
 
-- [`gha_generate_dashboard()`](https://rladies.github.io/jinx/reference/generate_gha_dashboard.md),
-  [`gha_publish_dashboard()`](https://rladies.github.io/jinx/reference/publish_gha_dashboard.md)
+- [`gha_generate_dashboard()`](https://rladies.github.io/jinx/reference/gha_generate_dashboard.md),
+  [`gha_publish_dashboard()`](https://rladies.github.io/jinx/reference/gha_publish_dashboard.md)
   for org-wide GitHub Actions workflow status reporting.
 
 ### Contributors
@@ -128,30 +128,30 @@ management.
   [`list_org_contributors()`](https://rladies.github.io/jinx/reference/list_org_contributors.md)
   for contributor tracking.
 - [`format_contributors()`](https://rladies.github.io/jinx/reference/format_contributors.md),
-  [`contributors_update()`](https://rladies.github.io/jinx/reference/update_contributors_list.md)
+  [`contributors_update()`](https://rladies.github.io/jinx/reference/contributors_update.md)
   for display and maintenance.
-- [`contributor_welcome()`](https://rladies.github.io/jinx/reference/welcome_contributor.md),
-  [`contributor_thank()`](https://rladies.github.io/jinx/reference/thank_contributor.md)
+- [`contributor_welcome()`](https://rladies.github.io/jinx/reference/contributor_welcome.md),
+  [`contributor_thank()`](https://rladies.github.io/jinx/reference/contributor_thank.md)
   for automated greetings.
 
 ### Commands
 
 - `/jinx` issue comment interface via
-  [`command_parse()`](https://rladies.github.io/jinx/reference/parse_command.md)
+  [`command_parse()`](https://rladies.github.io/jinx/reference/command_parse.md)
   and
-  [`command_execute()`](https://rladies.github.io/jinx/reference/execute_command.md).
+  [`command_execute()`](https://rladies.github.io/jinx/reference/command_execute.md).
 - 16 commands: invite, offboard, announce, validate-directory,
   chapter-health, blog-add, blog-check-links, report, chapter-setup,
   chapter-update, gha-dashboard, contributors, remind, help.
 
 ### Event management
 
-- [`events_list_chapter()`](https://rladies.github.io/jinx/reference/list_chapter_events.md)
+- [`events_list_chapter()`](https://rladies.github.io/jinx/reference/events_list_chapter.md)
   queries Meetup Pro for chapter events.
-- [`events_sync_chapters()`](https://rladies.github.io/jinx/reference/sync_chapter_events.md)
+- [`events_sync_chapters()`](https://rladies.github.io/jinx/reference/events_sync_chapters.md)
   fetches events across all configured chapters.
-- [`events_create_summary()`](https://rladies.github.io/jinx/reference/create_event_summary.md),
-  [`events_publish_summary()`](https://rladies.github.io/jinx/reference/publish_event_summary.md)
+- [`events_create_summary()`](https://rladies.github.io/jinx/reference/events_create_summary.md),
+  [`events_publish_summary()`](https://rladies.github.io/jinx/reference/events_publish_summary.md)
   for reporting.
 - Meetup GraphQL API integration via Meetup Pro.
 
@@ -162,8 +162,8 @@ management.
   for data collection.
 - [`compute_activity_trends()`](https://rladies.github.io/jinx/reference/compute_activity_trends.md)
   with ASCII sparklines for trend visualization.
-- [`analytics_generate_dashboard()`](https://rladies.github.io/jinx/reference/generate_analytics_dashboard.md),
-  [`analytics_publish_dashboard()`](https://rladies.github.io/jinx/reference/publish_analytics_dashboard.md)
+- [`analytics_generate_dashboard()`](https://rladies.github.io/jinx/reference/analytics_generate_dashboard.md),
+  [`analytics_publish_dashboard()`](https://rladies.github.io/jinx/reference/analytics_publish_dashboard.md)
   for monthly org-wide analytics.
 
 ### Website analytics
@@ -182,11 +182,11 @@ management.
 
 ### Conference coordination
 
-- [`cfp_list_open()`](https://rladies.github.io/jinx/reference/list_open_cfps.md),
-  [`cfp_create_issue()`](https://rladies.github.io/jinx/reference/create_cfp_issue.md),
-  [`cfp_check_deadlines()`](https://rladies.github.io/jinx/reference/check_cfp_deadlines.md)
+- [`cfp_list_open()`](https://rladies.github.io/jinx/reference/cfp_list_open.md),
+  [`cfp_create_issue()`](https://rladies.github.io/jinx/reference/cfp_create_issue.md),
+  [`cfp_check_deadlines()`](https://rladies.github.io/jinx/reference/cfp_check_deadlines.md)
   for CFP tracking via GitHub Issues.
-- [`cfp_recommend_speaker()`](https://rladies.github.io/jinx/reference/recommend_speaker.md),
+- [`cfp_recommend_speaker()`](https://rladies.github.io/jinx/reference/cfp_recommend_speaker.md),
   [`list_speaker_recommendations()`](https://rladies.github.io/jinx/reference/list_speaker_recommendations.md)
   for speaker management.
 - [`generate_conference_report()`](https://rladies.github.io/jinx/reference/generate_conference_report.md)
@@ -199,14 +199,14 @@ management.
 - [`list_supported_languages()`](https://rladies.github.io/jinx/reference/list_supported_languages.md),
   [`get_chapter_language()`](https://rladies.github.io/jinx/reference/get_chapter_language.md)
   for language management.
-- [`i18n_translations_validate()`](https://rladies.github.io/jinx/reference/validate_translations.md),
-  [`i18n_coverage_check()`](https://rladies.github.io/jinx/reference/check_translation_coverage.md)
+- [`i18n_translations_validate()`](https://rladies.github.io/jinx/reference/i18n_translations_validate.md),
+  [`i18n_coverage_check()`](https://rladies.github.io/jinx/reference/i18n_coverage_check.md)
   for translation quality assurance.
 - Starter translations for Spanish, Portuguese, and French.
 
 ### Infrastructure
 
-- ROR identifier for R-Ladies Global (`https://ror.org/05wpb1k41`).
+- ROR identifier for RLadies+ Global (`https://ror.org/05wpb1k41`).
 - 24 GitHub Actions workflows for automated operations.
 - JSON schemas for directory entries, blog entries, chapters, team data,
   events, and CFPs.

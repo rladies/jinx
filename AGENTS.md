@@ -1,6 +1,6 @@
 # jinx
 
-R package powering the R-Ladies GitHub organization bot. Deployed as a
+R package powering the RLadies+ GitHub organization bot. Deployed as a
 GitHub App (`jinx[bot]`) via GitHub Actions workflows.
 
 ## Architecture
@@ -52,7 +52,7 @@ its own `x-airtable-secret` header.
 
 1.  Airtable webhook fires on a new invitee row → worker posts a Block
     Kit card with **Approve** / **Deny** buttons in
-    `SLACK_INVITE_CHANNEL`.
+    `SLACK_COMMUNITY_INVITE_CHANNEL`.
 2.  Click **Deny**: Airtable record marked `denied = true`, card
     replaced with a denial note. Done.
 3.  Click **Approve**: card replaced in place with the manual-invite
@@ -67,6 +67,42 @@ its own `x-airtable-secret` header.
 The Airtable `invited` field must mean *the invite was actually sent*,
 not *approved*. Don’t flip it on Approve — wait for the **Mark invite
 sent** click.
+
+### Airtable webhook payload contract
+
+Every `/airtable/webhook` POST must include the originating base and
+table so the worker can write back to the right place. Each Airtable
+automation script is responsible for passing its own IDs:
+
+``` json
+{
+  "email": "person@example.com",
+  "name": "Person Name",
+  "chapter": "Optional chapter",
+  "record_id": "recXXXXXXXXXXXXXX",
+  "base_id": "appXXXXXXXXXXXXXX",
+  "table_id": "tblXXXXXXXXXXXXXX"
+}
+```
+
+`base_id` and `table_id` are required. Use the table ID (`tbl…`) rather
+than the table name — it survives renames. `record_id`, `base_id`, and
+`table_id` round-trip through the Block Kit button `value` so the
+approve/deny/mark-sent handlers can PATCH the originating base.
+
+### Airtable base allowlist
+
+Allowed bases are discovered dynamically by calling Airtable’s Meta API
+(`GET /v0/meta/bases`) with `AIRTABLE_API_KEY`. **The Airtable PAT’s
+scope *is* the allowlist** — any base the token can see is accepted.
+Granting the token broader access broadens what Jinx will accept; scope
+the PAT to invitee-flow bases only.
+
+The result is cached in the `AIRTABLE_BASES` KV namespace under key
+`allowed_bases` with a 1-hour TTL (`worker/src/airtable-meta.js`).
+Refresh on cache miss; **fail closed** if the Meta API errors during
+refresh — webhook returns HTTP 503. Bust the cache early by deleting the
+key from KV.
 
 ### Token management
 
@@ -104,26 +140,27 @@ two workspaces (organisers + community), **but it is not a public app**.
 `SLACK_ORGANIZER_TEAM_ID` and `SLACK_COMMUNITY_TEAM_ID`. Any other
 team’s install attempt is rejected with HTTP 403 and never reaches KV.
 
-To add a workspace: set its team ID as a worker var, redeploy, run
+To add a workspace: set its team ID as a worker secret, redeploy, run
 `/slack/install` from that workspace.
 
 ### Worker secrets (via `wrangler secret put`)
 
-| Secret                    | Purpose                                        |
-|---------------------------|------------------------------------------------|
-| `SLACK_SIGNING_SECRET`    | Verify Slack request authenticity (app-global) |
-| `SLACK_CLIENT_ID`         | OAuth client ID (app-global)                   |
-| `SLACK_CLIENT_SECRET`     | OAuth client secret (app-global)               |
-| `AIRTABLE_WEBHOOK_SECRET` | Verify Airtable webhook requests               |
-| `AIRTABLE_API_KEY`        | Airtable API access                            |
+| Secret | Purpose |
+|----|----|
+| `SLACK_SIGNING_SECRET` | Verify Slack request authenticity (app-global) |
+| `SLACK_CLIENT_ID` | OAuth client ID (app-global) |
+| `SLACK_CLIENT_SECRET` | OAuth client secret (app-global) |
+| `SLACK_ORGANIZER_TEAM_ID` | Organiser workspace team ID — required for allowlist + RAG bot |
+| `SLACK_COMMUNITY_TEAM_ID` | Community workspace team ID — required for allowlist + Airtable webhook |
+| `SLACK_COMMUNITY_INVITE_CHANNEL` | Channel ID in the community workspace where invite cards are posted |
+| `AIRTABLE_WEBHOOK_SECRET` | Verify Airtable webhook requests |
+| `AIRTABLE_API_KEY` | Airtable PAT — scope defines the base allowlist (see below) |
 
 ### Worker vars (in `wrangler.jsonc`)
 
-| Var | Purpose |
-|----|----|
+| Var           | Purpose                           |
+|---------------|-----------------------------------|
 | `GITHUB_REPO` | Target repo for GitHub dispatches |
-| `SLACK_COMMUNITY_TEAM_ID` | Community workspace team ID — required for allowlist + Airtable webhook |
-| `SLACK_ORGANIZER_TEAM_ID` | Organiser workspace team ID — required for allowlist + RAG bot |
 
 ## Code style
 

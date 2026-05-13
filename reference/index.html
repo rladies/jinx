@@ -35,11 +35,19 @@ document.addEventListener("DOMContentLoaded", function() {
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with jinx</a></li>
-    <li><a class="dropdown-item" href="../articles/privacy.html">Privacy policy</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>For users</h6></li>
     <li><a class="dropdown-item" href="../articles/slack-app.html">The Jinx Slack app</a></li>
-    <li><a class="dropdown-item" href="../articles/workflows.html">Workflow Reference for R-Ladies Org Admins</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>For admins</h6></li>
+    <li><a class="dropdown-item" href="../articles/architecture.html">How Jinx is built</a></li>
+    <li><a class="dropdown-item" href="../articles/workflows.html">Workflow Reference for RLadies+ Org Admins</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
-      </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
+      </ul><ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="../articles/privacy.html">Privacy</a></li>
+<li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/rladies/jinx/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
@@ -65,14 +73,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
       <dl><dt>
 
-          <code><a href="execute_command.html">command_execute()</a></code> <code><a href="execute_command.html">cmd_execute()</a></code>
+          <code><a href="command_execute.html">command_execute()</a></code> <code><a href="command_execute.html">cmd_execute()</a></code>
 
         </dt>
         <dd>Execute a parsed jinx command</dd>
 
         <dt>
 
-          <code><a href="parse_command.html">command_parse()</a></code> <code><a href="parse_command.html">cmd_parse()</a></code>
+          <code><a href="command_parse.html">command_parse()</a></code> <code><a href="command_parse.html">cmd_parse()</a></code>
 
         </dt>
         <dd>Parse a jinx command from an issue comment</dd>
@@ -88,42 +96,42 @@ document.addEventListener("DOMContentLoaded", function() {
 
       <dl><dt>
 
-          <code><a href="gt_check_invitations.html">global_team_check_invitations()</a></code> <code><a href="gt_check_invitations.html">gt_check_invitations()</a></code>
+          <code><a href="global_team_check_invitations.html">global_team_check_invitations()</a></code> <code><a href="global_team_check_invitations.html">gt_check_invitations()</a></code>
 
         </dt>
         <dd>Check pending global team invitations</dd>
 
         <dt>
 
-          <code><a href="gt_create_offboarding.html">global_team_create_offboarding()</a></code> <code><a href="gt_create_offboarding.html">gt_create_offboarding()</a></code>
+          <code><a href="global_team_create_offboarding.html">global_team_create_offboarding()</a></code> <code><a href="global_team_create_offboarding.html">gt_create_offboarding()</a></code>
 
         </dt>
         <dd>Create a global team offboarding issue</dd>
 
         <dt>
 
-          <code><a href="gt_finalize_offboarding.html">global_team_finalize_offboarding()</a></code> <code><a href="gt_finalize_offboarding.html">gt_finalize_offboarding()</a></code>
+          <code><a href="global_team_finalize_offboarding.html">global_team_finalize_offboarding()</a></code> <code><a href="global_team_finalize_offboarding.html">gt_finalize_offboarding()</a></code>
 
         </dt>
         <dd>Finalize global team offboarding by removing user from teams</dd>
 
         <dt>
 
-          <code><a href="gt_finalize_onboarding.html">global_team_finalize_onboarding()</a></code> <code><a href="gt_finalize_onboarding.html">gt_finalize_onboarding()</a></code>
+          <code><a href="global_team_finalize_onboarding.html">global_team_finalize_onboarding()</a></code> <code><a href="global_team_finalize_onboarding.html">gt_finalize_onboarding()</a></code>
 
         </dt>
         <dd>Finalize global team onboarding for an accepted member</dd>
 
         <dt>
 
-          <code><a href="gt_invite.html">global_team_invite()</a></code> <code><a href="gt_invite.html">gt_invite()</a></code>
+          <code><a href="global_team_invite.html">global_team_invite()</a></code> <code><a href="global_team_invite.html">gt_invite()</a></code>
 
         </dt>
-        <dd>Invite a user to the R-Ladies global team</dd>
+        <dd>Invite a user to the RLadies+ global team</dd>
 
         <dt>
 
-          <code><a href="gt_remind_stale.html">global_team_remind_stale()</a></code> <code><a href="gt_remind_stale.html">gt_remind_stale()</a></code>
+          <code><a href="global_team_remind_stale.html">global_team_remind_stale()</a></code> <code><a href="global_team_remind_stale.html">gt_remind_stale()</a></code>
 
         </dt>
         <dd>Send reminders on stale global team onboarding/offboarding issues</dd>
@@ -297,21 +305,21 @@ document.addEventListener("DOMContentLoaded", function() {
 
       <dl><dt>
 
-          <code><a href="check_blog_links.html">blog_check_links()</a></code>
+          <code><a href="blog_check_links.html">blog_check_links()</a></code>
 
         </dt>
         <dd>Check blog URLs and RSS feeds for broken links</dd>
 
         <dt>
 
-          <code><a href="create_blog_entry.html">blog_create_entry()</a></code>
+          <code><a href="blog_create_entry.html">blog_create_entry()</a></code>
 
         </dt>
         <dd>Auto-generate a blog entry JSON from a URL</dd>
 
         <dt>
 
-          <code><a href="post_blog_checklist.html">blog_post_checklist()</a></code>
+          <code><a href="blog_post_checklist.html">blog_post_checklist()</a></code>
 
         </dt>
         <dd>Post blog PR checklist</dd>
@@ -341,14 +349,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
         <dt>
 
-          <code><a href="create_chapter_setup.html">chapter_create_setup()</a></code>
+          <code><a href="chapter_create_setup.html">chapter_create_setup()</a></code>
 
         </dt>
         <dd>Create a new chapter setup issue</dd>
 
         <dt>
 
-          <code><a href="create_chapter_update.html">chapter_create_update()</a></code>
+          <code><a href="chapter_create_update.html">chapter_create_update()</a></code>
 
         </dt>
         <dd>Create a chapter update issue</dd>
@@ -362,7 +370,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         <dt>
 
-          <code><a href="check_chapter_health.html">chapter_check_health()</a></code>
+          <code><a href="chapter_check_health.html">chapter_check_health()</a></code>
 
         </dt>
         <dd>Check chapter health across the organization</dd>
@@ -378,28 +386,28 @@ document.addEventListener("DOMContentLoaded", function() {
 
       <dl><dt>
 
-          <code><a href="format_report_markdown.html">report_format_markdown()</a></code>
+          <code><a href="report_format_markdown.html">report_format_markdown()</a></code>
 
         </dt>
         <dd>Format a report as markdown</dd>
 
         <dt>
 
-          <code><a href="generate_report.html">report_generate()</a></code>
+          <code><a href="report_generate.html">report_generate()</a></code>
 
         </dt>
         <dd>Generate an organization activity report</dd>
 
         <dt>
 
-          <code><a href="publish_report.html">report_publish()</a></code>
+          <code><a href="report_publish.html">report_publish()</a></code>
 
         </dt>
         <dd>Publish a report as a GitHub issue</dd>
 
         <dt>
 
-          <code><a href="report_chapter_health.html">chapter_report_health()</a></code>
+          <code><a href="chapter_report_health.html">chapter_report_health()</a></code>
 
         </dt>
         <dd>Generate a chapter health report</dd>
@@ -461,7 +469,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
       <dl><dt>
 
-          <code><a href="auto_merge_pending.html">website_merge_pending()</a></code>
+          <code><a href="website_merge_pending.html">website_merge_pending()</a></code>
 
         </dt>
         <dd>Auto-merge PRs with pending label when date matches</dd>
@@ -507,28 +515,28 @@ document.addEventListener("DOMContentLoaded", function() {
 
       <dl><dt>
 
-          <code><a href="post_slack_message.html">slack_post_message()</a></code>
-
-        </dt>
-        <dd>Post a message to a Slack channel</dd>
-
-        <dt>
-
-          <code><a href="send_slack_invite.html">slack_invite_send()</a></code>
+          <code><a href="slack_invite_send.html">slack_invite_send()</a></code>
 
         </dt>
         <dd>Request a Slack invitation for someone not yet on the workspace</dd>
 
         <dt>
 
-          <code><a href="send_slack_invites.html">slack_invites_send()</a></code>
+          <code><a href="slack_invites_send.html">slack_invites_send()</a></code>
 
         </dt>
         <dd>Send pending Slack invitations</dd>
 
         <dt>
 
-          <code><a href="welcome_slack_member.html">slack_welcome_member()</a></code>
+          <code><a href="slack_post_message.html">slack_post_message()</a></code>
+
+        </dt>
+        <dd>Post a message to a Slack channel</dd>
+
+        <dt>
+
+          <code><a href="slack_welcome_member.html">slack_welcome_member()</a></code>
 
         </dt>
         <dd>Welcome a new member to an RLadies+ Slack workspace</dd>
@@ -565,14 +573,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
       <dl><dt>
 
-          <code><a href="generate_gha_dashboard.html">gha_generate_dashboard()</a></code>
+          <code><a href="gha_generate_dashboard.html">gha_generate_dashboard()</a></code>
 
         </dt>
         <dd>Generate GitHub Actions dashboard data</dd>
 
         <dt>
 
-          <code><a href="publish_gha_dashboard.html">gha_publish_dashboard()</a></code>
+          <code><a href="gha_publish_dashboard.html">gha_publish_dashboard()</a></code>
 
         </dt>
         <dd>Publish GHA dashboard as a GitHub issue</dd>
@@ -609,24 +617,24 @@ document.addEventListener("DOMContentLoaded", function() {
 
         <dt>
 
-          <code><a href="thank_contributor.html">contributor_thank()</a></code>
+          <code><a href="contributor_thank.html">contributor_thank()</a></code>
 
         </dt>
         <dd>Thank a contributor when their PR is merged</dd>
 
         <dt>
 
-          <code><a href="update_contributors_list.html">contributors_update()</a></code>
-
-        </dt>
-        <dd>Generate and update a contributors list for a repo</dd>
-
-        <dt>
-
-          <code><a href="welcome_contributor.html">contributor_welcome()</a></code>
+          <code><a href="contributor_welcome.html">contributor_welcome()</a></code>
 
         </dt>
         <dd>Welcome a first-time contributor</dd>
+
+        <dt>
+
+          <code><a href="contributors_update.html">contributors_update()</a></code>
+
+        </dt>
+        <dd>Generate and update a contributors list for a repo</dd>
       </dl></div><div class="section level2">
       <h2 id="events">Events<a class="anchor" aria-label="anchor" href="#events"></a></h2>
 
@@ -639,28 +647,28 @@ document.addEventListener("DOMContentLoaded", function() {
 
       <dl><dt>
 
-          <code><a href="create_event_summary.html">events_create_summary()</a></code>
+          <code><a href="events_create_summary.html">events_create_summary()</a></code>
 
         </dt>
         <dd>Create a formatted event summary</dd>
 
         <dt>
 
-          <code><a href="list_chapter_events.html">events_list_chapter()</a></code>
+          <code><a href="events_list_chapter.html">events_list_chapter()</a></code>
 
         </dt>
         <dd>List events for a chapter</dd>
 
         <dt>
 
-          <code><a href="publish_event_summary.html">events_publish_summary()</a></code>
+          <code><a href="events_publish_summary.html">events_publish_summary()</a></code>
 
         </dt>
         <dd>Publish event summary as a GitHub issue</dd>
 
         <dt>
 
-          <code><a href="sync_chapter_events.html">events_sync_chapters()</a></code>
+          <code><a href="events_sync_chapters.html">events_sync_chapters()</a></code>
 
         </dt>
         <dd>Sync events across all chapters</dd>
@@ -704,14 +712,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
         <dt>
 
-          <code><a href="generate_analytics_dashboard.html">analytics_generate_dashboard()</a></code>
+          <code><a href="analytics_generate_dashboard.html">analytics_generate_dashboard()</a></code>
 
         </dt>
         <dd>Generate analytics dashboard</dd>
 
         <dt>
 
-          <code><a href="publish_analytics_dashboard.html">analytics_publish_dashboard()</a></code>
+          <code><a href="analytics_publish_dashboard.html">analytics_publish_dashboard()</a></code>
 
         </dt>
         <dd>Publish analytics dashboard as a GitHub issue</dd>
@@ -764,28 +772,28 @@ document.addEventListener("DOMContentLoaded", function() {
 
       <dl><dt>
 
-          <code><a href="check_cfp_deadlines.html">cfp_check_deadlines()</a></code>
+          <code><a href="cfp_check_deadlines.html">cfp_check_deadlines()</a></code>
 
         </dt>
         <dd>Check CFP deadlines and post reminders</dd>
 
         <dt>
 
-          <code><a href="create_cfp_issue.html">cfp_create_issue()</a></code>
+          <code><a href="cfp_create_issue.html">cfp_create_issue()</a></code>
 
         </dt>
         <dd>Create a CFP tracking issue</dd>
 
         <dt>
 
-          <code><a href="list_open_cfps.html">cfp_list_open()</a></code>
+          <code><a href="cfp_list_open.html">cfp_list_open()</a></code>
 
         </dt>
         <dd>List open CFPs tracked as GitHub issues</dd>
 
         <dt>
 
-          <code><a href="recommend_speaker.html">cfp_recommend_speaker()</a></code>
+          <code><a href="cfp_recommend_speaker.html">cfp_recommend_speaker()</a></code>
 
         </dt>
         <dd>Recommend a speaker for a conference</dd>
@@ -836,14 +844,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
         <dt>
 
-          <code><a href="check_translation_coverage.html">i18n_coverage_check()</a></code>
+          <code><a href="i18n_coverage_check.html">i18n_coverage_check()</a></code>
 
         </dt>
         <dd>Check translation coverage across languages</dd>
 
         <dt>
 
-          <code><a href="validate_translations.html">i18n_translations_validate()</a></code>
+          <code><a href="i18n_translations_validate.html">i18n_translations_validate()</a></code>
 
         </dt>
         <dd>Validate translations for placeholder consistency</dd>

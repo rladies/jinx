@@ -55,13 +55,21 @@ document.addEventListener("DOMContentLoaded", function() {
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with jinx</a></li>
-    <li><a class="dropdown-item" href="../articles/privacy.html">Privacy policy</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>For users</h6></li>
     <li><a class="dropdown-item" href="../articles/slack-app.html">The Jinx Slack app</a></li>
-    <li><a class="dropdown-item" href="../articles/workflows.html">Workflow Reference for R-Ladies Org Admins</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>For admins</h6></li>
+    <li><a class="dropdown-item" href="../articles/architecture.html">How Jinx is built</a></li>
+    <li><a class="dropdown-item" href="../articles/workflows.html">Workflow Reference for RLadies+ Org Admins</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
+<li class="nav-item"><a class="nav-link" href="../articles/privacy.html">Privacy</a></li>
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
@@ -88,7 +96,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     
     
-<p>jinx is the R-Ladies GitHub organization management bot. It is an R
+<p>jinx is the RLadies+ GitHub organization management bot. It is an R
 package deployed via GitHub Actions with a registered GitHub App
 identity (<code>jinx[bot]</code>).</p>
 <div class="section level2">
@@ -127,7 +135,7 @@ New</strong> for your org</li>
 <li>Events: <code>issue_comment</code>, <code>issues</code>,
 <code>pull_request</code>
 </li>
-<li>Install on the R-Ladies org</li>
+<li>Install on the RLadies+ org</li>
 </ol>
 </div>
 <div class="section level3">
@@ -196,12 +204,12 @@ action:</p>
 /jinx report weekly
 /jinx chapter-setup Berlin Germany
 /jinx help</code></pre>
-<p>Commands are parsed by <code><a href="../reference/parse_command.html">cmd_parse()</a></code> and dispatched by
-<code><a href="../reference/execute_command.html">cmd_execute()</a></code>:</p>
+<p>Commands are parsed by <code><a href="../reference/command_parse.html">cmd_parse()</a></code> and dispatched by
+<code><a href="../reference/command_execute.html">cmd_execute()</a></code>:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/rladies/jinx" class="external-link">jinx</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">cmd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/parse_command.html">cmd_parse</a></span><span class="op">(</span><span class="st">"/jinx invite @octocat to website"</span><span class="op">)</span></span>
+<span><span class="va">cmd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/command_parse.html">cmd_parse</a></span><span class="op">(</span><span class="st">"/jinx invite @octocat to website"</span><span class="op">)</span></span>
 <span><span class="va">cmd</span></span>
 <span><span class="co">#&gt; $action</span></span>
 <span><span class="co">#&gt; [1] "invite"</span></span>
@@ -227,8 +235,8 @@ action:</p>
 <tr class="odd">
 <td>Team management</td>
 <td>
-<code><a href="../reference/gt_invite.html">gt_invite()</a></code>, <code><a href="../reference/gt_create_offboarding.html">gt_create_offboarding()</a></code>,
-<code><a href="../reference/gt_finalize_onboarding.html">gt_finalize_onboarding()</a></code>
+<code><a href="../reference/global_team_invite.html">gt_invite()</a></code>, <code><a href="../reference/global_team_create_offboarding.html">gt_create_offboarding()</a></code>,
+<code><a href="../reference/global_team_finalize_onboarding.html">gt_finalize_onboarding()</a></code>
 </td>
 </tr>
 <tr class="even">
@@ -248,21 +256,21 @@ action:</p>
 <tr class="even">
 <td>Blogs</td>
 <td>
-<code><a href="../reference/create_blog_entry.html">blog_create_entry()</a></code>,
-<code><a href="../reference/check_blog_links.html">blog_check_links()</a></code>
+<code><a href="../reference/blog_create_entry.html">blog_create_entry()</a></code>,
+<code><a href="../reference/blog_check_links.html">blog_check_links()</a></code>
 </td>
 </tr>
 <tr class="odd">
 <td>Chapters</td>
 <td>
 <code><a href="../reference/create_chapter.html">create_chapter()</a></code>,
-<code><a href="../reference/check_chapter_health.html">chapter_check_health()</a></code>
+<code><a href="../reference/chapter_check_health.html">chapter_check_health()</a></code>
 </td>
 </tr>
 <tr class="even">
 <td>Reports</td>
 <td>
-<code><a href="../reference/generate_report.html">report_generate()</a></code>, <code><a href="../reference/publish_report.html">report_publish()</a></code>
+<code><a href="../reference/report_generate.html">report_generate()</a></code>, <code><a href="../reference/report_publish.html">report_publish()</a></code>
 </td>
 </tr>
 <tr class="odd">
@@ -281,7 +289,7 @@ action:</p>
 <tr class="odd">
 <td>Website</td>
 <td>
-<code><a href="../reference/auto_merge_pending.html">website_merge_pending()</a></code>,
+<code><a href="../reference/website_merge_pending.html">website_merge_pending()</a></code>,
 <code><a href="../reference/greet_contributor.html">greet_contributor()</a></code>
 </td>
 </tr>
@@ -295,22 +303,22 @@ action:</p>
 <tr class="odd">
 <td>Slack</td>
 <td>
-<code><a href="../reference/send_slack_invites.html">slack_invites_send()</a></code>,
+<code><a href="../reference/slack_invites_send.html">slack_invites_send()</a></code>,
 <code><a href="../reference/subscribe_slack_rss.html">subscribe_slack_rss()</a></code>
 </td>
 </tr>
 <tr class="even">
 <td>GHA dashboard</td>
 <td>
-<code><a href="../reference/generate_gha_dashboard.html">gha_generate_dashboard()</a></code>,
-<code><a href="../reference/publish_gha_dashboard.html">gha_publish_dashboard()</a></code>
+<code><a href="../reference/gha_generate_dashboard.html">gha_generate_dashboard()</a></code>,
+<code><a href="../reference/gha_publish_dashboard.html">gha_publish_dashboard()</a></code>
 </td>
 </tr>
 <tr class="odd">
 <td>Contributors</td>
 <td>
 <code><a href="../reference/list_contributors.html">list_contributors()</a></code>,
-<code><a href="../reference/update_contributors_list.html">contributors_update()</a></code>
+<code><a href="../reference/contributors_update.html">contributors_update()</a></code>
 </td>
 </tr>
 </tbody>
@@ -361,7 +369,7 @@ list.</p>
 <div class="section level2">
 <h2 id="cross-repo-pr-review">Cross-repo PR review<a class="anchor" aria-label="anchor" href="#cross-repo-pr-review"></a>
 </h2>
-<p>Add this workflow to any R-Ladies repo for automated PR review:</p>
+<p>Add this workflow to any RLadies+ repo for automated PR review:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># .github/workflows/jinx-review.yml</span></span>
 <span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> PR Review</span></span>
 <span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>

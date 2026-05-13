@@ -35,11 +35,19 @@ document.addEventListener("DOMContentLoaded", function() {
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with jinx</a></li>
-    <li><a class="dropdown-item" href="../articles/privacy.html">Privacy policy</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>For users</h6></li>
     <li><a class="dropdown-item" href="../articles/slack-app.html">The Jinx Slack app</a></li>
-    <li><a class="dropdown-item" href="../articles/workflows.html">Workflow Reference for R-Ladies Org Admins</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>For admins</h6></li>
+    <li><a class="dropdown-item" href="../articles/architecture.html">How Jinx is built</a></li>
+    <li><a class="dropdown-item" href="../articles/workflows.html">Workflow Reference for RLadies+ Org Admins</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
-      </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
+      </ul><ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="../articles/privacy.html">Privacy</a></li>
+<li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/rladies/jinx/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
@@ -56,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     <div class="ref-description section level2">
-    <p>Delegates to <code><a href="welcome_contributor.html">contributor_welcome()</a></code> for first-time detection.</p>
+    <p>Delegates to <code><a href="contributor_welcome.html">contributor_welcome()</a></code> for first-time detection.</p>
     </div>
 
     <div class="section level2">

@@ -35,11 +35,19 @@ document.addEventListener("DOMContentLoaded", function() {
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="articles/getting-started.html">Getting Started with jinx</a></li>
-    <li><a class="dropdown-item" href="articles/privacy.html">Privacy policy</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>For users</h6></li>
     <li><a class="dropdown-item" href="articles/slack-app.html">The Jinx Slack app</a></li>
-    <li><a class="dropdown-item" href="articles/workflows.html">Workflow Reference for R-Ladies Org Admins</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>For admins</h6></li>
+    <li><a class="dropdown-item" href="articles/architecture.html">How Jinx is built</a></li>
+    <li><a class="dropdown-item" href="articles/workflows.html">Workflow Reference for RLadies+ Org Admins</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="articles/index.html">More articles...</a></li>
   </ul></li>
-      </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
+<li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
+      </ul><ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="articles/privacy.html">Privacy</a></li>
+<li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/rladies/jinx/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
@@ -56,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 <div id="jinx" class="section level1">
 
-<p>R package powering the R-Ladies GitHub organization bot. Deployed as a GitHub App (<code>jinx[bot]</code>) via GitHub Actions workflows.</p>
+<p>R package powering the RLadies+ GitHub organization bot. Deployed as a GitHub App (<code>jinx[bot]</code>) via GitHub Actions workflows.</p>
 <div class="section level2">
 <h2 id="architecture">Architecture<a class="anchor" aria-label="anchor" href="#architecture"></a></h2>
 <ul><li>
@@ -105,7 +113,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 <div class="section level3">
 <h3 id="airtable-invite-approval-flow">Airtable invite-approval flow<a class="anchor" aria-label="anchor" href="#airtable-invite-approval-flow"></a></h3>
-<ol style="list-style-type: decimal"><li>Airtable webhook fires on a new invitee row → worker posts a Block Kit card with <strong>Approve</strong> / <strong>Deny</strong> buttons in <code>SLACK_INVITE_CHANNEL</code>.</li>
+<ol style="list-style-type: decimal"><li>Airtable webhook fires on a new invitee row → worker posts a Block Kit card with <strong>Approve</strong> / <strong>Deny</strong> buttons in <code>SLACK_COMMUNITY_INVITE_CHANNEL</code>.</li>
 <li>Click <strong>Deny</strong>: Airtable record marked <code>denied = true</code>, card replaced with a denial note. Done.</li>
 <li>Click <strong>Approve</strong>: card replaced in place with the manual-invite checklist (workspace menu → <em>Invite people</em> → paste email) and a single <strong>Mark invite sent</strong> button. <em>No Airtable change yet.</em>
 </li>
@@ -114,27 +122,45 @@ document.addEventListener("DOMContentLoaded", function() {
 </ol><p>The Airtable <code>invited</code> field must mean <em>the invite was actually sent</em>, not <em>approved</em>. Don’t flip it on Approve — wait for the <strong>Mark invite sent</strong> click.</p>
 </div>
 <div class="section level3">
+<h3 id="airtable-webhook-payload-contract">Airtable webhook payload contract<a class="anchor" aria-label="anchor" href="#airtable-webhook-payload-contract"></a></h3>
+<p>Every <code>/airtable/webhook</code> POST must include the originating base and table so the worker can write back to the right place. Each Airtable automation script is responsible for passing its own IDs:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="dt">"email"</span><span class="fu">:</span> <span class="st">"person@example.com"</span><span class="fu">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"Person Name"</span><span class="fu">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="dt">"chapter"</span><span class="fu">:</span> <span class="st">"Optional chapter"</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="dt">"record_id"</span><span class="fu">:</span> <span class="st">"recXXXXXXXXXXXXXX"</span><span class="fu">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="dt">"base_id"</span><span class="fu">:</span> <span class="st">"appXXXXXXXXXXXXXX"</span><span class="fu">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="dt">"table_id"</span><span class="fu">:</span> <span class="st">"tblXXXXXXXXXXXXXX"</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><code>base_id</code> and <code>table_id</code> are required. Use the table ID (<code>tbl…</code>) rather than the table name — it survives renames. <code>record_id</code>, <code>base_id</code>, and <code>table_id</code> round-trip through the Block Kit button <code>value</code> so the approve/deny/mark-sent handlers can PATCH the originating base.</p>
+</div>
+<div class="section level3">
+<h3 id="airtable-base-allowlist">Airtable base allowlist<a class="anchor" aria-label="anchor" href="#airtable-base-allowlist"></a></h3>
+<p>Allowed bases are discovered dynamically by calling Airtable’s Meta API (<code>GET /v0/meta/bases</code>) with <code>AIRTABLE_API_KEY</code>. <strong>The Airtable PAT’s scope <em>is</em> the allowlist</strong> — any base the token can see is accepted. Granting the token broader access broadens what Jinx will accept; scope the PAT to invitee-flow bases only.</p>
+<p>The result is cached in the <code>AIRTABLE_BASES</code> KV namespace under key <code>allowed_bases</code> with a 1-hour TTL (<code>worker/src/airtable-meta.js</code>). Refresh on cache miss; <strong>fail closed</strong> if the Meta API errors during refresh — webhook returns HTTP 503. Bust the cache early by deleting the key from KV.</p>
+</div>
+<div class="section level3">
 <h3 id="token-management">Token management<a class="anchor" aria-label="anchor" href="#token-management"></a></h3>
 <p>Slack workspace tokens are managed via OAuth, stored in Cloudflare KV (<code>SLACK_TOKENS</code> namespace) keyed by <code>team:&lt;team_id&gt;</code>. Use <code>getSlackToken(env, teamId)</code> to look up tokens — never hardcode workspace-specific tokens.</p>
 <p>Each KV entry is JSON written by the <code>/slack/oauth</code> callback after a successful install:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="dt">"bot_token"</span><span class="fu">:</span> <span class="st">"xoxb-..."</span><span class="fu">,</span></span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="dt">"team_id"</span><span class="fu">:</span> <span class="st">"T012345"</span><span class="fu">,</span></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="dt">"team_name"</span><span class="fu">:</span> <span class="st">"RLadies+ Community"</span><span class="fu">,</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="dt">"bot_user_id"</span><span class="fu">:</span> <span class="st">"U012345"</span><span class="fu">,</span></span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="dt">"installed_at"</span><span class="fu">:</span> <span class="st">"2026-05-12T12:34:56.789Z"</span></span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="dt">"bot_token"</span><span class="fu">:</span> <span class="st">"xoxb-..."</span><span class="fu">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="dt">"team_id"</span><span class="fu">:</span> <span class="st">"T012345"</span><span class="fu">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="dt">"team_name"</span><span class="fu">:</span> <span class="st">"RLadies+ Community"</span><span class="fu">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="dt">"bot_user_id"</span><span class="fu">:</span> <span class="st">"U012345"</span><span class="fu">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="dt">"installed_at"</span><span class="fu">:</span> <span class="st">"2026-05-12T12:34:56.789Z"</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>No manual seeding needed — install the app into each workspace via <code>/slack/install</code> and the callback writes the entry. To revoke, delete the <code>team:&lt;id&gt;</code> key from KV.</p>
 <p>There is <strong>no token fallback</strong>. If <code>getSlackToken(env, teamId)</code> doesn’t find a KV entry for <code>team:&lt;teamId&gt;</code>, it throws. Install via OAuth or it doesn’t work.</p>
 </div>
 <div class="section level3">
 <h3 id="workspace-allowlist">Workspace allowlist<a class="anchor" aria-label="anchor" href="#workspace-allowlist"></a></h3>
 <p>Jinx is distribution-enabled in Slack so it can OAuth into RLadies+’s two workspaces (organisers + community), <strong>but it is not a public app</strong>. <code>handleSlackOAuthCallback</code> runs <code>isAllowedTeam(env, teamId)</code> against <code>SLACK_ORGANIZER_TEAM_ID</code> and <code>SLACK_COMMUNITY_TEAM_ID</code>. Any other team’s install attempt is rejected with HTTP 403 and never reaches KV.</p>
-<p>To add a workspace: set its team ID as a worker var, redeploy, run <code>/slack/install</code> from that workspace.</p>
+<p>To add a workspace: set its team ID as a worker secret, redeploy, run <code>/slack/install</code> from that workspace.</p>
 </div>
 <div class="section level3">
 <h3 id="worker-secrets-via-wrangler-secret-put">Worker secrets (via <code>wrangler secret put</code>)<a class="anchor" aria-label="anchor" href="#worker-secrets-via-wrangler-secret-put"></a></h3>
-<table class="table"><colgroup><col width="35%"><col width="64%"></colgroup><thead><tr><th>Secret</th>
+<table class="table"><colgroup><col width="31%"><col width="68%"></colgroup><thead><tr><th>Secret</th>
 <th>Purpose</th>
 </tr></thead><tbody><tr><td><code>SLACK_SIGNING_SECRET</code></td>
 <td>Verify Slack request authenticity (app-global)</td>
@@ -142,21 +168,23 @@ document.addEventListener("DOMContentLoaded", function() {
 <td>OAuth client ID (app-global)</td>
 </tr><tr><td><code>SLACK_CLIENT_SECRET</code></td>
 <td>OAuth client secret (app-global)</td>
+</tr><tr><td><code>SLACK_ORGANIZER_TEAM_ID</code></td>
+<td>Organiser workspace team ID — required for allowlist + RAG bot</td>
+</tr><tr><td><code>SLACK_COMMUNITY_TEAM_ID</code></td>
+<td>Community workspace team ID — required for allowlist + Airtable webhook</td>
+</tr><tr><td><code>SLACK_COMMUNITY_INVITE_CHANNEL</code></td>
+<td>Channel ID in the community workspace where invite cards are posted</td>
 </tr><tr><td><code>AIRTABLE_WEBHOOK_SECRET</code></td>
 <td>Verify Airtable webhook requests</td>
 </tr><tr><td><code>AIRTABLE_API_KEY</code></td>
-<td>Airtable API access</td>
+<td>Airtable PAT — scope defines the base allowlist (see below)</td>
 </tr></tbody></table></div>
 <div class="section level3">
 <h3 id="worker-vars-in-wranglerjsonc">Worker vars (in <code>wrangler.jsonc</code>)<a class="anchor" aria-label="anchor" href="#worker-vars-in-wranglerjsonc"></a></h3>
-<table class="table"><colgroup><col width="26%"><col width="73%"></colgroup><thead><tr><th>Var</th>
+<table class="table"><thead><tr><th>Var</th>
 <th>Purpose</th>
 </tr></thead><tbody><tr><td><code>GITHUB_REPO</code></td>
 <td>Target repo for GitHub dispatches</td>
-</tr><tr><td><code>SLACK_COMMUNITY_TEAM_ID</code></td>
-<td>Community workspace team ID — required for allowlist + Airtable webhook</td>
-</tr><tr><td><code>SLACK_ORGANIZER_TEAM_ID</code></td>
-<td>Organiser workspace team ID — required for allowlist + RAG bot</td>
 </tr></tbody></table></div>
 </div>
 <div class="section level2">
@@ -252,7 +280,7 @@ vignettes/            # getting-started.Rmd, workflows.Rmd</code></pre>
 </div>
 <div class="section level2">
 <h2 id="testing">Testing<a class="anchor" aria-label="anchor" href="#testing"></a></h2>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">test</span><span class="op">(</span><span class="op">)</span>    <span class="co"># 330+ tests</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">check</span><span class="op">(</span><span class="op">)</span>   <span class="co"># must pass with 0 errors, 0 warnings</span></span></code></pre></div>
 <p>Run via zsh to ensure PATH includes <code>/opt/homebrew/bin</code> (pandoc, gh).</p>
@@ -260,7 +288,7 @@ vignettes/            # getting-started.Rmd, workflows.Rmd</code></pre>
 <div class="section level2">
 <h2 id="pkgdown">pkgdown<a class="anchor" aria-label="anchor" href="#pkgdown"></a></h2>
 <p><code>_pkgdown.yml</code> defines reference sections grouped by module. Build with:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>Deployed to GitHub Pages via <code>.github/workflows/infra-pkgdown.yml</code>.</p>
 </div>

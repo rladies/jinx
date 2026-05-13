@@ -6,7 +6,7 @@ shared by both workspaces (see
 [`common_welcome_channels()`](https://rladies.github.io/jinx/reference/common_welcome_channels.md))
 and then adds workspace-specific extras. Override by passing your own
 list to
-[`slack_welcome_member()`](https://rladies.github.io/jinx/reference/welcome_slack_member.md).
+[`slack_welcome_member()`](https://rladies.github.io/jinx/reference/slack_welcome_member.md).
 
 ## Usage
 

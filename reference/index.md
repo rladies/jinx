@@ -4,34 +4,34 @@
 
 Issue comment command interface
 
-- [`command_execute()`](https://rladies.github.io/jinx/reference/execute_command.md)
-  [`cmd_execute()`](https://rladies.github.io/jinx/reference/execute_command.md)
+- [`command_execute()`](https://rladies.github.io/jinx/reference/command_execute.md)
+  [`cmd_execute()`](https://rladies.github.io/jinx/reference/command_execute.md)
   : Execute a parsed jinx command
-- [`command_parse()`](https://rladies.github.io/jinx/reference/parse_command.md)
-  [`cmd_parse()`](https://rladies.github.io/jinx/reference/parse_command.md)
+- [`command_parse()`](https://rladies.github.io/jinx/reference/command_parse.md)
+  [`cmd_parse()`](https://rladies.github.io/jinx/reference/command_parse.md)
   : Parse a jinx command from an issue comment
 
 ## Team management
 
 Global team onboarding and offboarding
 
-- [`global_team_check_invitations()`](https://rladies.github.io/jinx/reference/gt_check_invitations.md)
-  [`gt_check_invitations()`](https://rladies.github.io/jinx/reference/gt_check_invitations.md)
+- [`global_team_check_invitations()`](https://rladies.github.io/jinx/reference/global_team_check_invitations.md)
+  [`gt_check_invitations()`](https://rladies.github.io/jinx/reference/global_team_check_invitations.md)
   : Check pending global team invitations
-- [`global_team_create_offboarding()`](https://rladies.github.io/jinx/reference/gt_create_offboarding.md)
-  [`gt_create_offboarding()`](https://rladies.github.io/jinx/reference/gt_create_offboarding.md)
+- [`global_team_create_offboarding()`](https://rladies.github.io/jinx/reference/global_team_create_offboarding.md)
+  [`gt_create_offboarding()`](https://rladies.github.io/jinx/reference/global_team_create_offboarding.md)
   : Create a global team offboarding issue
-- [`global_team_finalize_offboarding()`](https://rladies.github.io/jinx/reference/gt_finalize_offboarding.md)
-  [`gt_finalize_offboarding()`](https://rladies.github.io/jinx/reference/gt_finalize_offboarding.md)
+- [`global_team_finalize_offboarding()`](https://rladies.github.io/jinx/reference/global_team_finalize_offboarding.md)
+  [`gt_finalize_offboarding()`](https://rladies.github.io/jinx/reference/global_team_finalize_offboarding.md)
   : Finalize global team offboarding by removing user from teams
-- [`global_team_finalize_onboarding()`](https://rladies.github.io/jinx/reference/gt_finalize_onboarding.md)
-  [`gt_finalize_onboarding()`](https://rladies.github.io/jinx/reference/gt_finalize_onboarding.md)
+- [`global_team_finalize_onboarding()`](https://rladies.github.io/jinx/reference/global_team_finalize_onboarding.md)
+  [`gt_finalize_onboarding()`](https://rladies.github.io/jinx/reference/global_team_finalize_onboarding.md)
   : Finalize global team onboarding for an accepted member
-- [`global_team_invite()`](https://rladies.github.io/jinx/reference/gt_invite.md)
-  [`gt_invite()`](https://rladies.github.io/jinx/reference/gt_invite.md)
-  : Invite a user to the R-Ladies global team
-- [`global_team_remind_stale()`](https://rladies.github.io/jinx/reference/gt_remind_stale.md)
-  [`gt_remind_stale()`](https://rladies.github.io/jinx/reference/gt_remind_stale.md)
+- [`global_team_invite()`](https://rladies.github.io/jinx/reference/global_team_invite.md)
+  [`gt_invite()`](https://rladies.github.io/jinx/reference/global_team_invite.md)
+  : Invite a user to the RLadies+ global team
+- [`global_team_remind_stale()`](https://rladies.github.io/jinx/reference/global_team_remind_stale.md)
+  [`gt_remind_stale()`](https://rladies.github.io/jinx/reference/global_team_remind_stale.md)
   : Send reminders on stale global team onboarding/offboarding issues
 
 ## Announcements
@@ -88,11 +88,11 @@ Directory entry management and validation
 
 Blog content management
 
-- [`blog_check_links()`](https://rladies.github.io/jinx/reference/check_blog_links.md)
+- [`blog_check_links()`](https://rladies.github.io/jinx/reference/blog_check_links.md)
   : Check blog URLs and RSS feeds for broken links
-- [`blog_create_entry()`](https://rladies.github.io/jinx/reference/create_blog_entry.md)
+- [`blog_create_entry()`](https://rladies.github.io/jinx/reference/blog_create_entry.md)
   : Auto-generate a blog entry JSON from a URL
-- [`blog_post_checklist()`](https://rladies.github.io/jinx/reference/post_blog_checklist.md)
+- [`blog_post_checklist()`](https://rladies.github.io/jinx/reference/blog_post_checklist.md)
   : Post blog PR checklist
 - [`validate_blog_entry()`](https://rladies.github.io/jinx/reference/validate_blog_entry.md)
   : Validate blog entry JSON files against schema
@@ -103,26 +103,26 @@ Chapter lifecycle management
 
 - [`create_chapter()`](https://rladies.github.io/jinx/reference/create_chapter.md)
   : Create a new chapter JSON file
-- [`chapter_create_setup()`](https://rladies.github.io/jinx/reference/create_chapter_setup.md)
+- [`chapter_create_setup()`](https://rladies.github.io/jinx/reference/chapter_create_setup.md)
   : Create a new chapter setup issue
-- [`chapter_create_update()`](https://rladies.github.io/jinx/reference/create_chapter_update.md)
+- [`chapter_create_update()`](https://rladies.github.io/jinx/reference/chapter_create_update.md)
   : Create a chapter update issue
 - [`create_chapter_json_pr()`](https://rladies.github.io/jinx/reference/create_chapter_json_pr.md)
   : Create a chapter JSON PR on the website repo
-- [`chapter_check_health()`](https://rladies.github.io/jinx/reference/check_chapter_health.md)
+- [`chapter_check_health()`](https://rladies.github.io/jinx/reference/chapter_check_health.md)
   : Check chapter health across the organization
 
 ## Reports
 
 Activity and health reporting
 
-- [`report_format_markdown()`](https://rladies.github.io/jinx/reference/format_report_markdown.md)
+- [`report_format_markdown()`](https://rladies.github.io/jinx/reference/report_format_markdown.md)
   : Format a report as markdown
-- [`report_generate()`](https://rladies.github.io/jinx/reference/generate_report.md)
+- [`report_generate()`](https://rladies.github.io/jinx/reference/report_generate.md)
   : Generate an organization activity report
-- [`report_publish()`](https://rladies.github.io/jinx/reference/publish_report.md)
+- [`report_publish()`](https://rladies.github.io/jinx/reference/report_publish.md)
   : Publish a report as a GitHub issue
-- [`chapter_report_health()`](https://rladies.github.io/jinx/reference/report_chapter_health.md)
+- [`chapter_report_health()`](https://rladies.github.io/jinx/reference/chapter_report_health.md)
   : Generate a chapter health report
 
 ## PR review
@@ -148,7 +148,7 @@ Airtable bidirectional sync
 
 Website PR management and contributor greetings
 
-- [`website_merge_pending()`](https://rladies.github.io/jinx/reference/auto_merge_pending.md)
+- [`website_merge_pending()`](https://rladies.github.io/jinx/reference/website_merge_pending.md)
   : Auto-merge PRs with pending label when date matches
 - [`greet_contributor()`](https://rladies.github.io/jinx/reference/greet_contributor.md)
   : Post a greeting on new PRs/issues from non-team members
@@ -166,13 +166,13 @@ Chapter activity monitoring and outreach
 
 Slack messaging and automation
 
-- [`slack_post_message()`](https://rladies.github.io/jinx/reference/post_slack_message.md)
-  : Post a message to a Slack channel
-- [`slack_invite_send()`](https://rladies.github.io/jinx/reference/send_slack_invite.md)
+- [`slack_invite_send()`](https://rladies.github.io/jinx/reference/slack_invite_send.md)
   : Request a Slack invitation for someone not yet on the workspace
-- [`slack_invites_send()`](https://rladies.github.io/jinx/reference/send_slack_invites.md)
+- [`slack_invites_send()`](https://rladies.github.io/jinx/reference/slack_invites_send.md)
   : Send pending Slack invitations
-- [`slack_welcome_member()`](https://rladies.github.io/jinx/reference/welcome_slack_member.md)
+- [`slack_post_message()`](https://rladies.github.io/jinx/reference/slack_post_message.md)
+  : Post a message to a Slack channel
+- [`slack_welcome_member()`](https://rladies.github.io/jinx/reference/slack_welcome_member.md)
   : Welcome a new member to an RLadies+ Slack workspace
 - [`subscribe_slack_rss()`](https://rladies.github.io/jinx/reference/subscribe_slack_rss.md)
   : Subscribe an RSS feed to a Slack channel
@@ -185,9 +185,9 @@ Slack messaging and automation
 
 GitHub Actions workflow status
 
-- [`gha_generate_dashboard()`](https://rladies.github.io/jinx/reference/generate_gha_dashboard.md)
+- [`gha_generate_dashboard()`](https://rladies.github.io/jinx/reference/gha_generate_dashboard.md)
   : Generate GitHub Actions dashboard data
-- [`gha_publish_dashboard()`](https://rladies.github.io/jinx/reference/publish_gha_dashboard.md)
+- [`gha_publish_dashboard()`](https://rladies.github.io/jinx/reference/gha_publish_dashboard.md)
   : Publish GHA dashboard as a GitHub issue
 
 ## Contributors
@@ -200,24 +200,24 @@ Contributor tracking and recognition
   : Collect contributors across multiple repos
 - [`format_contributors()`](https://rladies.github.io/jinx/reference/format_contributors.md)
   : Generate a contributors markdown section
-- [`contributor_thank()`](https://rladies.github.io/jinx/reference/thank_contributor.md)
+- [`contributor_thank()`](https://rladies.github.io/jinx/reference/contributor_thank.md)
   : Thank a contributor when their PR is merged
-- [`contributors_update()`](https://rladies.github.io/jinx/reference/update_contributors_list.md)
-  : Generate and update a contributors list for a repo
-- [`contributor_welcome()`](https://rladies.github.io/jinx/reference/welcome_contributor.md)
+- [`contributor_welcome()`](https://rladies.github.io/jinx/reference/contributor_welcome.md)
   : Welcome a first-time contributor
+- [`contributors_update()`](https://rladies.github.io/jinx/reference/contributors_update.md)
+  : Generate and update a contributors list for a repo
 
 ## Events
 
 Chapter event management
 
-- [`events_create_summary()`](https://rladies.github.io/jinx/reference/create_event_summary.md)
+- [`events_create_summary()`](https://rladies.github.io/jinx/reference/events_create_summary.md)
   : Create a formatted event summary
-- [`events_list_chapter()`](https://rladies.github.io/jinx/reference/list_chapter_events.md)
+- [`events_list_chapter()`](https://rladies.github.io/jinx/reference/events_list_chapter.md)
   : List events for a chapter
-- [`events_publish_summary()`](https://rladies.github.io/jinx/reference/publish_event_summary.md)
+- [`events_publish_summary()`](https://rladies.github.io/jinx/reference/events_publish_summary.md)
   : Publish event summary as a GitHub issue
-- [`events_sync_chapters()`](https://rladies.github.io/jinx/reference/sync_chapter_events.md)
+- [`events_sync_chapters()`](https://rladies.github.io/jinx/reference/events_sync_chapters.md)
   : Sync events across all chapters
 
 ## Analytics
@@ -232,9 +232,9 @@ Org-wide activity analytics
   : Compute activity trends
 - [`format_analytics_markdown()`](https://rladies.github.io/jinx/reference/format_analytics_markdown.md)
   : Format analytics as markdown
-- [`analytics_generate_dashboard()`](https://rladies.github.io/jinx/reference/generate_analytics_dashboard.md)
+- [`analytics_generate_dashboard()`](https://rladies.github.io/jinx/reference/analytics_generate_dashboard.md)
   : Generate analytics dashboard
-- [`analytics_publish_dashboard()`](https://rladies.github.io/jinx/reference/publish_analytics_dashboard.md)
+- [`analytics_publish_dashboard()`](https://rladies.github.io/jinx/reference/analytics_publish_dashboard.md)
   : Publish analytics dashboard as a GitHub issue
 
 ## Website analytics
@@ -254,13 +254,13 @@ Plausible website performance reports
 
 CFP tracking and speaker recommendations
 
-- [`cfp_check_deadlines()`](https://rladies.github.io/jinx/reference/check_cfp_deadlines.md)
+- [`cfp_check_deadlines()`](https://rladies.github.io/jinx/reference/cfp_check_deadlines.md)
   : Check CFP deadlines and post reminders
-- [`cfp_create_issue()`](https://rladies.github.io/jinx/reference/create_cfp_issue.md)
+- [`cfp_create_issue()`](https://rladies.github.io/jinx/reference/cfp_create_issue.md)
   : Create a CFP tracking issue
-- [`cfp_list_open()`](https://rladies.github.io/jinx/reference/list_open_cfps.md)
+- [`cfp_list_open()`](https://rladies.github.io/jinx/reference/cfp_list_open.md)
   : List open CFPs tracked as GitHub issues
-- [`cfp_recommend_speaker()`](https://rladies.github.io/jinx/reference/recommend_speaker.md)
+- [`cfp_recommend_speaker()`](https://rladies.github.io/jinx/reference/cfp_recommend_speaker.md)
   : Recommend a speaker for a conference
 - [`list_speaker_recommendations()`](https://rladies.github.io/jinx/reference/list_speaker_recommendations.md)
   : List speaker recommendations for a conference
@@ -277,9 +277,9 @@ Template translations
   : List supported languages
 - [`get_chapter_language()`](https://rladies.github.io/jinx/reference/get_chapter_language.md)
   : Get a chapter's preferred language
-- [`i18n_coverage_check()`](https://rladies.github.io/jinx/reference/check_translation_coverage.md)
+- [`i18n_coverage_check()`](https://rladies.github.io/jinx/reference/i18n_coverage_check.md)
   : Check translation coverage across languages
-- [`i18n_translations_validate()`](https://rladies.github.io/jinx/reference/validate_translations.md)
+- [`i18n_translations_validate()`](https://rladies.github.io/jinx/reference/i18n_translations_validate.md)
   : Validate translations for placeholder consistency
 
 ## Configuration
