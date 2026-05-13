@@ -29,6 +29,7 @@ jobs:
           echo "::add-mask::${{ github.event.client_payload.response_url }}"
           echo "::add-mask::${{ github.event.client_payload.user_name }}"
           echo "::add-mask::${{ github.event.client_payload.user_id }}"
+          echo "::add-mask::${{ github.event.client_payload.command }}"
 
       - uses: actions/create-github-app-token@v1
         id: app-token

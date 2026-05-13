@@ -19,6 +19,7 @@ export async function gatherGithubOrgSource(src) {
   const out = [];
 
   for (const team of teams) {
+    if (team.privacy && team.privacy !== "closed") continue;
     out.push({
       text: renderTeamText(team),
       heading: "",
