@@ -1,7 +1,7 @@
 - The following Guide sections are relevant to the Team. Please read them carefully:
-    - [ ] [R-Ladies Guide on mentoring](https://guide.rladies.org/coordination/mentoring/)
+    - [ ] [RLadies+ Guide on mentoring](https://guide.rladies.org/coordination/mentoring/)
     - [ ] [Adding mentoring entry to the website](https://guide.rladies.org/website/mentoring/)
-- Join these channels in the R-Ladies Organizers Slack.
+- Join these channels in the RLadies+ Organizers Slack.
     - [ ] [#organisers](https://r-ladies.slack.com/archives/C7L3BAHUG)
     - [ ] [#new-chapters](https://r-ladies.slack.com/archives/C2T7CRBJ6)
     - [ ] [#conferences](https://r-ladies.slack.com/archives/C2KDRDLBU)
@@ -9,5 +9,5 @@
     - [ ] [#conf-user](https://r-ladies.slack.com/archives/C9TGN9MH7)
 
 <!-- Extra for us
-- [ ] @rladies/mentoring will add you to the #team-mentoring channel on R-Ladies Organizers Slack.
+- [ ] @rladies/mentoring will add you to the #team-mentoring channel on RLadies+ Organizers Slack.
 -->

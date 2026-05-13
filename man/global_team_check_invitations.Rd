@@ -6,6 +6,7 @@
 \title{Check pending global team invitations}
 \usage{
 global_team_check_invitations(org = "rladies")
+
 gt_check_invitations(org = "rladies")
 }
 \arguments{

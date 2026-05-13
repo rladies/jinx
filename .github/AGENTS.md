@@ -1,6 +1,6 @@
 # jinx
 
-R package powering the R-Ladies GitHub organization bot. Deployed as a GitHub App (`jinx[bot]`) via GitHub Actions workflows.
+R package powering the RLadies+ GitHub organization bot. Deployed as a GitHub App (`jinx[bot]`) via GitHub Actions workflows.
 
 ## Architecture
 
@@ -44,7 +44,7 @@ Routes follow `/<service>/<action>` — never flat paths like `/slack-interact` 
 
 ### Airtable invite-approval flow
 
-1. Airtable webhook fires on a new invitee row → worker posts a Block Kit card with **Approve** / **Deny** buttons in `SLACK_INVITE_CHANNEL`.
+1. Airtable webhook fires on a new invitee row → worker posts a Block Kit card with **Approve** / **Deny** buttons in `SLACK_COMMUNITY_INVITE_CHANNEL`.
 2. Click **Deny**: Airtable record marked `denied = true`, card replaced with a denial note. Done.
 3. Click **Approve**: card replaced in place with the manual-invite checklist (workspace menu → _Invite people_ → paste email) and a single **Mark invite sent** button. _No Airtable change yet._
 4. The organiser sends the invite via Slack workspace settings, then clicks **Mark invite sent** on the same card.
@@ -99,25 +99,26 @@ There is **no token fallback**. If `getSlackToken(env, teamId)` doesn't find a K
 
 Jinx is distribution-enabled in Slack so it can OAuth into RLadies+'s two workspaces (organisers + community), **but it is not a public app**. `handleSlackOAuthCallback` runs `isAllowedTeam(env, teamId)` against `SLACK_ORGANIZER_TEAM_ID` and `SLACK_COMMUNITY_TEAM_ID`. Any other team's install attempt is rejected with HTTP 403 and never reaches KV.
 
-To add a workspace: set its team ID as a worker var, redeploy, run `/slack/install` from that workspace.
+To add a workspace: set its team ID as a worker secret, redeploy, run `/slack/install` from that workspace.
 
 ### Worker secrets (via `wrangler secret put`)
 
-| Secret                    | Purpose                                                     |
-| ------------------------- | ----------------------------------------------------------- |
-| `SLACK_SIGNING_SECRET`    | Verify Slack request authenticity (app-global)              |
-| `SLACK_CLIENT_ID`         | OAuth client ID (app-global)                                |
-| `SLACK_CLIENT_SECRET`     | OAuth client secret (app-global)                            |
-| `AIRTABLE_WEBHOOK_SECRET` | Verify Airtable webhook requests                            |
-| `AIRTABLE_API_KEY`        | Airtable PAT — scope defines the base allowlist (see below) |
+| Secret                           | Purpose                                                                 |
+| -------------------------------- | ----------------------------------------------------------------------- |
+| `SLACK_SIGNING_SECRET`           | Verify Slack request authenticity (app-global)                          |
+| `SLACK_CLIENT_ID`                | OAuth client ID (app-global)                                            |
+| `SLACK_CLIENT_SECRET`            | OAuth client secret (app-global)                                        |
+| `SLACK_ORGANIZER_TEAM_ID`        | Organiser workspace team ID — required for allowlist + RAG bot          |
+| `SLACK_COMMUNITY_TEAM_ID`        | Community workspace team ID — required for allowlist + Airtable webhook |
+| `SLACK_COMMUNITY_INVITE_CHANNEL` | Channel ID in the community workspace where invite cards are posted     |
+| `AIRTABLE_WEBHOOK_SECRET`        | Verify Airtable webhook requests                                        |
+| `AIRTABLE_API_KEY`               | Airtable PAT — scope defines the base allowlist (see below)             |
 
 ### Worker vars (in `wrangler.jsonc`)
 
-| Var                       | Purpose                                                                 |
-| ------------------------- | ----------------------------------------------------------------------- |
-| `GITHUB_REPO`             | Target repo for GitHub dispatches                                       |
-| `SLACK_COMMUNITY_TEAM_ID` | Community workspace team ID — required for allowlist + Airtable webhook |
-| `SLACK_ORGANIZER_TEAM_ID` | Organiser workspace team ID — required for allowlist + RAG bot          |
+| Var           | Purpose                           |
+| ------------- | --------------------------------- |
+| `GITHUB_REPO` | Target repo for GitHub dispatches |
 
 ## Code style
 

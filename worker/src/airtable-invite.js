@@ -71,7 +71,7 @@ export async function airtable_webhook_handle(request, env) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      channel: env.SLACK_INVITE_CHANNEL,
+      channel: env.SLACK_COMMUNITY_INVITE_CHANNEL,
       text: `New Slack invite request from ${name || email}`,
       blocks,
     }),

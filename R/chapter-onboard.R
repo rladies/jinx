@@ -1,7 +1,7 @@
 #' Create a new chapter setup issue
 #'
 #' Opens a tracking issue in the new-chapters-onboarding repo with
-#' the full checklist for setting up a new R-Ladies chapter.
+#' the full checklist for setting up a new RLadies+ chapter.
 #'
 #' @param city Chapter city name.
 #' @param country Chapter country.

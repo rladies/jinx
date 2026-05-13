@@ -6,6 +6,7 @@
 \title{Parse a jinx command from an issue comment}
 \usage{
 command_parse(body)
+
 cmd_parse(body)
 }
 \arguments{

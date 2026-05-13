@@ -1,4 +1,4 @@
-**jinx** - R-Ladies GitHub organization bot
+**jinx** - RLadies+ GitHub organization bot
 
 **Commands:**
 

@@ -2,7 +2,7 @@ The CFP for **<CONFERENCE>** closes in **<DAYS> days** (<DEADLINE>).
 
 <URL>
 
-Consider submitting a talk or recommending a speaker from the R-Ladies community.
+Consider submitting a talk or recommending a speaker from the RLadies+ community.
 
 Use `/jinx cfp recommend <CONFERENCE> @speaker` to add a recommendation.
 

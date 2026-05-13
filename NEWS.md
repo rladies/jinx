@@ -1,6 +1,6 @@
 # jinx 0.1.0
 
-Initial release of the jinx R package for R-Ladies GitHub organization
+Initial release of the jinx R package for RLadies+ GitHub organization
 management.
 
 ## Team management
@@ -140,7 +140,7 @@ management.
 
 ## Infrastructure
 
-- ROR identifier for R-Ladies Global (`https://ror.org/05wpb1k41`).
+- ROR identifier for RLadies+ Global (`https://ror.org/05wpb1k41`).
 - 24 GitHub Actions workflows for automated operations.
 - JSON schemas for directory entries, blog entries, chapters, team data,
   events, and CFPs.

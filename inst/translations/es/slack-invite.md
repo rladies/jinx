@@ -1,6 +1,6 @@
 Hola!
 
-Estas invitada a unirte al espacio de trabajo de R-Ladies Community en Slack.
+Estas invitada a unirte al espacio de trabajo de RLadies+ Community en Slack.
 
 Haz clic en el siguiente enlace para unirte:
 {{link}}
@@ -11,4 +11,4 @@ Si tienes alguna pregunta, no dudes en escribirnos a info@rladies.org.
 
 Saludos cordiales,
 {{sender}}
-R-Ladies Global
+RLadies+ Global

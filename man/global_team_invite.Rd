@@ -3,9 +3,10 @@
 \name{global_team_invite}
 \alias{global_team_invite}
 \alias{gt_invite}
-\title{Invite a user to the R-Ladies global team}
+\title{Invite a user to the RLadies+ global team}
 \usage{
 global_team_invite(username, team, name = username, org = "rladies")
+
 gt_invite(username, team, name = username, org = "rladies")
 }
 \arguments{
