@@ -52,6 +52,29 @@ Routes follow `/<service>/<action>` — never flat paths like `/slack-interact` 
 
 The Airtable `invited` field must mean _the invite was actually sent_, not _approved_. Don't flip it on Approve — wait for the **Mark invite sent** click.
 
+### Airtable webhook payload contract
+
+Every `/airtable/webhook` POST must include the originating base and table so the worker can write back to the right place. Each Airtable automation script is responsible for passing its own IDs:
+
+```json
+{
+  "email": "person@example.com",
+  "name": "Person Name",
+  "chapter": "Optional chapter",
+  "record_id": "recXXXXXXXXXXXXXX",
+  "base_id": "appXXXXXXXXXXXXXX",
+  "table_id": "tblXXXXXXXXXXXXXX"
+}
+```
+
+`base_id` and `table_id` are required. Use the table ID (`tbl…`) rather than the table name — it survives renames. `record_id`, `base_id`, and `table_id` round-trip through the Block Kit button `value` so the approve/deny/mark-sent handlers can PATCH the originating base.
+
+### Airtable base allowlist
+
+Allowed bases are discovered dynamically by calling Airtable's Meta API (`GET /v0/meta/bases`) with `AIRTABLE_API_KEY`. **The Airtable PAT's scope _is_ the allowlist** — any base the token can see is accepted. Granting the token broader access broadens what Jinx will accept; scope the PAT to invitee-flow bases only.
+
+The result is cached in the `AIRTABLE_BASES` KV namespace under key `allowed_bases` with a 1-hour TTL (`worker/src/airtable-meta.js`). Refresh on cache miss; **fail closed** if the Meta API errors during refresh — webhook returns HTTP 503. Bust the cache early by deleting the key from KV.
+
 ### Token management
 
 Slack workspace tokens are managed via OAuth, stored in Cloudflare KV (`SLACK_TOKENS` namespace) keyed by `team:<team_id>`. Use `getSlackToken(env, teamId)` to look up tokens — never hardcode workspace-specific tokens.
@@ -80,13 +103,13 @@ To add a workspace: set its team ID as a worker var, redeploy, run `/slack/insta
 
 ### Worker secrets (via `wrangler secret put`)
 
-| Secret                    | Purpose                                        |
-| ------------------------- | ---------------------------------------------- |
-| `SLACK_SIGNING_SECRET`    | Verify Slack request authenticity (app-global) |
-| `SLACK_CLIENT_ID`         | OAuth client ID (app-global)                   |
-| `SLACK_CLIENT_SECRET`     | OAuth client secret (app-global)               |
-| `AIRTABLE_WEBHOOK_SECRET` | Verify Airtable webhook requests               |
-| `AIRTABLE_API_KEY`        | Airtable API access                            |
+| Secret                    | Purpose                                                     |
+| ------------------------- | ----------------------------------------------------------- |
+| `SLACK_SIGNING_SECRET`    | Verify Slack request authenticity (app-global)              |
+| `SLACK_CLIENT_ID`         | OAuth client ID (app-global)                                |
+| `SLACK_CLIENT_SECRET`     | OAuth client secret (app-global)                            |
+| `AIRTABLE_WEBHOOK_SECRET` | Verify Airtable webhook requests                            |
+| `AIRTABLE_API_KEY`        | Airtable PAT — scope defines the base allowlist (see below) |
 
 ### Worker vars (in `wrangler.jsonc`)
 
