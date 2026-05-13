@@ -1,4 +1,5 @@
 import { github_dispatch_send } from "./github-dispatch.js";
+import { dispatch_failure_quip } from "./quips.js";
 import { slack_team_is_allowed } from "./slack-api.js";
 import { slash_is_local, slash_local_handle } from "./slash-local.js";
 
@@ -60,7 +61,7 @@ export async function slack_command_handle(env, ctx, body) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           response_type: "ephemeral",
-          text: "😿 Oops — I dropped that command behind the sofa and couldn't start it. Give it another try in a moment, or let a maintainer know.",
+          text: dispatch_failure_quip(),
         }),
       });
     }
