@@ -11,61 +11,15 @@ permissions:
 jobs:
   index:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - name: Checkout jinx
         uses: actions/checkout@v6
-
-      - name: Checkout rladiesguide
-        uses: actions/checkout@v6
-        with:
-          repository: rladies/rladiesguide
-          path: _sources/rladiesguide
-          submodules: recursive
-
-      - name: Checkout rladies.github.io
-        uses: actions/checkout@v6
-        with:
-          repository: rladies/rladies.github.io
-          path: _sources/rladies.github.io
-          submodules: recursive
 
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
           node-version: "20"
-
-      - name: Read Hugo versions from each site
-        id: hugo
-        run: |
-          guide_version=$(grep -E '^\s*HUGO_VERSION\s*=' _sources/rladiesguide/netlify.toml | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
-          site_version=$(grep -E '^\s*HUGO_VERSION\s*=' _sources/rladies.github.io/netlify.toml | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
-          echo "guide=${guide_version}" >> "$GITHUB_OUTPUT"
-          echo "site=${site_version}" >> "$GITHUB_OUTPUT"
-
-      - name: Install Hugo (rladiesguide version)
-        uses: peaceiris/actions-hugo@v3
-        with:
-          hugo-version: ${{ steps.hugo.outputs.guide }}
-          extended: true
-
-      - name: Build rladiesguide
-        working-directory: _sources/rladiesguide
-        run: hugo --minify -d public
-
-      - name: Install Hugo (rladies.github.io version)
-        uses: peaceiris/actions-hugo@v3
-        with:
-          hugo-version: ${{ steps.hugo.outputs.site }}
-          extended: true
-
-      - name: Install rladies.github.io npm dependencies
-        working-directory: _sources/rladies.github.io
-        run: npm install --no-audit --no-fund
-
-      - name: Build rladies.github.io
-        working-directory: _sources/rladies.github.io
-        run: hugo --minify -d public
 
       - name: Install indexer dependencies
         working-directory: indexer
@@ -86,6 +40,4 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           VECTORIZE_INDEX: rladies-content
-          RLADIESGUIDE_PUBLIC: ${{ github.workspace }}/_sources/rladiesguide/public
-          RLADIES_SITE_PUBLIC: ${{ github.workspace }}/_sources/rladies.github.io/public
         run: node index.mjs
