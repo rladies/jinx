@@ -52,7 +52,7 @@ reference:
     desc: Blog content management
     contents:
       - starts_with("blog_")
-      - contains("blog_entry")
+      - validate_blog_entry
 
   - title: Chapters
     desc: Chapter lifecycle management
@@ -109,11 +109,7 @@ reference:
   - title: Contributors
     desc: Contributor tracking and recognition
     contents:
-      - list_contributors
-      - list_org_contributors
-      - format_contributors
-      - starts_with("contributors_")
-      - starts_with("contributor_")
+      - contains("contributor")
 
   - title: Events
     desc: Chapter event management
