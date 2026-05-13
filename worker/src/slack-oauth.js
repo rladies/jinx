@@ -1,19 +1,31 @@
 import { slack_team_is_allowed } from "./slack-api.js";
 
+const NONCE_COOKIE = "jinx_install_nonce";
+
 export async function slack_oauth_install_handle(env, url) {
   const scopes = "chat:write,chat:write.public,commands";
   const redirectUri = `${url.origin}/slack/oauth`;
 
   const ts = Date.now().toString();
-  const state = await slack_oauth_hmac_state(env.SLACK_CLIENT_SECRET, ts);
+  const nonce = crypto.randomUUID();
+  const hmac = await slack_oauth_hmac_state(
+    env.SLACK_CLIENT_SECRET,
+    `${ts}:${nonce}`
+  );
 
   const authUrl = new URL("https://slack.com/oauth/v2/authorize");
   authUrl.searchParams.set("client_id", env.SLACK_CLIENT_ID);
   authUrl.searchParams.set("scope", scopes);
   authUrl.searchParams.set("redirect_uri", redirectUri);
-  authUrl.searchParams.set("state", `${ts}:${state}`);
+  authUrl.searchParams.set("state", `${ts}:${nonce}:${hmac}`);
 
-  return Response.redirect(authUrl.toString(), 302);
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: authUrl.toString(),
+      "Set-Cookie": `${NONCE_COOKIE}=${nonce}; Path=/slack/oauth; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+    },
+  });
 }
 
 export async function slack_oauth_callback_handle(request, env) {
@@ -29,8 +41,18 @@ export async function slack_oauth_callback_handle(request, env) {
     return new Response("Missing code or state", { status: 400 });
   }
 
-  const [ts, hmac] = state.split(":");
-  const expectedHmac = await slack_oauth_hmac_state(env.SLACK_CLIENT_SECRET, ts);
+  const [ts, nonce, hmac] = state.split(":");
+  if (!ts || !nonce || !hmac) {
+    return new Response("Invalid state parameter", { status: 403 });
+  }
+  const cookieNonce = parseCookie(request.headers.get("Cookie"), NONCE_COOKIE);
+  if (!cookieNonce || cookieNonce !== nonce) {
+    return new Response("State/cookie mismatch", { status: 403 });
+  }
+  const expectedHmac = await slack_oauth_hmac_state(
+    env.SLACK_CLIENT_SECRET,
+    `${ts}:${nonce}`
+  );
   if (hmac !== expectedHmac) {
     return new Response("Invalid state parameter", { status: 403 });
   }
@@ -87,7 +109,7 @@ export async function slack_oauth_callback_handle(request, env) {
   );
 }
 
-async function slack_oauth_hmac_state(secret, timestamp) {
+async function slack_oauth_hmac_state(secret, message) {
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -96,9 +118,18 @@ async function slack_oauth_hmac_state(secret, timestamp) {
     false,
     ["sign"]
   );
-  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(timestamp));
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(message));
   return btoa(String.fromCharCode(...new Uint8Array(sig)))
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/, "");
+}
+
+function parseCookie(header, name) {
+  if (!header) return null;
+  for (const part of header.split(";")) {
+    const [k, ...v] = part.trim().split("=");
+    if (k === name) return v.join("=");
+  }
+  return null;
 }
