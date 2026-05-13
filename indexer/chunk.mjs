@@ -24,7 +24,7 @@ export function chunkMarkdown(markdown, meta) {
   return out;
 }
 
-function stripFrontmatter(md) {
+export function stripFrontmatter(md) {
   const m = md.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
   if (!m) return { body: md, frontmatter: {} };
   return { body: m[2], frontmatter: parseFrontmatter(m[1]) };
