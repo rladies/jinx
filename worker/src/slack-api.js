@@ -36,21 +36,6 @@ export async function slack_reaction_remove(env, teamId, { channel, timestamp, n
   return slack_api_call(token, "reactions.remove", { channel, timestamp, name });
 }
 
-export async function slack_user_info_fetch(env, teamId, userId) {
-  const token = await slack_token_get(env, teamId);
-  return slack_api_call(token, "users.info", { user: userId });
-}
-
-export async function slack_user_lookup_by_email(env, teamId, email) {
-  const token = await slack_token_get(env, teamId);
-  return slack_api_call(token, "users.lookupByEmail", { email });
-}
-
-export async function slack_users_profile_get(env, teamId, userId) {
-  const token = await slack_token_get(env, teamId);
-  return slack_api_call(token, "users.profile.get", { user: userId });
-}
-
 export async function slack_conversations_open(env, teamId, { users }) {
   const token = await slack_token_get(env, teamId);
   return slack_api_call(token, "conversations.open", { users });

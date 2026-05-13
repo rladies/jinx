@@ -27,7 +27,6 @@ export async function slack_oauth_install_handle(env, url) {
     "team:read",
     "users:read",
     "users:read.email",
-    "users.profile:read",
   ].join(",");
   const redirectUri = `${url.origin}/slack/oauth`;
 

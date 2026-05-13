@@ -11,8 +11,6 @@ import {
   slack_reaction_add,
   slack_reaction_remove,
   slack_team_is_allowed,
-  slack_user_info_fetch,
-  slack_users_profile_get,
 } from "./slack-api.js";
 
 const LONG_ANSWER_THRESHOLD = 3000;
@@ -253,8 +251,6 @@ async function slack_event_handle_team_join(env, teamId, user) {
   const email = user.profile?.email || "";
   const link = await slack_pending_link_consume(env, email);
 
-  await slack_user_mapping_persist(env, teamId, user.id, email, link);
-
   const channelId = await slack_dm_open(env, teamId, user.id);
   if (!channelId) return;
 
@@ -321,15 +317,6 @@ function welcome_message_fallback(userId, link) {
 
 async function slack_event_handle_dm(env, teamId, channel, messageTs, threadTs, text, userId) {
   if (!userId) return;
-
-  let mapping = null;
-  if (env.SLACK_TOKENS) {
-    const mappingKey = slack_user_mapping_key(teamId, userId);
-    mapping = await env.SLACK_TOKENS.get(mappingKey, "json").catch(() => null);
-  }
-  if (!mapping) {
-    mapping = await slack_user_first_dm_link(env, teamId, userId);
-  }
 
   const isAssistantThread = Boolean(threadTs);
   const postBase = { channel };
@@ -417,19 +404,6 @@ async function slack_event_handle_assistant_start(env, teamId, thread) {
   }).catch((e) => console.warn("assistant setSuggestedPrompts failed:", e.message));
 }
 
-async function slack_user_first_dm_link(env, teamId, userId) {
-  try {
-    const info = await slack_user_info_fetch(env, teamId, userId);
-    const email = info?.user?.profile?.email || "";
-    if (!email) return null;
-    const link = await slack_pending_link_consume(env, email);
-    return slack_user_mapping_persist(env, teamId, userId, email, link);
-  } catch (e) {
-    console.error("First-DM identity lookup failed:", e);
-    return null;
-  }
-}
-
 async function slack_pending_link_consume(env, email) {
   if (!email || !env.SLACK_TOKENS) return null;
   const key = pending_link_key(email);
@@ -442,38 +416,6 @@ async function slack_pending_link_consume(env, email) {
   return link;
 }
 
-async function slack_user_mapping_persist(env, teamId, userId, email, link) {
-  if (!env.SLACK_TOKENS) return null;
-  let profile = null;
-  try {
-    const res = await slack_users_profile_get(env, teamId, userId);
-    profile = res?.profile || null;
-  } catch (e) {
-    console.warn("users.profile.get failed for", userId, e.message);
-  }
-  const mapping = {
-    slack_user_id: userId,
-    team_id: teamId,
-    email: email || null,
-    tz: profile?.tz || null,
-    real_name: profile?.real_name || null,
-    pronouns: profile?.pronouns || null,
-    airtable: link
-      ? {
-          record_id: link.record_id,
-          base_id: link.base_id,
-          table_id: link.table_id,
-        }
-      : null,
-    linked_at: new Date().toISOString(),
-  };
-  await env.SLACK_TOKENS.put(
-    slack_user_mapping_key(teamId, userId),
-    JSON.stringify(mapping)
-  );
-  return mapping;
-}
-
 async function slack_dm_open(env, teamId, userId) {
   try {
     const res = await slack_conversations_open(env, teamId, { users: userId });
@@ -482,10 +424,6 @@ async function slack_dm_open(env, teamId, userId) {
     console.error("conversations.open failed:", e);
     return null;
   }
-}
-
-function slack_user_mapping_key(teamId, userId) {
-  return `slack_user:${teamId}:${userId}`;
 }
 
 function slack_event_strip_mention(text) {
