@@ -8,6 +8,10 @@ on:
     workflows: ["Infra · Deploy Worker"]
     types: [completed]
     branches: [main]
+  pull_request:
+    paths:
+      - "worker/scripts/smoke-test.mjs"
+      - ".github/workflows/infra-slack-smoke.yml"
 
 permissions:
   contents: read
