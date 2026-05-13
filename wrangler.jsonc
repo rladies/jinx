@@ -30,6 +30,10 @@
 		{
 			"binding": "SLACK_TOKENS",
 			"id": "5614aacb7982413e807c2ae2126a4b3b"
+		},
+		{
+			"binding": "AIRTABLE_BASES",
+			"id": "698b7f8a6f214bf9ad9ecfaa839638f4"
 		}
 	]
 }
