@@ -45,17 +45,8 @@ reference:
   - title: Announcements
     desc: Cross-platform blog post announcements
     contents:
-      - announce_post
-      - create_announcement_message
-      - post_bluesky
-      - post_mastodon
-      - li_post_write
-      - li_req
-      - li_oauth
-      - li_urn_me
-      - li_media_upload
-      - li_get_version
-      - send_newsletter
+      - starts_with("announce_")
+      - starts_with("li_")
       - short_url
       - tags2hash
       - random_emoji
@@ -63,12 +54,9 @@ reference:
   - title: Directory
     desc: Directory entry management and validation
     contents:
+      - starts_with("directory_")
       - validate_directory_pr
       - validate_directory_entries
-      - validate_entry_filename
-      - verify_social_handles
-      - crop_directory_image
-      - optimize_image
 
   - title: Blogs
     desc: Blog content management
@@ -79,10 +67,10 @@ reference:
   - title: Chapters
     desc: Chapter lifecycle management
     contents:
-      - create_chapter
+      - chapter_create
       - chapter_create_setup
       - chapter_create_update
-      - create_chapter_json_pr
+      - chapter_create_pr
       - chapter_check_health
 
   - title: Reports
@@ -94,8 +82,7 @@ reference:
   - title: PR review
     desc: Automated pull request review
     contents:
-      - review_pr
-      - check_pr_naming
+      - starts_with("review_")
 
   - title: Airtable sync
     desc: Airtable bidirectional sync
@@ -105,20 +92,18 @@ reference:
   - title: Website automation
     desc: Website PR management and contributor greetings
     contents:
-      - starts_with("website_")
-      - greet_contributor
+      - website_merge_pending
 
   - title: Chapter monitoring
     desc: Chapter activity monitoring and outreach
     contents:
-      - monitor_chapter_status
+      - chapter_monitor_status
       - prepare_inactivity_emails
 
   - title: Slack
     desc: Slack messaging and automation
     contents:
       - starts_with("slack_")
-      - subscribe_slack_rss
 
   - title: GHA dashboard
     desc: GitHub Actions workflow status
@@ -128,55 +113,39 @@ reference:
   - title: Contributors
     desc: Contributor tracking and recognition
     contents:
-      - list_contributors
-      - list_org_contributors
-      - format_contributors
-      - matches("^contributors?_")
+      - starts_with("contributor_")
 
   - title: Events
     desc: Chapter event management
     contents:
-      - starts_with("events_")
+      - starts_with("event_")
 
   - title: Analytics
     desc: Org-wide activity analytics
     contents:
-      - collect_chapter_activity
-      - collect_contributor_growth
-      - compute_activity_trends
-      - format_analytics_markdown
-      - analytics_generate_dashboard
-      - analytics_publish_dashboard
+      - starts_with("analytics_")
 
   - title: Website analytics
     desc: Plausible website performance reports
     contents:
-      - collect_website_analytics
-      - format_website_analytics
-      - generate_website_report
-      - publish_website_report
+      - website_collect_analytics
+      - website_format_analytics
+      - website_generate_report
+      - website_publish_report
 
   - title: Conference coordination
     desc: CFP tracking and speaker recommendations
     contents:
       - starts_with("cfp_")
-      - list_speaker_recommendations
-      - generate_conference_report
+      - starts_with("conference_")
 
   - title: Internationalization
     desc: Template translations
     contents:
-      - translate_template
-      - list_supported_languages
-      - get_chapter_language
       - starts_with("i18n_")
+      - chapter_get_language
 
   - title: Configuration
     desc: Config loading utilities
     contents:
       - starts_with("load_")
-
-  - title: Templates
-    desc: Response and template utilities
-    contents:
-      - post_reply

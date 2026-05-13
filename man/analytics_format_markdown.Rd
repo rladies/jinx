@@ -9,7 +9,8 @@ analytics_format_markdown(trends, contributor_growth)
 \arguments{
 \item{trends}{Data frame from \code{\link[=analytics_compute_trends]{analytics_compute_trends()}}.}
 
-\item{contributor_growth}{Data frame from \code{\link[=analytics_collect_contributor_growth]{analytics_collect_contributor_growth()}}.}
+\item{contributor_growth}{Data frame from
+\code{\link[=analytics_collect_contributor_growth]{analytics_collect_contributor_growth()}}.}
 }
 \value{
 Formatted markdown string.

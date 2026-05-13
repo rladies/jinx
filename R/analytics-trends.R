@@ -39,7 +39,8 @@ analytics_compute_trends <- function(activity_data) {
 #' Format analytics as markdown
 #'
 #' @param trends Data frame from [analytics_compute_trends()].
-#' @param contributor_growth Data frame from [analytics_collect_contributor_growth()].
+#' @param contributor_growth Data frame from
+#'   [analytics_collect_contributor_growth()].
 #' @return Formatted markdown string.
 #' @export
 analytics_format_markdown <- function(trends, contributor_growth) {
