@@ -8,8 +8,15 @@ export async function gatherPkgdownLlmsSource(src) {
   }
 
   console.log(`Discovering R packages in ${src.org}`);
-  const repos = await listOrgRRepos(src.org, token);
-  console.log(`  ${repos.length} R-language repos`);
+  const candidates = await listOrgRRepos(src.org, token);
+  console.log(`  ${candidates.length} R-language repos, checking for DESCRIPTION`);
+  const repos = [];
+  for (const repo of candidates) {
+    if (await hasDescription(repo.full_name, token)) {
+      repos.push(repo);
+    }
+  }
+  console.log(`  ${repos.length} repos with a root DESCRIPTION`);
 
   const out = [];
   for (const repo of repos) {
@@ -59,6 +66,26 @@ async function listOrgRRepos(org, token) {
     url = nextLink(res.headers.get("link"));
   }
   return out;
+}
+
+async function hasDescription(fullName, token) {
+  const res = await fetch(
+    `https://api.github.com/repos/${fullName}/contents/DESCRIPTION`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "User-Agent": "rladies-jinx",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    }
+  );
+  if (res.status === 404) return false;
+  if (!res.ok) {
+    console.warn(`  HEAD ${fullName}/DESCRIPTION -> ${res.status}`);
+    return false;
+  }
+  return true;
 }
 
 function nextLink(linkHeader) {
