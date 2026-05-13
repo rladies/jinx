@@ -221,8 +221,8 @@ async function slack_event_answer_post(env, teamId, channel, threadTs, query, us
     return;
   }
 
-  const { answer, sources } = await rag_question_answer(env, query);
-  await slack_event_post_answer(env, teamId, { channel, threadTs, answer, sources });
+  const { answer } = await rag_question_answer(env, query);
+  await slack_event_post_answer(env, teamId, { channel, threadTs, answer });
 }
 
 async function slack_event_handle_reaction(env, teamId, event) {
@@ -341,12 +341,11 @@ async function slack_event_handle_dm(env, teamId, channel, messageTs, threadTs, 
         text: "Hi! 🔮 Ask me a question about RLadies+ — I'll go padding through the guide and the website to find an answer.",
       });
     } else {
-      const { answer, sources } = await rag_question_answer(env, query);
+      const { answer } = await rag_question_answer(env, query);
       await slack_event_post_answer(env, teamId, {
         channel,
         threadTs: threadTs || undefined,
         answer,
-        sources,
       });
     }
 
@@ -431,34 +430,20 @@ function slack_event_strip_mention(text) {
   return text.replace(/<@[A-Z0-9]+>/g, "").trim();
 }
 
-function slack_event_format_answer(answer, sources) {
-  if (!sources || sources.length === 0) return answer;
-  const list = sources
-    .map((s, i) => `${i + 1}. <${s.url}|${s.title}>`)
-    .join("\n");
-  return `${answer}\n\n*Sources:*\n${list}`;
+function slack_event_format_answer_markdown(answer) {
+  return ["# Jinx — RLadies+ answer", "", answer].join("\n") + "\n";
 }
 
-function slack_event_format_answer_markdown(answer, sources) {
-  const lines = ["# Jinx — RLadies+ answer", "", answer];
-  if (sources && sources.length) {
-    lines.push("", "## Sources");
-    for (const s of sources) lines.push(`- [${s.title}](${s.url})`);
-  }
-  return lines.join("\n") + "\n";
-}
-
-async function slack_event_post_answer(env, teamId, { channel, threadTs, answer, sources }) {
-  const text = slack_event_format_answer(answer, sources);
-  if (text.length <= LONG_ANSWER_THRESHOLD) {
-    const body = { channel, text };
+async function slack_event_post_answer(env, teamId, { channel, threadTs, answer }) {
+  if (answer.length <= LONG_ANSWER_THRESHOLD) {
+    const body = { channel, text: answer };
     if (threadTs) body.thread_ts = threadTs;
     await slack_message_post(env, teamId, body);
     return;
   }
 
   const filename = `jinx-answer-${Date.now()}.md`;
-  const content = slack_event_format_answer_markdown(answer, sources);
+  const content = slack_event_format_answer_markdown(answer);
   try {
     await slack_file_upload_text(env, teamId, {
       channel,
@@ -470,7 +455,7 @@ async function slack_event_post_answer(env, teamId, { channel, threadTs, answer,
     });
   } catch (e) {
     console.warn("file upload fallback:", e.message);
-    const body = { channel, text };
+    const body = { channel, text: answer };
     if (threadTs) body.thread_ts = threadTs;
     await slack_message_post(env, teamId, body);
   }
