@@ -14,14 +14,19 @@ R package powering the RLadies+ GitHub organization bot. Deployed as a GitHub Ap
 
 All workflows use `actions/create-github-app-token@v1` with these **repo secrets** (not variables):
 
-| Secret               | Purpose                                                 |
-| -------------------- | ------------------------------------------------------- |
-| `JINX_APP_ID`        | GitHub App ID                                           |
-| `JINX_PRIVATE_KEY`   | GitHub App private key (.pem)                           |
-| `MEETUPR_JWT_TOKEN`  | Meetup Pro JWT token for meetupr (event-sync.yml)       |
-| `MEETUPR_CLIENT_ID`  | Meetup Pro OAuth client ID for meetupr (event-sync.yml) |
-| `MEETUPR_JWT_ISSUER` | Meetup Pro JWT issuer for meetupr (event-sync.yml)      |
-| `AIRTABLE_API_KEY`   | Airtable API key (airtable-sync.yml)                    |
+| Secret                      | Purpose                                                               |
+| --------------------------- | --------------------------------------------------------------------- |
+| `JINX_APP_ID`               | GitHub App ID                                                         |
+| `JINX_PRIVATE_KEY`          | GitHub App private key (.pem)                                         |
+| `MEETUPR_JWT_TOKEN`         | Meetup Pro JWT token for meetupr (event-sync.yml)                     |
+| `MEETUPR_CLIENT_ID`         | Meetup Pro OAuth client ID for meetupr (event-sync.yml)               |
+| `MEETUPR_JWT_ISSUER`        | Meetup Pro JWT issuer for meetupr (event-sync.yml)                    |
+| `AIRTABLE_API_KEY`          | Airtable API key (airtable-sync.yml)                                  |
+| `JINX_WORKER_URL`           | Deployed worker URL (infra-slack-smoke.yml)                           |
+| `SLACK_ORGANISER_TOKEN`     | Bot token for the organisers workspace (infra-slack-smoke.yml)        |
+| `SLACK_HEALTHCHECK_CHANNEL` | Channel ID for healthcheck postMessage/delete (infra-slack-smoke.yml) |
+| `SLACK_HEALTHCHECK_TEAM_ID` | Team ID for the smoke-test workspace (infra-slack-smoke.yml)          |
+| `SLACK_SIGNING_SECRET`      | Slack signing secret — used to sign synthetic worker requests         |
 
 Always reference as `secrets.JINX_APP_ID`, never `vars.JINX_APP_ID`.
 
@@ -181,6 +186,17 @@ devtools::check()   # must pass with 0 errors, 0 warnings
 ```
 
 Run via zsh to ensure PATH includes `/opt/homebrew/bin` (pandoc, gh).
+
+### Worker tests
+
+Worker JS has its own vitest suite (no R involved):
+
+```sh
+cd worker && npm ci && npm test     # unit tests, no network
+cd worker && npm run smoke           # hits real Slack + deployed worker
+```
+
+The vitest suite runs as a prereq of `infra-deploy-worker.yml`, so a failing test blocks deploy. The smoke test runs daily and after every successful deploy via `infra-slack-smoke.yml`, and posts to `SLACK_HEALTHCHECK_CHANNEL` on failure.
 
 ## pkgdown
 
