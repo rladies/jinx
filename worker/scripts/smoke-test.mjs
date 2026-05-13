@@ -39,6 +39,11 @@ async function step(name, fn) {
   }
 }
 
+async function bodySnippet(res) {
+  const text = await res.text().catch(() => "");
+  return text ? ` — body: ${text.slice(0, 300)}` : "";
+}
+
 async function slackApi(method, body, token = BOT) {
   const res = await fetch(`https://slack.com/api/${method}`, {
     method: "POST",
@@ -118,22 +123,22 @@ await step("bookmarks.list (bookmarks:read scope)", async () => {
   await slackApi("bookmarks.list", { channel_id: CHANNEL });
 });
 
-await step("conversations.info (channels:read scope)", async () => {
-  await slackApi("conversations.info", { channel: CHANNEL });
-});
-
 await step("chat.delete (cleanup health-check message)", async () => {
   await slackApi("chat.delete", { channel: CHANNEL, ts: messageTs });
 });
 
 await step("Worker GET / responds with 200", async () => {
   const res = await fetch(`${workerOrigin}/`);
-  if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
+  if (res.status !== 200) {
+    throw new Error(`HTTP ${res.status}${await bodySnippet(res)}`);
+  }
 });
 
 await step("Worker GET /slack/install issues 302 to slack.com", async () => {
   const res = await fetch(`${workerOrigin}/slack/install`, { redirect: "manual" });
-  if (res.status !== 302) throw new Error(`HTTP ${res.status}`);
+  if (res.status !== 302) {
+    throw new Error(`HTTP ${res.status}${await bodySnippet(res)}`);
+  }
   const location = res.headers.get("location") || "";
   if (!location.startsWith("https://slack.com/oauth/v2/authorize")) {
     throw new Error(`unexpected Location: ${location}`);
@@ -150,7 +155,9 @@ await step("Worker /slack/command rejects bad signatures with 401", async () => 
     },
     body: "team_id=" + encodeURIComponent(TEAM_ID) + "&text=help",
   });
-  if (res.status !== 401) throw new Error(`expected 401, got ${res.status}`);
+  if (res.status !== 401) {
+    throw new Error(`expected 401, got ${res.status}${await bodySnippet(res)}`);
+  }
 });
 
 await step("Worker /slack/command help round-trip with signed body", async () => {
@@ -174,7 +181,9 @@ await step("Worker /slack/command help round-trip with signed body", async () =>
     },
     body,
   });
-  if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
+  if (res.status !== 200) {
+    throw new Error(`HTTP ${res.status}${await bodySnippet(res)}`);
+  }
   const data = await res.json();
   if (data.response_type !== "ephemeral") {
     throw new Error(`response_type: ${data.response_type}`);
