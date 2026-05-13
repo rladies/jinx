@@ -6,6 +6,7 @@
 \title{Execute a parsed jinx command}
 \usage{
 command_execute(command)
+
 cmd_execute(command)
 }
 \arguments{

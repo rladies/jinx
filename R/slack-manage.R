@@ -19,7 +19,7 @@ slack_invites_send <- function(
   invite_link,
   base_id = slack_invitees_base_id(),
   api_key = Sys.getenv("AIRTABLE_API_KEY"),
-  sender_name = "R-Ladies Global",
+  sender_name = "RLadies+ Global",
   sender_email = "info@rladies.org",
   dry_run = TRUE
 ) {
@@ -51,7 +51,7 @@ slack_invites_send <- function(
 
   emails <- data.frame(
     email = vapply(pending, function(x) x$email, character(1)),
-    subject = "You are invited to the R-Ladies Community Slack",
+    subject = "You are invited to the RLadies+ Community Slack",
     stringsAsFactors = FALSE
   )
 

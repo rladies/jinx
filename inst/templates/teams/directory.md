@@ -4,5 +4,5 @@
 
 
 <!--  Extra for us
-- [ ] @rladies/directory will add you to the #team-directory channel on R-Ladies Organizers Slack.
+- [ ] @rladies/directory will add you to the #team-directory channel on RLadies+ Organizers Slack.
 -->

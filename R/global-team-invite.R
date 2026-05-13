@@ -1,4 +1,4 @@
-#' Invite a user to the R-Ladies global team
+#' Invite a user to the RLadies+ global team
 #'
 #' Sends an organization membership invitation and adds the user to the
 #' global team.

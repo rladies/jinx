@@ -4,10 +4,10 @@ We have received a request to update the infrastructure for the chapter in **<CI
 
 The @rladies/chapter-onboarding team will:
 
--  [ ] send new organizer(s) the [R-Ladies Organizers form](https://rladies.org/form/organiser)
--  [ ] invite new organizer(s) to the R-Ladies Community Slack
+-  [ ] send new organizer(s) the [RLadies+ Organizers form](https://rladies.org/form/organiser)
+-  [ ] invite new organizer(s) to the RLadies+ Community Slack
 -  [ ] check that the requested information are well filled in the [Airtable Form](https://airtable.com/appM6GuE0Jl1UI9qx/tblU3jxWDxrv8QaVa/viwP7ggEpGgVEf2A5)
--  [ ] if everything looks good in the form, invite new organizer(s) to the R-Ladies Organizers Slack
+-  [ ] if everything looks good in the form, invite new organizer(s) to the RLadies+ Organizers Slack
 -  [ ] post a message here to request @rladies/email and @rladies/meetup-pro to update the chapter infrastructure. The email team requires the email address of the new chapter organizer(s) to be able to set everything up.
 
 ### Updating chapter infrastructure

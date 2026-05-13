@@ -1,6 +1,6 @@
 Ola!
 
-Voce esta convidada a participar do espaco de trabalho R-Ladies Community no Slack.
+Voce esta convidada a participar do espaco de trabalho RLadies+ Community no Slack.
 
 Clique no link abaixo para participar:
 {{link}}
@@ -11,4 +11,4 @@ Se tiver alguma duvida, entre em contato conosco em info@rladies.org.
 
 Atenciosamente,
 {{sender}}
-R-Ladies Global
+RLadies+ Global

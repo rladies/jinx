@@ -1,6 +1,6 @@
 - The following Guide sections are relevant to the Team. Please read them carefully:
-  - [ ] ["Meetup Account Management"](https://guide.rladies.org/coordination/meetup/) section of the R-Ladies Guidelines.
-- Join these channels in the R-Ladies Organizers Slack.
+  - [ ] ["Meetup Account Management"](https://guide.rladies.org/coordination/meetup/) section of the RLadies+ Guidelines.
+- Join these channels in the RLadies+ Organizers Slack.
     - [ ] [#organisers](https://r-ladies.slack.com/archives/C7L3BAHUG)
     - [ ] [#new-chapters](https://r-ladies.slack.com/archives/C2T7CRBJ6)
 - [ ] Let the @rladies/leadership know to which email address you want the messages from chapters@rladies.org and meetup@rladies.org be forwarded to.

@@ -1,8 +1,8 @@
 ---
-title: "Workflow Reference for R-Ladies Org Admins"
+title: "Workflow Reference for RLadies+ Org Admins"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Workflow Reference for R-Ladies Org Admins}
+  %\VignetteIndexEntry{Workflow Reference for RLadies+ Org Admins}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -226,7 +226,7 @@ invitations. Use `dry_run = TRUE` (the default) to preview before sending.
 subscribe_slack_rss()
 ```
 
-Subscribes Slack channels to the R-Ladies blog RSS feed.
+Subscribes Slack channels to the RLadies+ blog RSS feed.
 
 ## Directory maintenance
 

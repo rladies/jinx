@@ -1,12 +1,12 @@
 @<GH_USER> is leaving the <TEAM> Team and the Global Team.
-Thank you for all the time you have spent on R-Ladies, <NAME>.
+Thank you for all the time you have spent on RLadies+, <NAME>.
 We appreciate you and your work so much!
 
 ### What we will do to offboard you
 
 If you are not responsive to this issue within 2 weeks, or do not provide an alternative timeline for completion, then we will proceed with offboarding.
 
-- [ ] @rladies/website team will move you from the current global team to the alumni section on the R-Ladies website
+- [ ] @rladies/website team will move you from the current global team to the alumni section on the RLadies+ website
 - [ ] If you allow it, @rladies/communications team will post a thank you message on our social media. Please indicate in a reply if you would allow this.
 - [ ] @rladies/email will cancel any forwarding rule related to your rladies.org email account.
 - [ ] @rladies/email team will discontinue your rladies.org email account

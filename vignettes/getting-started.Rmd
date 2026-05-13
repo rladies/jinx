@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-jinx is the R-Ladies GitHub organization management bot.
+jinx is the RLadies+ GitHub organization management bot.
 It is an R package deployed via GitHub Actions with a registered
 GitHub App identity (`jinx[bot]`).
 
@@ -47,7 +47,7 @@ functions. The `gh` package handles GitHub API authentication via the
    - Repository: Issues (R/W), Pull Requests (R/W), Contents (Read)
    - Organization: Members (R/W), Administration (Read)
 4. Events: `issue_comment`, `issues`, `pull_request`
-5. Install on the R-Ladies org
+5. Install on the RLadies+ org
 
 ### 2. Configure secrets
 
@@ -163,7 +163,7 @@ placeholders with values from a named list.
 
 ## Cross-repo PR review
 
-Add this workflow to any R-Ladies repo for automated PR review:
+Add this workflow to any RLadies+ repo for automated PR review:
 
 ```yaml
 # .github/workflows/jinx-review.yml

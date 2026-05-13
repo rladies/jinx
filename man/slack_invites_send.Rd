@@ -8,7 +8,7 @@ slack_invites_send(
   invite_link,
   base_id = slack_invitees_base_id(),
   api_key = Sys.getenv("AIRTABLE_API_KEY"),
-  sender_name = "R-Ladies Global",
+  sender_name = "RLadies+ Global",
   sender_email = "info@rladies.org",
   dry_run = TRUE
 )

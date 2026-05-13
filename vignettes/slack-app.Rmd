@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 ```{=html}
 <span class="jinx-sprite" style="float: right;">
   <img src="../man/figures/sprites/support.svg"
-       height="180"
+       height="120"
        alt="Jinx the cat wearing a telephone headset, ready to help" />
 </span>
 ```

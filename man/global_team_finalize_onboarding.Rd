@@ -5,7 +5,13 @@
 \alias{gt_finalize_onboarding}
 \title{Finalize global team onboarding for an accepted member}
 \usage{
-global_team_finalize_onboarding(username, team, name = username, org = "rladies")
+global_team_finalize_onboarding(
+  username,
+  team,
+  name = username,
+  org = "rladies"
+)
+
 gt_finalize_onboarding(username, team, name = username, org = "rladies")
 }
 \arguments{
