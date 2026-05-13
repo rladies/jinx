@@ -1,6 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
-import { chunkMarkdown } from "../chunk.mjs";
+import { chunkMarkdown, stripFrontmatter } from "../chunk.mjs";
 
 export async function gatherMarkdownSource(src) {
   const dir = join(src.root, src.contentDir);
@@ -17,10 +17,11 @@ export async function gatherMarkdownSource(src) {
       continue;
     }
     const md = await readFile(file, "utf-8");
+    const { frontmatter } = stripFrontmatter(md);
     const meta = {
       repo: src.repo,
       path: rel,
-      url: toUrl(src.baseUrl, rel),
+      url: toUrl(src.baseUrl, rel, frontmatter),
       fallbackTitle: titleFromPath(rel),
     };
     const chunks = chunkMarkdown(md, meta);
@@ -59,13 +60,31 @@ async function walkMarkdown(dir) {
   return out;
 }
 
-function toUrl(base, relPath) {
+function toUrl(base, relPath, frontmatter = {}) {
+  const baseTrimmed = base.replace(/\/$/, "");
+
+  if (frontmatter.url) {
+    let u = frontmatter.url.startsWith("/") ? frontmatter.url : "/" + frontmatter.url;
+    if (!u.endsWith("/")) u += "/";
+    return baseTrimmed + u;
+  }
+
   let p = relPath.replace(/\.([a-z]{2})\.(md|qmd)$/, "");
   p = p.replace(/\.(md|qmd)$/, "");
-  p = p.replace(/(^|\/)_index$/, "$1");
-  p = p.replace(/(^|\/)index$/, "$1");
+  p = p.replace(/(^|\/)(_index|index)$/, "$1");
+
+  if (frontmatter.slug) {
+    if (p.endsWith("/")) {
+      p = p.replace(/[^/]+\/$/, `${frontmatter.slug}/`);
+    } else if (p.includes("/")) {
+      p = p.replace(/[^/]+$/, frontmatter.slug);
+    } else {
+      p = frontmatter.slug;
+    }
+  }
+
   if (p && !p.endsWith("/")) p += "/";
-  return base.replace(/\/$/, "") + "/" + p.replace(/^\//, "");
+  return baseTrimmed + "/" + p.replace(/^\//, "");
 }
 
 function titleFromPath(relPath) {
