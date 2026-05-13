@@ -51,8 +51,7 @@ reference:
   - title: Blogs
     desc: Blog content management
     contents:
-      - starts_with("blog_")
-      - contains("blog_entry")
+      - contains("blog_")
 
   - title: Chapters
     desc: Chapter lifecycle management
@@ -84,7 +83,7 @@ reference:
   - title: Website automation
     desc: Website PR management and contributor greetings
     contents:
-      - contains("merge_pending")
+      - starts_with("website_merge_")
       - greet_contributor
 
   - title: Chapter monitoring
