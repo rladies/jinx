@@ -172,9 +172,9 @@ export async function slack_event_handle(env, ctx, body) {
         channel,
         thread_ts: threadTs,
         text:
-          "🐈‍⬛ Jinx only runs in the RLadies+ organisers and community " +
-          "workspaces. If you think you should have access, ping the " +
-          "RLadies+ global team in https://github.com/rladies/jinx.",
+          "🐈‍⬛ I only roam in the RLadies+ organisers and community " +
+          "workspaces — sorry, house rules! If you think you should have " +
+          "access, ping the RLadies+ global team in https://github.com/rladies/jinx.",
       }).catch((e) => console.error("Refusal post failed:", e))
     );
     return new Response("", { status: 200 });
@@ -206,7 +206,7 @@ async function slack_event_handle_mention(env, teamId, channel, messageTs, threa
     await slack_message_post(env, teamId, {
       channel,
       thread_ts: threadTs,
-      text: "🐈‍⬛ Sorry — Jinx couldn't fetch an answer right now. Try again in a moment?",
+      text: "🐈‍⬛ Sorry — I couldn't fetch an answer just now. *grooms paw, regroups* — try me again in a moment?",
     }).catch((e) => console.error("Fallback post failed:", e));
   }
 }
@@ -216,7 +216,7 @@ async function slack_event_answer_post(env, teamId, channel, threadTs, query, us
     await slack_message_post(env, teamId, {
       channel,
       thread_ts: threadTs,
-      text: `Hi <@${userId}>! Ask me a question about RLadies+ — I'll look it up in the guide and the website. 🔮`,
+      text: `Hi <@${userId}>! 🔮 Ask me a question about RLadies+ — I'll go padding through the guide and the website to find an answer. (Type slowly, I have no thumbs.)`,
     });
     return;
   }
@@ -309,9 +309,9 @@ function welcome_message_fallback(userId, link) {
     ? "\n\nI matched you up with your RLadies+ chapter sign-up — welcome aboard! 💜"
     : "";
   return (
-    `Hi <@${userId}>! 🔮 I'm Jinx, the RLadies+ community bot.` +
+    `Hi <@${userId}>! 🔮 I'm Jinx (they/them), the RLadies+ community bot.` +
     chapterLine +
-    "\n\nAsk me anything about RLadies+ — chapters, events, the guide, code of conduct — and I'll look it up for you."
+    "\n\nAsk me anything about RLadies+ — chapters, events, the guide, code of conduct — and I'll pad off to look it up for you."
   );
 }
 
@@ -326,7 +326,7 @@ async function slack_event_handle_dm(env, teamId, channel, messageTs, threadTs, 
     await slack_assistant_set_status(env, teamId, {
       channelId: channel,
       threadTs,
-      status: "is searching the RLadies+ guide…",
+      status: "is padding through the RLadies+ guide…",
     }).catch((e) => console.warn("assistant setStatus failed:", e.message));
   } else {
     await slack_reaction_add(env, teamId, { channel, timestamp: messageTs, name: "eyes" })
@@ -338,7 +338,7 @@ async function slack_event_handle_dm(env, teamId, channel, messageTs, threadTs, 
     if (!query) {
       await slack_message_post(env, teamId, {
         ...postBase,
-        text: "Hi! Ask me a question about RLadies+ — I'll look it up in the guide and the website. 🔮",
+        text: "Hi! 🔮 Ask me a question about RLadies+ — I'll go padding through the guide and the website to find an answer.",
       });
     } else {
       const { answer, sources } = await rag_question_answer(env, query);
@@ -378,7 +378,7 @@ async function slack_event_handle_dm(env, teamId, channel, messageTs, threadTs, 
     }
     await slack_message_post(env, teamId, {
       ...postBase,
-      text: "🐈‍⬛ Sorry — Jinx couldn't fetch an answer right now. Try again in a moment?",
+      text: "🐈‍⬛ Sorry — I couldn't fetch an answer just now. *grooms paw, regroups* — try me again in a moment?",
     }).catch(() => {});
   }
 }
@@ -466,7 +466,7 @@ async function slack_event_post_answer(env, teamId, { channel, threadTs, answer,
       filename,
       title: "Jinx answer",
       content,
-      initialComment: "🔮 The full answer was long — uploading as a file for easier reading.",
+      initialComment: "🔮 That answer ran long — I've batted it into a file so it's easier to read.",
     });
   } catch (e) {
     console.warn("file upload fallback:", e.message);

@@ -188,7 +188,7 @@ describe("slack_interaction_handle", () => {
     const refusal = calls.find((c) => c.url === "https://hooks.slack.com/r/x");
     expect(refusal).toBeTruthy();
     const body = JSON.parse(refusal.init.body);
-    expect(body.text).toMatch(/only runs in/i);
+    expect(body.text).toMatch(/only roam in/i);
   });
 
   it("dispatches approval actions through ctx.waitUntil", async () => {

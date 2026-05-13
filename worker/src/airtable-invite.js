@@ -112,8 +112,8 @@ export async function slack_interaction_handle(env, ctx, body) {
           body: JSON.stringify({
             response_type: "ephemeral",
             text:
-              "🐈‍⬛ Jinx only runs in the RLadies+ organisers and community " +
-              "workspaces.",
+              "🐈‍⬛ I only roam in the RLadies+ organisers and community " +
+              "workspaces — sorry, house rules!",
           }),
         }).catch((e) => console.error("Refusal post failed:", e))
       );
