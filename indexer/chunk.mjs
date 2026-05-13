@@ -4,6 +4,7 @@ const MIN_CHARS = 200;
 export function chunkMarkdown(markdown, meta) {
   const { body, frontmatter } = stripFrontmatter(markdown);
   const sections = splitBySections(body);
+  const date = parseDate(frontmatter.date);
 
   const out = [];
   for (const section of sections) {
@@ -18,10 +19,18 @@ export function chunkMarkdown(markdown, meta) {
         repo: meta.repo,
         path: meta.path,
         url: meta.url,
+        date,
       });
     }
   }
   return out;
+}
+
+export function parseDate(raw) {
+  if (!raw) return 0;
+  const ms = Date.parse(raw);
+  if (Number.isNaN(ms)) return 0;
+  return Math.floor(ms / 1000);
 }
 
 export function stripFrontmatter(md) {

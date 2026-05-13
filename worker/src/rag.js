@@ -1,8 +1,20 @@
 import { coding_decline_message, is_coding_question } from "./intent.js";
 import { no_match_quip } from "./quips.js";
 
+const RETRIEVE_K = 20;
 const TOP_K = 5;
 const MIN_SCORE = 0.4;
+
+const SOURCE_WEIGHTS = {
+  guide: 1.25,
+  site: 1.05,
+  "jinx-docs": 1.05,
+  pkgdown: 0.95,
+  "github-files": 0.95,
+  "github-org": 0.85,
+};
+const DEFAULT_SOURCE_WEIGHT = 1.0;
+const RECENCY_HALF_LIFE_SECONDS = 730 * 24 * 60 * 60;
 
 const SYSTEM_PROMPT = `You are Jinx, the friendly familiar of RLadies+ — a global organization promoting gender diversity in the R community. Jinx uses they/them pronouns.
 
@@ -58,8 +70,26 @@ async function rag_query_embed(env, text) {
 
 async function rag_chunks_retrieve(env, embedding) {
   const results = await env.RAG_INDEX.query(embedding, {
-    topK: TOP_K,
+    topK: RETRIEVE_K,
     returnMetadata: "all",
   });
-  return (results.matches || []).filter((m) => m.score >= MIN_SCORE);
+  const raw = (results.matches || []).filter((m) => m.score >= MIN_SCORE);
+  return rerank_matches(raw, Date.now() / 1000).slice(0, TOP_K);
+}
+
+export function rerank_matches(matches, now_seconds) {
+  return matches
+    .map((m) => {
+      const source_weight =
+        SOURCE_WEIGHTS[m.metadata?.source_type] ?? DEFAULT_SOURCE_WEIGHT;
+      const recency = recency_factor(m.metadata?.date, now_seconds);
+      return { ...m, adjusted_score: m.score * source_weight * recency };
+    })
+    .sort((a, b) => b.adjusted_score - a.adjusted_score);
+}
+
+function recency_factor(date_seconds, now_seconds) {
+  if (!date_seconds || date_seconds <= 0) return 1.0;
+  const age = Math.max(0, now_seconds - date_seconds);
+  return Math.pow(0.5, age / RECENCY_HALF_LIFE_SECONDS);
 }

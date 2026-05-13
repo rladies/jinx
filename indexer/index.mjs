@@ -10,6 +10,7 @@ const JINX_REPO_ROOT = process.env.JINX_PATH || "..";
 const SOURCES = [
   {
     type: "markdown",
+    source_type: "guide",
     repo: "rladies/rladiesguide",
     root: process.env.RLADIESGUIDE_PATH || "_sources/rladiesguide",
     contentDir: "content",
@@ -17,6 +18,7 @@ const SOURCES = [
   },
   {
     type: "markdown",
+    source_type: "site",
     repo: "rladies/rladies.github.io",
     root: process.env.RLADIES_SITE_PATH || "_sources/rladies.github.io",
     contentDir: "content",
@@ -24,14 +26,17 @@ const SOURCES = [
   },
   {
     type: "github-org",
+    source_type: "github-org",
     org: "rladies",
   },
   {
     type: "pkgdown-llms",
+    source_type: "pkgdown",
     org: "rladies",
   },
   {
     type: "github-files",
+    source_type: "jinx-docs",
     repo: "rladies/jinx",
     root: JINX_REPO_ROOT,
     files: [
@@ -54,6 +59,7 @@ const SOURCES = [
   },
   {
     type: "github-remote-files",
+    source_type: "github-files",
     repo: "rladies/glamour",
     files: [
       {
@@ -81,7 +87,7 @@ const BATCH = 50;
 const all = [];
 for (const src of SOURCES) {
   const chunks = await gather(src);
-  for (const c of chunks) all.push(c);
+  for (const c of chunks) all.push({ ...c, source_type: src.source_type });
 }
 
 console.log(`\nTotal chunks: ${all.length}`);
@@ -106,6 +112,8 @@ for (let i = 0; i < all.length; i += BATCH) {
         repo: c.repo,
         path: c.path,
         text: c.text,
+        source_type: c.source_type,
+        date: c.date || 0,
       },
     });
   }
