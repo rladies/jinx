@@ -1,0 +1,33 @@
+name: Reusable · Slack failure notify
+
+on:
+  workflow_call:
+    inputs:
+      message:
+        description: "Full Slack message text. Caller composes the wording and any links."
+        required: true
+        type: string
+    secrets:
+      SLACK_BOT_TOKEN:
+        required: true
+      SLACK_CHANNEL:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to Slack
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
+          MESSAGE: ${{ inputs.message }}
+        run: |
+          payload=$(jq -nc --arg channel "$SLACK_CHANNEL" --arg text "$MESSAGE" '{channel: $channel, text: $text}')
+          curl -sS -X POST https://slack.com/api/chat.postMessage \
+            -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d "$payload" > /dev/null
