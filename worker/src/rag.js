@@ -1,4 +1,5 @@
 import { coding_decline_message, is_coding_question } from "./intent.js";
+import { no_match_quip } from "./quips.js";
 
 const TOP_K = 5;
 const MIN_SCORE = 0.4;
@@ -29,10 +30,7 @@ export async function rag_question_answer(env, query) {
   const matches = await rag_chunks_retrieve(env, embedding);
 
   if (matches.length === 0) {
-    return {
-      answer:
-        "🐈‍⬛ My whiskers came up empty — I couldn't find anything on that in the RLadies+ guide or website. Try rephrasing, or ask in #help-rladies and a human can pick up where my paws gave up.",
-    };
+    return { answer: no_match_quip() };
   }
 
   const context = matches

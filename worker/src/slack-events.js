@@ -1,4 +1,5 @@
 import { rag_question_answer } from "./rag.js";
+import { fetch_failure_quip } from "./quips.js";
 import { pending_link_key } from "./airtable-invite.js";
 import {
   slack_assistant_set_status,
@@ -206,7 +207,7 @@ async function slack_event_handle_mention(env, teamId, channel, messageTs, threa
     await slack_message_post(env, teamId, {
       channel,
       thread_ts: threadTs,
-      text: "🐈‍⬛ Sorry — I couldn't fetch an answer just now. *grooms paw, regroups* — try me again in a moment?",
+      text: fetch_failure_quip(),
     }).catch((e) => console.error("Fallback post failed:", e));
   }
 }
@@ -377,7 +378,7 @@ async function slack_event_handle_dm(env, teamId, channel, messageTs, threadTs, 
     }
     await slack_message_post(env, teamId, {
       ...postBase,
-      text: "🐈‍⬛ Sorry — I couldn't fetch an answer just now. *grooms paw, regroups* — try me again in a moment?",
+      text: fetch_failure_quip(),
     }).catch(() => {});
   }
 }
