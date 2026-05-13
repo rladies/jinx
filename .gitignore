@@ -13,3 +13,7 @@ inst/doc
 .dev.vars*
 !.dev.vars.example
 !.env.example
+
+# node (worker tests only)
+worker/node_modules/
+worker/coverage/

@@ -1,0 +1,48 @@
+name: Infra · Slack smoke test
+
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Infra · Deploy Worker"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Exercise deployed Slack worker
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run smoke test
+        env:
+          WORKER_URL: ${{ secrets.JINX_WORKER_URL }}
+          SLACK_HEALTHCHECK_BOT_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
+          SLACK_HEALTHCHECK_CHANNEL: ${{ secrets.SLACK_HEALTHCHECK_CHANNEL }}
+          SLACK_HEALTHCHECK_TEAM_ID: ${{ secrets.SLACK_HEALTHCHECK_TEAM_ID }}
+          SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
+        run: node worker/scripts/smoke-test.mjs
+
+      - name: Notify Slack on failure
+        if: failure() && env.SLACK_HEALTHCHECK_BOT_TOKEN != ''
+        env:
+          SLACK_HEALTHCHECK_BOT_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
+          SLACK_HEALTHCHECK_CHANNEL: ${{ secrets.SLACK_HEALTHCHECK_CHANNEL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          curl -sS -X POST https://slack.com/api/chat.postMessage \
+            -H "Authorization: Bearer $SLACK_HEALTHCHECK_BOT_TOKEN" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d "{\"channel\":\"$SLACK_HEALTHCHECK_CHANNEL\",\"text\":\"🚨 Jinx Slack smoke test failed — <$RUN_URL|run logs>\"}" \
+            > /dev/null
