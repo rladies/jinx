@@ -1,32 +1,35 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "jinx",
-  "main": "worker/src/index.js",
-  "compatibility_date": "2026-05-11",
-  "observability": {
-    "enabled": true
-  },
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
-  "vars": {
-    "GITHUB_REPO": "rladies/jinx",
-    "SLACK_COMMUNITY_TEAM_ID": "",
-    "SLACK_ORGANIZER_TEAM_ID": ""
-  },
-  "ai": {
-    "binding": "AI"
-  },
-  "vectorize": [
-    {
-      "binding": "RAG_INDEX",
-      "index_name": "rladies-content"
-    }
-  ],
-  "kv_namespaces": [
-    {
-      "binding": "SLACK_TOKENS",
-      "id": "5614aacb7982413e807c2ae2126a4b3b"
-    }
-  ]
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "jinx",
+	"main": "worker/src/index.js",
+	"compatibility_date": "2026-05-11",
+	"observability": {
+		"enabled": true
+	},
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"vars": {
+		"GITHUB_REPO": "rladies/jinx"
+	},
+	"ai": {
+		"binding": "AI"
+	},
+	"vectorize": [
+		{
+			"binding": "RAG_INDEX",
+			"index_name": "rladies-content"
+		},
+		{
+			"binding": "VECTORIZE",
+			"index_name": "rladies-content",
+			"remote": true
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "SLACK_TOKENS",
+			"id": "5614aacb7982413e807c2ae2126a4b3b"
+		}
+	]
 }
