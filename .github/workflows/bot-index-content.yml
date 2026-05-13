@@ -45,6 +45,7 @@ jobs:
         working-directory: indexer
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           VECTORIZE_INDEX: rladies-content
           RLADIESGUIDE_PATH: ${{ github.workspace }}/_sources/rladiesguide
