@@ -47,7 +47,7 @@ export async function slack_command_handle(env, ctx, body) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           response_type: "ephemeral",
-          text: `😿 Oops! Jinx couldn't start that command. The GitHub dispatch failed — please try again in a moment or let a maintainer know.\n\n_Error: ${err.message}_`,
+          text: "😿 Oops! Jinx couldn't start that command. Please try again in a moment or let a maintainer know.",
         }),
       });
     }
