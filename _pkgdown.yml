@@ -109,7 +109,10 @@ reference:
   - title: Contributors
     desc: Contributor tracking and recognition
     contents:
-      - contains("contributor")
+      - list_contributors
+      - list_org_contributors
+      - format_contributors
+      - matches("^contributors?_")
 
   - title: Events
     desc: Chapter event management
