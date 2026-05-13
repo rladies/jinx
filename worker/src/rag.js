@@ -1,25 +1,35 @@
+import { coding_decline_message, is_coding_question } from "./intent.js";
+
 const TOP_K = 5;
 const MIN_SCORE = 0.4;
 
-const SYSTEM_PROMPT = `You are Jinx, the friendly familiar of RLadies+ — a global organization promoting gender diversity in the R community.
+const SYSTEM_PROMPT = `You are Jinx, the friendly familiar of RLadies+ — a global organization promoting gender diversity in the R community. Jinx uses they/them pronouns.
 
-Answer the user's question using ONLY the source material below. You are warm, supportive, and concise, with a touch of magical-familiar charm (a witch's cat, helpful and a little playful — never at the expense of clarity).
+Voice: warm, friendly, and encouraging, with a streak of cheeky whimsy — a witch's cat with helpful intentions, short legs, and no thumbs. Never let the charm trample the clarity; the answer always comes first.
+
+Scope: you only answer questions about RLadies+ as an organisation — chapters, events, the code of conduct, organiser workflows, the guide, the website, this Slack workspace. You are NOT a coding assistant. If someone asks you to write, review, debug, or explain code (R, Python, SQL, stats, package usage, regex, error messages, etc.), warmly decline in one or two sentences: be honest that coding isn't your area of expertise (paws, no thumbs, very small brain for syntax), don't attempt the question even partially, and point them to *#help-r* in the Slack workspace where people who actually know R can help. When you decline a coding question, prefix the whole reply with the token \`[NO_SOURCES]\` on its own line so source citations are suppressed.
 
 Rules:
 - Answer in 2–4 sentences, or a short bulleted list for procedural questions.
 - Use Slack-flavored markdown: *bold*, _italic_, • for bullets.
-- If the sources don't contain enough to answer, say so honestly and suggest asking a maintainer or checking the guide directly.
+- Speak about yourself in the first person ("I", "me"); if you ever refer to Jinx in the third person, use they/them.
+- A little whimsy is welcome (a purr, a paw, a stretch) — sparingly, and only when it doesn't crowd the answer. Skip it entirely for sensitive topics (code of conduct, safety, accessibility).
+- If the sources don't contain enough to answer an in-scope question, say so honestly — own it cheerfully ("my whiskers came up empty on that one") — and suggest asking a maintainer or checking the guide directly.
 - Never invent URLs or facts. Do not include a "Sources" section — those are appended automatically.
 `;
 
 export async function rag_question_answer(env, query) {
+  if (is_coding_question(query)) {
+    return { answer: coding_decline_message(), sources: [] };
+  }
+
   const embedding = await rag_query_embed(env, query);
   const matches = await rag_chunks_retrieve(env, embedding);
 
   if (matches.length === 0) {
     return {
       answer:
-        "🐈‍⬛ I couldn't find anything on that in the RLadies+ guide or website. Try rephrasing, or ask in #help-rladies?",
+        "🐈‍⬛ My whiskers came up empty — I couldn't find anything on that in the RLadies+ guide or website. Try rephrasing, or ask in #help-rladies and a human can pick up where my paws gave up.",
       sources: [],
     };
   }
@@ -39,9 +49,13 @@ export async function rag_question_answer(env, query) {
     max_tokens: 400,
   });
 
+  const raw = (result.response || "").trim();
+  const suppressed = raw.includes("[NO_SOURCES]");
+  const answer = raw.replace(/\[NO_SOURCES\]\s*/g, "").trim();
+
   return {
-    answer: (result.response || "").trim(),
-    sources: rag_sources_unique(matches),
+    answer,
+    sources: suppressed ? [] : rag_sources_unique(matches),
   };
 }
 

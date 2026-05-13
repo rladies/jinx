@@ -36,7 +36,7 @@ export async function slack_command_handle(env, ctx, body) {
     );
     return Response.json({
       response_type: "ephemeral",
-      text: `🔮 On it — running \`/jinx ${command}\`...`,
+      text: `🔮 On it — running \`/jinx ${command}\` (give me a moment, I'm pawing at this one)...`,
     });
   }
 
@@ -60,7 +60,7 @@ export async function slack_command_handle(env, ctx, body) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           response_type: "ephemeral",
-          text: "😿 Oops! Jinx couldn't start that command. Please try again in a moment or let a maintainer know.",
+          text: "😿 Oops — I dropped that command behind the sofa and couldn't start it. Give it another try in a moment, or let a maintainer know.",
         }),
       });
     }
@@ -73,23 +73,25 @@ export async function slack_command_handle(env, ctx, body) {
 const ACKS = [
   "🔮 On it! Casting `/jinx {cmd}`...",
   "✨ One moment — conjuring `/jinx {cmd}` for you...",
-  "🐈‍⬛ Jinx stretches, yawns, and gets to work on `/jinx {cmd}`...",
+  "🐈‍⬛ I stretch, yawn, and get to work on `/jinx {cmd}`...",
   "💜 Say no more! Running `/jinx {cmd}`...",
   "🧹 Sweeping into action with `/jinx {cmd}`...",
   "📮 Message received! Working on `/jinx {cmd}`...",
   "🪄 Abracadabra... running `/jinx {cmd}`!",
-  "🐾 Padding over to handle `/jinx {cmd}`...",
+  "🐾 Padding over to handle `/jinx {cmd}` (short legs, doing my best)...",
   "⚡ Zap! On it — `/jinx {cmd}` coming right up...",
-  "🌙 Jinx heard you! Running `/jinx {cmd}`...",
+  "🌙 I heard you! Running `/jinx {cmd}`...",
   "🎀 Consider it done (well, almost) — running `/jinx {cmd}`...",
-  "☕ Jinx grabs a coffee and gets to work on `/jinx {cmd}`...",
-  "🔧 Tinkering away on `/jinx {cmd}`...",
+  "☕ I grab a coffee — well, knock one over — and get to work on `/jinx {cmd}`...",
+  "🔧 Tinkering away on `/jinx {cmd}`. Tricky without thumbs, but I manage...",
   "💫 Your wish is my command! Running `/jinx {cmd}`...",
   "🐈‍⬛ *purrs approvingly* — on it with `/jinx {cmd}`...",
+  "📜 Tail-typing my way through `/jinx {cmd}`...",
+  "🧶 Untangling `/jinx {cmd}` — bear with me, I'm a cat...",
 ];
 
 const WAIT_NOTE =
-  "\n_This may take a couple of minutes — Jinx will reply here when done._";
+  "\n_This may take a couple of minutes — my legs are short and I have no thumbs, but I'll reply here when I'm done._";
 
 function randomAck(command) {
   const template = ACKS[Math.floor(Math.random() * ACKS.length)];
@@ -109,7 +111,7 @@ async function fetchHelpText() {
     return "🔮 " + md.replace(/\|/g, "│").replace(/---/g, "———");
   } catch (e) {
     console.error("Failed to fetch help text:", e);
-    return "🔮 *Jinx* — I couldn't load the help text right now. Try `/jinx help` again in a moment, or check https://github.com/rladies/jinx";
+    return "🔮 *Jinx* — I couldn't load the help text right now (paws crossed it's just a hiccup). Try `/jinx help` again in a moment, or check https://github.com/rladies/jinx";
   }
 }
 

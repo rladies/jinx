@@ -62,13 +62,13 @@ export async function slash_local_handle(env, teamId, command, params, responseU
     }
   } catch (err) {
     console.error(`Local command "${verb}" failed:`, err);
-    await slash_respond(responseUrl, `😿 ${verb} failed: ${err.message}`);
+    await slash_respond(responseUrl, `😿 ${verb} didn't quite land — paws-up: ${err.message}`);
   }
 }
 
 async function slash_setup_channel(env, teamId, channelId, channelName, responseUrl) {
   if (!channelId) {
-    await slash_respond(responseUrl, "Run this from inside the channel you want to set up.");
+    await slash_respond(responseUrl, "Pop into the channel you want to set up and run this again — I can only tidy the room I'm standing in.");
     return;
   }
 
@@ -76,7 +76,7 @@ async function slash_setup_channel(env, teamId, channelId, channelName, response
   try {
     info = await slack_conversations_info(env, teamId, channelId);
   } catch (e) {
-    await slash_respond(responseUrl, `Can't see <#${channelId}>: ${e.message}`);
+    await slash_respond(responseUrl, `I can't quite see into <#${channelId}> from here: ${e.message}`);
     return;
   }
 
@@ -91,7 +91,7 @@ async function slash_setup_channel(env, teamId, channelId, channelName, response
   if (!isMember && isPrivate) {
     await slash_respond(
       responseUrl,
-      `🐈‍⬛ I'm not in <#${channelId}> yet — invite me first (it's a private channel), then run \`/jinx setup-channel\` again.`
+      `🐈‍⬛ I'm not in <#${channelId}> yet (and I can't let myself in — no thumbs!). Invite me first, since it's a private channel, then run \`/jinx setup-channel\` again.`
     );
     return;
   }
@@ -141,13 +141,13 @@ async function slash_remind_me(env, teamId, userId, args, responseUrl) {
   if (!when || !what) {
     await slash_respond(
       responseUrl,
-      "Please separate time and reminder text with a `|`. Example: `/jinx remind-me in 30 minutes | check the chapter onboarding queue`"
+      "Pop a `|` between the time and the reminder so I can tell them apart. Example: `/jinx remind-me in 30 minutes | check the chapter onboarding queue`"
     );
     return;
   }
 
   await slack_reminders_add(env, teamId, { text: what, time: when, user: userId });
-  await slash_respond(responseUrl, `⏰ Set a reminder for <@${userId}>: *${what}* (${when})`);
+  await slash_respond(responseUrl, `⏰ Tied a string round my paw for <@${userId}>: *${what}* (${when})`);
 }
 
 async function slash_pair(env, teamId, callerId, args, responseUrl) {
@@ -164,13 +164,13 @@ async function slash_pair(env, teamId, callerId, args, responseUrl) {
 
   const others = userIds.filter((id) => id !== callerId);
   if (others.length === 0) {
-    await slash_respond(responseUrl, "Mention at least one other person to pair with.");
+    await slash_respond(responseUrl, "Tag at least one other human — I'm a cat, not a conversation.");
     return;
   }
   if (others.length > 7) {
     await slash_respond(
       responseUrl,
-      `Slack group DMs cap at 8 people including you, so I can pair you with at most 7 others (you mentioned ${others.length}).`
+      `Slack group DMs cap at 8 people including you, so I can pair you with at most 7 others (you mentioned ${others.length}). Even my whiskers can only stretch so far.`
     );
     return;
   }
@@ -179,7 +179,7 @@ async function slash_pair(env, teamId, callerId, args, responseUrl) {
   const res = await slack_conversations_open(env, teamId, { users });
   const channelId = res?.channel?.id;
   if (!channelId) {
-    await slash_respond(responseUrl, "😿 Couldn't open the group DM.");
+    await slash_respond(responseUrl, "😿 I fumbled the group DM open — try again in a moment?");
     return;
   }
 
@@ -187,7 +187,7 @@ async function slash_pair(env, teamId, callerId, args, responseUrl) {
   const intro = `🔮 <@${callerId}> opened this group DM with ${mentionList}` +
     (message ? `:\n\n${message}` : ".");
   await slack_message_post(env, teamId, { channel: channelId, text: intro });
-  await slash_respond(responseUrl, `✉️ Opened a group DM with ${mentionList}.`);
+  await slash_respond(responseUrl, `✉️ Nudged open a group DM with ${mentionList}.`);
 }
 
 function parse_pair_args(args) {
@@ -202,7 +202,7 @@ function parse_pair_args(args) {
 
 async function slash_feedback(env, teamId, args, responseUrl) {
   if (!env.SLACK_TOKENS) {
-    await slash_respond(responseUrl, "🐈‍⬛ Feedback log isn't configured.");
+    await slash_respond(responseUrl, "🐈‍⬛ My feedback log isn't set up yet — nothing to peek at.");
     return;
   }
 
@@ -233,7 +233,7 @@ async function slash_feedback(env, teamId, args, responseUrl) {
   if (totals.size === 0) {
     await slash_respond(
       responseUrl,
-      `📊 No reaction signal yet in the last ${days} day${days === 1 ? "" : "s"}. Once people react to Jinx's answers, the counts show up here.`
+      `📊 No reactions on my answers in the last ${days} day${days === 1 ? "" : "s"} — either I'm doing great or no one's looking. 🐈‍⬛ Once folks react with 👍 / 👎 / ❤️, the counts will land here.`
     );
     return;
   }

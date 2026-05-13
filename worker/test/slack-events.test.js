@@ -114,7 +114,7 @@ describe("slack_event_handle", () => {
     const posts = calls.filter((c) => c.url.includes("chat.postMessage"));
     expect(posts).toHaveLength(1);
     const body = JSON.parse(posts[0].init.body);
-    expect(body.text).toMatch(/only runs in/i);
+    expect(body.text).toMatch(/only roam in/i);
     expect(body.thread_ts).toBe("1.0");
   });
 
