@@ -1,0 +1,22 @@
+{
+  "title": "RLadies+ Q&A with Jinx",
+  "prompts_title": "Try asking…",
+  "prompts": [
+    {
+      "title": "What is RLadies+?",
+      "message": "What is RLadies+ and what does it stand for?"
+    },
+    {
+      "title": "Start a chapter",
+      "message": "How do I start an RLadies+ chapter?"
+    },
+    {
+      "title": "Code of conduct",
+      "message": "Where can I find the RLadies+ code of conduct?"
+    },
+    {
+      "title": "Upcoming events",
+      "message": "What RLadies+ events are coming up?"
+    }
+  ]
+}

@@ -6,6 +6,8 @@
 
 .jinx-sprite img {
   display: block;
+  height: 200px;
+  width: auto;
 }
 
 [data-bs-theme="dark"] .jinx-sprite,

@@ -30,6 +30,12 @@
 | `/jinx translate validate [lang]`           | Validate translation placeholders                         |
 | `/jinx slack-invite <email>`                | Post a Slack invite request for an organiser to action    |
 | `/jinx remind stale`                        | Send reminders on stale issues                            |
+| `/jinx setup-channel`                       | Pin RLadies+ resource bookmarks in the current channel    |
+| `/jinx pair @alice @bob [message]`          | Open a group DM with mentioned users (up to 7)            |
+| `/jinx remind-me <when> \| <what>`          | Set a personal Slack reminder for yourself                |
+| `/jinx feedback [days]`                     | Show reaction signal on Jinx's recent answers             |
 | `/jinx help`                                | Show this help message                                    |
 
 **Teams:** abstract-review, blog, campaigns, chapter-activity, chapter-onboarding, coc, communications, community-slack, conference-liaison, directory, meetup-pro, mentoring, rocur, translation, website
+
+**DM Jinx or open the Assistant panel** to ask any RLadies+ question — Jinx searches the guide and the website. React to Jinx's answers with 👍 / 👎 / ❤️ so we can track which replies are useful.

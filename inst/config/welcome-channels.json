@@ -1,0 +1,47 @@
+{
+  "coc_url": "https://rladies.org/about/coc/",
+  "common": [
+    { "name": "general", "desc": "workspace-wide announcements" },
+    { "name": "help-r", "desc": "ask questions about R and R-related tools" },
+    {
+      "name": "blogs-by-rladies",
+      "desc": "a feed of new posts from across the RLadies+ blog network"
+    },
+    { "name": "jobs", "desc": "job listings shared by the community" }
+  ],
+  "community": {
+    "welcome_channel": "welcome",
+    "help_channel": "help-how_to_slack",
+    "extras": [
+      {
+        "name": "events_global",
+        "desc": "global community events, meetups, and conferences"
+      },
+      { "name": "career-advice", "desc": "career questions and advice" },
+      {
+        "name": "whereintheworld",
+        "desc": "find other RLadies+ members in cities you are travelling to"
+      },
+      { "name": "random", "desc": "off-topic chatter and introductions" }
+    ]
+  },
+  "organisers": {
+    "welcome_channel": "welcome",
+    "help_channel": "help-how_to_slack",
+    "extras": [
+      {
+        "name": "help-ask_the_leadership",
+        "desc": "ask questions to RLadies+ leadership"
+      },
+      {
+        "name": "online-meetups",
+        "desc": "chat about online meetups and events"
+      },
+      {
+        "name": "new-chapters",
+        "desc": "starting and onboarding new chapters"
+      },
+      { "name": "events", "desc": "event and conference planning" }
+    ]
+  }
+}

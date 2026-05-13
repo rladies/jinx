@@ -1,6 +1,6 @@
 # Privacy Policy
 
-_Last updated: 2026-05-12_
+_Last updated: 2026-05-13_
 
 Jinx is a Slack app and GitHub bot maintained by volunteers for the **RLadies+** organization. It exists to help RLadies+ run its community operations — answering questions about the RLadies+ Guide, and running organization commands such as inviting members, generating reports, and reminding maintainers about stale issues.
 
@@ -58,11 +58,14 @@ The Worker does not store the question or the answer outside of Cloudflare's sta
 | ----------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | Slack request payloads (in transit) | Cloudflare Worker memory                    | Discarded as soon as the request completes                                                                                           |
 | Worker observability logs           | Cloudflare                                  | Per [Cloudflare's data retention](https://developers.cloudflare.com/workers/observability/logs/) — currently 7 days for Workers Logs |
-| Command audit trail                 | GitHub Actions run logs in rladies/jinx     | Per GitHub's retention — 90 days by default for public repos                                                                         |
+| Command audit trail                 | GitHub Actions run logs in rladies/jinx     | 14 days (repo-level retention configured on rladies/jinx)                                                                            |
 | `@Jinx` question text               | Sent to Cloudflare Workers AI for inference | Per [Cloudflare's AI data policy](https://www.cloudflare.com/trust-hub/) — inputs are not used to train models                       |
 | RAG content index                   | Cloudflare Vectorize (`rladies-content`)    | Contains only public RLadies+ Guide and website text, no user data                                                                   |
+| Pending Slack-invite email          | Cloudflare KV (`SLACK_TOKENS`)              | 90 days after an organiser marks the invite sent, or consumed (and deleted) the moment the member joins the workspace                |
+| Reaction feedback (per-emoji count) | Cloudflare KV (`SLACK_TOKENS`)              | 180 days — counts only, no message text or user identifiers                                                                          |
+| Workspace install metadata          | Cloudflare KV (`SLACK_TOKENS`)              | Until the app is uninstalled from the workspace                                                                                      |
 
-Jinx does **not** maintain its own database of users, conversations, or personal information.
+Jinx maintains a small Cloudflare KV store described in the table above. It does **not** store the content of your messages, the questions you ask, or the answers it gives, beyond the standard observability logs above.
 
 ## Who Jinx shares data with
 
@@ -80,7 +83,7 @@ You can ask the maintainers to:
 - Stop responding to your slash commands and mentions (you can also simply not invoke Jinx — Jinx never receives data unless you summon it).
 - Provide a list of the audit-trail entries that reference your Slack user ID.
 
-Send requests to **info@rladies.org** or open a private contact through a Global Team member. We aim to respond within 30 days.
+Send requests to **jinx@rladies.org** or open a private contact through a Global Team member. We aim to respond within 30 days.
 
 ## Security
 
