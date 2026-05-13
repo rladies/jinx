@@ -13,18 +13,12 @@ reference:
   - title: Commands
     desc: Issue comment command interface
     contents:
-      - command_parse
-      - command_execute
+      - starts_with("command_")
 
   - title: Team management
     desc: Global team onboarding and offboarding
     contents:
-      - global_team_invite
-      - global_team_check_invitations
-      - global_team_finalize_onboarding
-      - global_team_create_offboarding
-      - global_team_finalize_offboarding
-      - global_team_remind_stale
+      - starts_with("global_team_")
 
   - title: Announcements
     desc: Cross-platform blog post announcements
@@ -57,10 +51,8 @@ reference:
   - title: Blogs
     desc: Blog content management
     contents:
-      - blog_create_entry
-      - validate_blog_entry
-      - blog_check_links
-      - blog_post_checklist
+      - starts_with("blog_")
+      - contains("blog_entry")
 
   - title: Chapters
     desc: Chapter lifecycle management
@@ -74,9 +66,7 @@ reference:
   - title: Reports
     desc: Activity and health reporting
     contents:
-      - report_generate
-      - report_publish
-      - report_format_markdown
+      - starts_with("report_")
       - chapter_report_health
 
   - title: PR review
@@ -94,7 +84,7 @@ reference:
   - title: Website automation
     desc: Website PR management and contributor greetings
     contents:
-      - website_merge_pending
+      - contains("merge_pending")
       - greet_contributor
 
   - title: Chapter monitoring
@@ -106,19 +96,15 @@ reference:
   - title: Slack
     desc: Slack messaging and automation
     contents:
-      - slack_post_message
-      - slack_invite_send
-      - slack_invites_send
+      - starts_with("slack_")
       - subscribe_slack_rss
-      - slack_welcome_member
       - common_welcome_channels
       - default_welcome_channels
 
   - title: GHA dashboard
     desc: GitHub Actions workflow status
     contents:
-      - gha_generate_dashboard
-      - gha_publish_dashboard
+      - starts_with("gha_")
 
   - title: Contributors
     desc: Contributor tracking and recognition
@@ -126,17 +112,13 @@ reference:
       - list_contributors
       - list_org_contributors
       - format_contributors
-      - contributors_update
-      - contributor_welcome
-      - contributor_thank
+      - starts_with("contributors_")
+      - starts_with("contributor_")
 
   - title: Events
     desc: Chapter event management
     contents:
-      - events_list_chapter
-      - events_sync_chapters
-      - events_create_summary
-      - events_publish_summary
+      - starts_with("events_")
 
   - title: Analytics
     desc: Org-wide activity analytics
@@ -159,10 +141,7 @@ reference:
   - title: Conference coordination
     desc: CFP tracking and speaker recommendations
     contents:
-      - cfp_list_open
-      - cfp_create_issue
-      - cfp_check_deadlines
-      - cfp_recommend_speaker
+      - starts_with("cfp_")
       - list_speaker_recommendations
       - generate_conference_report
 
@@ -172,15 +151,12 @@ reference:
       - translate_template
       - list_supported_languages
       - get_chapter_language
-      - i18n_translations_validate
-      - i18n_coverage_check
+      - starts_with("i18n_")
 
   - title: Configuration
     desc: Config loading utilities
     contents:
-      - load_teams_config
-      - load_review_rules
-      - load_labels_config
+      - starts_with("load_")
 
   - title: Templates
     desc: Response and template utilities
