@@ -60,3 +60,14 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
         run: npx --yes wrangler@4 deploy
+
+  notify-failure:
+    name: Notify Slack on deploy failure
+    needs: [test, validate, deploy]
+    if: failure() && github.event_name == 'push'
+    uses: ./.github/workflows/reusable-slack-fail-notify.yml
+    with:
+      message: "🚨 Jinx worker deploy failed — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run logs> · <${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|commit>"
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
+      SLACK_CHANNEL: ${{ secrets.SLACK_HEALTHCHECK_CHANNEL }}

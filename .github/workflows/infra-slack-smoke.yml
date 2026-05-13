@@ -38,15 +38,12 @@ jobs:
           SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
         run: node worker/scripts/smoke-test.mjs
 
-      - name: Notify Slack on failure
-        if: failure() && env.SLACK_HEALTHCHECK_BOT_TOKEN != ''
-        env:
-          SLACK_HEALTHCHECK_BOT_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
-          SLACK_HEALTHCHECK_CHANNEL: ${{ secrets.SLACK_HEALTHCHECK_CHANNEL }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          curl -sS -X POST https://slack.com/api/chat.postMessage \
-            -H "Authorization: Bearer $SLACK_HEALTHCHECK_BOT_TOKEN" \
-            -H "Content-Type: application/json; charset=utf-8" \
-            -d "{\"channel\":\"$SLACK_HEALTHCHECK_CHANNEL\",\"text\":\"🚨 Jinx Slack smoke test failed — <$RUN_URL|run logs>\"}" \
-            > /dev/null
+  notify-failure:
+    needs: smoke
+    if: failure() && github.event_name != 'pull_request'
+    uses: ./.github/workflows/reusable-slack-fail-notify.yml
+    with:
+      message: "🚨 Jinx Slack smoke test failed — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run logs>"
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
+      SLACK_CHANNEL: ${{ secrets.SLACK_HEALTHCHECK_CHANNEL }}
