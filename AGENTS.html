@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="section level2">
 <h2 id="secrets">Secrets<a class="anchor" aria-label="anchor" href="#secrets"></a></h2>
 <p>All workflows use <code>actions/create-github-app-token@v1</code> with these <strong>repo secrets</strong> (not variables):</p>
-<table class="table"><colgroup><col width="26%"><col width="73%"></colgroup><thead><tr><th>Secret</th>
+<table class="table"><colgroup><col width="28%"><col width="71%"></colgroup><thead><tr><th>Secret</th>
 <th>Purpose</th>
 </tr></thead><tbody><tr><td><code>JINX_APP_ID</code></td>
 <td>GitHub App ID</td>
@@ -96,6 +96,16 @@ document.addEventListener("DOMContentLoaded", function() {
 <td>Meetup Pro JWT issuer for meetupr (event-sync.yml)</td>
 </tr><tr><td><code>AIRTABLE_API_KEY</code></td>
 <td>Airtable API key (airtable-sync.yml)</td>
+</tr><tr><td><code>JINX_WORKER_URL</code></td>
+<td>Deployed worker URL (infra-slack-smoke.yml)</td>
+</tr><tr><td><code>SLACK_ORGANISER_TOKEN</code></td>
+<td>Bot token for the organisers workspace (infra-slack-smoke.yml)</td>
+</tr><tr><td><code>SLACK_HEALTHCHECK_CHANNEL</code></td>
+<td>Channel ID for healthcheck postMessage/delete (infra-slack-smoke.yml)</td>
+</tr><tr><td><code>SLACK_HEALTHCHECK_TEAM_ID</code></td>
+<td>Team ID for the smoke-test workspace (infra-slack-smoke.yml)</td>
+</tr><tr><td><code>SLACK_SIGNING_SECRET</code></td>
+<td>Slack signing secret — used to sign synthetic worker requests</td>
 </tr></tbody></table><p>Always reference as <code>secrets.JINX_APP_ID</code>, never <code>vars.JINX_APP_ID</code>.</p>
 </div>
 <div class="section level2">
@@ -284,11 +294,18 @@ vignettes/            # getting-started.Rmd, workflows.Rmd</code></pre>
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">test</span><span class="op">(</span><span class="op">)</span>    <span class="co"># 330+ tests</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">check</span><span class="op">(</span><span class="op">)</span>   <span class="co"># must pass with 0 errors, 0 warnings</span></span></code></pre></div>
 <p>Run via zsh to ensure PATH includes <code>/opt/homebrew/bin</code> (pandoc, gh).</p>
+<div class="section level3">
+<h3 id="worker-tests">Worker tests<a class="anchor" aria-label="anchor" href="#worker-tests"></a></h3>
+<p>Worker JS has its own vitest suite (no R involved):</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="bu">cd</span> worker <span class="kw">&amp;&amp;</span> <span class="ex">npm</span> ci <span class="kw">&amp;&amp;</span> <span class="ex">npm</span> test     <span class="co"># unit tests, no network</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="bu">cd</span> worker <span class="kw">&amp;&amp;</span> <span class="ex">npm</span> run smoke           <span class="co"># hits real Slack + deployed worker</span></span></code></pre></div>
+<p>The vitest suite runs as a prereq of <code>infra-deploy-worker.yml</code>, so a failing test blocks deploy. The smoke test runs daily and after every successful deploy via <code>infra-slack-smoke.yml</code>, and posts to <code>SLACK_HEALTHCHECK_CHANNEL</code> on failure.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="pkgdown">pkgdown<a class="anchor" aria-label="anchor" href="#pkgdown"></a></h2>
 <p><code>_pkgdown.yml</code> defines reference sections grouped by module. Build with:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>Deployed to GitHub Pages via <code>.github/workflows/infra-pkgdown.yml</code>.</p>
 </div>
