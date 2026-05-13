@@ -32,7 +32,6 @@
 <url><loc>https://rladies.github.io/jinx/reference/collect_website_analytics.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/command_execute.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/command_parse.html</loc></url>
-<url><loc>https://rladies.github.io/jinx/reference/common_welcome_channels.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/compute_activity_trends.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/contributor_thank.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/contributor_welcome.html</loc></url>
@@ -41,7 +40,6 @@
 <url><loc>https://rladies.github.io/jinx/reference/create_chapter.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/create_chapter_json_pr.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/crop_directory_image.html</loc></url>
-<url><loc>https://rladies.github.io/jinx/reference/default_welcome_channels.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/events_create_summary.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/events_list_chapter.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/events_publish_summary.html</loc></url>
@@ -94,7 +92,6 @@
 <url><loc>https://rladies.github.io/jinx/reference/slack_invite_send.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/slack_invites_send.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/slack_post_message.html</loc></url>
-<url><loc>https://rladies.github.io/jinx/reference/slack_welcome_member.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/subscribe_slack_rss.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/sync_directory_airtable.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/sync_global_team_airtable.html</loc></url>

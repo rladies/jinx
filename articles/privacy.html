@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     
     
-<p><em>Last updated: 2026-05-12</em></p>
+<p><em>Last updated: 2026-05-13</em></p>
 <p>Jinx is a Slack app and GitHub bot maintained by volunteers for the
 <strong>RLadies+</strong> organization. It exists to help RLadies+ run
 its community operations — answering questions about the RLadies+ Guide,
@@ -214,7 +214,7 @@ data retention</a> — currently 7 days for Workers Logs</td>
 <tr class="odd">
 <td>Command audit trail</td>
 <td>GitHub Actions run logs in rladies/jinx</td>
-<td>Per GitHub’s retention — 90 days by default for public repos</td>
+<td>14 days (repo-level retention configured on rladies/jinx)</td>
 </tr>
 <tr class="even">
 <td>
@@ -229,10 +229,28 @@ data policy</a> — inputs are not used to train models</td>
 <td>Contains only public RLadies+ Guide and website text, no user
 data</td>
 </tr>
+<tr class="even">
+<td>Pending Slack-invite email</td>
+<td>Cloudflare KV (<code>SLACK_TOKENS</code>)</td>
+<td>90 days after an organiser marks the invite sent, or consumed (and
+deleted) the moment the member joins the workspace</td>
+</tr>
+<tr class="odd">
+<td>Reaction feedback (per-emoji count)</td>
+<td>Cloudflare KV (<code>SLACK_TOKENS</code>)</td>
+<td>180 days — counts only, no message text or user identifiers</td>
+</tr>
+<tr class="even">
+<td>Workspace install metadata</td>
+<td>Cloudflare KV (<code>SLACK_TOKENS</code>)</td>
+<td>Until the app is uninstalled from the workspace</td>
+</tr>
 </tbody>
 </table>
-<p>Jinx does <strong>not</strong> maintain its own database of users,
-conversations, or personal information.</p>
+<p>Jinx maintains a small Cloudflare KV store described in the table
+above. It does <strong>not</strong> store the content of your messages,
+the questions you ask, or the answers it gives, beyond the standard
+observability logs above.</p>
 </div>
 <div class="section level2">
 <h2 id="who-jinx-shares-data-with">Who Jinx shares data with<a class="anchor" aria-label="anchor" href="#who-jinx-shares-data-with"></a>
@@ -266,7 +284,7 @@ it).</li>
 <li>Provide a list of the audit-trail entries that reference your Slack
 user ID.</li>
 </ul>
-<p>Send requests to <strong><a href="mailto:info@rladies.org" class="email">info@rladies.org</a></strong> or open a private contact
+<p>Send requests to <strong><a href="mailto:jinx@rladies.org" class="email">jinx@rladies.org</a></strong> or open a private contact
 through a Global Team member. We aim to respond within 30 days.</p>
 </div>
 <div class="section level2">
