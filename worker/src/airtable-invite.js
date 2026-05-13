@@ -2,11 +2,13 @@ import { slack_token_get, slack_team_is_allowed } from "./slack-api.js";
 
 export async function airtable_webhook_handle(request, env) {
   const secret = env.AIRTABLE_WEBHOOK_SECRET;
-  if (secret) {
-    const provided = request.headers.get("x-airtable-secret");
-    if (provided !== secret) {
-      return new Response("Unauthorized", { status: 401 });
-    }
+  if (!secret) {
+    console.error("AIRTABLE_WEBHOOK_SECRET is not configured");
+    return new Response("Webhook not configured", { status: 500 });
+  }
+  const provided = request.headers.get("x-airtable-secret");
+  if (provided !== secret) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
   let payload;
@@ -23,6 +25,10 @@ export async function airtable_webhook_handle(request, env) {
 
   if (!email) {
     return new Response("Missing email", { status: 400 });
+  }
+
+  if (recordId && !/^rec[A-Za-z0-9]{14}$/.test(recordId)) {
+    return new Response("Invalid record_id", { status: 400 });
   }
 
   const blocks = slack_invite_request_blocks({ email, name, chapter, recordId });
