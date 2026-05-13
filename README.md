@@ -1,17 +1,17 @@
 # jinx <img src="man/figures/sprites/working.svg" align="right" height="200" alt="Jinx the cat, sitting at a laptop, working" />
 
-RLadies+ operations bot — an R package that runs via GitHub Actions
-as `jinx[bot]`, with a Cloudflare Worker bridging Slack to the same
-machinery.
+Jinx is the operations bot for [RLadies+](https://rladies.org/).
+It runs on GitHub Actions as `jinx[bot]`, with a Cloudflare Worker bridging Slack to the same machinery.
 
-Jinx helps with organiser onboarding, directory PR review, chapter
-monitoring, announcements, reports, event sync, translation checks,
-and Slack invites for the RLadies+ community.
+Organisers reach Jinx two ways — by typing `/jinx ...` in Slack, or by posting `/jinx ...` as a comment on any issue or PR in an RLadies+ repo.
+Either way, the same R package answers.
+
+Day to day, Jinx handles organiser onboarding, directory PR review, chapter monitoring, announcements, reports, event sync, translation checks, and Slack invites for the RLadies+ community.
 
 ## Documentation
 
-- User-facing docs for organisers live in the
-  [RLadies+ Guide](https://guide.rladies.org/).
-- Developer docs — package internals, workflows, the Slack app — live
-  in the [package vignettes](https://rladies.github.io/jinx/articles/).
-- Data-handling policy: [PRIVACY.md](PRIVACY.md).
+The [pkgdown site](https://rladies.github.io/jinx/) is split by audience:
+
+- **For organisers using Jinx** — [Getting started](https://rladies.github.io/jinx/articles/jinx.html) and [The Jinx Slack app](https://rladies.github.io/jinx/articles/slack-app.html).
+- **For admins maintaining Jinx** — [Operating Jinx](https://rladies.github.io/jinx/articles/workflows.html) and [How Jinx is built](https://rladies.github.io/jinx/articles/architecture.html).
+- **For everyone** — day-to-day RLadies+ organising lives in the [RLadies+ Guide](https://guide.rladies.org/); data handling is in [PRIVACY.md](PRIVACY.md).
