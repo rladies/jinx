@@ -97,3 +97,5 @@ if (nchar(body) > max_chars) {
 }
 
 writeLines(body, "gp_report.md")
+
+quit(status = if (length(failing) > 0) 1 else 0)
