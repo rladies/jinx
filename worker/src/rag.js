@@ -29,8 +29,16 @@ Rules:
 - A little whimsy is welcome (a purr, a paw, a stretch) — sparingly, and only when it doesn't crowd the answer. Skip it entirely for sensitive topics (code of conduct, safety, accessibility).
 - **Branding is non-negotiable**: always write the organisation name as *RLadies+* — one word, no hyphen, trailing plus. Never write "R-Ladies", "R-Ladies+", "RLadies" (without the plus), or "R Ladies". This applies even when the source material you are quoting uses an older variant; correct it silently. The only exceptions are literal URLs and handles (e.g. *r-ladies.slack.com*, the *@rladies* GitHub org) which must stay as-is.
 - If the sources don't contain enough to answer an in-scope question, say so honestly — own it cheerfully ("my whiskers came up empty on that one") — and suggest asking a maintainer or checking the guide directly.
-- Weave at most two citations into the prose itself, using Slack link syntax around the most directly relevant phrase ("you can read more in the <URL|chapter onboarding guide>"). Pick the source that best answers the question; don't tack a link onto every sentence, and don't append a separate "Sources" section. If no source in the material below is a good fit for the answer, leave links out entirely.
-- Never invent URLs. Only link to URLs that appear verbatim in the source material below.
+
+Linking (do this — it is not optional):
+- Always include 1–2 inline Slack-formatted links in your answer, drawn from the URLs marked "Source URL:" in the material below. Wrap a relevant phrase, never a bare URL.
+- Pick the source that most directly answers the question. Don't tack a link onto every sentence, and don't append a separate "Sources" section.
+- Never invent URLs. Only link to URLs that appear verbatim under "Source URL:" below. If — and only if — none of the sources are relevant to the question, omit links.
+- If a user asks "can you give me links / sources / where can I read more", treat that as a request to *include* links in your answer, not a yes/no question. Don't refuse.
+
+Worked example (style only — the URLs and topic will differ):
+Question: How do I start an RLadies+ chapter?
+Answer: Chapters start by filling out the new-chapter form, then waiting for a Global Team review. You can find the full walkthrough in the <https://guide.rladies.org/organize/new-chapter/|new chapter guide>, and the application itself lives on the <https://rladies.org/about-us/start-rladies/|main RLadies+ site>.
 `;
 
 export async function rag_question_answer(env, query) {
@@ -45,22 +53,47 @@ export async function rag_question_answer(env, query) {
     return { answer: no_match_quip() };
   }
 
-  const context = matches
-    .map(
-      (m, i) =>
-        `--- Source ${i + 1}: ${m.metadata.title}${m.metadata.heading ? ` › ${m.metadata.heading}` : ""}\nURL: ${m.metadata.url}\n${m.metadata.text}`
-    )
-    .join("\n\n");
-
   const result = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: `Question: ${query}\n\nSource material:\n${context}` },
-    ],
+    messages: rag_build_messages(query, matches),
     max_tokens: 400,
   });
 
-  return { answer: (result.response || "").trim() };
+  const raw = (result.response || "").trim();
+  const answer = rag_repair_links(raw, rag_source_urls(matches));
+  return { answer };
+}
+
+const BROKEN_SCHEME_RE = /<(ttps?:\/\/)/g;
+const SLACK_LINK_RE = /<(https?:\/\/[^\s|>]+)\|([^>]+)>/g;
+
+export function rag_repair_links(text, allowed_urls) {
+  if (!text) return text;
+  const allowed = new Set(allowed_urls || []);
+  return text
+    .replace(BROKEN_SCHEME_RE, "<h$1")
+    .replace(SLACK_LINK_RE, (full, url, label) =>
+      allowed.has(url) ? full : label.trim()
+    );
+}
+
+export function rag_build_messages(query, matches) {
+  const context = matches
+    .map((m, i) => {
+      const heading = m.metadata.heading ? ` › ${m.metadata.heading}` : "";
+      return `--- Source ${i + 1}: ${m.metadata.title}${heading}\nSource URL: ${m.metadata.url}\n\n${m.metadata.text}\n\n(Linkable as: <${m.metadata.url}|${m.metadata.title}>)`;
+    })
+    .join("\n\n");
+
+  return [
+    { role: "system", content: SYSTEM_PROMPT },
+    { role: "user", content: `Question: ${query}\n\nSource material:\n${context}` },
+  ];
+}
+
+export function rag_source_urls(matches) {
+  return matches
+    .map((m) => m?.metadata?.url)
+    .filter((u) => typeof u === "string" && u.length > 0);
 }
 
 async function rag_query_embed(env, text) {
@@ -83,7 +116,11 @@ export function rerank_matches(matches, now_seconds) {
       const source_weight =
         SOURCE_WEIGHTS[m.metadata?.source_type] ?? DEFAULT_SOURCE_WEIGHT;
       const recency = recency_factor(m.metadata?.date, now_seconds);
-      return { ...m, adjusted_score: m.score * source_weight * recency };
+      const audience = audience_penalty(m.metadata?.url);
+      return {
+        ...m,
+        adjusted_score: m.score * source_weight * recency * audience,
+      };
     })
     .sort((a, b) => b.adjusted_score - a.adjusted_score);
 }
@@ -92,4 +129,12 @@ function recency_factor(date_seconds, now_seconds) {
   if (!date_seconds || date_seconds <= 0) return 1.0;
   const age = Math.max(0, now_seconds - date_seconds);
   return Math.pow(0.5, age / RECENCY_HALF_LIFE_SECONDS);
+}
+
+// Guide pages under /global-team/ are maintainer-facing meta-docs
+// (e.g. "Editing and publishing the Code of Conduct") and should rank
+// below the canonical user-facing resources they describe.
+function audience_penalty(url) {
+  if (typeof url !== "string") return 1.0;
+  return /\/global-team\//.test(url) ? 0.7 : 1.0;
 }
