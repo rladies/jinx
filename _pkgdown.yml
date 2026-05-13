@@ -6,8 +6,30 @@ template:
 
 navbar:
   structure:
-    left: [intro, reference, articles]
-    right: [search, github]
+    left: [intro, reference, articles, news]
+    right: [privacy, search, github]
+  components:
+    privacy:
+      text: Privacy
+      href: articles/privacy.html
+
+articles:
+  - title: Get started
+    navbar: ~
+    contents:
+      - getting-started
+  - title: Using Jinx
+    navbar: For users
+    contents:
+      - slack-app
+  - title: Operating Jinx
+    navbar: For admins
+    contents:
+      - articles/architecture
+      - workflows
+  - title: Policies
+    contents:
+      - articles/privacy
 
 reference:
   - title: Commands

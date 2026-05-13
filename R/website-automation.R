@@ -116,7 +116,7 @@ try_squash_merge <- function(pr, org, repo) {
 #' @export
 blog_post_checklist <- function(owner, repo, pr_number) {
   checklist <- paste(
-    "Thank you for submitting a blogpost to R-Ladies!",
+    "Thank you for submitting a blogpost to RLadies+!",
     "",
     "## Content Checklist",
     "- [ ] Ensure the PR is kept as a draft until you are ready for review.",

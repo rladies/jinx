@@ -6,6 +6,7 @@
 \title{Send reminders on stale global team onboarding/offboarding issues}
 \usage{
 global_team_remind_stale(org = "rladies", days = 30, repo = "global-team")
+
 gt_remind_stale(org = "rladies", days = 30, repo = "global-team")
 }
 \arguments{

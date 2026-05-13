@@ -5,7 +5,13 @@
 \alias{gt_create_offboarding}
 \title{Create a global team offboarding issue}
 \usage{
-global_team_create_offboarding(username, team, name = username, org = "rladies")
+global_team_create_offboarding(
+  username,
+  team,
+  name = username,
+  org = "rladies"
+)
+
 gt_create_offboarding(username, team, name = username, org = "rladies")
 }
 \arguments{

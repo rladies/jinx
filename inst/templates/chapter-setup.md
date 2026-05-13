@@ -13,11 +13,11 @@ The @rladies/chapter-onboarding team will:
 
 The @rladies/chapter-onboarding team will:
 
--  [ ] send information on how to get a new chapter started by sending the email template available on the [R-Ladies Guide](https://guide.rladies.org/coordination/onboarding/#appendix-a)
--  [ ] send prospective organizers the [R-Ladies Organizers form](https://rladies.org/form/organiser)
--  [ ] invite prospective organizers to the R-Ladies Community Slack
+-  [ ] send information on how to get a new chapter started by sending the email template available on the [RLadies+ Guide](https://guide.rladies.org/coordination/onboarding/#appendix-a)
+-  [ ] send prospective organizers the [RLadies+ Organizers form](https://rladies.org/form/organiser)
+-  [ ] invite prospective organizers to the RLadies+ Community Slack
 -  [ ] check that the requested information are well filled in the [Airtable Form](https://airtable.com/appM6GuE0Jl1UI9qx/tblU3jxWDxrv8QaVa/viwP7ggEpGgVEf2A5)
--  [ ] if everything looks good in the form, invite organizers to the R-Ladies Organizers Slack
+-  [ ] if everything looks good in the form, invite organizers to the RLadies+ Organizers Slack
 -  [ ] post a message here to request @rladies/email and @rladies/meetup-pro to create the chapter infrastructure. The email team requires the email address of the prospective chapter organizer to be able to set everything up.
 
 ### Creating chapter infrastructure

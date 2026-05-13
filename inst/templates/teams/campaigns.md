@@ -4,5 +4,5 @@
 - [ ] Check the [branding-materials](https://github.com/rladies/branding-materials) repository
 - [ ] Have a look at existing resources for [IWD campaigns](https://github.com/rladies/IWD)
 - [ ] Read the blog post explaining the campaigns [2019](https://rladies.org/blog/2019-03-25-blog_iwdtwitter_2019/) and [2018](https://rladies.org/blog/2018-03-26-ideation_and_creation/)
-- Join these channels in the R-Ladies Organizers Slack.
+- Join these channels in the RLadies+ Organizers Slack.
     - [ ] [#branding](https://r-ladies.slack.com/archives/C3F839PRT)

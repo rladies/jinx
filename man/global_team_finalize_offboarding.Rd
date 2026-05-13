@@ -6,6 +6,7 @@
 \title{Finalize global team offboarding by removing user from teams}
 \usage{
 global_team_finalize_offboarding(username, team, org = "rladies")
+
 gt_finalize_offboarding(username, team, org = "rladies")
 }
 \arguments{

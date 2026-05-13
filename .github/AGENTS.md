@@ -1,6 +1,6 @@
 # jinx
 
-R package powering the R-Ladies GitHub organization bot. Deployed as a GitHub App (`jinx[bot]`) via GitHub Actions workflows.
+R package powering the RLadies+ GitHub organization bot. Deployed as a GitHub App (`jinx[bot]`) via GitHub Actions workflows.
 
 ## Architecture
 
