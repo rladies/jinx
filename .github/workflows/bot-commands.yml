@@ -13,7 +13,10 @@ jobs:
   handle:
     if: >-
       github.event_name == 'repository_dispatch' ||
-      startsWith(github.event.comment.body, '/jinx ')
+      (
+        startsWith(github.event.comment.body, '/jinx ') &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+      )
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rladies/jinx-bot:latest
