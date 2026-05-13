@@ -44,7 +44,7 @@ describe("empty_event_df", {
   })
 })
 
-describe("create_event_summary", {
+describe("events_create_summary", {
   it("formats a weekly summary with events", {
     events <- data.frame(
       title = c("Intro to R", "ggplot2 Workshop"),
@@ -55,7 +55,7 @@ describe("create_event_summary", {
       chapter = c("rladies-berlin", "rladies-london"),
       stringsAsFactors = FALSE
     )
-    result <- create_event_summary(events, "weekly")
+    result <- events_create_summary(events, "weekly")
     expect_true(grepl("weekly", result, ignore.case = TRUE))
     expect_true(grepl("2 events", result, fixed = TRUE))
     expect_true(grepl("2 chapters", result, fixed = TRUE))
@@ -64,25 +64,25 @@ describe("create_event_summary", {
   })
 
   it("handles empty events", {
-    result <- create_event_summary(empty_event_df(), "monthly")
+    result <- events_create_summary(empty_event_df(), "monthly")
     expect_true(grepl("No events found", result, fixed = TRUE))
   })
 })
 
 describe("event command parsing", {
   it("parses /jinx events <chapter>", {
-    cmd <- parse_command("/jinx events rladies-berlin")
+    cmd <- command_parse("/jinx events rladies-berlin")
     expect_identical(cmd$action, "events")
     expect_identical(cmd$chapter, "rladies-berlin")
   })
 
   it("parses /jinx events sync", {
-    cmd <- parse_command("/jinx events sync")
+    cmd <- command_parse("/jinx events sync")
     expect_identical(cmd$action, "events-sync")
   })
 
   it("returns error for bare events command", {
-    cmd <- parse_command("/jinx events")
+    cmd <- command_parse("/jinx events")
     expect_identical(cmd$action, "error")
   })
 })

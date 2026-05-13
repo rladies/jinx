@@ -1,9 +1,12 @@
-name: Global Team - 02 - Check Invitations
+name: Ops · Global Team · 02 Check Invitations
 
 on:
   schedule:
     - cron: "0 */6 * * *"
   workflow_dispatch: {}
+
+permissions:
+  contents: read
 
 jobs:
   check:
@@ -51,7 +54,7 @@ jobs:
                     gh::gh(
                       "POST /repos/{repo}/actions/workflows/{workflow_id}/dispatches",
                       repo = Sys.getenv("GH_REPO"),
-                      workflow_id = "global-team-finalize.yml",
+                      workflow_id = "ops-global-team-finalize.yml",
                       ref = "main",
                       inputs = list(
                         username = details$username,

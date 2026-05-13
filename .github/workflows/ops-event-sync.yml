@@ -1,17 +1,12 @@
-name: Airtable Sync
+name: Ops · Event Sync
 
 on:
   schedule:
-    - cron: "0 0 * * FRI"
+    - cron: "30 9 * * 1"
   workflow_dispatch:
-    inputs:
-      target:
-        description: What to sync
-        required: true
-        type: choice
-        options:
-          - directory
-          - global-team
+
+permissions:
+  contents: read
 
 jobs:
   sync:
@@ -38,17 +33,16 @@ jobs:
         with:
           extra-packages: local::.
 
-      - name: Sync from Airtable
+      - name: Sync and publish events
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+          MEETUP_API_KEY: ${{ secrets.MEETUP_API_KEY }}
+          MEETUPR_JWT_TOKEN: ${{ secrets.MEETUPR_JWT_TOKEN }}
+          MEETUPR_CLIENT_ID: ${{ secrets.MEETUPR_CLIENT_ID }}
+          MEETUPR_JWT_ISSUER: ${{ secrets.MEETUPR_JWT_ISSUER }}
         run: |
           Rscript -e '
-            target <- "${{ inputs.target }}"
-            if (target == "" || target == "directory") {
-              jinx::sync_directory_airtable()
-            }
-            if (target == "" || target == "global-team") {
-              jinx::sync_global_team_airtable()
-            }
+            events <- jinx::events_sync_chapters(dry_run = FALSE)
+            summary <- jinx::events_create_summary(events, "weekly")
+            jinx::events_publish_summary(summary)
           '

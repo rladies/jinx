@@ -33,16 +33,16 @@ See [PRIVACY.md](PRIVACY.md) for the data-handling policy.
 | Area            | Highlights                                                                                            |
 | --------------- | ----------------------------------------------------------------------------------------------------- |
 | Team management | `gt_invite()`, `gt_create_offboarding()`, `gt_finalize_offboarding()`, `gt_remind_stale()`            |
-| Chapters        | `create_chapter()`, `create_chapter_setup()`, `monitor_chapter_status()`, `report_chapter_health()`   |
+| Chapters        | `create_chapter()`, `chapter_create_setup()`, `monitor_chapter_status()`, `chapter_report_health()`   |
 | Directory       | `validate_directory_pr()`, `validate_entry_filename()`, `verify_social_handles()`, `optimize_image()` |
-| Blog            | `create_blog_entry()`, `check_blog_links()`, `auto_merge_pending()`                                   |
+| Blog            | `blog_create_entry()`, `blog_check_links()`, `website_merge_pending()`                                   |
 | Announcements   | `announce_post()` cross-posts to Bluesky, LinkedIn, Mastodon + newsletter                             |
-| Reports         | `generate_report()`, `format_analytics_markdown()`, `collect_website_analytics()`                     |
-| Events          | `list_chapter_events()`, `sync_chapter_events()`, `create_event_summary()`                            |
-| Conferences     | `add_cfp()`, `check_cfp_deadlines()`, `recommend_speaker()`                                           |
-| Contributors    | `welcome_contributor()`, `list_org_contributors()`, `update_contributors_md()`                        |
-| i18n            | `validate_translations()`, `check_translation_coverage()`                                             |
-| Slack           | `send_slack_invite()`, `post_slack_message()`, `welcome_slack_member()`                               |
+| Reports         | `report_generate()`, `format_analytics_markdown()`, `collect_website_analytics()`                     |
+| Events          | `events_list_chapter()`, `events_sync_chapters()`, `events_create_summary()`                            |
+| Conferences     | `add_cfp()`, `cfp_check_deadlines()`, `cfp_recommend_speaker()`                                           |
+| Contributors    | `contributor_welcome()`, `list_org_contributors()`, `update_contributors_md()`                        |
+| i18n            | `i18n_translations_validate()`, `i18n_coverage_check()`                                             |
+| Slack           | `slack_invite_send()`, `slack_post_message()`, `slack_welcome_member()`                               |
 
 `/jinx help` in Slack or any issue comment prints the full slash-command
 reference. The same list lives in
@@ -78,7 +78,7 @@ on:
     types: [opened, reopened, synchronize]
 jobs:
   review:
-    uses: rladies/jinx/.github/workflows/pr-review.yml@main
+    uses: rladies/jinx/.github/workflows/reusable-pr-review.yml@main
     secrets: inherit
 ```
 
@@ -87,7 +87,7 @@ jobs:
 The worker at `https://jinx.rladies.workers.dev` handles the OAuth
 install flow, slash commands, `@`-mention events, and the Airtable
 invite approval pipeline. Worker source is in [`worker/src/`](worker/src/);
-deploy via `.github/workflows/deploy-worker.yml`. Required worker
+deploy via `.github/workflows/infra-deploy-worker.yml`. Required worker
 secrets and KV bindings are documented in
 [`.github/AGENTS.md`](.github/AGENTS.md#cloudflare-worker).
 
@@ -126,7 +126,7 @@ functions; the `gh` package authenticates via the App-minted
 
 Bot-facing workflows use the prebuilt `ghcr.io/rladies/jinx-bot:latest`
 image so they boot with the current package already installed. The
-image is rebuilt by `.github/workflows/build-bot-image.yml` when the
+image is rebuilt by `.github/workflows/infra-build-bot-image.yml` when the
 runtime files change.
 
 ```
@@ -136,7 +136,7 @@ Slack / issue comment / cron
 GitHub Actions workflow
         │  (jinx[bot] App-token authed)
         ▼
-jinx::parse_command() ─► jinx::execute_command()
+jinx::cmd_parse() ─► jinx::cmd_execute()
         │
         ▼
 gh::gh() API call as jinx[bot]

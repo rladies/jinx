@@ -1,12 +1,15 @@
-name: Auto-Merge Pending Blog Posts
+name: Ops · Report · Weekly Activity
 
 on:
   schedule:
-    - cron: "58 10 * * *"
+    - cron: "0 10 * * 1"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  merge:
+  report:
     runs-on: ubuntu-latest
     steps:
       - name: Generate app token
@@ -30,8 +33,11 @@ jobs:
         with:
           extra-packages: local::.
 
-      - name: Auto-merge pending PRs
+      - name: Generate and publish report
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          Rscript -e 'jinx::auto_merge_pending()'
+          Rscript -e '
+            report <- jinx::report_generate(type = "weekly")
+            jinx::report_publish(report)
+          '

@@ -75,7 +75,7 @@ gt_create_offboarding("octocat", "blog")
 
 **What happens:**
 
-1. `create_chapter_setup()` opens a setup tracking issue
+1. `chapter_create_setup()` opens a setup tracking issue
 2. The issue contains a checklist: create repos, add organizers, configure
    Meetup, set up social media
 3. `create_chapter()` generates the chapter JSON for the directory
@@ -88,7 +88,7 @@ gt_create_offboarding("octocat", "blog")
 
 ## Monitoring chapter health
 
-**Scheduled workflow** runs periodically via `check_chapter_health()`.
+**Scheduled workflow** runs periodically via `chapter_check_health()`.
 
 **Via issue comment:**
 ```
@@ -119,9 +119,9 @@ prepare_inactivity_emails(statuses)
 
 **What happens:**
 
-1. `create_blog_entry()` fetches metadata from the URL
+1. `blog_create_entry()` fetches metadata from the URL
 2. Creates a YAML entry and opens a PR to the blog repo
-3. `post_blog_checklist()` adds a review checklist to the PR
+3. `blog_post_checklist()` adds a review checklist to the PR
 
 ### Checking blog links
 
@@ -129,11 +129,11 @@ prepare_inactivity_emails(statuses)
 /jinx blog-check-links
 ```
 
-Runs `check_blog_links()` to find broken URLs across all blog entries.
+Runs `blog_check_links()` to find broken URLs across all blog entries.
 
 ### Auto-merge on publish date
 
-`auto_merge_pending()` runs on a schedule and merges blog PRs whose
+`website_merge_pending()` runs on a schedule and merges blog PRs whose
 publish date has arrived. This is triggered by the
 `website-merge-pending.yml` workflow.
 
@@ -168,8 +168,8 @@ Each platform is posted independently -- failures on one do not block others.
 **Programmatically:**
 ```{r}
 #| eval: false
-report <- generate_report(type = "weekly")
-publish_report(report)
+report <- report_generate(type = "weekly")
+report_publish(report)
 ```
 
 ### Chapter health reports
@@ -180,7 +180,7 @@ publish_report(report)
 
 ```{r}
 #| eval: false
-url <- report_chapter_health()
+url <- chapter_report_health()
 ```
 
 ## Managing the GHA dashboard
@@ -191,8 +191,8 @@ url <- report_chapter_health()
 
 **What happens:**
 
-1. `generate_gha_dashboard()` queries workflow run status across all org repos
-2. `publish_gha_dashboard()` posts a formatted status table as a GitHub issue
+1. `gha_generate_dashboard()` queries workflow run status across all org repos
+2. `gha_publish_dashboard()` posts a formatted status table as a GitHub issue
 
 **Scheduled workflow** runs weekly via `gha-dashboard.yml`.
 
@@ -204,7 +204,7 @@ url <- report_chapter_health()
 ```{r}
 #| eval: false
 sync_directory_airtable()
-sync_global_team_airtable()
+sync_gt_airtable()
 ```
 
 Syncs directory entries and global team data between Airtable and GitHub.
@@ -214,7 +214,7 @@ Creates PRs for any changes detected.
 
 ```{r}
 #| eval: false
-send_slack_invites(dry_run = TRUE)
+slack_invites_send(dry_run = TRUE)
 ```
 
 Fetches pending invitees from Airtable and sends Slack workspace
@@ -259,8 +259,8 @@ modify directory entries. It checks:
 
 **Automated greetings:**
 
-- `welcome_contributor()` posts a welcome comment on first-time PRs
-- `thank_contributor()` posts a thank-you when PRs are merged
+- `contributor_welcome()` posts a welcome comment on first-time PRs
+- `contributor_thank()` posts a thank-you when PRs are merged
 
 Both are triggered by the `welcome-contributor.yml` and
 `thank-contributor.yml` workflows.

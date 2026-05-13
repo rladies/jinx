@@ -26,7 +26,7 @@ common_welcome_channels <- function() {
 #' have somewhere obvious to head first. The list starts with the
 #' channels shared by both workspaces (see [common_welcome_channels()])
 #' and then adds workspace-specific extras. Override by passing your
-#' own list to [welcome_slack_member()].
+#' own list to [slack_welcome_member()].
 #'
 #' @param workspace One of `"community"` or `"organisers"`.
 #' @return A list of named character vectors with `name` and `desc`.
@@ -104,7 +104,7 @@ default_help_channel <- function(workspace = c("community", "organisers")) {
 #' @param token Slack API token. Defaults to `Sys.getenv("SLACK_TOKEN")`.
 #' @return API response (invisibly).
 #' @export
-welcome_slack_member <- function(
+slack_welcome_member <- function(
   user_id,
   workspace = c("community", "organisers"),
   coc_url = "https://rladies.org/about/coc/",

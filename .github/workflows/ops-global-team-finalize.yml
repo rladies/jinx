@@ -1,37 +1,23 @@
-name: Global Team - Offboard
+name: Ops · Global Team · 03 Finalize
 
 on:
   workflow_dispatch:
     inputs:
-      team:
-        type: choice
-        description: Team
+      username:
+        description: GitHub username
         required: true
-        options:
-          - abstract-review
-          - blog
-          - campaigns
-          - chapter-activity
-          - chapter-onboarding
-          - coc
-          - communications
-          - community-slack
-          - conference-liaison
-          - directory
-          - meetup-pro
-          - mentoring
-          - rocur
-          - translation
-          - website
       name:
         description: Full name
         required: true
-      username:
-        description: GitHub username (without @)
+      team:
+        description: Team slug
         required: true
 
+permissions:
+  contents: read
+
 jobs:
-  offboard:
+  finalize:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -51,12 +37,12 @@ jobs:
         with:
           extra-packages: local::.
 
-      - name: Create offboarding issue
+      - name: Finalize global team onboarding
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           Rscript -e '
-            jinx::gt_create_offboarding(
+            jinx::gt_finalize_onboarding(
               username = "${{ inputs.username }}",
               team = "${{ inputs.team }}",
               name = "${{ inputs.name }}"

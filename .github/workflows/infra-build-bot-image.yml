@@ -1,11 +1,11 @@
-name: Build Jinx Bot Image
+name: Infra · Build Bot Image
 
 on:
   push:
     branches: [main]
     paths:
       - ".github/images/jinx-bot/**"
-      - ".github/workflows/build-bot-image.yml"
+      - ".github/workflows/infra-build-bot-image.yml"
       - "DESCRIPTION"
       - "NAMESPACE"
       - "LICENSE"
@@ -15,7 +15,7 @@ on:
   pull_request:
     paths:
       - ".github/images/jinx-bot/**"
-      - ".github/workflows/build-bot-image.yml"
+      - ".github/workflows/infra-build-bot-image.yml"
       - "DESCRIPTION"
       - "NAMESPACE"
       - "LICENSE"

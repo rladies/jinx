@@ -1,4 +1,4 @@
-name: Global Team - 01 - Invite
+name: Ops · Global Team · Offboard Start
 
 on:
   workflow_dispatch:
@@ -30,12 +30,11 @@ on:
         description: GitHub username (without @)
         required: true
 
-concurrency:
-  group: global-team-${{ inputs.username }}-${{ inputs.team }}
-  cancel-in-progress: true
+permissions:
+  contents: read
 
 jobs:
-  invite:
+  offboard:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,24 +54,14 @@ jobs:
         with:
           extra-packages: local::.
 
-      - name: Invite global team member
+      - name: Create offboarding issue
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           Rscript -e '
-            jinx::gt_invite(
+            jinx::gt_create_offboarding(
               username = "${{ inputs.username }}",
               team = "${{ inputs.team }}",
               name = "${{ inputs.name }}"
             )
           '
-
-      - name: Save global team onboarding details
-        run: |
-          echo '{"username": "${{ inputs.username }}", "name": "${{ inputs.name }}", "team": "${{ inputs.team }}"}' > global-team-details.json
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: global-team-${{ inputs.username }}-${{ inputs.team }}
-          path: global-team-details.json
-          retention-days: 7

@@ -7,7 +7,7 @@
 #' @return Data frame with columns: title, date, url, rsvp_count, source,
 #'   chapter.
 #' @export
-list_chapter_events <- function(chapter, months = 3) {
+events_list_chapter <- function(chapter, months = 3) {
   events <- tryCatch(
     {
       meetup_list_events(chapter, months = months)
@@ -35,7 +35,7 @@ list_chapter_events <- function(chapter, months = 3) {
 #' @param dry_run If `TRUE`, print what would be synced without acting.
 #' @return Data frame of all events (invisibly).
 #' @export
-sync_chapter_events <- function(
+events_sync_chapters <- function(
   org = "rladies",
   target_repo = "event-archive",
   months = 3,
@@ -55,7 +55,7 @@ sync_chapter_events <- function(
 
   for (ch in chapters) {
     cli::cli_alert_info("Fetching events for {ch}")
-    events <- list_chapter_events(ch, months = months)
+    events <- events_list_chapter(ch, months = months)
     if (nrow(events) > 0) {
       all_events[[length(all_events) + 1]] <- events
     }
@@ -91,12 +91,12 @@ sync_chapter_events <- function(
 
 #' Create a formatted event summary
 #'
-#' @param events Data frame from [list_chapter_events()] or
-#'   [sync_chapter_events()].
+#' @param events Data frame from [events_list_chapter()] or
+#'   [events_sync_chapters()].
 #' @param period Summary period label.
 #' @return Formatted markdown string.
 #' @export
-create_event_summary <- function(events, period = c("weekly", "monthly")) {
+events_create_summary <- function(events, period = c("weekly", "monthly")) {
   period <- match.arg(period)
 
   if (nrow(events) == 0) {
@@ -145,12 +145,12 @@ create_event_summary <- function(events, period = c("weekly", "monthly")) {
 
 #' Publish event summary as a GitHub issue
 #'
-#' @param summary Formatted summary from [create_event_summary()].
+#' @param summary Formatted summary from [events_create_summary()].
 #' @param org GitHub organization.
 #' @param target_repo Repository to publish to.
 #' @return Issue URL (invisibly).
 #' @export
-publish_event_summary <- function(
+events_publish_summary <- function(
   summary,
   org = "rladies",
   target_repo = "global-team"

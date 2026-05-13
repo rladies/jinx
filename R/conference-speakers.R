@@ -10,7 +10,7 @@
 #' @param repo Repository where CFP issues are tracked.
 #' @return Comment URL (invisibly).
 #' @export
-recommend_speaker <- function(
+cfp_recommend_speaker <- function(
   conference,
   speaker_name,
   speaker_github = NULL,
@@ -18,7 +18,7 @@ recommend_speaker <- function(
   org = "rladies",
   repo = "global-team"
 ) {
-  cfps <- list_open_cfps(org = org, repo = repo)
+  cfps <- cfp_list_open(org = org, repo = repo)
 
   matched <- cfps[grepl(conference, cfps$conference, ignore.case = TRUE), ]
   if (nrow(matched) == 0) {
@@ -89,7 +89,7 @@ list_speaker_recommendations <- function(
   org = "rladies",
   repo = "global-team"
 ) {
-  cfps <- list_open_cfps(org = org, repo = repo)
+  cfps <- cfp_list_open(org = org, repo = repo)
   matched <- cfps[grepl(conference, cfps$conference, ignore.case = TRUE), ]
 
   if (nrow(matched) == 0) {

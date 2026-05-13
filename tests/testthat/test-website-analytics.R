@@ -114,34 +114,34 @@ describe("format_website_analytics", {
 
 describe("parse_website_analytics_command", {
   it("parses /jinx website-analytics with default period", {
-    cmd <- parse_command("/jinx website-analytics")
+    cmd <- command_parse("/jinx website-analytics")
     expect_identical(cmd$action, "website-analytics")
     expect_identical(cmd$period, "30d")
   })
 
   it("parses /jinx website-analytics with specified period", {
-    cmd <- parse_command("/jinx website-analytics 7d")
+    cmd <- command_parse("/jinx website-analytics 7d")
     expect_identical(cmd$action, "website-analytics")
     expect_identical(cmd$period, "7d")
 
-    cmd <- parse_command("/jinx website-analytics 12mo")
+    cmd <- command_parse("/jinx website-analytics 12mo")
     expect_identical(cmd$period, "12mo")
   })
 
   it("returns error for invalid period", {
-    cmd <- parse_command("/jinx website-analytics 3d")
+    cmd <- command_parse("/jinx website-analytics 3d")
     expect_identical(cmd$action, "error")
     expect_true(grepl("period", cmd$message, fixed = TRUE))
   })
 
   it("parses natural language: /jinx generate website analytics", {
-    cmd <- parse_command("/jinx generate website analytics")
+    cmd <- command_parse("/jinx generate website analytics")
     expect_identical(cmd$action, "website-analytics")
     expect_identical(cmd$period, "30d")
   })
 
   it("parses natural language with period", {
-    cmd <- parse_command("/jinx generate website analytics 7d")
+    cmd <- command_parse("/jinx generate website analytics 7d")
     expect_identical(cmd$action, "website-analytics")
     expect_identical(cmd$period, "7d")
   })

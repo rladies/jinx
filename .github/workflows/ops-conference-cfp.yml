@@ -1,12 +1,15 @@
-name: Weekly Activity Report
+name: Ops · Conference CFP Check
 
 on:
   schedule:
-    - cron: "0 10 * * 1"
+    - cron: "0 9 * * 1"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  report:
+  check-deadlines:
     runs-on: ubuntu-latest
     steps:
       - name: Generate app token
@@ -30,11 +33,10 @@ jobs:
         with:
           extra-packages: local::.
 
-      - name: Generate and publish report
+      - name: Check CFP deadlines
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           Rscript -e '
-            report <- jinx::generate_report(type = "weekly")
-            jinx::publish_report(report)
+            jinx::cfp_check_deadlines(warn_days = 7)
           '

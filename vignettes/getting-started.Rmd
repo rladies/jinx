@@ -26,7 +26,7 @@ GitHub App identity (`jinx[bot]`).
 Issue comment (/jinx invite ...)
   -> issue_comment workflow triggers
     -> installs jinx R package
-      -> calls jinx::parse_command() + jinx::execute_command()
+      -> calls jinx::cmd_parse() + jinx::cmd_execute()
         -> gh::gh() API calls as jinx[bot]
           -> reply comment posted
 ```
@@ -86,14 +86,14 @@ is installed. Commands start with `/jinx` followed by an action:
 /jinx help
 ```
 
-Commands are parsed by `parse_command()` and dispatched by
-`execute_command()`:
+Commands are parsed by `cmd_parse()` and dispatched by
+`cmd_execute()`:
 
 ```{r}
 #| eval: false
 library(jinx)
 
-cmd <- parse_command("/jinx invite @octocat to website")
+cmd <- cmd_parse("/jinx invite @octocat to website")
 cmd
 #> $action
 #> [1] "invite"
@@ -112,16 +112,16 @@ jinx is organized into modules, each handling a specific domain:
 | Team management | `gt_invite()`, `gt_create_offboarding()`, `gt_finalize_onboarding()` |
 | Announcements | `announce_post()`, `post_bluesky()`, `post_mastodon()` |
 | Directory | `validate_directory_pr()`, `crop_directory_image()` |
-| Blogs | `create_blog_entry()`, `check_blog_links()` |
-| Chapters | `create_chapter()`, `check_chapter_health()` |
-| Reports | `generate_report()`, `publish_report()` |
+| Blogs | `blog_create_entry()`, `blog_check_links()` |
+| Chapters | `create_chapter()`, `chapter_check_health()` |
+| Reports | `report_generate()`, `report_publish()` |
 | PR review | `review_pr()`, `check_pr_naming()` |
-| Airtable sync | `sync_directory_airtable()`, `sync_global_team_airtable()` |
-| Website | `auto_merge_pending()`, `greet_contributor()` |
+| Airtable sync | `sync_directory_airtable()`, `sync_gt_airtable()` |
+| Website | `website_merge_pending()`, `greet_contributor()` |
 | Chapter monitoring | `monitor_chapter_status()`, `prepare_inactivity_emails()` |
-| Slack | `send_slack_invites()`, `subscribe_slack_rss()` |
-| GHA dashboard | `generate_gha_dashboard()`, `publish_gha_dashboard()` |
-| Contributors | `list_contributors()`, `update_contributors_list()` |
+| Slack | `slack_invites_send()`, `subscribe_slack_rss()` |
+| GHA dashboard | `gha_generate_dashboard()`, `gha_publish_dashboard()` |
+| Contributors | `list_contributors()`, `contributors_update()` |
 
 ## Configuration
 
@@ -173,7 +173,7 @@ on:
     types: [opened, reopened, synchronize]
 jobs:
   review:
-    uses: rladies/jinx/.github/workflows/pr-review.yml@main
+    uses: rladies/jinx/.github/workflows/reusable-pr-review.yml@main
     secrets: inherit
 ```
 

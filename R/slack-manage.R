@@ -15,7 +15,7 @@ slack_invitees_base_id <- function() {
 #' @param dry_run If `TRUE` (default), only returns prepared emails.
 #' @return Data frame of prepared emails (invisibly).
 #' @export
-send_slack_invites <- function(
+slack_invites_send <- function(
   invite_link,
   base_id = slack_invitees_base_id(),
   api_key = Sys.getenv("AIRTABLE_API_KEY"),
@@ -98,7 +98,7 @@ send_slack_invites <- function(
 #' @return A single status string suitable for posting back as a PR
 #'   comment.
 #' @export
-send_slack_invite <- function(
+slack_invite_send <- function(
   email,
   channel = Sys.getenv("SLACK_INVITE_REQUEST_CHANNEL"),
   base_id = slack_invitees_base_id(),
@@ -120,7 +120,7 @@ send_slack_invite <- function(
   }
 
   text <- invite_request_message(email)
-  resp <- post_slack_message(text, channel, token)
+  resp <- slack_post_message(text, channel, token)
 
   if (!isTRUE(resp$ok)) {
     cli::cli_abort(c(
@@ -232,7 +232,7 @@ subscribe_slack_rss <- function(
 #' @param token Slack API token. Defaults to `Sys.getenv("SLACK_TOKEN")`.
 #' @return API response (invisibly).
 #' @export
-post_slack_message <- function(
+slack_post_message <- function(
   text,
   channel,
   token = Sys.getenv("SLACK_TOKEN")

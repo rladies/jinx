@@ -1,6 +1,6 @@
-import { getSlackToken, isAllowedTeam } from "./slack-api.js";
+import { slack_token_get, slack_team_is_allowed } from "./slack-api.js";
 
-export async function handleAirtableWebhook(request, env) {
+export async function airtable_webhook_handle(request, env) {
   const secret = env.AIRTABLE_WEBHOOK_SECRET;
   if (secret) {
     const provided = request.headers.get("x-airtable-secret");
@@ -25,9 +25,9 @@ export async function handleAirtableWebhook(request, env) {
     return new Response("Missing email", { status: 400 });
   }
 
-  const blocks = inviteRequestBlocks({ email, name, chapter, recordId });
+  const blocks = slack_invite_request_blocks({ email, name, chapter, recordId });
 
-  const token = await getSlackToken(env, env.SLACK_COMMUNITY_TEAM_ID);
+  const token = await slack_token_get(env, env.SLACK_COMMUNITY_TEAM_ID);
 
   const res = await fetch("https://slack.com/api/chat.postMessage", {
     method: "POST",
@@ -51,7 +51,7 @@ export async function handleAirtableWebhook(request, env) {
   return new Response("OK", { status: 200 });
 }
 
-export async function handleSlackInteraction(env, ctx, body) {
+export async function slack_interaction_handle(env, ctx, body) {
   const params = new URLSearchParams(body);
 
   let interaction;
@@ -67,7 +67,7 @@ export async function handleSlackInteraction(env, ctx, body) {
 
   const teamId = interaction.team?.id;
   const responseUrl = interaction.response_url;
-  if (!isAllowedTeam(env, teamId)) {
+  if (!slack_team_is_allowed(env, teamId)) {
     console.warn(`Rejected interaction from team ${teamId}`);
     if (responseUrl) {
       ctx.waitUntil(
@@ -93,32 +93,32 @@ export async function handleSlackInteraction(env, ctx, body) {
   const adminUser = interaction.user?.username || "unknown";
 
   if (action.action_id === "invite_approve") {
-    ctx.waitUntil(processApproval(env, actionData, adminUser, responseUrl));
+    ctx.waitUntil(slack_invite_process_approval(env, actionData, adminUser, responseUrl));
   } else if (action.action_id === "invite_deny") {
-    ctx.waitUntil(processDenial(env, actionData, adminUser, responseUrl));
+    ctx.waitUntil(slack_invite_process_denial(env, actionData, adminUser, responseUrl));
   } else if (action.action_id === "invite_mark_sent") {
-    ctx.waitUntil(processInviteSent(env, actionData, adminUser, responseUrl));
+    ctx.waitUntil(slack_invite_process_sent(env, actionData, adminUser, responseUrl));
   }
 
   return new Response("", { status: 200 });
 }
 
-async function processApproval(env, data, approver, responseUrl) {
+async function slack_invite_process_approval(env, data, approver, responseUrl) {
   await fetch(responseUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       replace_original: true,
-      blocks: approvalChecklistBlocks(data.email, approver, data.record_id),
+      blocks: slack_invite_approval_checklist_blocks(data.email, approver, data.record_id),
       text: `Approved by @${approver} - invite ${data.email} manually`,
     }),
   });
 }
 
-async function processInviteSent(env, data, sender, responseUrl) {
+async function slack_invite_process_sent(env, data, sender, responseUrl) {
   try {
     if (data.record_id && env.AIRTABLE_API_KEY) {
-      await updateAirtableRecord(env, data.record_id, { invited: true });
+      await airtable_record_update(env, data.record_id, { invited: true });
     }
 
     const approverLine = data.approver
@@ -146,9 +146,9 @@ async function processInviteSent(env, data, sender, responseUrl) {
   }
 }
 
-async function processDenial(env, data, adminUser, responseUrl) {
+async function slack_invite_process_denial(env, data, adminUser, responseUrl) {
   if (data.record_id && env.AIRTABLE_API_KEY) {
-    await updateAirtableRecord(env, data.record_id, { denied: true }).catch(
+    await airtable_record_update(env, data.record_id, { denied: true }).catch(
       (err) => console.error("Airtable update failed:", err)
     );
   }
@@ -163,7 +163,7 @@ async function processDenial(env, data, adminUser, responseUrl) {
   });
 }
 
-async function updateAirtableRecord(env, recordId, fields) {
+async function airtable_record_update(env, recordId, fields) {
   const table = encodeURIComponent(env.AIRTABLE_TABLE_NAME || "Table 1");
   const res = await fetch(
     `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${table}/${recordId}`,
@@ -183,7 +183,7 @@ async function updateAirtableRecord(env, recordId, fields) {
   }
 }
 
-function inviteRequestBlocks({ email, name, chapter, recordId }) {
+function slack_invite_request_blocks({ email, name, chapter, recordId }) {
   return [
     {
       type: "header",
@@ -224,7 +224,7 @@ function inviteRequestBlocks({ email, name, chapter, recordId }) {
   ];
 }
 
-function approvalChecklistBlocks(email, approver, recordId) {
+function slack_invite_approval_checklist_blocks(email, approver, recordId) {
   return [
     {
       type: "header",

@@ -1,5 +1,5 @@
-export async function dispatchToGitHub(env, payload) {
-  const token = await mintInstallationToken(env);
+export async function github_dispatch_send(env, payload) {
+  const token = await github_token_mint_installation(env);
 
   const response = await fetch(
     `https://api.github.com/repos/${env.GITHUB_REPO}/dispatches`,
@@ -25,8 +25,8 @@ export async function dispatchToGitHub(env, payload) {
   }
 }
 
-async function mintInstallationToken(env) {
-  const jwt = await createJWT(env.JINX_APP_ID, env.JINX_PRIVATE_KEY);
+async function github_token_mint_installation(env) {
+  const jwt = await github_jwt_create(env.JINX_APP_ID, env.JINX_PRIVATE_KEY);
 
   const installRes = await fetch(`https://api.github.com/app/installations`, {
     headers: {
@@ -69,7 +69,7 @@ async function mintInstallationToken(env) {
   return token;
 }
 
-async function createJWT(appId, privateKeyPem) {
+async function github_jwt_create(appId, privateKeyPem) {
   const now = Math.floor(Date.now() / 1000);
 
   const header = { alg: "RS256", typ: "JWT" };
@@ -90,7 +90,7 @@ async function createJWT(appId, privateKeyPem) {
   const payloadB64 = b64url(payload);
   const signingInput = `${headerB64}.${payloadB64}`;
 
-  const key = await importPrivateKey(privateKeyPem);
+  const key = await github_private_key_import(privateKeyPem);
   const sig = await crypto.subtle.sign(
     "RSASSA-PKCS1-v1_5",
     key,
@@ -105,7 +105,7 @@ async function createJWT(appId, privateKeyPem) {
   return `${headerB64}.${payloadB64}.${sigB64}`;
 }
 
-async function importPrivateKey(pem) {
+async function github_private_key_import(pem) {
   const pemContents = pem
     .replace(/-----BEGIN RSA PRIVATE KEY-----/, "")
     .replace(/-----END RSA PRIVATE KEY-----/, "")

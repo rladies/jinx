@@ -103,7 +103,7 @@ describe("format_analytics_markdown", {
 
 describe("analytics command parsing", {
   it("parses /jinx analytics", {
-    cmd <- parse_command("/jinx analytics")
+    cmd <- command_parse("/jinx analytics")
     expect_identical(cmd$action, "analytics")
   })
 })

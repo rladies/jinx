@@ -1,16 +1,16 @@
-import { handleSlackEvent } from "./slack-events.js";
-import { handleSlackInstall, handleSlackOAuthCallback } from "./slack-oauth.js";
+import { slack_event_handle } from "./slack-events.js";
+import { slack_oauth_install_handle, slack_oauth_callback_handle } from "./slack-oauth.js";
 import {
-  handleAirtableWebhook,
-  handleSlackInteraction,
+  airtable_webhook_handle,
+  slack_interaction_handle,
 } from "./airtable-invite.js";
-import { handleSlashCommand } from "./slash-command.js";
-import { verifySlackSignature } from "./slack-api.js";
+import { slack_command_handle } from "./slash-command.js";
+import { slack_signature_verify } from "./slack-api.js";
 
 const SLACK_ROUTES = {
-  "/slack/command": handleSlashCommand,
-  "/slack/events": handleSlackEvent,
-  "/slack/interact": handleSlackInteraction,
+  "/slack/command": slack_command_handle,
+  "/slack/events": slack_event_handle,
+  "/slack/interact": slack_interaction_handle,
 };
 
 export default {
@@ -18,10 +18,10 @@ export default {
     const url = new URL(request.url);
 
     if (request.method === "GET" && url.pathname === "/slack/install") {
-      return handleSlackInstall(env, url);
+      return slack_oauth_install_handle(env, url);
     }
     if (request.method === "GET" && url.pathname === "/slack/oauth") {
-      return handleSlackOAuthCallback(request, env);
+      return slack_oauth_callback_handle(request, env);
     }
 
     if (request.method !== "POST") {
@@ -31,7 +31,7 @@ export default {
     }
 
     if (url.pathname === "/airtable/webhook") {
-      return handleAirtableWebhook(request, env);
+      return airtable_webhook_handle(request, env);
     }
 
     const slackHandler = SLACK_ROUTES[url.pathname];
@@ -44,7 +44,7 @@ export default {
     const signature = request.headers.get("x-slack-signature");
 
     if (
-      !(await verifySlackSignature(
+      !(await slack_signature_verify(
         env.SLACK_SIGNING_SECRET,
         timestamp,
         body,

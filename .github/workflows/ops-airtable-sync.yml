@@ -1,24 +1,23 @@
-name: Chapter Onboarding
+name: Ops · Airtable Sync
 
 on:
+  schedule:
+    - cron: "0 0 * * FRI"
   workflow_dispatch:
     inputs:
-      action:
-        description: Action to perform
+      target:
+        description: What to sync
         required: true
         type: choice
         options:
-          - setup
-          - update
-      city:
-        description: Chapter city
-        required: true
-      country:
-        description: Chapter country
-        required: true
+          - directory
+          - global-team
+
+permissions:
+  contents: read
 
 jobs:
-  onboard:
+  sync:
     runs-on: ubuntu-latest
     steps:
       - name: Generate app token
@@ -42,21 +41,17 @@ jobs:
         with:
           extra-packages: local::.
 
-      - name: Run chapter onboarding
+      - name: Sync from Airtable
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
         run: |
           Rscript -e '
-            if ("${{ inputs.action }}" == "setup") {
-              jinx::create_chapter_setup(
-                city = "${{ inputs.city }}",
-                country = "${{ inputs.country }}",
-                organizers = character(0)
-              )
-            } else {
-              jinx::create_chapter_update(
-                city = "${{ inputs.city }}",
-                country = "${{ inputs.country }}"
-              )
+            target <- "${{ inputs.target }}"
+            if (target == "" || target == "directory") {
+              jinx::sync_directory_airtable()
+            }
+            if (target == "" || target == "global-team") {
+              jinx::sync_gt_airtable()
             }
           '

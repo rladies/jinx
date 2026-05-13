@@ -12,7 +12,7 @@
 #' @param org Organization name.
 #' @return Comment URL or `NULL` if author is a team member (invisibly).
 #' @export
-welcome_contributor <- function(
+contributor_welcome <- function(
   owner,
   repo,
   number,
@@ -60,7 +60,7 @@ welcome_contributor <- function(
 #' @param org Organization name.
 #' @return Comment URL (invisibly).
 #' @export
-thank_contributor <- function(owner, repo, pr_number, author, org = "rladies") {
+contributor_thank <- function(owner, repo, pr_number, author, org = "rladies") {
   if (is_bot(author)) {
     return(invisible(NULL))
   }
@@ -198,7 +198,7 @@ format_contributors <- function(
 #' @param format Format for the contributor list.
 #' @return PR URL if changes were made, `NULL` otherwise (invisibly).
 #' @export
-update_contributors_list <- function(
+contributors_update <- function(
   owner,
   repo,
   file_path = ".github/contributors.md",

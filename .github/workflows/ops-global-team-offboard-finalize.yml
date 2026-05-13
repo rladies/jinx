@@ -1,8 +1,11 @@
-name: Global Team - Offboard Finalize
+name: Ops · Global Team · Offboard Finalize
 
 on:
   issues:
     types: [closed]
+
+permissions:
+  contents: read
 
 jobs:
   finalize:

@@ -10,7 +10,7 @@
 #' @return A named list with `action` and action-specific fields, or `NULL`
 #'   if the comment is not a jinx command.
 #' @export
-parse_command <- function(body) {
+command_parse <- function(body) {
   body <- trimws(body)
   if (!startsWith(body, "/jinx ")) {
     return(NULL)
@@ -48,6 +48,12 @@ parse_command <- function(body) {
     help = list(action = "help"),
     list(action = "unknown", raw = paste(parts, collapse = " "))
   )
+}
+
+#' @rdname command_parse
+#' @export
+cmd_parse <- function(body) {
+  command_parse(body)
 }
 
 parse_invite_command <- function(parts) {
@@ -268,10 +274,10 @@ parse_contributors_command <- function(parts) {
 #' responsible for routing the message to the right destination (GitHub
 #' issue comment, Slack, R console, etc.).
 #'
-#' @param command Parsed command list from [parse_command()].
+#' @param command Parsed command list from [command_parse()].
 #' @return Character string with the response message.
 #' @export
-execute_command <- function(command) {
+command_execute <- function(command) {
   if (is.null(command)) {
     return(invisible(NULL))
   }
@@ -282,7 +288,7 @@ execute_command <- function(command) {
     invite = {
       config <- load_teams_config()
       if (command$team %in% team_slugs(config)) {
-        gt_invite(command$username, command$team)
+        global_team_invite(command$username, command$team)
         glue::glue(
           "Invitation sent to @{command$username}",
           " for the **{command$team}** team."
@@ -297,7 +303,7 @@ execute_command <- function(command) {
     offboard = {
       config <- load_teams_config()
       if (command$team %in% team_slugs(config)) {
-        gt_create_offboarding(command$username, command$team)
+        global_team_create_offboarding(command$username, command$team)
         glue::glue(
           "Offboarding initiated for @{command$username}",
           " from the **{command$team}** team."
@@ -310,11 +316,11 @@ execute_command <- function(command) {
       }
     },
     "slack-invite" = {
-      send_slack_invite(command$email)
+      slack_invite_send(command$email)
     },
     report = {
-      report <- generate_report(type = command$type)
-      format_report_markdown(report)
+      report <- report_generate(type = command$type)
+      report_format_markdown(report)
     },
     announce = {
       glue::glue("Announcing post: {command$url}")
@@ -326,7 +332,7 @@ execute_command <- function(command) {
     },
     "blog-check-links" = "Checking blog links...",
     "chapter-setup" = {
-      url <- create_chapter_setup(
+      url <- chapter_create_setup(
         command$city,
         command$country,
         organizers = character(0)
@@ -334,11 +340,11 @@ execute_command <- function(command) {
       glue::glue("Chapter setup issue created: {url}")
     },
     "chapter-update" = {
-      url <- create_chapter_update(command$city, command$country)
+      url <- chapter_create_update(command$city, command$country)
       glue::glue("Chapter update issue created: {url}")
     },
     "report-chapters" = {
-      health <- check_chapter_health()
+      health <- chapter_check_health()
       if (nrow(health) == 0) {
         "No chapter data available."
       } else {
@@ -346,7 +352,7 @@ execute_command <- function(command) {
       }
     },
     "gha-dashboard" = {
-      data <- generate_gha_dashboard()
+      data <- gha_generate_dashboard()
       format_gha_dashboard(data)
     },
     "contributors-list" = {
@@ -356,7 +362,7 @@ execute_command <- function(command) {
     },
     "contributors-update" = {
       target <- command$repo %||% "jinx"
-      url <- update_contributors_list("rladies", target)
+      url <- contributors_update("rladies", target)
       if (!is.null(url)) {
         glue::glue("Contributors PR created: {url}")
       } else {
@@ -377,17 +383,17 @@ execute_command <- function(command) {
       )
     },
     events = {
-      events <- list_chapter_events(command$chapter)
-      create_event_summary(events, "weekly")
+      events <- events_list_chapter(command$chapter)
+      events_create_summary(events, "weekly")
     },
     "events-sync" = {
-      events <- sync_chapter_events(dry_run = FALSE)
-      summary <- create_event_summary(events, "weekly")
-      url <- publish_event_summary(summary)
+      events <- events_sync_chapters(dry_run = FALSE)
+      summary <- events_create_summary(events, "weekly")
+      url <- events_publish_summary(summary)
       glue::glue("Event summary published: {url}")
     },
     analytics = {
-      data <- generate_analytics_dashboard()
+      data <- analytics_generate_dashboard()
       data$markdown %||% "No analytics data available."
     },
     "website-analytics" = {
@@ -395,7 +401,7 @@ execute_command <- function(command) {
       format_website_analytics(data)
     },
     "cfp-list" = {
-      cfps <- list_open_cfps()
+      cfps <- cfp_list_open()
       if (nrow(cfps) == 0) {
         "No open CFPs found."
       } else {
@@ -407,18 +413,18 @@ execute_command <- function(command) {
       }
     },
     "cfp-add" = {
-      url <- create_cfp_issue(command$conference, command$deadline, command$url)
+      url <- cfp_create_issue(command$conference, command$deadline, command$url)
       glue::glue("CFP issue created: {url}")
     },
     "cfp-recommend" = {
-      recommend_speaker(command$conference, command$speaker)
+      cfp_recommend_speaker(command$conference, command$speaker)
       glue::glue(
         "Speaker recommendation for @{command$speaker}",
         " added to **{command$conference}**."
       )
     },
     "translate-status" = {
-      coverage <- check_translation_coverage()
+      coverage <- i18n_coverage_check()
       lines <- glue::glue_data(
         coverage,
         paste0(
@@ -429,7 +435,7 @@ execute_command <- function(command) {
       paste("## Translation Coverage\n", paste(lines, collapse = "\n"))
     },
     "translate-validate" = {
-      results <- validate_translations(language = command$language)
+      results <- i18n_translations_validate(language = command$language)
       issues <- results[results$status != "ok", ]
       if (nrow(issues) == 0) {
         "All translations are valid."
@@ -442,7 +448,7 @@ execute_command <- function(command) {
       }
     },
     remind = {
-      stale <- gt_remind_stale()
+      stale <- global_team_remind_stale()
       if (length(stale) == 0) {
         "No stale issues found - all caught up! \U0001f389"
       } else {
@@ -467,6 +473,12 @@ execute_command <- function(command) {
       )
     }
   )
+}
+
+#' @rdname command_execute
+#' @export
+cmd_execute <- function(command) {
+  command_execute(command)
 }
 
 normalize_command <- function(parts) {

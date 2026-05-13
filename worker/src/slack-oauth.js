@@ -1,11 +1,11 @@
-import { isAllowedTeam } from "./slack-api.js";
+import { slack_team_is_allowed } from "./slack-api.js";
 
-export async function handleSlackInstall(env, url) {
+export async function slack_oauth_install_handle(env, url) {
   const scopes = "chat:write,chat:write.public,commands";
   const redirectUri = `${url.origin}/slack/oauth`;
 
   const ts = Date.now().toString();
-  const state = await hmacState(env.SLACK_CLIENT_SECRET, ts);
+  const state = await slack_oauth_hmac_state(env.SLACK_CLIENT_SECRET, ts);
 
   const authUrl = new URL("https://slack.com/oauth/v2/authorize");
   authUrl.searchParams.set("client_id", env.SLACK_CLIENT_ID);
@@ -16,7 +16,7 @@ export async function handleSlackInstall(env, url) {
   return Response.redirect(authUrl.toString(), 302);
 }
 
-export async function handleSlackOAuthCallback(request, env) {
+export async function slack_oauth_callback_handle(request, env) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
@@ -30,7 +30,7 @@ export async function handleSlackOAuthCallback(request, env) {
   }
 
   const [ts, hmac] = state.split(":");
-  const expectedHmac = await hmacState(env.SLACK_CLIENT_SECRET, ts);
+  const expectedHmac = await slack_oauth_hmac_state(env.SLACK_CLIENT_SECRET, ts);
   if (hmac !== expectedHmac) {
     return new Response("Invalid state parameter", { status: 403 });
   }
@@ -60,7 +60,7 @@ export async function handleSlackOAuthCallback(request, env) {
   const teamId = data.team?.id;
   const teamName = data.team?.name || "unknown";
 
-  if (!isAllowedTeam(env, teamId)) {
+  if (!slack_team_is_allowed(env, teamId)) {
     console.warn(
       `Rejected install attempt from team ${teamName} (${teamId}) — not in allowlist`
     );
@@ -87,7 +87,7 @@ export async function handleSlackOAuthCallback(request, env) {
   );
 }
 
-async function hmacState(secret, timestamp) {
+async function slack_oauth_hmac_state(secret, timestamp) {
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",

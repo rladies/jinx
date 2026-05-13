@@ -9,7 +9,7 @@
 #' @param org GitHub organization. Defaults to `"rladies"`.
 #' @return The created issue URL (invisibly).
 #' @export
-gt_finalize_onboarding <- function(
+global_team_finalize_onboarding <- function(
   username,
   team,
   name = username,
@@ -55,6 +55,22 @@ gt_finalize_onboarding <- function(
 
   cli::cli_alert_success("Created onboarding issue: {issue$html_url}")
   invisible(issue$html_url)
+}
+
+#' @rdname global_team_finalize_onboarding
+#' @export
+gt_finalize_onboarding <- function(
+  username,
+  team,
+  name = username,
+  org = "rladies"
+) {
+  global_team_finalize_onboarding(
+    username = username,
+    team = team,
+    name = name,
+    org = org
+  )
 }
 
 #' Notify teams by commenting on an issue with @-mentions

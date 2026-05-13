@@ -13,18 +13,12 @@ reference:
   - title: Commands
     desc: Issue comment command interface
     contents:
-      - parse_command
-      - execute_command
+      - starts_with("cmd_")
 
   - title: Team management
     desc: Global team onboarding and offboarding
     contents:
-      - gt_invite
-      - gt_check_invitations
-      - gt_finalize_onboarding
-      - gt_create_offboarding
-      - gt_finalize_offboarding
-      - gt_remind_stale
+      - starts_with("gt_")
 
   - title: Announcements
     desc: Cross-platform blog post announcements
@@ -57,27 +51,23 @@ reference:
   - title: Blogs
     desc: Blog content management
     contents:
-      - create_blog_entry
+      - starts_with("blog_")
       - validate_blog_entry
-      - check_blog_links
-      - post_blog_checklist
 
   - title: Chapters
     desc: Chapter lifecycle management
     contents:
       - create_chapter
-      - create_chapter_setup
-      - create_chapter_update
+      - chapter_create_setup
+      - chapter_create_update
       - create_chapter_json_pr
-      - check_chapter_health
+      - chapter_check_health
 
   - title: Reports
     desc: Activity and health reporting
     contents:
-      - generate_report
-      - publish_report
-      - format_report_markdown
-      - report_chapter_health
+      - starts_with("report_")
+      - chapter_report_health
 
   - title: PR review
     desc: Automated pull request review
@@ -88,13 +78,12 @@ reference:
   - title: Airtable sync
     desc: Airtable bidirectional sync
     contents:
-      - sync_directory_airtable
-      - sync_global_team_airtable
+      - contains("airtable")
 
   - title: Website automation
     desc: Website PR management and contributor greetings
     contents:
-      - auto_merge_pending
+      - starts_with("website_")
       - greet_contributor
 
   - title: Chapter monitoring
@@ -106,19 +95,15 @@ reference:
   - title: Slack
     desc: Slack messaging and automation
     contents:
-      - post_slack_message
-      - send_slack_invite
-      - send_slack_invites
+      - starts_with("slack_")
       - subscribe_slack_rss
-      - welcome_slack_member
       - common_welcome_channels
       - default_welcome_channels
 
   - title: GHA dashboard
     desc: GitHub Actions workflow status
     contents:
-      - generate_gha_dashboard
-      - publish_gha_dashboard
+      - starts_with("gha_")
 
   - title: Contributors
     desc: Contributor tracking and recognition
@@ -126,17 +111,12 @@ reference:
       - list_contributors
       - list_org_contributors
       - format_contributors
-      - update_contributors_list
-      - welcome_contributor
-      - thank_contributor
+      - matches("^contributors?_")
 
   - title: Events
     desc: Chapter event management
     contents:
-      - list_chapter_events
-      - sync_chapter_events
-      - create_event_summary
-      - publish_event_summary
+      - starts_with("events_")
 
   - title: Analytics
     desc: Org-wide activity analytics
@@ -145,8 +125,8 @@ reference:
       - collect_contributor_growth
       - compute_activity_trends
       - format_analytics_markdown
-      - generate_analytics_dashboard
-      - publish_analytics_dashboard
+      - analytics_generate_dashboard
+      - analytics_publish_dashboard
 
   - title: Website analytics
     desc: Plausible website performance reports
@@ -159,10 +139,7 @@ reference:
   - title: Conference coordination
     desc: CFP tracking and speaker recommendations
     contents:
-      - list_open_cfps
-      - create_cfp_issue
-      - check_cfp_deadlines
-      - recommend_speaker
+      - starts_with("cfp_")
       - list_speaker_recommendations
       - generate_conference_report
 
@@ -172,15 +149,12 @@ reference:
       - translate_template
       - list_supported_languages
       - get_chapter_language
-      - validate_translations
-      - check_translation_coverage
+      - starts_with("i18n_")
 
   - title: Configuration
     desc: Config loading utilities
     contents:
-      - load_teams_config
-      - load_review_rules
-      - load_labels_config
+      - starts_with("load_")
 
   - title: Templates
     desc: Response and template utilities

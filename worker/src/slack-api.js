@@ -1,5 +1,5 @@
-export async function postSlackMessage(env, teamId, { channel, thread_ts, text, blocks }) {
-  const token = await getSlackToken(env, teamId);
+export async function slack_message_post(env, teamId, { channel, thread_ts, text, blocks }) {
+  const token = await slack_token_get(env, teamId);
 
   const body = { channel, text };
   if (thread_ts) body.thread_ts = thread_ts;
@@ -21,9 +21,9 @@ export async function postSlackMessage(env, teamId, { channel, thread_ts, text, 
   return result;
 }
 
-export async function getSlackToken(env, teamId) {
+export async function slack_token_get(env, teamId) {
   if (!teamId) {
-    throw new Error("getSlackToken requires a team id");
+    throw new Error("slack_token_get requires a team id");
   }
   if (!env.SLACK_TOKENS) {
     throw new Error("SLACK_TOKENS KV binding not configured");
@@ -37,7 +37,7 @@ export async function getSlackToken(env, teamId) {
   return data.bot_token;
 }
 
-export function isAllowedTeam(env, teamId) {
+export function slack_team_is_allowed(env, teamId) {
   if (!teamId) return false;
   const allowed = [env.SLACK_ORGANIZER_TEAM_ID, env.SLACK_COMMUNITY_TEAM_ID]
     .filter(Boolean);
@@ -49,7 +49,7 @@ export function isAllowedTeam(env, teamId) {
   return allowed.includes(teamId);
 }
 
-export async function verifySlackSignature(signingSecret, timestamp, body, expected) {
+export async function slack_signature_verify(signingSecret, timestamp, body, expected) {
   if (!timestamp || !expected || !signingSecret) return false;
 
   const now = Math.floor(Date.now() / 1000);

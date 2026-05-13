@@ -64,9 +64,9 @@ describe("extract_placeholder_keys", {
   })
 })
 
-describe("check_translation_coverage", {
+describe("i18n_coverage_check", {
   it("returns coverage data frame", {
-    result <- check_translation_coverage()
+    result <- i18n_coverage_check()
     expect_s3_class(result, "data.frame")
     expect_true(all(
       c("language", "total_templates", "translated", "coverage_pct") %in%
@@ -77,24 +77,24 @@ describe("check_translation_coverage", {
 
 describe("translate command parsing", {
   it("parses /jinx translate status", {
-    cmd <- parse_command("/jinx translate status")
+    cmd <- command_parse("/jinx translate status")
     expect_identical(cmd$action, "translate-status")
   })
 
   it("parses /jinx translate validate es", {
-    cmd <- parse_command("/jinx translate validate es")
+    cmd <- command_parse("/jinx translate validate es")
     expect_identical(cmd$action, "translate-validate")
     expect_identical(cmd$language, "es")
   })
 
   it("parses /jinx translate validate without language", {
-    cmd <- parse_command("/jinx translate validate")
+    cmd <- command_parse("/jinx translate validate")
     expect_identical(cmd$action, "translate-validate")
     expect_null(cmd$language)
   })
 
   it("returns error for bare translate", {
-    cmd <- parse_command("/jinx translate")
+    cmd <- command_parse("/jinx translate")
     expect_identical(cmd$action, "error")
   })
 })

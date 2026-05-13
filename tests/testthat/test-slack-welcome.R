@@ -22,13 +22,13 @@ describe("default_welcome_channels", {
   })
 })
 
-describe("welcome_slack_member", {
+describe("slack_welcome_member", {
   it("aborts when SLACK_TOKEN is not set", {
     withr::with_envvar(
       c(SLACK_TOKEN = ""),
       {
         expect_error(
-          welcome_slack_member("U12345"),
+          slack_welcome_member("U12345"),
           "SLACK_TOKEN"
         )
       }
@@ -40,7 +40,7 @@ describe("welcome_slack_member", {
       c(SLACK_TOKEN = "xoxb-test"),
       {
         expect_error(
-          welcome_slack_member(""),
+          slack_welcome_member(""),
           "user_id"
         )
       }
@@ -51,7 +51,7 @@ describe("welcome_slack_member", {
     withr::with_envvar(
       c(SLACK_TOKEN = "xoxb-test"),
       {
-        expect_error(welcome_slack_member("U12345", workspace = "private"))
+        expect_error(slack_welcome_member("U12345", workspace = "private"))
       }
     )
   })
@@ -69,7 +69,7 @@ describe("welcome_slack_member", {
       c(SLACK_TOKEN = "xoxb-test"),
       {
         expect_message(
-          result <- welcome_slack_member("U12345"),
+          result <- slack_welcome_member("U12345"),
           "Failed to welcome"
         )
       }

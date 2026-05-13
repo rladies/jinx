@@ -9,7 +9,7 @@
 #' @param output_dir Directory to write the JSON file. Defaults to `"."`.
 #' @return File path of the created JSON (invisibly).
 #' @export
-create_blog_entry <- function(
+blog_create_entry <- function(
   url,
   language = "en",
   author_name,

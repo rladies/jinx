@@ -1,4 +1,4 @@
-name: Blog Post PR Checklist
+name: Reusable · PR Review
 
 on:
   workflow_call:
@@ -9,8 +9,9 @@ on:
         required: true
 
 jobs:
-  checklist:
+  review:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
     container:
       image: ghcr.io/rladies/jinx-bot:latest
     steps:
@@ -22,12 +23,12 @@ jobs:
           private-key: ${{ secrets.JINX_PRIVATE_KEY }}
           owner: rladies
 
-      - name: Post blog checklist
+      - name: Run PR review automation
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           Rscript -e '
-            jinx::post_blog_checklist(
+            jinx::review_pr(
               owner = "${{ github.repository_owner }}",
               repo = "${{ github.event.repository.name }}",
               pr_number = ${{ github.event.pull_request.number }}

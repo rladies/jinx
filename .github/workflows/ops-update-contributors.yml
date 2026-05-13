@@ -1,4 +1,4 @@
-name: Update Contributors List
+name: Ops · Contributors Update
 
 on:
   schedule:
@@ -8,6 +8,9 @@ on:
       repo:
         description: "Repository to update (leave empty for all key repos)"
         required: false
+
+permissions:
+  contents: read
 
 jobs:
   update:
@@ -41,14 +44,14 @@ jobs:
           Rscript -e '
             repo <- "${{ inputs.repo }}"
             if (nzchar(repo)) {
-              jinx::update_contributors_list("rladies", repo)
+              jinx::contributors_update("rladies", repo)
             } else {
               repos <- c("rladies.github.io", "directory",
                          "awesome-rladies-blogs", "meetup_archive",
                          "rladiesguide", "jinx")
               for (r in repos) {
                 tryCatch(
-                  jinx::update_contributors_list("rladies", r),
+                  jinx::contributors_update("rladies", r),
                   error = function(e) {
                     cli::cli_alert_warning("Failed for {r}: {e$message}")
                   }

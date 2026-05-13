@@ -1,7 +1,7 @@
-import { answerQuestion } from "./rag.js";
-import { postSlackMessage, isAllowedTeam } from "./slack-api.js";
+import { rag_question_answer } from "./rag.js";
+import { slack_message_post, slack_team_is_allowed } from "./slack-api.js";
 
-export async function handleSlackEvent(env, ctx, body) {
+export async function slack_event_handle(env, ctx, body) {
   let payload;
   try {
     payload = JSON.parse(body);
@@ -25,13 +25,13 @@ export async function handleSlackEvent(env, ctx, body) {
   const teamId = payload.team_id;
   const channel = event.channel;
   const threadTs = event.thread_ts || event.ts;
-  const query = stripMention(event.text);
+  const query = slack_event_strip_mention(event.text);
   const userId = event.user;
 
-  if (!isAllowedTeam(env, teamId)) {
+  if (!slack_team_is_allowed(env, teamId)) {
     console.warn(`Rejected app_mention from team ${teamId}`);
     ctx.waitUntil(
-      postSlackMessage(env, teamId, {
+      slack_message_post(env, teamId, {
         channel,
         thread_ts: threadTs,
         text:
@@ -44,10 +44,10 @@ export async function handleSlackEvent(env, ctx, body) {
   }
 
   ctx.waitUntil(
-    answerAndPost(env, teamId, channel, threadTs, query, userId).catch(
+    slack_event_answer_post(env, teamId, channel, threadTs, query, userId).catch(
       async (err) => {
         console.error("RAG answer failed:", err);
-        await postSlackMessage(env, teamId, {
+        await slack_message_post(env, teamId, {
           channel,
           thread_ts: threadTs,
           text: "🐈‍⬛ Sorry — Jinx couldn't fetch an answer right now. Try again in a moment?",
@@ -59,9 +59,9 @@ export async function handleSlackEvent(env, ctx, body) {
   return new Response("", { status: 200 });
 }
 
-async function answerAndPost(env, teamId, channel, threadTs, query, userId) {
+async function slack_event_answer_post(env, teamId, channel, threadTs, query, userId) {
   if (!query) {
-    await postSlackMessage(env, teamId, {
+    await slack_message_post(env, teamId, {
       channel,
       thread_ts: threadTs,
       text: `Hi <@${userId}>! Ask me a question about RLadies+ — I'll look it up in the guide and the website. 🔮`,
@@ -69,18 +69,18 @@ async function answerAndPost(env, teamId, channel, threadTs, query, userId) {
     return;
   }
 
-  const { answer, sources } = await answerQuestion(env, query);
-  const text = formatAnswer(answer, sources);
+  const { answer, sources } = await rag_question_answer(env, query);
+  const text = slack_event_format_answer(answer, sources);
 
-  await postSlackMessage(env, teamId, { channel, thread_ts: threadTs, text });
+  await slack_message_post(env, teamId, { channel, thread_ts: threadTs, text });
 }
 
-function stripMention(text) {
+function slack_event_strip_mention(text) {
   if (!text) return "";
   return text.replace(/<@[A-Z0-9]+>/g, "").trim();
 }
 
-function formatAnswer(answer, sources) {
+function slack_event_format_answer(answer, sources) {
   if (!sources || sources.length === 0) return answer;
   const list = sources
     .map((s, i) => `${i + 1}. <${s.url}|${s.title}>`)

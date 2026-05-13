@@ -1,9 +1,12 @@
-name: Global Team - Remind Stale Issues
+name: Ops · Global Team · Remind Stale
 
 on:
   schedule:
     - cron: "10 9 * * 1"
   workflow_dispatch: {}
+
+permissions:
+  contents: read
 
 jobs:
   remind:

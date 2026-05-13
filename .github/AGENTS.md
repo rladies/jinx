@@ -166,4 +166,4 @@ Run via zsh to ensure PATH includes `/opt/homebrew/bin` (pandoc, gh).
 pkgdown::build_site()
 ```
 
-Deployed to GitHub Pages via `.github/workflows/pkgdown.yml`.
+Deployed to GitHub Pages via `.github/workflows/infra-pkgdown.yml`.

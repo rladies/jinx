@@ -1,9 +1,9 @@
 #' Format a report as markdown
 #'
-#' @param report Report data from [generate_report()].
+#' @param report Report data from [report_generate()].
 #' @return Character string with markdown-formatted report.
 #' @export
-format_report_markdown <- function(report) {
+report_format_markdown <- function(report) {
   s <- report$summary
   header <- glue::glue(
     "## {report$type} Activity Report\n",

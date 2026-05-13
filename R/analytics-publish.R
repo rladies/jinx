@@ -7,7 +7,7 @@
 #' @param output_path Optional path to write JSON data.
 #' @return Named list with `trends`, `growth`, and `markdown` (invisibly).
 #' @export
-generate_analytics_dashboard <- function(
+analytics_generate_dashboard <- function(
   org = "rladies",
   months = 12,
   output_path = NULL
@@ -34,13 +34,13 @@ generate_analytics_dashboard <- function(
 
 #' Publish analytics dashboard as a GitHub issue
 #'
-#' @param dashboard_data Data from [generate_analytics_dashboard()].
+#' @param dashboard_data Data from [analytics_generate_dashboard()].
 #' @param org GitHub organization.
 #' @param target_repo Repository to publish to.
 #' @param slack_channel Optional Slack channel to post a summary to.
 #' @return Issue URL (invisibly).
 #' @export
-publish_analytics_dashboard <- function(
+analytics_publish_dashboard <- function(
   dashboard_data,
   org = "rladies",
   target_repo = "global-team",
@@ -61,7 +61,7 @@ publish_analytics_dashboard <- function(
 
   if (!is.null(slack_channel)) {
     slack_body <- format_analytics_slack(dashboard_data, issue$html_url)
-    post_slack_message(slack_body, channel = slack_channel)
+    slack_post_message(slack_body, channel = slack_channel)
   }
 
   invisible(issue$html_url)

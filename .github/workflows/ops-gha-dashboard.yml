@@ -1,12 +1,15 @@
-name: Chapter Health Report
+name: Ops · GitHub Actions Dashboard
 
 on:
   schedule:
-    - cron: "0 10 1 * *"
+    - cron: "13 10 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  report:
+  dashboard:
     runs-on: ubuntu-latest
     steps:
       - name: Generate app token
@@ -30,8 +33,11 @@ jobs:
         with:
           extra-packages: local::.
 
-      - name: Generate and publish chapter report
+      - name: Generate and publish dashboard
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          Rscript -e 'jinx::report_chapter_health()'
+          Rscript -e '
+            data <- jinx::gha_generate_dashboard()
+            jinx::gha_publish_dashboard(data)
+          '

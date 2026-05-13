@@ -8,12 +8,12 @@
 #'   Defaults to `"global-team"`.
 #' @return Issue URL (invisibly).
 #' @export
-report_chapter_health <- function(
+chapter_report_health <- function(
   months = 6,
   org = "rladies",
   target_repo = "global-team"
 ) {
-  health <- check_chapter_health(months = months, org = org)
+  health <- chapter_check_health(months = months, org = org)
 
   if (nrow(health) == 0) {
     cli::cli_alert_warning("No chapter data available for report")
