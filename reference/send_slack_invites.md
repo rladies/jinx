@@ -6,7 +6,7 @@ Slack invitation link.
 ## Usage
 
 ``` r
-send_slack_invites(
+slack_invites_send(
   invite_link,
   base_id = slack_invitees_base_id(),
   api_key = Sys.getenv("AIRTABLE_API_KEY"),

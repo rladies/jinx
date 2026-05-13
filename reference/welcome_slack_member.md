@@ -9,7 +9,7 @@ Slack.
 ## Usage
 
 ``` r
-welcome_slack_member(
+slack_welcome_member(
   user_id,
   workspace = c("community", "organisers"),
   coc_url = "https://rladies.org/about/coc/",

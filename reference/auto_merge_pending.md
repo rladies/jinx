@@ -6,7 +6,7 @@ post's date matches today, merges the PR.
 ## Usage
 
 ``` r
-auto_merge_pending(org = "rladies", repo = "rladies.github.io")
+website_merge_pending(org = "rladies", repo = "rladies.github.io")
 ```
 
 ## Arguments

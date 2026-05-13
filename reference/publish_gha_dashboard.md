@@ -5,7 +5,7 @@ Creates a summary issue with workflow status badges.
 ## Usage
 
 ``` r
-publish_gha_dashboard(
+gha_publish_dashboard(
   dashboard_data,
   org = "rladies",
   target_repo = "global-team"
@@ -17,7 +17,7 @@ publish_gha_dashboard(
 - dashboard_data:
 
   Data from
-  [`generate_gha_dashboard()`](https://rladies.github.io/jinx/reference/generate_gha_dashboard.md).
+  [`gha_generate_dashboard()`](https://rladies.github.io/jinx/reference/generate_gha_dashboard.md).
 
 - org:
 

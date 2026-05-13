@@ -1,7 +1,7 @@
 # Post a greeting on new PRs/issues from non-team members
 
 Delegates to
-[`welcome_contributor()`](https://rladies.github.io/jinx/reference/welcome_contributor.md)
+[`contributor_welcome()`](https://rladies.github.io/jinx/reference/welcome_contributor.md)
 for first-time detection.
 
 ## Usage

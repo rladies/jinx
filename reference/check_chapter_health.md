@@ -6,7 +6,7 @@ number of months.
 ## Usage
 
 ``` r
-check_chapter_health(
+chapter_check_health(
   months = 12,
   org = "rladies",
   data_repo = "meetup_archive"

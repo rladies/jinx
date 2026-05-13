@@ -5,7 +5,7 @@ Publish analytics dashboard as a GitHub issue
 ## Usage
 
 ``` r
-publish_analytics_dashboard(
+analytics_publish_dashboard(
   dashboard_data,
   org = "rladies",
   target_repo = "global-team",
@@ -18,7 +18,7 @@ publish_analytics_dashboard(
 - dashboard_data:
 
   Data from
-  [`generate_analytics_dashboard()`](https://rladies.github.io/jinx/reference/generate_analytics_dashboard.md).
+  [`analytics_generate_dashboard()`](https://rladies.github.io/jinx/reference/generate_analytics_dashboard.md).
 
 - org:
 

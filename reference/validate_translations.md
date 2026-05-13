@@ -6,7 +6,7 @@ as the English baseline.
 ## Usage
 
 ``` r
-validate_translations(language = NULL)
+i18n_translations_validate(language = NULL)
 ```
 
 ## Arguments

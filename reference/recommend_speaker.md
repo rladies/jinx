@@ -5,7 +5,7 @@ Adds a speaker recommendation as a comment on the CFP tracking issue.
 ## Usage
 
 ``` r
-recommend_speaker(
+cfp_recommend_speaker(
   conference,
   speaker_name,
   speaker_github = NULL,

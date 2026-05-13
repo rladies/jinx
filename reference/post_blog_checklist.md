@@ -5,7 +5,7 @@ Posts a review checklist comment on PRs that modify blog content.
 ## Usage
 
 ``` r
-post_blog_checklist(owner, repo, pr_number)
+blog_post_checklist(owner, repo, pr_number)
 ```
 
 ## Arguments

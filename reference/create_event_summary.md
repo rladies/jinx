@@ -5,7 +5,7 @@ Create a formatted event summary
 ## Usage
 
 ``` r
-create_event_summary(events, period = c("weekly", "monthly"))
+events_create_summary(events, period = c("weekly", "monthly"))
 ```
 
 ## Arguments
@@ -13,9 +13,9 @@ create_event_summary(events, period = c("weekly", "monthly"))
 - events:
 
   Data frame from
-  [`list_chapter_events()`](https://rladies.github.io/jinx/reference/list_chapter_events.md)
+  [`events_list_chapter()`](https://rladies.github.io/jinx/reference/list_chapter_events.md)
   or
-  [`sync_chapter_events()`](https://rladies.github.io/jinx/reference/sync_chapter_events.md).
+  [`events_sync_chapters()`](https://rladies.github.io/jinx/reference/sync_chapter_events.md).
 
 - period:
 

@@ -97,7 +97,7 @@ identity (<code>jinx[bot]</code>).</p>
 <pre><code>Issue comment (/jinx invite ...)
   -&gt; issue_comment workflow triggers
     -&gt; installs jinx R package
-      -&gt; calls jinx::parse_command() + jinx::execute_command()
+      -&gt; calls jinx::cmd_parse() + jinx::cmd_execute()
         -&gt; gh::gh() API calls as jinx[bot]
           -&gt; reply comment posted</code></pre>
 <p>jinx is a standard R package. GitHub Actions workflows call exported
@@ -196,12 +196,12 @@ action:</p>
 /jinx report weekly
 /jinx chapter-setup Berlin Germany
 /jinx help</code></pre>
-<p>Commands are parsed by <code><a href="../reference/parse_command.html">parse_command()</a></code> and dispatched by
-<code><a href="../reference/execute_command.html">execute_command()</a></code>:</p>
+<p>Commands are parsed by <code><a href="../reference/parse_command.html">cmd_parse()</a></code> and dispatched by
+<code><a href="../reference/execute_command.html">cmd_execute()</a></code>:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/rladies/jinx" class="external-link">jinx</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">cmd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/parse_command.html">parse_command</a></span><span class="op">(</span><span class="st">"/jinx invite @octocat to website"</span><span class="op">)</span></span>
+<span><span class="va">cmd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/parse_command.html">cmd_parse</a></span><span class="op">(</span><span class="st">"/jinx invite @octocat to website"</span><span class="op">)</span></span>
 <span><span class="va">cmd</span></span>
 <span><span class="co">#&gt; $action</span></span>
 <span><span class="co">#&gt; [1] "invite"</span></span>
@@ -248,21 +248,21 @@ action:</p>
 <tr class="even">
 <td>Blogs</td>
 <td>
-<code><a href="../reference/create_blog_entry.html">create_blog_entry()</a></code>,
-<code><a href="../reference/check_blog_links.html">check_blog_links()</a></code>
+<code><a href="../reference/create_blog_entry.html">blog_create_entry()</a></code>,
+<code><a href="../reference/check_blog_links.html">blog_check_links()</a></code>
 </td>
 </tr>
 <tr class="odd">
 <td>Chapters</td>
 <td>
 <code><a href="../reference/create_chapter.html">create_chapter()</a></code>,
-<code><a href="../reference/check_chapter_health.html">check_chapter_health()</a></code>
+<code><a href="../reference/check_chapter_health.html">chapter_check_health()</a></code>
 </td>
 </tr>
 <tr class="even">
 <td>Reports</td>
 <td>
-<code><a href="../reference/generate_report.html">generate_report()</a></code>, <code><a href="../reference/publish_report.html">publish_report()</a></code>
+<code><a href="../reference/generate_report.html">report_generate()</a></code>, <code><a href="../reference/publish_report.html">report_publish()</a></code>
 </td>
 </tr>
 <tr class="odd">
@@ -275,13 +275,13 @@ action:</p>
 <td>Airtable sync</td>
 <td>
 <code><a href="../reference/sync_directory_airtable.html">sync_directory_airtable()</a></code>,
-<code><a href="../reference/sync_global_team_airtable.html">sync_global_team_airtable()</a></code>
+<code><a href="../reference/sync_global_team_airtable.html">sync_gt_airtable()</a></code>
 </td>
 </tr>
 <tr class="odd">
 <td>Website</td>
 <td>
-<code><a href="../reference/auto_merge_pending.html">auto_merge_pending()</a></code>,
+<code><a href="../reference/auto_merge_pending.html">website_merge_pending()</a></code>,
 <code><a href="../reference/greet_contributor.html">greet_contributor()</a></code>
 </td>
 </tr>
@@ -295,22 +295,22 @@ action:</p>
 <tr class="odd">
 <td>Slack</td>
 <td>
-<code><a href="../reference/send_slack_invites.html">send_slack_invites()</a></code>,
+<code><a href="../reference/send_slack_invites.html">slack_invites_send()</a></code>,
 <code><a href="../reference/subscribe_slack_rss.html">subscribe_slack_rss()</a></code>
 </td>
 </tr>
 <tr class="even">
 <td>GHA dashboard</td>
 <td>
-<code><a href="../reference/generate_gha_dashboard.html">generate_gha_dashboard()</a></code>,
-<code><a href="../reference/publish_gha_dashboard.html">publish_gha_dashboard()</a></code>
+<code><a href="../reference/generate_gha_dashboard.html">gha_generate_dashboard()</a></code>,
+<code><a href="../reference/publish_gha_dashboard.html">gha_publish_dashboard()</a></code>
 </td>
 </tr>
 <tr class="odd">
 <td>Contributors</td>
 <td>
 <code><a href="../reference/list_contributors.html">list_contributors()</a></code>,
-<code><a href="../reference/update_contributors_list.html">update_contributors_list()</a></code>
+<code><a href="../reference/update_contributors_list.html">contributors_update()</a></code>
 </td>
 </tr>
 </tbody>
@@ -369,7 +369,7 @@ list.</p>
 <span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="at">    </span><span class="fu">types</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">opened</span><span class="kw">,</span><span class="at"> reopened</span><span class="kw">,</span><span class="at"> synchronize</span><span class="kw">]</span></span>
 <span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
 <span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="at">  </span><span class="fu">review</span><span class="kw">:</span></span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="at">    </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> rladies/jinx/.github/workflows/pr-review.yml@main</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="at">    </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> rladies/jinx/.github/workflows/reusable-pr-review.yml@main</span></span>
 <span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="at">    </span><span class="fu">secrets</span><span class="kw">:</span><span class="at"> inherit</span></span></code></pre></div>
 </div>
 <div class="section level2">

@@ -6,7 +6,7 @@ compatible with awesome-rladies-blogs format.
 ## Usage
 
 ``` r
-create_blog_entry(url, language = "en", author_name, output_dir = ".")
+blog_create_entry(url, language = "en", author_name, output_dir = ".")
 ```
 
 ## Arguments

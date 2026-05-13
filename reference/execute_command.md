@@ -7,7 +7,8 @@ issue comment, Slack, R console, etc.).
 ## Usage
 
 ``` r
-execute_command(command)
+command_execute(command)
+cmd_execute(command)
 ```
 
 ## Arguments
@@ -15,7 +16,7 @@ execute_command(command)
 - command:
 
   Parsed command list from
-  [`parse_command()`](https://rladies.github.io/jinx/reference/parse_command.md).
+  [`command_parse()`](https://rladies.github.io/jinx/reference/parse_command.md).
 
 ## Value
 

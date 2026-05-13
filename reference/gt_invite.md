@@ -6,6 +6,7 @@ global team.
 ## Usage
 
 ``` r
+global_team_invite(username, team, name = username, org = "rladies")
 gt_invite(username, team, name = username, org = "rladies")
 ```
 

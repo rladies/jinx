@@ -6,7 +6,7 @@ checklist for setting up a new R-Ladies chapter.
 ## Usage
 
 ``` r
-create_chapter_setup(
+chapter_create_setup(
   city,
   country,
   organizers,

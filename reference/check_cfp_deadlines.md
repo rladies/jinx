@@ -5,7 +5,7 @@ Check CFP deadlines and post reminders
 ## Usage
 
 ``` r
-check_cfp_deadlines(org = "rladies", repo = "global-team", warn_days = 7)
+cfp_check_deadlines(org = "rladies", repo = "global-team", warn_days = 7)
 ```
 
 ## Arguments

@@ -5,7 +5,7 @@ Check blog URLs and RSS feeds for broken links
 ## Usage
 
 ``` r
-check_blog_links(blogs_path)
+blog_check_links(blogs_path)
 ```
 
 ## Arguments

@@ -60,11 +60,11 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="section level3">
 <h3 id="team-management-0-1-0">Team management<a class="anchor" aria-label="anchor" href="#team-management-0-1-0"></a></h3>
 <ul><li>
-<code><a href="../reference/gt_invite.html">gt_invite()</a></code>, <code><a href="../reference/gt_check_invitations.html">gt_check_invitations()</a></code>, <code><a href="../reference/gt_finalize_onboarding.html">gt_finalize_onboarding()</a></code> for onboarding new global team members.</li>
+<code><a href="../reference/gt_invite.html">global_team_invite()</a></code>, <code><a href="../reference/gt_check_invitations.html">global_team_check_invitations()</a></code>, <code><a href="../reference/gt_finalize_onboarding.html">global_team_finalize_onboarding()</a></code> for onboarding new global team members.</li>
 <li>
-<code><a href="../reference/gt_create_offboarding.html">gt_create_offboarding()</a></code>, <code><a href="../reference/gt_finalize_offboarding.html">gt_finalize_offboarding()</a></code> for offboarding.</li>
+<code><a href="../reference/gt_create_offboarding.html">global_team_create_offboarding()</a></code>, <code><a href="../reference/gt_finalize_offboarding.html">global_team_finalize_offboarding()</a></code> for offboarding.</li>
 <li>
-<code><a href="../reference/gt_remind_stale.html">gt_remind_stale()</a></code> for stale issue reminders.</li>
+<code><a href="../reference/gt_remind_stale.html">global_team_remind_stale()</a></code> for stale issue reminders.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="announcements-0-1-0">Announcements<a class="anchor" aria-label="anchor" href="#announcements-0-1-0"></a></h3>
@@ -85,29 +85,29 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="section level3">
 <h3 id="blogs-0-1-0">Blogs<a class="anchor" aria-label="anchor" href="#blogs-0-1-0"></a></h3>
 <ul><li>
-<code><a href="../reference/create_blog_entry.html">create_blog_entry()</a></code>, <code><a href="../reference/validate_blog_entry.html">validate_blog_entry()</a></code> for blog content management.</li>
+<code><a href="../reference/create_blog_entry.html">blog_create_entry()</a></code>, <code><a href="../reference/validate_blog_entry.html">validate_blog_entry()</a></code> for blog content management.</li>
 <li>
-<code><a href="../reference/check_blog_links.html">check_blog_links()</a></code> for link validation.</li>
+<code><a href="../reference/check_blog_links.html">blog_check_links()</a></code> for link validation.</li>
 <li>
-<code><a href="../reference/post_blog_checklist.html">post_blog_checklist()</a></code> for automated PR review checklists.</li>
+<code><a href="../reference/post_blog_checklist.html">blog_post_checklist()</a></code> for automated PR review checklists.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="chapters-0-1-0">Chapters<a class="anchor" aria-label="anchor" href="#chapters-0-1-0"></a></h3>
 <ul><li>
-<code><a href="../reference/create_chapter.html">create_chapter()</a></code>, <code><a href="../reference/create_chapter_setup.html">create_chapter_setup()</a></code>, <code><a href="../reference/create_chapter_update.html">create_chapter_update()</a></code> for chapter lifecycle management.</li>
+<code><a href="../reference/create_chapter.html">create_chapter()</a></code>, <code><a href="../reference/create_chapter_setup.html">chapter_create_setup()</a></code>, <code><a href="../reference/create_chapter_update.html">chapter_create_update()</a></code> for chapter lifecycle management.</li>
 <li>
 <code><a href="../reference/create_chapter_json_pr.html">create_chapter_json_pr()</a></code> for directory integration.</li>
 <li>
-<code><a href="../reference/check_chapter_health.html">check_chapter_health()</a></code> for activity monitoring.</li>
+<code><a href="../reference/check_chapter_health.html">chapter_check_health()</a></code> for activity monitoring.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="reports-0-1-0">Reports<a class="anchor" aria-label="anchor" href="#reports-0-1-0"></a></h3>
 <ul><li>
-<code><a href="../reference/generate_report.html">generate_report()</a></code>, <code><a href="../reference/publish_report.html">publish_report()</a></code> for activity reports.</li>
+<code><a href="../reference/generate_report.html">report_generate()</a></code>, <code><a href="../reference/publish_report.html">report_publish()</a></code> for activity reports.</li>
 <li>
-<code><a href="../reference/report_chapter_health.html">report_chapter_health()</a></code> for chapter-specific reporting.</li>
+<code><a href="../reference/report_chapter_health.html">chapter_report_health()</a></code> for chapter-specific reporting.</li>
 <li>
-<code><a href="../reference/format_report_markdown.html">format_report_markdown()</a></code> for report rendering.</li>
+<code><a href="../reference/format_report_markdown.html">report_format_markdown()</a></code> for report rendering.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="pr-review-0-1-0">PR review<a class="anchor" aria-label="anchor" href="#pr-review-0-1-0"></a></h3>
@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="section level3">
 <h3 id="website-automation-0-1-0">Website automation<a class="anchor" aria-label="anchor" href="#website-automation-0-1-0"></a></h3>
 <ul><li>
-<code><a href="../reference/auto_merge_pending.html">auto_merge_pending()</a></code> for date-based PR auto-merge.</li>
+<code><a href="../reference/auto_merge_pending.html">website_merge_pending()</a></code> for date-based PR auto-merge.</li>
 <li>
 <code><a href="../reference/greet_contributor.html">greet_contributor()</a></code> for contributor interaction.</li>
 </ul></div>
@@ -137,40 +137,40 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="section level3">
 <h3 id="slack-management-0-1-0">Slack management<a class="anchor" aria-label="anchor" href="#slack-management-0-1-0"></a></h3>
 <ul><li>
-<code><a href="../reference/send_slack_invites.html">send_slack_invites()</a></code> for community Slack onboarding.</li>
+<code><a href="../reference/send_slack_invites.html">slack_invites_send()</a></code> for community Slack onboarding.</li>
 <li>
 <code><a href="../reference/subscribe_slack_rss.html">subscribe_slack_rss()</a></code> for blog feed integration.</li>
 <li>
-<code><a href="../reference/welcome_slack_member.html">welcome_slack_member()</a></code> sends a workspace-aware welcome DM to a new member, with separate templates for the RLadies+ community and organisers Slack workspaces. Stateless: triggered by a Slack <code>team_join</code> event via the <code>slack-welcome.yml</code> workflow (<code>workflow_dispatch</code> / <code>repository_dispatch</code>) — jinx does not persist any user identifiers.</li>
+<code><a href="../reference/welcome_slack_member.html">slack_welcome_member()</a></code> sends a workspace-aware welcome DM to a new member, with separate templates for the RLadies+ community and organisers Slack workspaces. Stateless: triggered by a Slack <code>team_join</code> event via the <code>slack-welcome.yml</code> workflow (<code>workflow_dispatch</code> / <code>repository_dispatch</code>) — jinx does not persist any user identifiers.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="gha-dashboard-0-1-0">GHA dashboard<a class="anchor" aria-label="anchor" href="#gha-dashboard-0-1-0"></a></h3>
 <ul><li>
-<code><a href="../reference/generate_gha_dashboard.html">generate_gha_dashboard()</a></code>, <code><a href="../reference/publish_gha_dashboard.html">publish_gha_dashboard()</a></code> for org-wide GitHub Actions workflow status reporting.</li>
+<code><a href="../reference/generate_gha_dashboard.html">gha_generate_dashboard()</a></code>, <code><a href="../reference/publish_gha_dashboard.html">gha_publish_dashboard()</a></code> for org-wide GitHub Actions workflow status reporting.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="contributors-0-1-0">Contributors<a class="anchor" aria-label="anchor" href="#contributors-0-1-0"></a></h3>
 <ul><li>
 <code><a href="../reference/list_contributors.html">list_contributors()</a></code>, <code><a href="../reference/list_org_contributors.html">list_org_contributors()</a></code> for contributor tracking.</li>
 <li>
-<code><a href="../reference/format_contributors.html">format_contributors()</a></code>, <code><a href="../reference/update_contributors_list.html">update_contributors_list()</a></code> for display and maintenance.</li>
+<code><a href="../reference/format_contributors.html">format_contributors()</a></code>, <code><a href="../reference/update_contributors_list.html">contributors_update()</a></code> for display and maintenance.</li>
 <li>
-<code><a href="../reference/welcome_contributor.html">welcome_contributor()</a></code>, <code><a href="../reference/thank_contributor.html">thank_contributor()</a></code> for automated greetings.</li>
+<code><a href="../reference/welcome_contributor.html">contributor_welcome()</a></code>, <code><a href="../reference/thank_contributor.html">contributor_thank()</a></code> for automated greetings.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="commands-0-1-0">Commands<a class="anchor" aria-label="anchor" href="#commands-0-1-0"></a></h3>
 <ul><li>
-<code>/jinx</code> issue comment interface via <code><a href="../reference/parse_command.html">parse_command()</a></code> and <code><a href="../reference/execute_command.html">execute_command()</a></code>.</li>
+<code>/jinx</code> issue comment interface via <code><a href="../reference/parse_command.html">command_parse()</a></code> and <code><a href="../reference/execute_command.html">command_execute()</a></code>.</li>
 <li>16 commands: invite, offboard, announce, validate-directory, chapter-health, blog-add, blog-check-links, report, chapter-setup, chapter-update, gha-dashboard, contributors, remind, help.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="event-management-0-1-0">Event management<a class="anchor" aria-label="anchor" href="#event-management-0-1-0"></a></h3>
 <ul><li>
-<code><a href="../reference/list_chapter_events.html">list_chapter_events()</a></code> queries Meetup Pro for chapter events.</li>
+<code><a href="../reference/list_chapter_events.html">events_list_chapter()</a></code> queries Meetup Pro for chapter events.</li>
 <li>
-<code><a href="../reference/sync_chapter_events.html">sync_chapter_events()</a></code> fetches events across all configured chapters.</li>
+<code><a href="../reference/sync_chapter_events.html">events_sync_chapters()</a></code> fetches events across all configured chapters.</li>
 <li>
-<code><a href="../reference/create_event_summary.html">create_event_summary()</a></code>, <code><a href="../reference/publish_event_summary.html">publish_event_summary()</a></code> for reporting.</li>
+<code><a href="../reference/create_event_summary.html">events_create_summary()</a></code>, <code><a href="../reference/publish_event_summary.html">events_publish_summary()</a></code> for reporting.</li>
 <li>Meetup GraphQL API integration via Meetup Pro.</li>
 </ul></div>
 <div class="section level3">
@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <li>
 <code><a href="../reference/compute_activity_trends.html">compute_activity_trends()</a></code> with ASCII sparklines for trend visualization.</li>
 <li>
-<code><a href="../reference/generate_analytics_dashboard.html">generate_analytics_dashboard()</a></code>, <code><a href="../reference/publish_analytics_dashboard.html">publish_analytics_dashboard()</a></code> for monthly org-wide analytics.</li>
+<code><a href="../reference/generate_analytics_dashboard.html">analytics_generate_dashboard()</a></code>, <code><a href="../reference/publish_analytics_dashboard.html">analytics_publish_dashboard()</a></code> for monthly org-wide analytics.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="website-analytics-0-1-0">Website analytics<a class="anchor" aria-label="anchor" href="#website-analytics-0-1-0"></a></h3>
@@ -196,9 +196,9 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="section level3">
 <h3 id="conference-coordination-0-1-0">Conference coordination<a class="anchor" aria-label="anchor" href="#conference-coordination-0-1-0"></a></h3>
 <ul><li>
-<code><a href="../reference/list_open_cfps.html">list_open_cfps()</a></code>, <code><a href="../reference/create_cfp_issue.html">create_cfp_issue()</a></code>, <code><a href="../reference/check_cfp_deadlines.html">check_cfp_deadlines()</a></code> for CFP tracking via GitHub Issues.</li>
+<code><a href="../reference/list_open_cfps.html">cfp_list_open()</a></code>, <code><a href="../reference/create_cfp_issue.html">cfp_create_issue()</a></code>, <code><a href="../reference/check_cfp_deadlines.html">cfp_check_deadlines()</a></code> for CFP tracking via GitHub Issues.</li>
 <li>
-<code><a href="../reference/recommend_speaker.html">recommend_speaker()</a></code>, <code><a href="../reference/list_speaker_recommendations.html">list_speaker_recommendations()</a></code> for speaker management.</li>
+<code><a href="../reference/recommend_speaker.html">cfp_recommend_speaker()</a></code>, <code><a href="../reference/list_speaker_recommendations.html">list_speaker_recommendations()</a></code> for speaker management.</li>
 <li>
 <code><a href="../reference/generate_conference_report.html">generate_conference_report()</a></code> for coordination summaries.</li>
 </ul></div>
@@ -209,7 +209,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <li>
 <code><a href="../reference/list_supported_languages.html">list_supported_languages()</a></code>, <code><a href="../reference/get_chapter_language.html">get_chapter_language()</a></code> for language management.</li>
 <li>
-<code><a href="../reference/validate_translations.html">validate_translations()</a></code>, <code><a href="../reference/check_translation_coverage.html">check_translation_coverage()</a></code> for translation quality assurance.</li>
+<code><a href="../reference/validate_translations.html">i18n_translations_validate()</a></code>, <code><a href="../reference/check_translation_coverage.html">i18n_coverage_check()</a></code> for translation quality assurance.</li>
 <li>Starter translations for Spanish, Portuguese, and French.</li>
 </ul></div>
 <div class="section level3">

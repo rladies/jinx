@@ -5,7 +5,7 @@ Queries Meetup Pro for recent events.
 ## Usage
 
 ``` r
-list_chapter_events(chapter, months = 3)
+events_list_chapter(chapter, months = 3)
 ```
 
 ## Arguments

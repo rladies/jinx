@@ -5,7 +5,7 @@ Create a CFP tracking issue
 ## Usage
 
 ``` r
-create_cfp_issue(
+cfp_create_issue(
   conference,
   deadline,
   url,

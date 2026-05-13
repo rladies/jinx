@@ -5,7 +5,7 @@ List open CFPs tracked as GitHub issues
 ## Usage
 
 ``` r
-list_open_cfps(org = "rladies", repo = "global-team")
+cfp_list_open(org = "rladies", repo = "global-team")
 ```
 
 ## Arguments

@@ -6,7 +6,7 @@ contributor list if one exists.
 ## Usage
 
 ``` r
-thank_contributor(owner, repo, pr_number, author, org = "rladies")
+contributor_thank(owner, repo, pr_number, author, org = "rladies")
 ```
 
 ## Arguments

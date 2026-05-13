@@ -6,7 +6,7 @@ information, and generates a JSON report.
 ## Usage
 
 ``` r
-generate_gha_dashboard(
+gha_generate_dashboard(
   org = "rladies",
   exclude_pattern = "^meetup-",
   output_path = NULL

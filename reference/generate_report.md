@@ -5,7 +5,7 @@ Collects stats across org repos: commits, PRs, issues.
 ## Usage
 
 ``` r
-generate_report(
+report_generate(
   type = c("weekly", "monthly"),
   org = "rladies",
   exclude_pattern = "^meetup-"

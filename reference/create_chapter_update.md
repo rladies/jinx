@@ -6,7 +6,7 @@ infrastructure.
 ## Usage
 
 ``` r
-create_chapter_update(
+chapter_create_update(
   city,
   country,
   org = "rladies",

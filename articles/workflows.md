@@ -66,7 +66,7 @@ gt_create_offboarding("octocat", "blog")
 
 **What happens:**
 
-1.  [`create_chapter_setup()`](https://rladies.github.io/jinx/reference/create_chapter_setup.md)
+1.  [`chapter_create_setup()`](https://rladies.github.io/jinx/reference/create_chapter_setup.md)
     opens a setup tracking issue
 2.  The issue contains a checklist: create repos, add organizers,
     configure Meetup, set up social media
@@ -82,7 +82,7 @@ gt_create_offboarding("octocat", "blog")
 ## Monitoring chapter health
 
 **Scheduled workflow** runs periodically via
-[`check_chapter_health()`](https://rladies.github.io/jinx/reference/check_chapter_health.md).
+[`chapter_check_health()`](https://rladies.github.io/jinx/reference/check_chapter_health.md).
 
 **Via issue comment:**
 
@@ -112,10 +112,10 @@ prepare_inactivity_emails(statuses)
 
 **What happens:**
 
-1.  [`create_blog_entry()`](https://rladies.github.io/jinx/reference/create_blog_entry.md)
+1.  [`blog_create_entry()`](https://rladies.github.io/jinx/reference/create_blog_entry.md)
     fetches metadata from the URL
 2.  Creates a YAML entry and opens a PR to the blog repo
-3.  [`post_blog_checklist()`](https://rladies.github.io/jinx/reference/post_blog_checklist.md)
+3.  [`blog_post_checklist()`](https://rladies.github.io/jinx/reference/post_blog_checklist.md)
     adds a review checklist to the PR
 
 ### Checking blog links
@@ -123,12 +123,12 @@ prepare_inactivity_emails(statuses)
     /jinx blog-check-links
 
 Runs
-[`check_blog_links()`](https://rladies.github.io/jinx/reference/check_blog_links.md)
+[`blog_check_links()`](https://rladies.github.io/jinx/reference/check_blog_links.md)
 to find broken URLs across all blog entries.
 
 ### Auto-merge on publish date
 
-[`auto_merge_pending()`](https://rladies.github.io/jinx/reference/auto_merge_pending.md)
+[`website_merge_pending()`](https://rladies.github.io/jinx/reference/auto_merge_pending.md)
 runs on a schedule and merges blog PRs whose publish date has arrived.
 This is triggered by the `website-merge-pending.yml` workflow.
 
@@ -171,8 +171,8 @@ others.
 
 ``` r
 
-report <- generate_report(type = "weekly")
-publish_report(report)
+report <- report_generate(type = "weekly")
+report_publish(report)
 ```
 
 ### Chapter health reports
@@ -181,7 +181,7 @@ publish_report(report)
 
 ``` r
 
-url <- report_chapter_health()
+url <- chapter_report_health()
 ```
 
 ## Managing the GHA dashboard
@@ -190,9 +190,9 @@ url <- report_chapter_health()
 
 **What happens:**
 
-1.  [`generate_gha_dashboard()`](https://rladies.github.io/jinx/reference/generate_gha_dashboard.md)
+1.  [`gha_generate_dashboard()`](https://rladies.github.io/jinx/reference/generate_gha_dashboard.md)
     queries workflow run status across all org repos
-2.  [`publish_gha_dashboard()`](https://rladies.github.io/jinx/reference/publish_gha_dashboard.md)
+2.  [`gha_publish_dashboard()`](https://rladies.github.io/jinx/reference/publish_gha_dashboard.md)
     posts a formatted status table as a GitHub issue
 
 **Scheduled workflow** runs weekly via `gha-dashboard.yml`.
@@ -206,7 +206,7 @@ url <- report_chapter_health()
 ``` r
 
 sync_directory_airtable()
-sync_global_team_airtable()
+sync_gt_airtable()
 ```
 
 Syncs directory entries and global team data between Airtable and
@@ -216,7 +216,7 @@ GitHub. Creates PRs for any changes detected.
 
 ``` r
 
-send_slack_invites(dry_run = TRUE)
+slack_invites_send(dry_run = TRUE)
 ```
 
 Fetches pending invitees from Airtable and sends Slack workspace
@@ -266,9 +266,9 @@ checks:
 
 **Automated greetings:**
 
-- [`welcome_contributor()`](https://rladies.github.io/jinx/reference/welcome_contributor.md)
+- [`contributor_welcome()`](https://rladies.github.io/jinx/reference/welcome_contributor.md)
   posts a welcome comment on first-time PRs
-- [`thank_contributor()`](https://rladies.github.io/jinx/reference/thank_contributor.md)
+- [`contributor_thank()`](https://rladies.github.io/jinx/reference/thank_contributor.md)
   posts a thank-you when PRs are merged
 
 Both are triggered by the `welcome-contributor.yml` and

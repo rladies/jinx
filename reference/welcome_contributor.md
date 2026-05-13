@@ -7,7 +7,7 @@ posts a shorter thank-you.
 ## Usage
 
 ``` r
-welcome_contributor(owner, repo, number, author, is_pr = TRUE, org = "rladies")
+contributor_welcome(owner, repo, number, author, is_pr = TRUE, org = "rladies")
 ```
 
 ## Arguments

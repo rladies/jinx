@@ -5,7 +5,7 @@ Orchestrates data collection, trend computation, and formatting.
 ## Usage
 
 ``` r
-generate_analytics_dashboard(org = "rladies", months = 12, output_path = NULL)
+analytics_generate_dashboard(org = "rladies", months = 12, output_path = NULL)
 ```
 
 ## Arguments

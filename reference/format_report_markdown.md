@@ -5,7 +5,7 @@ Format a report as markdown
 ## Usage
 
 ``` r
-format_report_markdown(report)
+report_format_markdown(report)
 ```
 
 ## Arguments
@@ -13,7 +13,7 @@ format_report_markdown(report)
 - report:
 
   Report data from
-  [`generate_report()`](https://rladies.github.io/jinx/reference/generate_report.md).
+  [`report_generate()`](https://rladies.github.io/jinx/reference/generate_report.md).
 
 ## Value
 

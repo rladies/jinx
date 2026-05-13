@@ -6,6 +6,7 @@ the onboarding checklist.
 ## Usage
 
 ``` r
+global_team_finalize_onboarding(username, team, name = username, org = "rladies")
 gt_finalize_onboarding(username, team, name = username, org = "rladies")
 ```
 

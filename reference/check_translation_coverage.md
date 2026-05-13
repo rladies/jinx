@@ -5,7 +5,7 @@ Check translation coverage across languages
 ## Usage
 
 ``` r
-check_translation_coverage()
+i18n_coverage_check()
 ```
 
 ## Value

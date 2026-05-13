@@ -5,7 +5,7 @@ Fetches events from all configured sources and writes a summary.
 ## Usage
 
 ``` r
-sync_chapter_events(
+events_sync_chapters(
   org = "rladies",
   target_repo = "event-archive",
   months = 3,

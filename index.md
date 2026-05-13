@@ -28,16 +28,16 @@ data-handling policy.
 | Area | Highlights |
 |----|----|
 | Team management | [`gt_invite()`](https://rladies.github.io/jinx/reference/gt_invite.md), [`gt_create_offboarding()`](https://rladies.github.io/jinx/reference/gt_create_offboarding.md), [`gt_finalize_offboarding()`](https://rladies.github.io/jinx/reference/gt_finalize_offboarding.md), [`gt_remind_stale()`](https://rladies.github.io/jinx/reference/gt_remind_stale.md) |
-| Chapters | [`create_chapter()`](https://rladies.github.io/jinx/reference/create_chapter.md), [`create_chapter_setup()`](https://rladies.github.io/jinx/reference/create_chapter_setup.md), [`monitor_chapter_status()`](https://rladies.github.io/jinx/reference/monitor_chapter_status.md), [`report_chapter_health()`](https://rladies.github.io/jinx/reference/report_chapter_health.md) |
+| Chapters | [`create_chapter()`](https://rladies.github.io/jinx/reference/create_chapter.md), [`chapter_create_setup()`](https://rladies.github.io/jinx/reference/create_chapter_setup.md), [`monitor_chapter_status()`](https://rladies.github.io/jinx/reference/monitor_chapter_status.md), [`chapter_report_health()`](https://rladies.github.io/jinx/reference/report_chapter_health.md) |
 | Directory | [`validate_directory_pr()`](https://rladies.github.io/jinx/reference/validate_directory_pr.md), [`validate_entry_filename()`](https://rladies.github.io/jinx/reference/validate_entry_filename.md), [`verify_social_handles()`](https://rladies.github.io/jinx/reference/verify_social_handles.md), [`optimize_image()`](https://rladies.github.io/jinx/reference/optimize_image.md) |
-| Blog | [`create_blog_entry()`](https://rladies.github.io/jinx/reference/create_blog_entry.md), [`check_blog_links()`](https://rladies.github.io/jinx/reference/check_blog_links.md), [`auto_merge_pending()`](https://rladies.github.io/jinx/reference/auto_merge_pending.md) |
+| Blog | [`blog_create_entry()`](https://rladies.github.io/jinx/reference/create_blog_entry.md), [`blog_check_links()`](https://rladies.github.io/jinx/reference/check_blog_links.md), [`website_merge_pending()`](https://rladies.github.io/jinx/reference/auto_merge_pending.md) |
 | Announcements | [`announce_post()`](https://rladies.github.io/jinx/reference/announce_post.md) cross-posts to Bluesky, LinkedIn, Mastodon + newsletter |
-| Reports | [`generate_report()`](https://rladies.github.io/jinx/reference/generate_report.md), [`format_analytics_markdown()`](https://rladies.github.io/jinx/reference/format_analytics_markdown.md), [`collect_website_analytics()`](https://rladies.github.io/jinx/reference/collect_website_analytics.md) |
-| Events | [`list_chapter_events()`](https://rladies.github.io/jinx/reference/list_chapter_events.md), [`sync_chapter_events()`](https://rladies.github.io/jinx/reference/sync_chapter_events.md), [`create_event_summary()`](https://rladies.github.io/jinx/reference/create_event_summary.md) |
-| Conferences | `add_cfp()`, [`check_cfp_deadlines()`](https://rladies.github.io/jinx/reference/check_cfp_deadlines.md), [`recommend_speaker()`](https://rladies.github.io/jinx/reference/recommend_speaker.md) |
-| Contributors | [`welcome_contributor()`](https://rladies.github.io/jinx/reference/welcome_contributor.md), [`list_org_contributors()`](https://rladies.github.io/jinx/reference/list_org_contributors.md), `update_contributors_md()` |
-| i18n | [`validate_translations()`](https://rladies.github.io/jinx/reference/validate_translations.md), [`check_translation_coverage()`](https://rladies.github.io/jinx/reference/check_translation_coverage.md) |
-| Slack | [`send_slack_invite()`](https://rladies.github.io/jinx/reference/send_slack_invite.md), [`post_slack_message()`](https://rladies.github.io/jinx/reference/post_slack_message.md), [`welcome_slack_member()`](https://rladies.github.io/jinx/reference/welcome_slack_member.md) |
+| Reports | [`report_generate()`](https://rladies.github.io/jinx/reference/generate_report.md), [`format_analytics_markdown()`](https://rladies.github.io/jinx/reference/format_analytics_markdown.md), [`collect_website_analytics()`](https://rladies.github.io/jinx/reference/collect_website_analytics.md) |
+| Events | [`events_list_chapter()`](https://rladies.github.io/jinx/reference/list_chapter_events.md), [`events_sync_chapters()`](https://rladies.github.io/jinx/reference/sync_chapter_events.md), [`events_create_summary()`](https://rladies.github.io/jinx/reference/create_event_summary.md) |
+| Conferences | `add_cfp()`, [`cfp_check_deadlines()`](https://rladies.github.io/jinx/reference/check_cfp_deadlines.md), [`cfp_recommend_speaker()`](https://rladies.github.io/jinx/reference/recommend_speaker.md) |
+| Contributors | [`contributor_welcome()`](https://rladies.github.io/jinx/reference/welcome_contributor.md), [`list_org_contributors()`](https://rladies.github.io/jinx/reference/list_org_contributors.md), `update_contributors_md()` |
+| i18n | [`i18n_translations_validate()`](https://rladies.github.io/jinx/reference/validate_translations.md), [`i18n_coverage_check()`](https://rladies.github.io/jinx/reference/check_translation_coverage.md) |
+| Slack | [`slack_invite_send()`](https://rladies.github.io/jinx/reference/send_slack_invite.md), [`slack_post_message()`](https://rladies.github.io/jinx/reference/post_slack_message.md), [`slack_welcome_member()`](https://rladies.github.io/jinx/reference/welcome_slack_member.md) |
 
 `/jinx help` in Slack or any issue comment prints the full slash-command
 reference. The same list lives in
@@ -73,7 +73,7 @@ on:
     types: [opened, reopened, synchronize]
 jobs:
   review:
-    uses: rladies/jinx/.github/workflows/pr-review.yml@main
+    uses: rladies/jinx/.github/workflows/reusable-pr-review.yml@main
     secrets: inherit
 ```
 
@@ -83,8 +83,8 @@ The worker at `https://jinx.rladies.workers.dev` handles the OAuth
 install flow, slash commands, `@`-mention events, and the Airtable
 invite approval pipeline. Worker source is in
 [`worker/src/`](https://rladies.github.io/jinx/worker/src/); deploy via
-`.github/workflows/deploy-worker.yml`. Required worker secrets and KV
-bindings are documented in
+`.github/workflows/infra-deploy-worker.yml`. Required worker secrets and
+KV bindings are documented in
 [`.github/AGENTS.md`](https://rladies.github.io/jinx/AGENTS.html#cloudflare-worker).
 
 ## Development
@@ -124,8 +124,8 @@ functions; the `gh` package authenticates via the App-minted
 
 Bot-facing workflows use the prebuilt `ghcr.io/rladies/jinx-bot:latest`
 image so they boot with the current package already installed. The image
-is rebuilt by `.github/workflows/build-bot-image.yml` when the runtime
-files change.
+is rebuilt by `.github/workflows/infra-build-bot-image.yml` when the
+runtime files change.
 
     Slack / issue comment / cron
             │
@@ -133,7 +133,7 @@ files change.
     GitHub Actions workflow
             │  (jinx[bot] App-token authed)
             ▼
-    jinx::parse_command() ─► jinx::execute_command()
+    jinx::cmd_parse() ─► jinx::cmd_execute()
             │
             ▼
     gh::gh() API call as jinx[bot]

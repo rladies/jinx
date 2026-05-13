@@ -13,7 +13,8 @@ Parses commands like:
 ## Usage
 
 ``` r
-parse_command(body)
+command_parse(body)
+cmd_parse(body)
 ```
 
 ## Arguments

@@ -6,7 +6,7 @@ in a specified file.
 ## Usage
 
 ``` r
-update_contributors_list(
+contributors_update(
   owner,
   repo,
   file_path = ".github/contributors.md",

@@ -9,7 +9,7 @@ Airtable record's `invited` flag for audit.
 ## Usage
 
 ``` r
-send_slack_invite(
+slack_invite_send(
   email,
   channel = Sys.getenv("SLACK_INVITE_REQUEST_CHANNEL"),
   base_id = slack_invitees_base_id(),

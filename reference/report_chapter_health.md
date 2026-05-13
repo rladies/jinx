@@ -5,7 +5,7 @@ Analyzes chapter activity data and publishes a summary report.
 ## Usage
 
 ``` r
-report_chapter_health(months = 6, org = "rladies", target_repo = "global-team")
+chapter_report_health(months = 6, org = "rladies", target_repo = "global-team")
 ```
 
 ## Arguments

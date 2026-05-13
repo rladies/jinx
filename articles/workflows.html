@@ -140,7 +140,7 @@ access and closes the issue</li>
 <p><strong>What happens:</strong></p>
 <ol style="list-style-type: decimal">
 <li>
-<code><a href="../reference/create_chapter_setup.html">create_chapter_setup()</a></code> opens a setup tracking
+<code><a href="../reference/create_chapter_setup.html">chapter_create_setup()</a></code> opens a setup tracking
 issue</li>
 <li>The issue contains a checklist: create repos, add organizers,
 configure Meetup, set up social media</li>
@@ -158,7 +158,7 @@ to the directory</li>
 <h2 id="monitoring-chapter-health">Monitoring chapter health<a class="anchor" aria-label="anchor" href="#monitoring-chapter-health"></a>
 </h2>
 <p><strong>Scheduled workflow</strong> runs periodically via
-<code><a href="../reference/check_chapter_health.html">check_chapter_health()</a></code>.</p>
+<code><a href="../reference/check_chapter_health.html">chapter_check_health()</a></code>.</p>
 <p><strong>Via issue comment:</strong></p>
 <pre><code>/jinx chapter-health</code></pre>
 <p><strong>What happens:</strong></p>
@@ -183,10 +183,10 @@ to the directory</li>
 <p><strong>What happens:</strong></p>
 <ol style="list-style-type: decimal">
 <li>
-<code><a href="../reference/create_blog_entry.html">create_blog_entry()</a></code> fetches metadata from the URL</li>
+<code><a href="../reference/create_blog_entry.html">blog_create_entry()</a></code> fetches metadata from the URL</li>
 <li>Creates a YAML entry and opens a PR to the blog repo</li>
 <li>
-<code><a href="../reference/post_blog_checklist.html">post_blog_checklist()</a></code> adds a review checklist to the
+<code><a href="../reference/post_blog_checklist.html">blog_post_checklist()</a></code> adds a review checklist to the
 PR</li>
 </ol>
 </div>
@@ -194,14 +194,14 @@ PR</li>
 <h3 id="checking-blog-links">Checking blog links<a class="anchor" aria-label="anchor" href="#checking-blog-links"></a>
 </h3>
 <pre><code>/jinx blog-check-links</code></pre>
-<p>Runs <code><a href="../reference/check_blog_links.html">check_blog_links()</a></code> to find broken URLs across all
+<p>Runs <code><a href="../reference/check_blog_links.html">blog_check_links()</a></code> to find broken URLs across all
 blog entries.</p>
 </div>
 <div class="section level3">
 <h3 id="auto-merge-on-publish-date">Auto-merge on publish date<a class="anchor" aria-label="anchor" href="#auto-merge-on-publish-date"></a>
 </h3>
-<p><code><a href="../reference/auto_merge_pending.html">auto_merge_pending()</a></code> runs on a schedule and merges blog
-PRs whose publish date has arrived. This is triggered by the
+<p><code><a href="../reference/auto_merge_pending.html">website_merge_pending()</a></code> runs on a schedule and merges
+blog PRs whose publish date has arrived. This is triggered by the
 <code>website-merge-pending.yml</code> workflow.</p>
 </div>
 </div>
@@ -236,15 +236,15 @@ others.</p>
 /jinx report monthly</code></pre>
 <p><strong>Programmatically:</strong></p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">report</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_report.html">generate_report</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"weekly"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/publish_report.html">publish_report</a></span><span class="op">(</span><span class="va">report</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">report</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_report.html">report_generate</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"weekly"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/publish_report.html">report_publish</a></span><span class="op">(</span><span class="va">report</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="chapter-health-reports">Chapter health reports<a class="anchor" aria-label="anchor" href="#chapter-health-reports"></a>
 </h3>
 <pre><code>/jinx report chapters</code></pre>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">url</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report_chapter_health.html">report_chapter_health</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">url</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report_chapter_health.html">chapter_report_health</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -254,10 +254,10 @@ others.</p>
 <p><strong>What happens:</strong></p>
 <ol style="list-style-type: decimal">
 <li>
-<code><a href="../reference/generate_gha_dashboard.html">generate_gha_dashboard()</a></code> queries workflow run status
+<code><a href="../reference/generate_gha_dashboard.html">gha_generate_dashboard()</a></code> queries workflow run status
 across all org repos</li>
 <li>
-<code><a href="../reference/publish_gha_dashboard.html">publish_gha_dashboard()</a></code> posts a formatted status table
+<code><a href="../reference/publish_gha_dashboard.html">gha_publish_dashboard()</a></code> posts a formatted status table
 as a GitHub issue</li>
 </ol>
 <p><strong>Scheduled workflow</strong> runs weekly via
@@ -271,7 +271,7 @@ as a GitHub issue</li>
 <p><strong>Programmatically:</strong></p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/sync_directory_airtable.html">sync_directory_airtable</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/sync_global_team_airtable.html">sync_global_team_airtable</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/sync_global_team_airtable.html">sync_gt_airtable</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>Syncs directory entries and global team data between Airtable and
 GitHub. Creates PRs for any changes detected.</p>
 </div>
@@ -279,7 +279,7 @@ GitHub. Creates PRs for any changes detected.</p>
 <h2 id="slack-onboarding">Slack onboarding<a class="anchor" aria-label="anchor" href="#slack-onboarding"></a>
 </h2>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/send_slack_invites.html">send_slack_invites</a></span><span class="op">(</span>dry_run <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/send_slack_invites.html">slack_invites_send</a></span><span class="op">(</span>dry_run <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>Fetches pending invitees from Airtable and sends Slack workspace
 invitations. Use <code>dry_run = TRUE</code> (the default) to preview
 before sending.</p>
@@ -315,10 +315,10 @@ on PRs that modify directory entries. It checks:</p>
 <p><strong>Automated greetings:</strong></p>
 <ul>
 <li>
-<code><a href="../reference/welcome_contributor.html">welcome_contributor()</a></code> posts a welcome comment on
+<code><a href="../reference/welcome_contributor.html">contributor_welcome()</a></code> posts a welcome comment on
 first-time PRs</li>
 <li>
-<code><a href="../reference/thank_contributor.html">thank_contributor()</a></code> posts a thank-you when PRs are
+<code><a href="../reference/thank_contributor.html">contributor_thank()</a></code> posts a thank-you when PRs are
 merged</li>
 </ul>
 <p>Both are triggered by the <code>welcome-contributor.yml</code> and

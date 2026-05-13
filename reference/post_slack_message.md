@@ -6,7 +6,7 @@ the Slack Web API.
 ## Usage
 
 ``` r
-post_slack_message(text, channel, token = Sys.getenv("SLACK_TOKEN"))
+slack_post_message(text, channel, token = Sys.getenv("SLACK_TOKEN"))
 ```
 
 ## Arguments

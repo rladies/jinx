@@ -5,7 +5,7 @@ Publish event summary as a GitHub issue
 ## Usage
 
 ``` r
-publish_event_summary(summary, org = "rladies", target_repo = "global-team")
+events_publish_summary(summary, org = "rladies", target_repo = "global-team")
 ```
 
 ## Arguments
@@ -13,7 +13,7 @@ publish_event_summary(summary, org = "rladies", target_repo = "global-team")
 - summary:
 
   Formatted summary from
-  [`create_event_summary()`](https://rladies.github.io/jinx/reference/create_event_summary.md).
+  [`events_create_summary()`](https://rladies.github.io/jinx/reference/create_event_summary.md).
 
 - org:
 
