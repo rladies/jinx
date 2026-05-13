@@ -9,5 +9,9 @@
   },
   "scripts": {
     "index": "node index.mjs"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "turndown": "^7.2.4"
   }
 }

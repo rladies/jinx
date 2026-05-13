@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { gatherMarkdownSource } from "./sources/markdown.mjs";
+import { gatherHugoSiteSource } from "./sources/hugo-site.mjs";
 import { gatherGithubOrgSource } from "./sources/github.mjs";
 import { gatherPkgdownLlmsSource } from "./sources/pkgdown.mjs";
 import { gatherGithubFilesSource } from "./sources/github-files.mjs";
@@ -9,20 +9,23 @@ const JINX_REPO_ROOT = process.env.JINX_PATH || "..";
 
 const SOURCES = [
   {
-    type: "markdown",
+    type: "hugo-site",
     source_type: "guide",
     repo: "rladies/rladiesguide",
-    root: process.env.RLADIESGUIDE_PATH || "_sources/rladiesguide",
-    contentDir: "content",
+    publicDir: process.env.RLADIESGUIDE_PUBLIC || "_sources/rladiesguide/public",
     baseUrl: "https://guide.rladies.org",
+    titleSuffix: " :: R-Ladies organizational guidance",
+    languageRoots: { english: "en", others: ["es"] },
   },
   {
-    type: "markdown",
+    type: "hugo-site",
     source_type: "site",
     repo: "rladies/rladies.github.io",
-    root: process.env.RLADIES_SITE_PATH || "_sources/rladies.github.io",
-    contentDir: "content",
+    publicDir:
+      process.env.RLADIES_SITE_PUBLIC || "_sources/rladies.github.io/public",
     baseUrl: "https://rladies.org",
+    titleSuffix: " - RLadies+ Global",
+    languageRoots: { english: null, others: ["es", "fr", "pt"] },
   },
   {
     type: "github-org",
@@ -125,8 +128,8 @@ console.log(`Upserted ${vectors.length} vectors to ${INDEX_NAME}.`, result);
 
 async function gather(src) {
   switch (src.type) {
-    case "markdown":
-      return gatherMarkdownSource(src);
+    case "hugo-site":
+      return gatherHugoSiteSource(src);
     case "github-org":
       return gatherGithubOrgSource(src);
     case "pkgdown-llms":
