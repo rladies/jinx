@@ -1,6 +1,10 @@
 import { createHash } from "node:crypto";
 import { gatherMarkdownSource } from "./sources/markdown.mjs";
 import { gatherGithubOrgSource } from "./sources/github.mjs";
+import { gatherPkgdownLlmsSource } from "./sources/pkgdown.mjs";
+import { gatherGithubFilesSource } from "./sources/github-files.mjs";
+
+const JINX_REPO_ROOT = process.env.JINX_PATH || "..";
 
 const SOURCES = [
   {
@@ -20,6 +24,32 @@ const SOURCES = [
   {
     type: "github-org",
     org: "rladies",
+  },
+  {
+    type: "pkgdown-llms",
+    org: "rladies",
+  },
+  {
+    type: "github-files",
+    repo: "rladies/jinx",
+    root: JINX_REPO_ROOT,
+    files: [
+      {
+        path: "inst/commands/help.md",
+        url: "https://github.com/rladies/jinx/blob/main/inst/commands/help.md",
+        title: "Jinx slash command reference",
+      },
+      {
+        path: "NEWS.md",
+        url: "https://rladies.org/jinx/news/index.html",
+        title: "Jinx release notes",
+      },
+      {
+        path: "PRIVACY.md",
+        url: "https://rladies.org/jinx/articles/privacy.html",
+        title: "Jinx privacy policy",
+      },
+    ],
   },
 ];
 
@@ -74,6 +104,10 @@ async function gather(src) {
       return gatherMarkdownSource(src);
     case "github-org":
       return gatherGithubOrgSource(src);
+    case "pkgdown-llms":
+      return gatherPkgdownLlmsSource(src);
+    case "github-files":
+      return gatherGithubFilesSource(src);
     default:
       console.error(`Unknown source type: ${src.type}`);
       return [];
