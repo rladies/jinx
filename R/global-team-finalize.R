@@ -57,6 +57,22 @@ global_team_finalize_onboarding <- function(
   invisible(issue$html_url)
 }
 
+#' @rdname global_team_finalize_onboarding
+#' @export
+gt_finalize_onboarding <- function(
+  username,
+  team,
+  name = username,
+  org = "rladies"
+) {
+  global_team_finalize_onboarding(
+    username = username,
+    team = team,
+    name = name,
+    org = org
+  )
+}
+
 #' Notify teams by commenting on an issue with @-mentions
 #' @param org GitHub organization.
 #' @param repo Repository name.

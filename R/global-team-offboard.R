@@ -41,6 +41,22 @@ global_team_create_offboarding <- function(
   invisible(issue$html_url)
 }
 
+#' @rdname global_team_create_offboarding
+#' @export
+gt_create_offboarding <- function(
+  username,
+  team,
+  name = username,
+  org = "rladies"
+) {
+  global_team_create_offboarding(
+    username = username,
+    team = team,
+    name = name,
+    org = org
+  )
+}
+
 #' Finalize global team offboarding by removing user from teams
 #'
 #' @param username GitHub username.
@@ -72,4 +88,10 @@ global_team_finalize_offboarding <- function(username, team, org = "rladies") {
   }
 
   invisible()
+}
+
+#' @rdname global_team_finalize_offboarding
+#' @export
+gt_finalize_offboarding <- function(username, team, org = "rladies") {
+  global_team_finalize_offboarding(username = username, team = team, org = org)
 }

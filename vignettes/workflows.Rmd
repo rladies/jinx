@@ -28,22 +28,22 @@ For setup and architecture details, see `vignette("getting-started")`.
 
 **What happens:**
 
-1. `global_team_invite()` sends an org invitation to the user
+1. `gt_invite()` sends an org invitation to the user
 2. A tracking issue is created with the team-specific onboarding checklist
-3. Once the user accepts, `global_team_finalize_onboarding()` adds them to the
+3. Once the user accepts, `gt_finalize_onboarding()` adds them to the
    appropriate team(s) and repos
 4. The tracking issue is closed
 
 **Programmatically:**
 ```{r}
 #| eval: false
-global_team_invite("octocat", "website")
+gt_invite("octocat", "website")
 ```
 
 **Checking pending invitations:**
 ```{r}
 #| eval: false
-global_team_check_invitations()
+gt_check_invitations()
 ```
 
 ## Offboarding a team member
@@ -55,15 +55,15 @@ global_team_check_invitations()
 
 **What happens:**
 
-1. `global_team_create_offboarding()` opens an offboarding tracking issue
+1. `gt_create_offboarding()` opens an offboarding tracking issue
 2. The issue lists cleanup steps (remove from team, repos, external services)
-3. Once complete, `global_team_finalize_offboarding()` removes org access and closes
+3. Once complete, `gt_finalize_offboarding()` removes org access and closes
    the issue
 
 **Programmatically:**
 ```{r}
 #| eval: false
-global_team_create_offboarding("octocat", "blog")
+gt_create_offboarding("octocat", "blog")
 ```
 
 ## Setting up a new chapter
@@ -285,5 +285,5 @@ repos.
 /jinx remind stale
 ```
 
-`global_team_remind_stale()` scans for onboarding/offboarding issues that have
+`gt_remind_stale()` scans for onboarding/offboarding issues that have
 gone stale and posts reminder comments.

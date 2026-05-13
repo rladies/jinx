@@ -13,12 +13,12 @@ reference:
   - title: Commands
     desc: Issue comment command interface
     contents:
-      - starts_with("command_")
+      - starts_with("cmd_")
 
   - title: Team management
     desc: Global team onboarding and offboarding
     contents:
-      - starts_with("global_team_")
+      - starts_with("gt_")
 
   - title: Announcements
     desc: Cross-platform blog post announcements

@@ -51,3 +51,9 @@ global_team_remind_stale <- function(org = "rladies", days = 30, repo = "global-
 
   invisible(stale)
 }
+
+#' @rdname global_team_remind_stale
+#' @export
+gt_remind_stale <- function(org = "rladies", days = 30, repo = "global-team") {
+  global_team_remind_stale(org = org, days = days, repo = repo)
+}

@@ -32,7 +32,7 @@ See [PRIVACY.md](PRIVACY.md) for the data-handling policy.
 
 | Area            | Highlights                                                                                            |
 | --------------- | ----------------------------------------------------------------------------------------------------- |
-| Team management | `global_team_invite()`, `global_team_create_offboarding()`, `global_team_finalize_offboarding()`, `global_team_remind_stale()`            |
+| Team management | `gt_invite()`, `gt_create_offboarding()`, `gt_finalize_offboarding()`, `gt_remind_stale()`            |
 | Chapters        | `create_chapter()`, `chapter_create_setup()`, `monitor_chapter_status()`, `chapter_report_health()`   |
 | Directory       | `validate_directory_pr()`, `validate_entry_filename()`, `verify_social_handles()`, `optimize_image()` |
 | Blog            | `blog_create_entry()`, `blog_check_links()`, `website_merge_pending()`                                   |
@@ -136,7 +136,7 @@ Slack / issue comment / cron
 GitHub Actions workflow
         │  (jinx[bot] App-token authed)
         ▼
-jinx::command_parse() ─► jinx::command_execute()
+jinx::cmd_parse() ─► jinx::cmd_execute()
         │
         ▼
 gh::gh() API call as jinx[bot]

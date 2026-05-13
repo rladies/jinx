@@ -63,7 +63,7 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           Rscript -e '
-            jinx::global_team_invite(
+            jinx::gt_invite(
               username = "${{ inputs.username }}",
               team = "${{ inputs.team }}",
               name = "${{ inputs.name }}"

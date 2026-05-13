@@ -2,9 +2,11 @@
 % Please edit documentation in R/global-team-check.R
 \name{global_team_check_invitations}
 \alias{global_team_check_invitations}
+\alias{gt_check_invitations}
 \title{Check pending global team invitations}
 \usage{
 global_team_check_invitations(org = "rladies")
+gt_check_invitations(org = "rladies")
 }
 \arguments{
 \item{org}{GitHub organization. Defaults to \code{"rladies"}.}

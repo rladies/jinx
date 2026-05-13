@@ -26,7 +26,7 @@ GitHub App identity (`jinx[bot]`).
 Issue comment (/jinx invite ...)
   -> issue_comment workflow triggers
     -> installs jinx R package
-      -> calls jinx::command_parse() + jinx::command_execute()
+      -> calls jinx::cmd_parse() + jinx::cmd_execute()
         -> gh::gh() API calls as jinx[bot]
           -> reply comment posted
 ```
@@ -86,14 +86,14 @@ is installed. Commands start with `/jinx` followed by an action:
 /jinx help
 ```
 
-Commands are parsed by `command_parse()` and dispatched by
-`command_execute()`:
+Commands are parsed by `cmd_parse()` and dispatched by
+`cmd_execute()`:
 
 ```{r}
 #| eval: false
 library(jinx)
 
-cmd <- command_parse("/jinx invite @octocat to website")
+cmd <- cmd_parse("/jinx invite @octocat to website")
 cmd
 #> $action
 #> [1] "invite"
@@ -109,7 +109,7 @@ jinx is organized into modules, each handling a specific domain:
 
 | Module | Functions |
 |--------|-----------|
-| Team management | `global_team_invite()`, `global_team_create_offboarding()`, `global_team_finalize_onboarding()` |
+| Team management | `gt_invite()`, `gt_create_offboarding()`, `gt_finalize_onboarding()` |
 | Announcements | `announce_post()`, `post_bluesky()`, `post_mastodon()` |
 | Directory | `validate_directory_pr()`, `crop_directory_image()` |
 | Blogs | `blog_create_entry()`, `blog_check_links()` |

@@ -59,7 +59,7 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           Rscript -e '
-            jinx::global_team_create_offboarding(
+            jinx::gt_create_offboarding(
               username = "${{ inputs.username }}",
               team = "${{ inputs.team }}",
               name = "${{ inputs.name }}"

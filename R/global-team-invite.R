@@ -38,3 +38,9 @@ global_team_invite <- function(username, team, name = username, org = "rladies")
 
   invisible()
 }
+
+#' @rdname global_team_invite
+#' @export
+gt_invite <- function(username, team, name = username, org = "rladies") {
+  global_team_invite(username = username, team = team, name = name, org = org)
+}

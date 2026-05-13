@@ -2,9 +2,11 @@
 % Please edit documentation in R/global-team-remind.R
 \name{global_team_remind_stale}
 \alias{global_team_remind_stale}
+\alias{gt_remind_stale}
 \title{Send reminders on stale global team onboarding/offboarding issues}
 \usage{
 global_team_remind_stale(org = "rladies", days = 30, repo = "global-team")
+gt_remind_stale(org = "rladies", days = 30, repo = "global-team")
 }
 \arguments{
 \item{org}{GitHub organization. Defaults to \code{"rladies"}.}

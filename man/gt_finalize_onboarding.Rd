@@ -2,9 +2,11 @@
 % Please edit documentation in R/global-team-finalize.R
 \name{global_team_finalize_onboarding}
 \alias{global_team_finalize_onboarding}
+\alias{gt_finalize_onboarding}
 \title{Finalize global team onboarding for an accepted member}
 \usage{
 global_team_finalize_onboarding(username, team, name = username, org = "rladies")
+gt_finalize_onboarding(username, team, name = username, org = "rladies")
 }
 \arguments{
 \item{username}{GitHub username.}

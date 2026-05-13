@@ -2,9 +2,11 @@
 % Please edit documentation in R/commands.R
 \name{command_parse}
 \alias{command_parse}
+\alias{cmd_parse}
 \title{Parse a jinx command from an issue comment}
 \usage{
 command_parse(body)
+cmd_parse(body)
 }
 \arguments{
 \item{body}{Character string, the comment body.}

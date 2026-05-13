@@ -50,6 +50,12 @@ command_parse <- function(body) {
   )
 }
 
+#' @rdname command_parse
+#' @export
+cmd_parse <- function(body) {
+  command_parse(body)
+}
+
 parse_invite_command <- function(parts) {
   # /jinx invite @username to team
   if (length(parts) < 4 || tolower(parts[3]) != "to") {
@@ -467,6 +473,12 @@ command_execute <- function(command) {
       )
     }
   )
+}
+
+#' @rdname command_execute
+#' @export
+cmd_execute <- function(command) {
+  command_execute(command)
 }
 
 normalize_command <- function(parts) {

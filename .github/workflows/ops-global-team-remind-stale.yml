@@ -32,4 +32,4 @@ jobs:
       - name: Send stale reminders
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: Rscript -e 'jinx::global_team_remind_stale()'
+        run: Rscript -e 'jinx::gt_remind_stale()'

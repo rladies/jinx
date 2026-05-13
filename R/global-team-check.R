@@ -43,3 +43,9 @@ global_team_check_invitations <- function(org = "rladies") {
 
   invisible(accepted)
 }
+
+#' @rdname global_team_check_invitations
+#' @export
+gt_check_invitations <- function(org = "rladies") {
+  global_team_check_invitations(org = org)
+}

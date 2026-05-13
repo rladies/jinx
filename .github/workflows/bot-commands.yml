@@ -48,8 +48,8 @@ jobs:
             source <- Sys.getenv("COMMAND_SOURCE")
             text <- Sys.getenv("COMMAND_TEXT")
             if (source == "slack") text <- paste("/jinx", text)
-            cmd <- jinx::command_parse(text)
-            result <- jinx::command_execute(cmd)
+            cmd <- jinx::cmd_parse(text)
+            result <- jinx::cmd_execute(cmd)
             if (is.null(result)) result <- "\u2705 Done!"
             writeLines(result, "jinx_response.txt")
           '

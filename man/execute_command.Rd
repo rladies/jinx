@@ -2,9 +2,11 @@
 % Please edit documentation in R/commands.R
 \name{command_execute}
 \alias{command_execute}
+\alias{cmd_execute}
 \title{Execute a parsed jinx command}
 \usage{
 command_execute(command)
+cmd_execute(command)
 }
 \arguments{
 \item{command}{Parsed command list from \code{\link[=command_parse]{command_parse()}}.}

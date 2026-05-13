@@ -2,9 +2,11 @@
 % Please edit documentation in R/global-team-offboard.R
 \name{global_team_finalize_offboarding}
 \alias{global_team_finalize_offboarding}
+\alias{gt_finalize_offboarding}
 \title{Finalize global team offboarding by removing user from teams}
 \usage{
 global_team_finalize_offboarding(username, team, org = "rladies")
+gt_finalize_offboarding(username, team, org = "rladies")
 }
 \arguments{
 \item{username}{GitHub username.}

@@ -36,7 +36,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           Rscript -e '
-            accepted <- jinx::global_team_check_invitations()
+            accepted <- jinx::gt_check_invitations()
             if (length(accepted) > 0) {
               for (user in accepted) {
                 artifacts <- gh::gh(
