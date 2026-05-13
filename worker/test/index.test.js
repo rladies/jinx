@@ -128,4 +128,33 @@ describe("worker fetch routing", () => {
     );
     expect([400, 403, 500]).toContain(res.status);
   });
+
+  it("returns a 503 with the error message when a handler throws (e.g. misconfigured allowlist)", async () => {
+    const env = makeEnv({
+      SLACK_ORGANIZER_TEAM_ID: undefined,
+      SLACK_COMMUNITY_TEAM_ID: undefined,
+    });
+    const ts = String(Math.floor(Date.now() / 1000));
+    const body = new URLSearchParams({
+      team_id: "T_ORG",
+      text: "help",
+    }).toString();
+    const sig = await signSlack("test-signing-secret", ts, body);
+
+    const res = await worker.fetch(
+      makeRequest("https://jinx.example.com/slack/command", {
+        method: "POST",
+        headers: {
+          "x-slack-request-timestamp": ts,
+          "x-slack-signature": sig,
+        },
+        body,
+      }),
+      env,
+      makeCtx()
+    );
+    expect(res.status).toBe(503);
+    const text = await res.text();
+    expect(text).toMatch(/SLACK_ORGANIZER_TEAM_ID/);
+  });
 });
