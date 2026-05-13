@@ -1,11 +1,16 @@
 import { describe, it, expect } from "vitest";
-import { rerank_matches } from "../src/rag.js";
+import {
+  rag_build_messages,
+  rag_repair_links,
+  rag_source_urls,
+  rerank_matches,
+} from "../src/rag.js";
 
 const NOW = 1_715_000_000;
 const ONE_YEAR = 365 * 24 * 60 * 60;
 
-function match({ id, score, source_type, date = 0 }) {
-  return { id, score, metadata: { source_type, date } };
+function match({ id, score, source_type, date = 0, url = "" }) {
+  return { id, score, metadata: { source_type, date, url } };
 }
 
 describe("rerank_matches", () => {
@@ -64,5 +69,160 @@ describe("rerank_matches", () => {
       NOW
     );
     expect(out[0].adjusted_score).toBeCloseTo(0.6, 5);
+  });
+
+  it("ranks the canonical CoC above its maintainer meta-doc at equal cosine score", () => {
+    const out = rerank_matches(
+      [
+        match({
+          id: "meta",
+          score: 0.8,
+          source_type: "guide",
+          url: "https://guide.rladies.org/global-team/code-of-conduct/",
+        }),
+        match({
+          id: "canonical",
+          score: 0.8,
+          source_type: "site",
+          url: "https://rladies.org/coc/",
+        }),
+      ],
+      NOW
+    );
+    expect(out[0].id).toBe("canonical");
+    expect(out[1].id).toBe("meta");
+  });
+
+  it("applies a 0.7 multiplier to /global-team/ URLs", () => {
+    const [penalised] = rerank_matches(
+      [
+        match({
+          id: "g",
+          score: 0.8,
+          source_type: "guide",
+          url: "https://guide.rladies.org/global-team/jinx/",
+        }),
+      ],
+      NOW
+    );
+    expect(penalised.adjusted_score).toBeCloseTo(0.8 * 1.25 * 0.7, 5);
+  });
+
+  it("does not penalise non-/global-team/ guide pages", () => {
+    const [unaffected] = rerank_matches(
+      [
+        match({
+          id: "g",
+          score: 0.8,
+          source_type: "guide",
+          url: "https://guide.rladies.org/organizers/intro/get-started/",
+        }),
+      ],
+      NOW
+    );
+    expect(unaffected.adjusted_score).toBeCloseTo(0.8 * 1.25, 5);
+  });
+});
+
+describe("rag_build_messages", () => {
+  const sample_match = {
+    metadata: {
+      title: "Code of Conduct",
+      heading: "Reporting",
+      url: "https://rladies.org/coc/",
+      text: "Reports can go to safety@rladies.org.",
+    },
+  };
+
+  it("emits a system + user message pair", () => {
+    const messages = rag_build_messages("how do i report?", [sample_match]);
+    expect(messages).toHaveLength(2);
+    expect(messages[0].role).toBe("system");
+    expect(messages[1].role).toBe("user");
+  });
+
+  it("inlines the source URL into the user prompt", () => {
+    const messages = rag_build_messages("how do i report?", [sample_match]);
+    expect(messages[1].content).toContain("https://rladies.org/coc/");
+    expect(messages[1].content).toContain("Code of Conduct");
+    expect(messages[1].content).toContain("Reporting");
+  });
+
+  it("instructs Slack hyperlink syntax in the system prompt", () => {
+    const [system] = rag_build_messages("anything", [sample_match]);
+    expect(system.content).toMatch(/<https:\/\/example\.com\|readable label>/);
+  });
+});
+
+describe("rag_repair_links", () => {
+  const allowed = ["https://guide.rladies.org/coc/", "https://rladies.org/"];
+
+  it("repairs <ttps:// to <https:// before validating", () => {
+    const out = rag_repair_links(
+      "See the <ttps://guide.rladies.org/coc/|Code of Conduct>.",
+      allowed
+    );
+    expect(out).toBe(
+      "See the <https://guide.rladies.org/coc/|Code of Conduct>."
+    );
+  });
+
+  it("repairs <ttp:// to <http:// for non-https sources", () => {
+    const out = rag_repair_links(
+      "See <ttp://example.org|example>.",
+      ["http://example.org"]
+    );
+    expect(out).toBe("See <http://example.org|example>.");
+  });
+
+  it("strips invented URLs but keeps the label", () => {
+    const out = rag_repair_links(
+      "Check <https://invented.example/page|the made-up guide> for details.",
+      allowed
+    );
+    expect(out).toBe("Check the made-up guide for details.");
+  });
+
+  it("keeps links whose URL is in the allowlist", () => {
+    const out = rag_repair_links(
+      "Read the <https://rladies.org/|main site>.",
+      allowed
+    );
+    expect(out).toBe("Read the <https://rladies.org/|main site>.");
+  });
+
+  it("handles a mix of repair, allowed, and invented in one answer", () => {
+    const out = rag_repair_links(
+      "Try the <ttps://guide.rladies.org/coc/|CoC>, the <https://rladies.org/|site>, and the <https://nope.example|imaginary doc>.",
+      allowed
+    );
+    expect(out).toBe(
+      "Try the <https://guide.rladies.org/coc/|CoC>, the <https://rladies.org/|site>, and the imaginary doc."
+    );
+  });
+
+  it("returns empty input unchanged", () => {
+    expect(rag_repair_links("", allowed)).toBe("");
+  });
+
+  it("treats a missing allowlist as no allowed URLs (strips every link)", () => {
+    const out = rag_repair_links(
+      "See <https://rladies.org/|the site>.",
+      undefined
+    );
+    expect(out).toBe("See the site.");
+  });
+});
+
+describe("rag_source_urls", () => {
+  it("returns only well-formed URLs from match metadata", () => {
+    const urls = rag_source_urls([
+      { metadata: { url: "https://a.example" } },
+      { metadata: { url: "" } },
+      { metadata: {} },
+      { metadata: { url: "https://b.example" } },
+      {},
+    ]);
+    expect(urls).toEqual(["https://a.example", "https://b.example"]);
   });
 });
