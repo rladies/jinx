@@ -60,7 +60,7 @@ Two things distinguish it from a typical R package:
   and prefer returning structured data the workflow can post back.
 
 You can call any exported function locally —
-[`gt_invite()`](https://rladies.github.io/jinx/reference/global_team_invite.md),
+[`gt_invite()`](https://rladies.github.io/jinx/reference/gt_invite.md),
 [`report_generate()`](https://rladies.github.io/jinx/reference/report_generate.md),
 [`announce_post()`](https://rladies.github.io/jinx/reference/announce_post.md)
 — given the right env vars. This is how all of the bot’s behaviour stays

@@ -1,4 +1,4 @@
-# Invite a user to the R-Ladies global team
+# Invite a user to the RLadies+ global team
 
 Sends an organization membership invitation and adds the user to the
 global team.
@@ -6,7 +6,6 @@ global team.
 ## Usage
 
 ``` r
-global_team_invite(username, team, name = username, org = "rladies")
 gt_invite(username, team, name = username, org = "rladies")
 ```
 

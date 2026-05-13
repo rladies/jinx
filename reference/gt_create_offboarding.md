@@ -5,7 +5,6 @@ Create a global team offboarding issue
 ## Usage
 
 ``` r
-global_team_create_offboarding(username, team, name = username, org = "rladies")
 gt_create_offboarding(username, team, name = username, org = "rladies")
 ```
 

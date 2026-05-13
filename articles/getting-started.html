@@ -204,12 +204,12 @@ action:</p>
 /jinx report weekly
 /jinx chapter-setup Berlin Germany
 /jinx help</code></pre>
-<p>Commands are parsed by <code><a href="../reference/command_parse.html">cmd_parse()</a></code> and dispatched by
-<code><a href="../reference/command_execute.html">cmd_execute()</a></code>:</p>
+<p>Commands are parsed by <code><a href="../reference/cmd_parse.html">cmd_parse()</a></code> and dispatched by
+<code><a href="../reference/cmd_execute.html">cmd_execute()</a></code>:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/rladies/jinx" class="external-link">jinx</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">cmd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/command_parse.html">cmd_parse</a></span><span class="op">(</span><span class="st">"/jinx invite @octocat to website"</span><span class="op">)</span></span>
+<span><span class="va">cmd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cmd_parse.html">cmd_parse</a></span><span class="op">(</span><span class="st">"/jinx invite @octocat to website"</span><span class="op">)</span></span>
 <span><span class="va">cmd</span></span>
 <span><span class="co">#&gt; $action</span></span>
 <span><span class="co">#&gt; [1] "invite"</span></span>
@@ -235,22 +235,22 @@ action:</p>
 <tr class="odd">
 <td>Team management</td>
 <td>
-<code><a href="../reference/global_team_invite.html">gt_invite()</a></code>, <code><a href="../reference/global_team_create_offboarding.html">gt_create_offboarding()</a></code>,
-<code><a href="../reference/global_team_finalize_onboarding.html">gt_finalize_onboarding()</a></code>
+<code><a href="../reference/gt_invite.html">gt_invite()</a></code>, <code><a href="../reference/gt_create_offboarding.html">gt_create_offboarding()</a></code>,
+<code><a href="../reference/gt_finalize_onboarding.html">gt_finalize_onboarding()</a></code>
 </td>
 </tr>
 <tr class="even">
 <td>Announcements</td>
 <td>
-<code><a href="../reference/announce_post.html">announce_post()</a></code>, <code><a href="../reference/post_bluesky.html">post_bluesky()</a></code>,
-<code><a href="../reference/post_mastodon.html">post_mastodon()</a></code>
+<code><a href="../reference/announce_post.html">announce_post()</a></code>, <code><a href="../reference/announce_post_bluesky.html">announce_post_bluesky()</a></code>,
+<code><a href="../reference/announce_post_mastodon.html">announce_post_mastodon()</a></code>
 </td>
 </tr>
 <tr class="odd">
 <td>Directory</td>
 <td>
 <code><a href="../reference/validate_directory_pr.html">validate_directory_pr()</a></code>,
-<code><a href="../reference/crop_directory_image.html">crop_directory_image()</a></code>
+<code><a href="../reference/directory_crop_image.html">directory_crop_image()</a></code>
 </td>
 </tr>
 <tr class="even">
@@ -263,7 +263,7 @@ action:</p>
 <tr class="odd">
 <td>Chapters</td>
 <td>
-<code><a href="../reference/create_chapter.html">create_chapter()</a></code>,
+<code><a href="../reference/chapter_create.html">chapter_create()</a></code>,
 <code><a href="../reference/chapter_check_health.html">chapter_check_health()</a></code>
 </td>
 </tr>
@@ -276,35 +276,36 @@ action:</p>
 <tr class="odd">
 <td>PR review</td>
 <td>
-<code><a href="../reference/review_pr.html">review_pr()</a></code>, <code><a href="../reference/check_pr_naming.html">check_pr_naming()</a></code>
+<code><a href="../reference/review_run.html">review_run()</a></code>,
+<code><a href="../reference/review_check_pr_naming.html">review_check_pr_naming()</a></code>
 </td>
 </tr>
 <tr class="even">
 <td>Airtable sync</td>
 <td>
-<code><a href="../reference/sync_directory_airtable.html">sync_directory_airtable()</a></code>,
-<code><a href="../reference/sync_global_team_airtable.html">sync_gt_airtable()</a></code>
+<code><a href="../reference/directory_sync_airtable.html">directory_sync_airtable()</a></code>,
+<code><a href="../reference/gt_sync_airtable.html">gt_sync_airtable()</a></code>
 </td>
 </tr>
 <tr class="odd">
 <td>Website</td>
 <td>
 <code><a href="../reference/website_merge_pending.html">website_merge_pending()</a></code>,
-<code><a href="../reference/greet_contributor.html">greet_contributor()</a></code>
+<code><a href="../reference/contributor_greet.html">contributor_greet()</a></code>
 </td>
 </tr>
 <tr class="even">
 <td>Chapter monitoring</td>
 <td>
-<code><a href="../reference/monitor_chapter_status.html">monitor_chapter_status()</a></code>,
+<code><a href="../reference/chapter_monitor_status.html">chapter_monitor_status()</a></code>,
 <code><a href="../reference/prepare_inactivity_emails.html">prepare_inactivity_emails()</a></code>
 </td>
 </tr>
 <tr class="odd">
 <td>Slack</td>
 <td>
-<code><a href="../reference/slack_invites_send.html">slack_invites_send()</a></code>,
-<code><a href="../reference/subscribe_slack_rss.html">subscribe_slack_rss()</a></code>
+<code><a href="../reference/slack_invite_batch.html">slack_invite_batch()</a></code>,
+<code><a href="../reference/slack_subscribe_rss.html">slack_subscribe_rss()</a></code>
 </td>
 </tr>
 <tr class="even">
@@ -317,8 +318,8 @@ action:</p>
 <tr class="odd">
 <td>Contributors</td>
 <td>
-<code><a href="../reference/list_contributors.html">list_contributors()</a></code>,
-<code><a href="../reference/contributors_update.html">contributors_update()</a></code>
+<code><a href="../reference/contributor_list.html">contributor_list()</a></code>,
+<code><a href="../reference/contributor_update.html">contributor_update()</a></code>
 </td>
 </tr>
 </tbody>

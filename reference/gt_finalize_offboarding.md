@@ -5,7 +5,6 @@ Finalize global team offboarding by removing user from teams
 ## Usage
 
 ``` r
-global_team_finalize_offboarding(username, team, org = "rladies")
 gt_finalize_offboarding(username, team, org = "rladies")
 ```
 

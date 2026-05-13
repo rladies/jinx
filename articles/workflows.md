@@ -12,12 +12,12 @@ and architecture details, see
 
 **What happens:**
 
-1.  [`gt_invite()`](https://rladies.github.io/jinx/reference/global_team_invite.md)
+1.  [`gt_invite()`](https://rladies.github.io/jinx/reference/gt_invite.md)
     sends an org invitation to the user
 2.  A tracking issue is created with the team-specific onboarding
     checklist
 3.  Once the user accepts,
-    [`gt_finalize_onboarding()`](https://rladies.github.io/jinx/reference/global_team_finalize_onboarding.md)
+    [`gt_finalize_onboarding()`](https://rladies.github.io/jinx/reference/gt_finalize_onboarding.md)
     adds them to the appropriate team(s) and repos
 4.  The tracking issue is closed
 
@@ -43,12 +43,12 @@ gt_check_invitations()
 
 **What happens:**
 
-1.  [`gt_create_offboarding()`](https://rladies.github.io/jinx/reference/global_team_create_offboarding.md)
+1.  [`gt_create_offboarding()`](https://rladies.github.io/jinx/reference/gt_create_offboarding.md)
     opens an offboarding tracking issue
 2.  The issue lists cleanup steps (remove from team, repos, external
     services)
 3.  Once complete,
-    [`gt_finalize_offboarding()`](https://rladies.github.io/jinx/reference/global_team_finalize_offboarding.md)
+    [`gt_finalize_offboarding()`](https://rladies.github.io/jinx/reference/gt_finalize_offboarding.md)
     removes org access and closes the issue
 
 **Programmatically:**
@@ -70,9 +70,9 @@ gt_create_offboarding("octocat", "blog")
     opens a setup tracking issue
 2.  The issue contains a checklist: create repos, add organizers,
     configure Meetup, set up social media
-3.  [`create_chapter()`](https://rladies.github.io/jinx/reference/create_chapter.md)
+3.  [`chapter_create()`](https://rladies.github.io/jinx/reference/chapter_create.md)
     generates the chapter JSON for the directory
-4.  [`create_chapter_json_pr()`](https://rladies.github.io/jinx/reference/create_chapter_json_pr.md)
+4.  [`chapter_create_pr()`](https://rladies.github.io/jinx/reference/chapter_create_pr.md)
     opens a PR to add the chapter to the directory
 
 **Updating an existing chapter:**
@@ -98,7 +98,7 @@ gt_create_offboarding("octocat", "blog")
 
 ``` r
 
-statuses <- monitor_chapter_status()
+statuses <- chapter_monitor_status()
 prepare_inactivity_emails(statuses)
 ```
 
@@ -144,16 +144,16 @@ After a blog post merges, announce it across platforms:
 
 1.  [`announce_post()`](https://rladies.github.io/jinx/reference/announce_post.md)
     reads the post’s YAML front matter
-2.  [`create_announcement_message()`](https://rladies.github.io/jinx/reference/create_announcement_message.md)
+2.  [`announce_create_message()`](https://rladies.github.io/jinx/reference/announce_create_message.md)
     builds the message with hashtags
 3.  Posts to Bluesky
-    ([`post_bluesky()`](https://rladies.github.io/jinx/reference/post_bluesky.md)),
+    ([`announce_post_bluesky()`](https://rladies.github.io/jinx/reference/announce_post_bluesky.md)),
     Mastodon
-    ([`post_mastodon()`](https://rladies.github.io/jinx/reference/post_mastodon.md)),
+    ([`announce_post_mastodon()`](https://rladies.github.io/jinx/reference/announce_post_mastodon.md)),
     LinkedIn
     ([`li_post_write()`](https://rladies.github.io/jinx/reference/li_post_write.md)),
     and newsletter
-    ([`send_newsletter()`](https://rladies.github.io/jinx/reference/send_newsletter.md))
+    ([`announce_send_newsletter()`](https://rladies.github.io/jinx/reference/announce_send_newsletter.md))
 
 Each platform is posted independently – failures on one do not block
 others.
@@ -205,8 +205,8 @@ url <- chapter_report_health()
 
 ``` r
 
-sync_directory_airtable()
-sync_gt_airtable()
+directory_sync_airtable()
+gt_sync_airtable()
 ```
 
 Syncs directory entries and global team data between Airtable and
@@ -216,7 +216,7 @@ GitHub. Creates PRs for any changes detected.
 
 ``` r
 
-slack_invites_send(dry_run = TRUE)
+slack_invite_batch(dry_run = TRUE)
 ```
 
 Fetches pending invitees from Airtable and sends Slack workspace
@@ -227,7 +227,7 @@ sending.
 
 ``` r
 
-subscribe_slack_rss()
+slack_subscribe_rss()
 ```
 
 Subscribes Slack channels to the RLadies+ blog RSS feed.
@@ -243,12 +243,12 @@ checks:
 
 - YAML schema compliance
 - Filename conventions
-  ([`validate_entry_filename()`](https://rladies.github.io/jinx/reference/validate_entry_filename.md))
+  ([`directory_validate_filename()`](https://rladies.github.io/jinx/reference/directory_validate_filename.md))
 - Image optimization
-  ([`crop_directory_image()`](https://rladies.github.io/jinx/reference/crop_directory_image.md),
-  [`optimize_image()`](https://rladies.github.io/jinx/reference/optimize_image.md))
+  ([`directory_crop_image()`](https://rladies.github.io/jinx/reference/directory_crop_image.md),
+  [`directory_optimize_image()`](https://rladies.github.io/jinx/reference/directory_optimize_image.md))
 - Social handle verification
-  ([`verify_social_handles()`](https://rladies.github.io/jinx/reference/verify_social_handles.md))
+  ([`directory_verify_handles()`](https://rladies.github.io/jinx/reference/directory_verify_handles.md))
 
 ## Contributor recognition
 
@@ -280,11 +280,11 @@ PR review runs automatically on pull requests via reusable workflows.
 
 **What happens:**
 
-1.  [`review_pr()`](https://rladies.github.io/jinx/reference/review_pr.md)
+1.  [`review_run()`](https://rladies.github.io/jinx/reference/review_run.md)
     applies the rules from `review-rules.yml`
 2.  Reviewers are assigned based on file paths and team ownership
 3.  Labels are applied based on `labels.yml` mappings
-4.  [`check_pr_naming()`](https://rladies.github.io/jinx/reference/check_pr_naming.md)
+4.  [`review_check_pr_naming()`](https://rladies.github.io/jinx/reference/review_check_pr_naming.md)
     enforces branch and title conventions
 
 **See**
@@ -295,6 +295,6 @@ for how to add PR review to other repos.
 
     /jinx remind stale
 
-[`gt_remind_stale()`](https://rladies.github.io/jinx/reference/global_team_remind_stale.md)
+[`gt_remind_stale()`](https://rladies.github.io/jinx/reference/gt_remind_stale.md)
 scans for onboarding/offboarding issues that have gone stale and posts
 reminder comments.

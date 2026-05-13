@@ -6,7 +6,6 @@ been updated in `days` days, and posts a reminder comment.
 ## Usage
 
 ``` r
-global_team_remind_stale(org = "rladies", days = 30, repo = "global-team")
 gt_remind_stale(org = "rladies", days = 30, repo = "global-team")
 ```
 

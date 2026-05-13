@@ -13,7 +13,7 @@ prepare_inactivity_emails(chapters, template_path = NULL, dry_run = TRUE)
 - chapters:
 
   Chapter status data from
-  [`monitor_chapter_status()`](https://rladies.github.io/jinx/reference/monitor_chapter_status.md).
+  [`chapter_monitor_status()`](https://rladies.github.io/jinx/reference/chapter_monitor_status.md).
 
 - template_path:
 
