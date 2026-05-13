@@ -41,9 +41,9 @@ jobs:
   invite:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/create-github-app-token@v1
+      - uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ secrets.JINX_APP_ID }}
@@ -74,7 +74,7 @@ jobs:
         run: |
           echo '{"username": "${{ inputs.username }}", "name": "${{ inputs.name }}", "team": "${{ inputs.team }}"}' > global-team-details.json
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: global-team-${{ inputs.username }}-${{ inputs.team }}
           path: global-team-details.json

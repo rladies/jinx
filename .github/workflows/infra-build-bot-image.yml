@@ -35,7 +35,7 @@ jobs:
       IMAGE_BASE: ghcr.io/rladies/jinx-bot
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Compute image tag
         id: meta

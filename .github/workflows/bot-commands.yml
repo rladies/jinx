@@ -31,7 +31,7 @@ jobs:
           echo "::add-mask::${{ github.event.client_payload.user_id }}"
           echo "::add-mask::${{ github.event.client_payload.command }}"
 
-      - uses: actions/create-github-app-token@v1
+      - uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ secrets.JINX_APP_ID }}
@@ -60,7 +60,7 @@ jobs:
 
       - name: Reply to GitHub issue
         if: always() && github.event_name == 'issue_comment'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           RUN_URL: https://github.com/rladies/jinx/actions/runs/${{ github.run_id }}
         with:

@@ -14,28 +14,28 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout jinx
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Checkout rladiesguide
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: rladies/rladiesguide
           path: _sources/rladiesguide
 
       - name: Checkout rladies.github.io
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: rladies/rladies.github.io
           path: _sources/rladies.github.io
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
 
       - name: Mint jinx-familiar App token
         id: app-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.JINX_APP_ID }}
           private-key: ${{ secrets.JINX_PRIVATE_KEY }}
