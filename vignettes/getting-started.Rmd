@@ -116,7 +116,7 @@ jinx is organized into modules, each handling a specific domain:
 | Chapters | `create_chapter()`, `chapter_check_health()` |
 | Reports | `report_generate()`, `report_publish()` |
 | PR review | `review_pr()`, `check_pr_naming()` |
-| Airtable sync | `sync_directory_airtable()`, `sync_global_team_airtable()` |
+| Airtable sync | `sync_directory_airtable()`, `sync_gt_airtable()` |
 | Website | `website_merge_pending()`, `greet_contributor()` |
 | Chapter monitoring | `monitor_chapter_status()`, `prepare_inactivity_emails()` |
 | Slack | `slack_invites_send()`, `subscribe_slack_rss()` |

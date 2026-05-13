@@ -107,6 +107,22 @@ sync_global_team_airtable <- function(
   list(current = current, alumni = alumni_list)
 }
 
+#' @rdname sync_global_team_airtable
+#' @export
+sync_gt_airtable <- function(
+  base_id = "appZjaV7eM0Y9FsHZ",
+  api_key = Sys.getenv("AIRTABLE_API_KEY"),
+  org = "rladies",
+  website_repo = "rladies.github.io"
+) {
+  sync_global_team_airtable(
+    base_id = base_id,
+    api_key = api_key,
+    org = org,
+    website_repo = website_repo
+  )
+}
+
 airtable_list_records <- function(base_id, table, api_key) {
   all_records <- list()
   offset <- NULL

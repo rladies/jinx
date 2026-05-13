@@ -52,6 +52,6 @@ jobs:
               jinx::sync_directory_airtable()
             }
             if (target == "" || target == "global-team") {
-              jinx::sync_global_team_airtable()
+              jinx::sync_gt_airtable()
             }
           '

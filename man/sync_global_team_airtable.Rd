@@ -2,9 +2,16 @@
 % Please edit documentation in R/airtable-sync.R
 \name{sync_global_team_airtable}
 \alias{sync_global_team_airtable}
+\alias{sync_gt_airtable}
 \title{Sync global team data from Airtable}
 \usage{
 sync_global_team_airtable(
+  base_id = "appZjaV7eM0Y9FsHZ",
+  api_key = Sys.getenv("AIRTABLE_API_KEY"),
+  org = "rladies",
+  website_repo = "rladies.github.io"
+)
+sync_gt_airtable(
   base_id = "appZjaV7eM0Y9FsHZ",
   api_key = Sys.getenv("AIRTABLE_API_KEY"),
   org = "rladies",

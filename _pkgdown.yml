@@ -78,8 +78,7 @@ reference:
   - title: Airtable sync
     desc: Airtable bidirectional sync
     contents:
-      - sync_directory_airtable
-      - sync_global_team_airtable
+      - contains("airtable")
 
   - title: Website automation
     desc: Website PR management and contributor greetings

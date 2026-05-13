@@ -204,7 +204,7 @@ url <- chapter_report_health()
 ```{r}
 #| eval: false
 sync_directory_airtable()
-sync_global_team_airtable()
+sync_gt_airtable()
 ```
 
 Syncs directory entries and global team data between Airtable and GitHub.
