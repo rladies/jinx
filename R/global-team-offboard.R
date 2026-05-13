@@ -6,14 +6,14 @@
 #' @param org GitHub organization. Defaults to `"rladies"`.
 #' @return The created issue URL (invisibly).
 #' @export
-global_team_create_offboarding <- function(
+gt_create_offboarding <- function(
   username,
   team,
   name = username,
   org = "rladies"
 ) {
   config <- load_teams_config()
-  team_def <- team_by_slug(team, config)
+  team_def <- team_get_by_slug(team, config)
 
   if (is.null(team_def)) {
     cli::cli_abort("Unknown team {.val {team}}")
@@ -35,26 +35,10 @@ global_team_create_offboarding <- function(
   if (!is.null(team_def$notify_teams)) {
     notify_teams <- unique(c(notify_teams, team_def$notify_teams))
   }
-  notify_issue_teams(org, "global-team", issue$number, notify_teams)
+  review_notify_teams(org, "global-team", issue$number, notify_teams)
 
   cli::cli_alert_success("Created offboarding issue: {issue$html_url}")
   invisible(issue$html_url)
-}
-
-#' @rdname global_team_create_offboarding
-#' @export
-gt_create_offboarding <- function(
-  username,
-  team,
-  name = username,
-  org = "rladies"
-) {
-  global_team_create_offboarding(
-    username = username,
-    team = team,
-    name = name,
-    org = org
-  )
 }
 
 #' Finalize global team offboarding by removing user from teams
@@ -65,7 +49,7 @@ gt_create_offboarding <- function(
 #' @return Invisibly returns `NULL`. Called for its side effect of removing
 #'   the user from the specified teams.
 #' @export
-global_team_finalize_offboarding <- function(username, team, org = "rladies") {
+gt_finalize_offboarding <- function(username, team, org = "rladies") {
   teams_to_remove <- c("global", team)
 
   for (team_slug in teams_to_remove) {
@@ -88,10 +72,4 @@ global_team_finalize_offboarding <- function(username, team, org = "rladies") {
   }
 
   invisible()
-}
-
-#' @rdname global_team_finalize_offboarding
-#' @export
-gt_finalize_offboarding <- function(username, team, org = "rladies") {
-  global_team_finalize_offboarding(username = username, team = team, org = org)
 }

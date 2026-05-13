@@ -6,7 +6,7 @@
 #' @return Character vector of usernames that have accepted their invitation
 #'   (invisibly).
 #' @export
-global_team_check_invitations <- function(org = "rladies") {
+gt_check_invitations <- function(org = "rladies") {
   pending <- gh::gh(
     "GET /orgs/{org}/invitations",
     org = org,
@@ -42,10 +42,4 @@ global_team_check_invitations <- function(org = "rladies") {
   }
 
   invisible(accepted)
-}
-
-#' @rdname global_team_check_invitations
-#' @export
-gt_check_invitations <- function(org = "rladies") {
-  global_team_check_invitations(org = org)
 }

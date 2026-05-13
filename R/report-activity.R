@@ -31,7 +31,7 @@ report_generate <- function(
 
   repo_stats <- lapply(repos, function(r) {
     tryCatch(
-      collect_repo_stats(org, r$name, since),
+      analytics_collect_repo_stats(org, r$name, since),
       error = function(e) {
         list(
           repo = r$name,
@@ -65,7 +65,7 @@ report_generate <- function(
   invisible(report)
 }
 
-collect_repo_stats <- function(org, repo, since) {
+analytics_collect_repo_stats <- function(org, repo, since) {
   commits <- tryCatch(
     gh::gh(
       "GET /repos/{org}/{repo}/commits",

@@ -20,7 +20,7 @@ chapter_report_health <- function(
     return(invisible(NULL))
   }
 
-  body <- format_chapter_report(health, months)
+  body <- chapter_format_report(health, months)
 
   issue <- gh::gh(
     "POST /repos/{owner}/{repo}/issues",
@@ -35,7 +35,7 @@ chapter_report_health <- function(
   invisible(issue$html_url)
 }
 
-format_chapter_report <- function(health, months) {
+chapter_format_report <- function(health, months) {
   n_active <- sum(health$status == "active")
   n_inactive <- sum(health$status == "inactive")
 

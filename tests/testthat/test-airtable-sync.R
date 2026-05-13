@@ -70,22 +70,22 @@ describe("airtable_to_directory_entry", {
   })
 })
 
-describe("extract_airtable_photo", {
+describe("airtable_extract_photo", {
   it("extracts URL from photo field", {
     photo <- list(list(url = "https://example.com/photo.jpg"))
     expect_identical(
-      extract_airtable_photo(photo),
+      airtable_extract_photo(photo),
       "https://example.com/photo.jpg"
     )
   })
 
   it("returns NULL for empty field", {
-    expect_null(extract_airtable_photo(NULL))
-    expect_null(extract_airtable_photo(list()))
+    expect_null(airtable_extract_photo(NULL))
+    expect_null(airtable_extract_photo(list()))
   })
 
   it("returns NULL when no URL", {
     photo <- list(list(id = "att123"))
-    expect_null(extract_airtable_photo(photo))
+    expect_null(airtable_extract_photo(photo))
   })
 })

@@ -44,7 +44,7 @@ tags2hash <- function(tags) {
 #' @param uri URL of the post.
 #' @return Formatted message string.
 #' @export
-create_announcement_message <- function(frontmatter, uri) {
+announce_create_message <- function(frontmatter, uri) {
   emoji <- random_emoji()
   tags <- tags2hash(frontmatter$tags)
 

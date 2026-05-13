@@ -8,7 +8,7 @@
 #' @param body Comment body (markdown).
 #' @return The API response (invisibly).
 #' @export
-post_reply <- function(owner, repo, issue_number, body) {
+announce_post_reply <- function(owner, repo, issue_number, body) {
   response <- gh::gh(
     "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
     owner = owner,

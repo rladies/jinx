@@ -25,7 +25,7 @@ validate_directory_pr <- function(owner, repo, pr_number) {
   )
 
   if (length(json_files) == 0) {
-    post_reply(
+    announce_post_reply(
       owner,
       repo,
       pr_number,
@@ -40,7 +40,7 @@ validate_directory_pr <- function(owner, repo, pr_number) {
   for (f in json_files) {
     fname <- basename(f$filename)
 
-    fn_check <- validate_entry_filename(fname)
+    fn_check <- directory_validate_filename(fname)
     if (fn_check$valid) {
       report_lines <- c(
         report_lines,
@@ -66,7 +66,7 @@ validate_directory_pr <- function(owner, repo, pr_number) {
   )
   body <- paste(c(header, report_lines), collapse = "\n- ")
 
-  post_reply(owner, repo, pr_number, body)
+  announce_post_reply(owner, repo, pr_number, body)
   cli::cli_alert_info("Posted validation report on PR #{pr_number}")
   invisible()
 }

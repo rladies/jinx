@@ -1,10 +1,10 @@
-describe("translate_template", {
+describe("i18n_translate_template", {
   it("returns English template when language is en", {
     withr::local_envvar(list(R_TESTS = ""))
     base_path <- system.file("templates", "slack-invite.md", package = "jinx")
     skip_if(!nzchar(base_path), "jinx not installed")
 
-    result <- translate_template(
+    result <- i18n_translate_template(
       "slack-invite.md",
       language = "en",
       variables = list()
@@ -14,7 +14,7 @@ describe("translate_template", {
   })
 
   it("falls back to English when translation is missing", {
-    result <- translate_template(
+    result <- i18n_translate_template(
       "slack-invite.md",
       language = "xx",
       variables = list()
@@ -23,9 +23,9 @@ describe("translate_template", {
   })
 })
 
-describe("list_supported_languages", {
+describe("i18n_list_languages", {
   it("returns a data frame with expected columns", {
-    result <- list_supported_languages()
+    result <- i18n_list_languages()
     expect_s3_class(result, "data.frame")
     expect_true(all(
       c("code", "name", "native_name", "direction") %in% names(result)
@@ -77,24 +77,24 @@ describe("i18n_coverage_check", {
 
 describe("translate command parsing", {
   it("parses /jinx translate status", {
-    cmd <- command_parse("/jinx translate status")
+    cmd <- cmd_parse("/jinx translate status")
     expect_identical(cmd$action, "translate-status")
   })
 
   it("parses /jinx translate validate es", {
-    cmd <- command_parse("/jinx translate validate es")
+    cmd <- cmd_parse("/jinx translate validate es")
     expect_identical(cmd$action, "translate-validate")
     expect_identical(cmd$language, "es")
   })
 
   it("parses /jinx translate validate without language", {
-    cmd <- command_parse("/jinx translate validate")
+    cmd <- cmd_parse("/jinx translate validate")
     expect_identical(cmd$action, "translate-validate")
     expect_null(cmd$language)
   })
 
   it("returns error for bare translate", {
-    cmd <- command_parse("/jinx translate")
+    cmd <- cmd_parse("/jinx translate")
     expect_identical(cmd$action, "error")
   })
 })

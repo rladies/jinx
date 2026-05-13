@@ -1,4 +1,4 @@
-# jinx <span class="jinx-sprite"><img src="man/figures/sprites/working.svg" align="right" height="200" alt="Jinx the cat, sitting at a laptop, working" /></span>
+# jinx <img src="man/figures/sprites/working.svg" align="right" height="200" alt="Jinx the cat, sitting at a laptop, working" />
 
 RLadies+ operations bot — an R package that runs via GitHub Actions
 as `jinx[bot]`, with a Cloudflare Worker bridging Slack to the same

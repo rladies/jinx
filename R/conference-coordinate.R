@@ -6,7 +6,7 @@
 #' @param repo Repository where CFP issues are tracked.
 #' @return Formatted markdown string.
 #' @export
-generate_conference_report <- function(org = "rladies", repo = "global-team") {
+conference_generate_report <- function(org = "rladies", repo = "global-team") {
   cli::cli_h2("Generating conference coordination report")
 
   cfps <- cfp_list_open(org = org, repo = repo)

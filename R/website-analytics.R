@@ -12,7 +12,7 @@
 #' @return Named list with `aggregate`, `timeseries`, `top_pages`, and
 #'   `top_sources`.
 #' @export
-collect_website_analytics <- function(
+website_collect_analytics <- function(
   site_id = Sys.getenv("PLAUSIBLE_SITE_ID"),
   api_key = Sys.getenv("PLAUSIBLE_API_KEY"),
   base_url = Sys.getenv("PLAUSIBLE_URL", "https://plausible.io"),
@@ -21,7 +21,7 @@ collect_website_analytics <- function(
   period <- match.arg(period)
   cli::cli_h2("Collecting website analytics for {site_id}")
 
-  aggregate <- plausible_query(
+  aggregate <- website_plausible_query(
     base_url,
     api_key,
     "/api/v1/stats/aggregate",
@@ -30,7 +30,7 @@ collect_website_analytics <- function(
     metrics = "visitors,pageviews,bounce_rate,visit_duration"
   )
 
-  timeseries <- plausible_query(
+  timeseries <- website_plausible_query(
     base_url,
     api_key,
     "/api/v1/stats/timeseries",
@@ -39,7 +39,7 @@ collect_website_analytics <- function(
     metrics = "visitors,pageviews"
   )
 
-  top_pages <- plausible_query(
+  top_pages <- website_plausible_query(
     base_url,
     api_key,
     "/api/v1/stats/breakdown",
@@ -50,7 +50,7 @@ collect_website_analytics <- function(
     limit = "10"
   )
 
-  top_sources <- plausible_query(
+  top_sources <- website_plausible_query(
     base_url,
     api_key,
     "/api/v1/stats/breakdown",
@@ -75,7 +75,7 @@ collect_website_analytics <- function(
   )
 }
 
-plausible_query <- function(base_url, api_key, endpoint, ...) {
+website_plausible_query <- function(base_url, api_key, endpoint, ...) {
   params <- list(...)
   req <- httr2::request(paste0(base_url, endpoint)) |>
     httr2::req_headers(Authorization = paste("Bearer", api_key)) |>
@@ -87,10 +87,10 @@ plausible_query <- function(base_url, api_key, endpoint, ...) {
 
 #' Format website analytics as markdown
 #'
-#' @param analytics Data from [collect_website_analytics()].
+#' @param analytics Data from [website_collect_analytics()].
 #' @return Formatted markdown string.
 #' @export
-format_website_analytics <- function(analytics) {
+website_format_analytics <- function(analytics) {
   template_path <- system.file(
     "templates",
     "website-analytics.md",
@@ -113,7 +113,7 @@ format_website_analytics <- function(analytics) {
   ts <- analytics$timeseries$results
   ts_lines <- if (length(ts) > 0) {
     visitors <- vapply(ts, function(x) x$visitors, integer(1))
-    sparkline <- paste(compute_sparkline(visitors), collapse = "")
+    sparkline <- paste(analytics_compute_sparkline(visitors), collapse = "")
     paste(
       glue::glue("Visitors trend: {sparkline}"),
       "",
@@ -213,11 +213,11 @@ format_website_analytics <- function(analytics) {
 #'
 #' Collects Plausible analytics and formats as markdown.
 #'
-#' @inheritParams collect_website_analytics
+#' @inheritParams website_collect_analytics
 #' @param output_path Optional path to write JSON data.
 #' @return Named list with `analytics` and `markdown` (invisibly).
 #' @export
-generate_website_report <- function(
+website_generate_report <- function(
   site_id = Sys.getenv("PLAUSIBLE_SITE_ID"),
   api_key = Sys.getenv("PLAUSIBLE_API_KEY"),
   base_url = Sys.getenv("PLAUSIBLE_URL", "https://plausible.io"),
@@ -225,13 +225,13 @@ generate_website_report <- function(
   output_path = NULL
 ) {
   period <- match.arg(period)
-  analytics <- collect_website_analytics(
+  analytics <- website_collect_analytics(
     site_id = site_id,
     api_key = api_key,
     base_url = base_url,
     period = period
   )
-  markdown <- format_website_analytics(analytics)
+  markdown <- website_format_analytics(analytics)
 
   result <- list(analytics = analytics, markdown = markdown)
 
@@ -246,13 +246,13 @@ generate_website_report <- function(
 
 #' Publish website analytics as a GitHub issue
 #'
-#' @param report_data Data from [generate_website_report()].
+#' @param report_data Data from [website_generate_report()].
 #' @param org GitHub organization.
 #' @param target_repo Repository to publish to.
 #' @param slack_channel Optional Slack channel to post a summary to.
 #' @return Issue URL (invisibly).
 #' @export
-publish_website_report <- function(
+website_publish_report <- function(
   report_data,
   org = "rladies",
   target_repo = "global-team",
@@ -273,14 +273,14 @@ publish_website_report <- function(
   cli::cli_alert_success("Website analytics published: {issue$html_url}")
 
   if (!is.null(slack_channel)) {
-    slack_body <- format_website_slack(report_data, issue$html_url)
+    slack_body <- website_format_slack(report_data, issue$html_url)
     slack_post_message(slack_body, channel = slack_channel)
   }
 
   invisible(issue$html_url)
 }
 
-format_website_slack <- function(report_data, issue_url) {
+website_format_slack <- function(report_data, issue_url) {
   agg <- report_data$analytics$aggregate$results
   site <- report_data$analytics$site_id
   period <- report_data$analytics$period
@@ -288,7 +288,7 @@ format_website_slack <- function(report_data, issue_url) {
   ts <- report_data$analytics$timeseries$results
   sparkline <- if (length(ts) > 0) {
     visitors <- vapply(ts, function(x) x$visitors, integer(1))
-    paste(compute_sparkline(visitors), collapse = "")
+    paste(analytics_compute_sparkline(visitors), collapse = "")
   } else {
     ""
   }

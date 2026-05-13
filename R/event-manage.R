@@ -7,19 +7,19 @@
 #' @return Data frame with columns: title, date, url, rsvp_count, source,
 #'   chapter.
 #' @export
-events_list_chapter <- function(chapter, months = 3) {
+event_list_chapter <- function(chapter, months = 3) {
   events <- tryCatch(
     {
-      meetup_list_events(chapter, months = months)
+      event_meetup_list(chapter, months = months)
     },
     error = function(e) {
       cli::cli_alert_warning("Meetup fetch failed for {chapter}: {e$message}")
-      empty_event_df()
+      event_empty_df()
     }
   )
 
   if (nrow(events) == 0) {
-    return(empty_event_df())
+    return(event_empty_df())
   }
 
   events[order(events$date, decreasing = TRUE), ]
@@ -35,7 +35,7 @@ events_list_chapter <- function(chapter, months = 3) {
 #' @param dry_run If `TRUE`, print what would be synced without acting.
 #' @return Data frame of all events (invisibly).
 #' @export
-events_sync_chapters <- function(
+event_sync_chapters <- function(
   org = "rladies",
   target_repo = "event-archive",
   months = 3,
@@ -48,14 +48,14 @@ events_sync_chapters <- function(
 
   if (length(chapters) == 0) {
     cli::cli_alert_warning("No chapters configured in events.yml")
-    return(invisible(empty_event_df()))
+    return(invisible(event_empty_df()))
   }
 
   all_events <- list()
 
   for (ch in chapters) {
     cli::cli_alert_info("Fetching events for {ch}")
-    events <- events_list_chapter(ch, months = months)
+    events <- event_list_chapter(ch, months = months)
     if (nrow(events) > 0) {
       all_events[[length(all_events) + 1]] <- events
     }
@@ -63,7 +63,7 @@ events_sync_chapters <- function(
 
   if (length(all_events) == 0) {
     cli::cli_alert_info("No events found")
-    return(invisible(empty_event_df()))
+    return(invisible(event_empty_df()))
   }
 
   combined <- do.call(rbind, all_events)
@@ -91,12 +91,12 @@ events_sync_chapters <- function(
 
 #' Create a formatted event summary
 #'
-#' @param events Data frame from [events_list_chapter()] or
-#'   [events_sync_chapters()].
+#' @param events Data frame from [event_list_chapter()] or
+#'   [event_sync_chapters()].
 #' @param period Summary period label.
 #' @return Formatted markdown string.
 #' @export
-events_create_summary <- function(events, period = c("weekly", "monthly")) {
+event_create_summary <- function(events, period = c("weekly", "monthly")) {
   period <- match.arg(period)
 
   if (nrow(events) == 0) {
@@ -113,7 +113,7 @@ events_create_summary <- function(events, period = c("weekly", "monthly")) {
     package = "jinx"
   )
   if (!nzchar(template_path)) {
-    return(format_event_summary_inline(events, period))
+    return(event_format_summary_inline(events, period))
   }
 
   event_lines <- glue::glue_data(
@@ -145,12 +145,12 @@ events_create_summary <- function(events, period = c("weekly", "monthly")) {
 
 #' Publish event summary as a GitHub issue
 #'
-#' @param summary Formatted summary from [events_create_summary()].
+#' @param summary Formatted summary from [event_create_summary()].
 #' @param org GitHub organization.
 #' @param target_repo Repository to publish to.
 #' @return Issue URL (invisibly).
 #' @export
-events_publish_summary <- function(
+event_publish_summary <- function(
   summary,
   org = "rladies",
   target_repo = "global-team"
@@ -184,7 +184,7 @@ load_events_config <- function() {
 #'
 #' @return Data frame with 0 rows and standard event columns.
 #' @noRd
-empty_event_df <- function() {
+event_empty_df <- function() {
   data.frame(
     title = character(0),
     date = as.Date(character(0)),
@@ -196,7 +196,7 @@ empty_event_df <- function() {
   )
 }
 
-format_event_summary_inline <- function(events, period) {
+event_format_summary_inline <- function(events, period) {
   event_lines <- glue::glue_data(
     events,
     paste0(

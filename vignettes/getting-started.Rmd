@@ -110,18 +110,18 @@ jinx is organized into modules, each handling a specific domain:
 | Module | Functions |
 |--------|-----------|
 | Team management | `gt_invite()`, `gt_create_offboarding()`, `gt_finalize_onboarding()` |
-| Announcements | `announce_post()`, `post_bluesky()`, `post_mastodon()` |
-| Directory | `validate_directory_pr()`, `crop_directory_image()` |
+| Announcements | `announce_post()`, `announce_post_bluesky()`, `announce_post_mastodon()` |
+| Directory | `validate_directory_pr()`, `directory_crop_image()` |
 | Blogs | `blog_create_entry()`, `blog_check_links()` |
-| Chapters | `create_chapter()`, `chapter_check_health()` |
+| Chapters | `chapter_create()`, `chapter_check_health()` |
 | Reports | `report_generate()`, `report_publish()` |
-| PR review | `review_pr()`, `check_pr_naming()` |
-| Airtable sync | `sync_directory_airtable()`, `sync_gt_airtable()` |
-| Website | `website_merge_pending()`, `greet_contributor()` |
-| Chapter monitoring | `monitor_chapter_status()`, `prepare_inactivity_emails()` |
-| Slack | `slack_invites_send()`, `subscribe_slack_rss()` |
+| PR review | `review_run()`, `review_check_pr_naming()` |
+| Airtable sync | `directory_sync_airtable()`, `gt_sync_airtable()` |
+| Website | `website_merge_pending()`, `contributor_greet()` |
+| Chapter monitoring | `chapter_monitor_status()`, `prepare_inactivity_emails()` |
+| Slack | `slack_invite_batch()`, `slack_subscribe_rss()` |
 | GHA dashboard | `gha_generate_dashboard()`, `gha_publish_dashboard()` |
-| Contributors | `list_contributors()`, `contributors_update()` |
+| Contributors | `contributor_list()`, `contributor_update()` |
 
 ## Configuration
 

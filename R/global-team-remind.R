@@ -9,7 +9,7 @@
 #' @return Invisibly returns `NULL`. Called for its side effect of posting
 #'   reminder comments on stale issues.
 #' @export
-global_team_remind_stale <- function(
+gt_remind_stale <- function(
   org = "rladies",
   days = 30,
   repo = "global-team"
@@ -33,7 +33,7 @@ global_team_remind_stale <- function(
       updated <- as.Date(sub("T.*", "", issue$updated_at))
       if (updated <= as.Date(cutoff)) {
         days_stale <- as.integer(Sys.Date() - updated)
-        post_reply(
+        announce_post_reply(
           org,
           repo,
           issue$number,
@@ -54,10 +54,4 @@ global_team_remind_stale <- function(
   }
 
   invisible(stale)
-}
-
-#' @rdname global_team_remind_stale
-#' @export
-gt_remind_stale <- function(org = "rladies", days = 30, repo = "global-team") {
-  global_team_remind_stale(org = org, days = days, repo = repo)
 }

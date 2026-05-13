@@ -93,7 +93,7 @@ gha_publish_dashboard <- function(
   org = "rladies",
   target_repo = "global-team"
 ) {
-  body <- format_gha_dashboard(dashboard_data)
+  body <- gha_format_dashboard(dashboard_data)
 
   issue <- gh::gh(
     "POST /repos/{owner}/{repo}/issues",
@@ -108,7 +108,7 @@ gha_publish_dashboard <- function(
   invisible(issue$html_url)
 }
 
-format_gha_dashboard <- function(dashboard_data) {
+gha_format_dashboard <- function(dashboard_data) {
   if (length(dashboard_data) == 0) {
     return("No workflow data found.")
   }

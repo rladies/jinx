@@ -9,7 +9,7 @@
 #' @param output Output path. Defaults to overwriting the input.
 #' @return Output path (invisibly).
 #' @export
-crop_directory_image <- function(
+directory_crop_image <- function(
   path,
   width = 400,
   height = 400,
@@ -38,7 +38,12 @@ crop_directory_image <- function(
 #' @param output Output path. Defaults to overwriting the input.
 #' @return Output path (invisibly).
 #' @export
-optimize_image <- function(path, max_width = 800, quality = 85, output = path) {
+directory_optimize_image <- function(
+  path,
+  max_width = 800,
+  quality = 85,
+  output = path
+) {
   img <- magick::image_read(path)
   info <- magick::image_info(img)
 

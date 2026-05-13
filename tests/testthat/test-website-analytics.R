@@ -17,7 +17,7 @@ describe("format_duration", {
   })
 })
 
-describe("format_website_analytics", {
+describe("website_format_analytics", {
   it("formats complete analytics data into markdown", {
     analytics <- list(
       site_id = "rladies.org",
@@ -51,7 +51,7 @@ describe("format_website_analytics", {
       )
     )
 
-    result <- format_website_analytics(analytics)
+    result <- website_format_analytics(analytics)
     expect_true(grepl("Website Analytics", result, fixed = TRUE))
     expect_true(grepl("rladies.org", result))
     expect_true(grepl("1250", result, fixed = TRUE))
@@ -80,7 +80,7 @@ describe("format_website_analytics", {
       top_sources = list(results = list())
     )
 
-    result <- format_website_analytics(analytics)
+    result <- website_format_analytics(analytics)
     expect_true(grepl("No timeseries data", result, fixed = TRUE))
     expect_true(grepl("No page data", result, fixed = TRUE))
     expect_true(grepl("No referral data", result, fixed = TRUE))
@@ -107,47 +107,47 @@ describe("format_website_analytics", {
       )
     )
 
-    result <- format_website_analytics(analytics)
+    result <- website_format_analytics(analytics)
     expect_true(grepl("Direct / None", result, fixed = TRUE))
   })
 })
 
 describe("parse_website_analytics_command", {
   it("parses /jinx website-analytics with default period", {
-    cmd <- command_parse("/jinx website-analytics")
+    cmd <- cmd_parse("/jinx website-analytics")
     expect_identical(cmd$action, "website-analytics")
     expect_identical(cmd$period, "30d")
   })
 
   it("parses /jinx website-analytics with specified period", {
-    cmd <- command_parse("/jinx website-analytics 7d")
+    cmd <- cmd_parse("/jinx website-analytics 7d")
     expect_identical(cmd$action, "website-analytics")
     expect_identical(cmd$period, "7d")
 
-    cmd <- command_parse("/jinx website-analytics 12mo")
+    cmd <- cmd_parse("/jinx website-analytics 12mo")
     expect_identical(cmd$period, "12mo")
   })
 
   it("returns error for invalid period", {
-    cmd <- command_parse("/jinx website-analytics 3d")
+    cmd <- cmd_parse("/jinx website-analytics 3d")
     expect_identical(cmd$action, "error")
     expect_true(grepl("period", cmd$message, fixed = TRUE))
   })
 
   it("parses natural language: /jinx generate website analytics", {
-    cmd <- command_parse("/jinx generate website analytics")
+    cmd <- cmd_parse("/jinx generate website analytics")
     expect_identical(cmd$action, "website-analytics")
     expect_identical(cmd$period, "30d")
   })
 
   it("parses natural language with period", {
-    cmd <- command_parse("/jinx generate website analytics 7d")
+    cmd <- cmd_parse("/jinx generate website analytics 7d")
     expect_identical(cmd$action, "website-analytics")
     expect_identical(cmd$period, "7d")
   })
 })
 
-describe("format_website_slack", {
+describe("website_format_slack", {
   it("formats a Slack summary with key metrics", {
     report_data <- list(
       analytics = list(
@@ -178,7 +178,7 @@ describe("format_website_slack", {
       markdown = "full report"
     )
 
-    result <- format_website_slack(report_data, "https://github.com/issue/1")
+    result <- website_format_slack(report_data, "https://github.com/issue/1")
     expect_true(grepl("rladies.org", result))
     expect_true(grepl("1250", result, fixed = TRUE))
     expect_true(grepl("3400", result, fixed = TRUE))
@@ -207,13 +207,13 @@ describe("format_website_slack", {
       markdown = "empty"
     )
 
-    result <- format_website_slack(report_data, "https://github.com/issue/2")
+    result <- website_format_slack(report_data, "https://github.com/issue/2")
     expect_true(grepl("rladies.org", result))
     expect_false(grepl("Top pages", result, fixed = TRUE))
   })
 })
 
-describe("format_analytics_slack", {
+describe("analytics_format_slack", {
   it("formats a Slack summary for org analytics", {
     dashboard_data <- list(
       trends = data.frame(
@@ -233,7 +233,7 @@ describe("format_analytics_slack", {
       markdown = "full report"
     )
 
-    result <- format_analytics_slack(
+    result <- analytics_format_slack(
       dashboard_data,
       "https://github.com/issue/3"
     )

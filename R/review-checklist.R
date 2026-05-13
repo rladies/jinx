@@ -9,8 +9,8 @@
 #' @return Posted comment URL (invisibly).
 #' @keywords internal
 #' @noRd
-post_checklist <- function(owner, repo, pr_number, file_paths) {
-  checklist <- build_checklist(file_paths, repo)
+review_post_checklist <- function(owner, repo, pr_number, file_paths) {
+  checklist <- review_build_checklist(file_paths, repo)
   if (is.null(checklist)) {
     return(invisible(NULL))
   }
@@ -26,7 +26,7 @@ post_checklist <- function(owner, repo, pr_number, file_paths) {
   invisible(comment$html_url)
 }
 
-build_checklist <- function(file_paths, repo) {
+review_build_checklist <- function(file_paths, repo) {
   sections <- character(0)
 
   has_json <- any(grepl("\\.json$", file_paths))

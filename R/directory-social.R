@@ -7,37 +7,37 @@
 #' @return A data frame with columns `platform`, `handle`, `status`,
 #'   and `valid`.
 #' @export
-verify_social_handles <- function(entry) {
+directory_verify_handles <- function(entry) {
   social <- entry$social_media
   if (is.null(social)) {
-    return(empty_social_df())
+    return(directory_empty_social_df())
   }
 
   results <- lapply(
     names(social),
-    function(platform) verify_one_handle(platform, social[[platform]])
+    function(platform) directory_verify_one_handle(platform, social[[platform]])
   )
 
   do.call(rbind, Filter(Negate(is.null), results))
 }
 
-verify_one_handle <- function(platform, handle) {
+directory_verify_one_handle <- function(platform, handle) {
   if (is.null(handle) || !nzchar(handle)) {
     return(NULL)
   }
 
   url_builder <- social_url_builders[[platform]]
   if (is.null(url_builder)) {
-    return(social_row(platform, handle, NA_integer_, NA))
+    return(directory_social_row(platform, handle, NA_integer_, NA))
   }
 
   url <- url_builder(handle)
   if (is.na(url)) {
-    return(social_row(platform, handle, NA_integer_, FALSE))
+    return(directory_social_row(platform, handle, NA_integer_, FALSE))
   }
 
   status <- head_status(url)
-  social_row(platform, handle, status, !is.na(status) && status < 400)
+  directory_social_row(platform, handle, status, !is.na(status) && status < 400)
 }
 
 social_url_builders <- list(
@@ -59,7 +59,7 @@ social_url_builders <- list(
   }
 )
 
-empty_social_df <- function() {
+directory_empty_social_df <- function() {
   data.frame(
     platform = character(),
     handle = character(),
@@ -69,7 +69,7 @@ empty_social_df <- function() {
   )
 }
 
-social_row <- function(platform, handle, status, valid) {
+directory_social_row <- function(platform, handle, status, valid) {
   data.frame(
     platform = platform,
     handle = handle,

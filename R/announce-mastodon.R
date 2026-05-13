@@ -5,7 +5,7 @@
 #' @param image_alt Alt text for the image.
 #' @return Post response (invisibly).
 #' @export
-post_mastodon <- function(text, image = NULL, image_alt = NULL) {
+announce_post_mastodon <- function(text, image = NULL, image_alt = NULL) {
   resp <- rtoot::post_toot(
     status = text,
     media = image,

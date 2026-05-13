@@ -10,7 +10,7 @@
 #' @return Invisibly returns `NULL`. Called for its side effect of sending
 #'   the invitation and adding the user to the specified team.
 #' @export
-global_team_invite <- function(
+gt_invite <- function(
   username,
   team,
   name = username,
@@ -18,9 +18,9 @@ global_team_invite <- function(
 ) {
   config <- load_teams_config()
 
-  if (!team %in% team_slugs(config)) {
+  if (!team %in% team_list_slugs(config)) {
     cli::cli_abort(
-      "Unknown team {.val {team}}. Valid: {.val {team_slugs(config)}}"
+      "Unknown team {.val {team}}. Valid: {.val {team_list_slugs(config)}}"
     )
   }
 
@@ -42,10 +42,4 @@ global_team_invite <- function(
   cli::cli_alert_success("Added {.val {username}} to global team")
 
   invisible()
-}
-
-#' @rdname global_team_invite
-#' @export
-gt_invite <- function(username, team, name = username, org = "rladies") {
-  global_team_invite(username = username, team = team, name = name, org = org)
 }

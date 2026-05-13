@@ -40,21 +40,21 @@ describe("load_teams_config", {
   })
 })
 
-describe("team_by_slug", {
+describe("team_get_by_slug", {
   it("returns team definition for valid slug", {
-    team <- team_by_slug("website")
+    team <- team_get_by_slug("website")
     expect_identical(team$name, "Website")
     expect_identical(team$role, "maintainer")
   })
 
   it("returns NULL for unknown slug", {
-    expect_null(team_by_slug("nonexistent"))
+    expect_null(team_get_by_slug("nonexistent"))
   })
 })
 
-describe("team_slugs", {
+describe("team_list_slugs", {
   it("returns character vector of slugs", {
-    slugs <- team_slugs()
+    slugs <- team_list_slugs()
     expect_type(slugs, "character")
     expect_true("website" %in% slugs)
     expect_true("blog" %in% slugs)

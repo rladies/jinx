@@ -12,10 +12,10 @@ analytics_generate_dashboard <- function(
   months = 12,
   output_path = NULL
 ) {
-  activity <- collect_chapter_activity(org = org, months = months)
-  growth <- collect_contributor_growth(org = org, months = months)
-  trends <- compute_activity_trends(activity)
-  markdown <- format_analytics_markdown(trends, growth)
+  activity <- analytics_collect_chapter_activity(org = org, months = months)
+  growth <- analytics_collect_contributor_growth(org = org, months = months)
+  trends <- analytics_compute_trends(activity)
+  markdown <- analytics_format_markdown(trends, growth)
 
   result <- list(
     trends = trends,
@@ -60,14 +60,14 @@ analytics_publish_dashboard <- function(
   cli::cli_alert_success("Analytics dashboard published: {issue$html_url}")
 
   if (!is.null(slack_channel)) {
-    slack_body <- format_analytics_slack(dashboard_data, issue$html_url)
+    slack_body <- analytics_format_slack(dashboard_data, issue$html_url)
     slack_post_message(slack_body, channel = slack_channel)
   }
 
   invisible(issue$html_url)
 }
 
-format_analytics_slack <- function(dashboard_data, issue_url) {
+analytics_format_slack <- function(dashboard_data, issue_url) {
   trends <- dashboard_data$trends
   growth <- dashboard_data$growth
 
