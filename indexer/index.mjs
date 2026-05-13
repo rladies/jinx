@@ -3,6 +3,7 @@ import { gatherMarkdownSource } from "./sources/markdown.mjs";
 import { gatherGithubOrgSource } from "./sources/github.mjs";
 import { gatherPkgdownLlmsSource } from "./sources/pkgdown.mjs";
 import { gatherGithubFilesSource } from "./sources/github-files.mjs";
+import { gatherGithubRemoteFilesSource } from "./sources/github-remote-files.mjs";
 
 const JINX_REPO_ROOT = process.env.JINX_PATH || "..";
 
@@ -48,6 +49,22 @@ const SOURCES = [
         path: "PRIVACY.md",
         url: "https://rladies.org/jinx/articles/privacy.html",
         title: "Jinx privacy policy",
+      },
+    ],
+  },
+  {
+    type: "github-remote-files",
+    repo: "rladies/glamour",
+    files: [
+      {
+        path: "README.md",
+        url: "https://github.com/rladies/glamour#readme",
+        title: "Glamour — Quarto extension for RLadies+",
+      },
+      {
+        path: "CHANGELOG.md",
+        url: "https://github.com/rladies/glamour/blob/main/CHANGELOG.md",
+        title: "Glamour changelog",
       },
     ],
   },
@@ -108,6 +125,8 @@ async function gather(src) {
       return gatherPkgdownLlmsSource(src);
     case "github-files":
       return gatherGithubFilesSource(src);
+    case "github-remote-files":
+      return gatherGithubRemoteFilesSource(src);
     default:
       console.error(`Unknown source type: ${src.type}`);
       return [];
