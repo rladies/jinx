@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Workflow Reference for RLadies+ Org Admins • jinx</title>
+<title>Operating Jinx • jinx</title>
 <script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Poppins-0.4.10/font.css" rel="stylesheet">
@@ -13,7 +13,7 @@
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
-<meta property="og:title" content="Workflow Reference for RLadies+ Org Admins">
+<meta property="og:title" content="Operating Jinx">
 <link rel="icon" href="favicon-purple.svg" type="image/svg+xml">
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -50,18 +50,18 @@ document.addEventListener("DOMContentLoaded", function() {
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/jinx.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with jinx</a></li>
-    <li><hr class="dropdown-divider"></li>
+<li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>For users</h6></li>
     <li><a class="dropdown-item" href="../articles/slack-app.html">The Jinx Slack app</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>For admins</h6></li>
     <li><a class="dropdown-item" href="../articles/architecture.html">How Jinx is built</a></li>
-    <li><a class="dropdown-item" href="../articles/workflows.html">Workflow Reference for RLadies+ Org Admins</a></li>
+    <li><a class="dropdown-item" href="../articles/workflows.html">Operating Jinx</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
@@ -87,7 +87,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Workflow Reference for RLadies+ Org Admins</h1>
+      <h1>Operating Jinx</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/rladies/jinx/blob/main/vignettes/workflows.Rmd" class="external-link"><code>vignettes/workflows.Rmd</code></a></small>
@@ -96,270 +96,242 @@ document.addEventListener("DOMContentLoaded", function() {
 
     
     
-<p>This vignette walks through each admin workflow jinx supports. For
-setup and architecture details, see
-<code><a href="../articles/getting-started.html">vignette("getting-started")</a></code>.</p>
+<p>This page is for the people who maintain Jinx — registering the
+GitHub App, deploying the Cloudflare Worker, wiring in new commands. If
+you just want to use Jinx, <a href="jinx.html">Getting started</a> is
+the page you want.</p>
+<p>For the architecture map (what runs where, who triggers it), see <a href="architecture.html">How Jinx is built</a>. This page is the
+<em>operational</em> counterpart: what you do to stand it up, change it,
+and keep it running.</p>
 <div class="section level2">
-<h2 id="onboarding-a-new-team-member">Onboarding a new team member<a class="anchor" aria-label="anchor" href="#onboarding-a-new-team-member"></a>
+<h2 id="register-the-github-app">Register the GitHub App<a class="anchor" aria-label="anchor" href="#register-the-github-app"></a>
 </h2>
-<p><strong>Via issue comment:</strong></p>
-<pre><code>/jinx invite @username to website</code></pre>
-<p><strong>What happens:</strong></p>
-<ol style="list-style-type: decimal">
-<li>
-<code><a href="../reference/gt_invite.html">gt_invite()</a></code> sends an org invitation to the user</li>
-<li>A tracking issue is created with the team-specific onboarding
-checklist</li>
-<li>Once the user accepts, <code><a href="../reference/gt_finalize_onboarding.html">gt_finalize_onboarding()</a></code> adds
-them to the appropriate team(s) and repos</li>
-<li>The tracking issue is closed</li>
-</ol>
-<p><strong>Programmatically:</strong></p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/gt_invite.html">gt_invite</a></span><span class="op">(</span><span class="st">"octocat"</span>, <span class="st">"website"</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Checking pending invitations:</strong></p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/gt_check_invitations.html">gt_check_invitations</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="offboarding-a-team-member">Offboarding a team member<a class="anchor" aria-label="anchor" href="#offboarding-a-team-member"></a>
-</h2>
-<p><strong>Via issue comment:</strong></p>
-<pre><code>/jinx offboard @username from blog</code></pre>
-<p><strong>What happens:</strong></p>
-<ol style="list-style-type: decimal">
-<li>
-<code><a href="../reference/gt_create_offboarding.html">gt_create_offboarding()</a></code> opens an offboarding tracking
-issue</li>
-<li>The issue lists cleanup steps (remove from team, repos, external
-services)</li>
-<li>Once complete, <code><a href="../reference/gt_finalize_offboarding.html">gt_finalize_offboarding()</a></code> removes org
-access and closes the issue</li>
-</ol>
-<p><strong>Programmatically:</strong></p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/gt_create_offboarding.html">gt_create_offboarding</a></span><span class="op">(</span><span class="st">"octocat"</span>, <span class="st">"blog"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="setting-up-a-new-chapter">Setting up a new chapter<a class="anchor" aria-label="anchor" href="#setting-up-a-new-chapter"></a>
-</h2>
-<p><strong>Via issue comment:</strong></p>
-<pre><code>/jinx chapter-setup Berlin Germany</code></pre>
-<p><strong>What happens:</strong></p>
-<ol style="list-style-type: decimal">
-<li>
-<code><a href="../reference/chapter_create_setup.html">chapter_create_setup()</a></code> opens a setup tracking
-issue</li>
-<li>The issue contains a checklist: create repos, add organizers,
-configure Meetup, set up social media</li>
-<li>
-<code><a href="../reference/chapter_create.html">chapter_create()</a></code> generates the chapter JSON for the
-directory</li>
-<li>
-<code><a href="../reference/chapter_create_pr.html">chapter_create_pr()</a></code> opens a PR to add the chapter to
-the directory</li>
-</ol>
-<p><strong>Updating an existing chapter:</strong></p>
-<pre><code>/jinx chapter-update Berlin Germany</code></pre>
-</div>
-<div class="section level2">
-<h2 id="monitoring-chapter-health">Monitoring chapter health<a class="anchor" aria-label="anchor" href="#monitoring-chapter-health"></a>
-</h2>
-<p><strong>Scheduled workflow</strong> runs periodically via
-<code><a href="../reference/chapter_check_health.html">chapter_check_health()</a></code>.</p>
-<p><strong>Via issue comment:</strong></p>
-<pre><code>/jinx chapter-health</code></pre>
-<p><strong>What happens:</strong></p>
-<ol style="list-style-type: decimal">
-<li>Reads chapter activity data (commits, issues, events)</li>
-<li>Classifies chapters as active, quiet, or inactive</li>
-<li>Posts a summary with recommendations</li>
-</ol>
-<p><strong>Outreach to inactive chapters:</strong></p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">statuses</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/chapter_monitor_status.html">chapter_monitor_status</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/prepare_inactivity_emails.html">prepare_inactivity_emails</a></span><span class="op">(</span><span class="va">statuses</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="blog-post-workflow">Blog post workflow<a class="anchor" aria-label="anchor" href="#blog-post-workflow"></a>
-</h2>
-<div class="section level3">
-<h3 id="adding-a-new-blog-entry">Adding a new blog entry<a class="anchor" aria-label="anchor" href="#adding-a-new-blog-entry"></a>
-</h3>
-<p><strong>Via issue comment:</strong></p>
-<pre><code>/jinx blog-add https://example.com/my-rladies-post</code></pre>
-<p><strong>What happens:</strong></p>
-<ol style="list-style-type: decimal">
-<li>
-<code><a href="../reference/blog_create_entry.html">blog_create_entry()</a></code> fetches metadata from the URL</li>
-<li>Creates a YAML entry and opens a PR to the blog repo</li>
-<li>
-<code><a href="../reference/blog_post_checklist.html">blog_post_checklist()</a></code> adds a review checklist to the
-PR</li>
-</ol>
-</div>
-<div class="section level3">
-<h3 id="checking-blog-links">Checking blog links<a class="anchor" aria-label="anchor" href="#checking-blog-links"></a>
-</h3>
-<pre><code>/jinx blog-check-links</code></pre>
-<p>Runs <code><a href="../reference/blog_check_links.html">blog_check_links()</a></code> to find broken URLs across all
-blog entries.</p>
-</div>
-<div class="section level3">
-<h3 id="auto-merge-on-publish-date">Auto-merge on publish date<a class="anchor" aria-label="anchor" href="#auto-merge-on-publish-date"></a>
-</h3>
-<p><code><a href="../reference/website_merge_pending.html">website_merge_pending()</a></code> runs on a schedule and merges
-blog PRs whose publish date has arrived. This is triggered by the
-<code>website-merge-pending.yml</code> workflow.</p>
-</div>
-</div>
-<div class="section level2">
-<h2 id="announcing-blog-posts">Announcing blog posts<a class="anchor" aria-label="anchor" href="#announcing-blog-posts"></a>
-</h2>
-<p>After a blog post merges, announce it across platforms:</p>
-<p><strong>Via issue comment:</strong></p>
-<pre><code>/jinx announce https://rladies.org/blog/my-post/</code></pre>
-<p><strong>What happens:</strong></p>
-<ol style="list-style-type: decimal">
-<li>
-<code><a href="../reference/announce_post.html">announce_post()</a></code> reads the post’s YAML front matter</li>
-<li>
-<code><a href="../reference/announce_create_message.html">announce_create_message()</a></code> builds the message with
-hashtags</li>
-<li>Posts to Bluesky (<code><a href="../reference/announce_post_bluesky.html">announce_post_bluesky()</a></code>), Mastodon
-(<code><a href="../reference/announce_post_mastodon.html">announce_post_mastodon()</a></code>), LinkedIn
-(<code><a href="../reference/li_post_write.html">li_post_write()</a></code>), and newsletter
-(<code><a href="../reference/announce_send_newsletter.html">announce_send_newsletter()</a></code>)</li>
-</ol>
-<p>Each platform is posted independently – failures on one do not block
-others.</p>
-</div>
-<div class="section level2">
-<h2 id="running-reports">Running reports<a class="anchor" aria-label="anchor" href="#running-reports"></a>
-</h2>
-<div class="section level3">
-<h3 id="activity-reports">Activity reports<a class="anchor" aria-label="anchor" href="#activity-reports"></a>
-</h3>
-<p><strong>Via issue comment:</strong></p>
-<pre><code>/jinx report weekly
-/jinx report monthly</code></pre>
-<p><strong>Programmatically:</strong></p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">report</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report_generate.html">report_generate</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"weekly"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/report_publish.html">report_publish</a></span><span class="op">(</span><span class="va">report</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="chapter-health-reports">Chapter health reports<a class="anchor" aria-label="anchor" href="#chapter-health-reports"></a>
-</h3>
-<pre><code>/jinx report chapters</code></pre>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">url</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/chapter_report_health.html">chapter_report_health</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-</div>
-</div>
-<div class="section level2">
-<h2 id="managing-the-gha-dashboard">Managing the GHA dashboard<a class="anchor" aria-label="anchor" href="#managing-the-gha-dashboard"></a>
-</h2>
-<pre><code>/jinx gha-dashboard</code></pre>
-<p><strong>What happens:</strong></p>
-<ol style="list-style-type: decimal">
-<li>
-<code><a href="../reference/gha_generate_dashboard.html">gha_generate_dashboard()</a></code> queries workflow run status
-across all org repos</li>
-<li>
-<code><a href="../reference/gha_publish_dashboard.html">gha_publish_dashboard()</a></code> posts a formatted status table
-as a GitHub issue</li>
-</ol>
-<p><strong>Scheduled workflow</strong> runs weekly via
-<code>gha-dashboard.yml</code>.</p>
-</div>
-<div class="section level2">
-<h2 id="airtable-sync">Airtable sync<a class="anchor" aria-label="anchor" href="#airtable-sync"></a>
-</h2>
-<p><strong>Scheduled workflow</strong> runs weekly via
-<code>airtable-sync.yml</code>.</p>
-<p><strong>Programmatically:</strong></p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/directory_sync_airtable.html">directory_sync_airtable</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/gt_sync_airtable.html">gt_sync_airtable</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>Syncs directory entries and global team data between Airtable and
-GitHub. Creates PRs for any changes detected.</p>
-</div>
-<div class="section level2">
-<h2 id="slack-onboarding">Slack onboarding<a class="anchor" aria-label="anchor" href="#slack-onboarding"></a>
-</h2>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/slack_invite_batch.html">slack_invite_batch</a></span><span class="op">(</span>dry_run <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p>Fetches pending invitees from Airtable and sends Slack workspace
-invitations. Use <code>dry_run = TRUE</code> (the default) to preview
-before sending.</p>
-<p><strong>RSS feed integration:</strong></p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/slack_subscribe_rss.html">slack_subscribe_rss</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>Subscribes Slack channels to the RLadies+ blog RSS feed.</p>
-</div>
-<div class="section level2">
-<h2 id="directory-maintenance">Directory maintenance<a class="anchor" aria-label="anchor" href="#directory-maintenance"></a>
-</h2>
-<p><strong>Validating directory PRs:</strong></p>
-<p>The <code><a href="../reference/validate_directory_pr.html">validate_directory_pr()</a></code> function runs automatically
-on PRs that modify directory entries. It checks:</p>
+<p>Jinx posts as <code>jinx[bot]</code> because it authenticates as a
+registered GitHub App, not a maintainer’s PAT. Set up in <em>Settings →
+Developer settings → GitHub Apps → New</em> on the org:</p>
 <ul>
-<li>YAML schema compliance</li>
-<li>Filename conventions
-(<code><a href="../reference/directory_validate_filename.html">directory_validate_filename()</a></code>)</li>
-<li>Image optimization (<code><a href="../reference/directory_crop_image.html">directory_crop_image()</a></code>,
-<code><a href="../reference/directory_optimize_image.html">directory_optimize_image()</a></code>)</li>
-<li>Social handle verification
-(<code><a href="../reference/directory_verify_handles.html">directory_verify_handles()</a></code>)</li>
-</ul>
-</div>
-<div class="section level2">
-<h2 id="contributor-recognition">Contributor recognition<a class="anchor" aria-label="anchor" href="#contributor-recognition"></a>
-</h2>
-<p><strong>List contributors for a repo:</strong></p>
-<pre><code>/jinx contributors jinx</code></pre>
-<p><strong>Update the contributors list:</strong></p>
-<pre><code>/jinx contributors update jinx</code></pre>
-<p><strong>Org-wide contributor stats:</strong></p>
-<pre><code>/jinx contributors org</code></pre>
-<p><strong>Automated greetings:</strong></p>
+<li>Name: <code>jinx</code>.</li>
+<li>Permissions:
 <ul>
-<li>
-<code><a href="../reference/contributor_welcome.html">contributor_welcome()</a></code> posts a welcome comment on
-first-time PRs</li>
-<li>
-<code><a href="../reference/contributor_thank.html">contributor_thank()</a></code> posts a thank-you when PRs are
-merged</li>
+<li>Repository: Issues (R/W), Pull Requests (R/W), Contents (Read).</li>
+<li>Organization: Members (R/W), Administration (Read).</li>
 </ul>
-<p>Both are triggered by the <code>welcome-contributor.yml</code> and
-<code>thank-contributor.yml</code> workflows.</p>
-</div>
-<div class="section level2">
-<h2 id="pr-review-automation">PR review automation<a class="anchor" aria-label="anchor" href="#pr-review-automation"></a>
-</h2>
-<p>PR review runs automatically on pull requests via reusable
-workflows.</p>
-<p><strong>What happens:</strong></p>
-<ol style="list-style-type: decimal">
-<li>
-<code><a href="../reference/review_run.html">review_run()</a></code> applies the rules from
-<code>review-rules.yml</code>
 </li>
-<li>Reviewers are assigned based on file paths and team ownership</li>
-<li>Labels are applied based on <code>labels.yml</code> mappings</li>
-<li>
-<code><a href="../reference/review_check_pr_naming.html">review_check_pr_naming()</a></code> enforces branch and title
-conventions</li>
-</ol>
-<p><strong>See</strong> <code><a href="../articles/getting-started.html">vignette("getting-started")</a></code> for how
-to add PR review to other repos.</p>
+<li>Events: <code>issue_comment</code>, <code>issues</code>,
+<code>pull_request</code>.</li>
+<li>Install on the RLadies+ org.</li>
+</ul>
+<p>Save the App ID, generate a private key, and install the app on every
+repo Jinx needs to act in.</p>
 </div>
 <div class="section level2">
-<h2 id="stale-issue-reminders">Stale issue reminders<a class="anchor" aria-label="anchor" href="#stale-issue-reminders"></a>
+<h2 id="wire-up-secrets">Wire up secrets<a class="anchor" aria-label="anchor" href="#wire-up-secrets"></a>
 </h2>
-<pre><code>/jinx remind stale</code></pre>
-<p><code><a href="../reference/gt_remind_stale.html">gt_remind_stale()</a></code> scans for onboarding/offboarding
-issues that have gone stale and posts reminder comments.</p>
+<p>Two values are required for every workflow:</p>
+<ul>
+<li>Variable <code>JINX_APP_ID</code> — the App ID from the registration
+above.</li>
+<li>Secret <code>JINX_PRIVATE_KEY</code> — the App’s private key, pasted
+as-is.</li>
+</ul>
+<p>Both are read by <a href="https://github.com/actions/create-github-app-token" class="external-link"><code>actions/create-github-app-token</code></a>
+at the top of every workflow. Set them at the org level so new repos
+pick them up automatically.</p>
+<p>Module-specific secrets are only needed if you want that module’s
+features. A missing module secret is not fatal — Jinx skips the module
+and logs a hint:</p>
+<table class="table">
+<thead><tr class="header">
+<th>Secret</th>
+<th>Used by</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>AIRTABLE_API_KEY</code></td>
+<td>Airtable sync</td>
+</tr>
+<tr class="even">
+<td>
+<code>BSKY_USER</code>, <code>BSKY_PASS</code>
+</td>
+<td>Bluesky announcements</td>
+</tr>
+<tr class="odd">
+<td><code>MASTODON_TOKEN</code></td>
+<td>Mastodon announcements</td>
+</tr>
+<tr class="even">
+<td><code>LINKEDIN_ACCESS_TOKEN</code></td>
+<td>LinkedIn announcements</td>
+</tr>
+<tr class="odd">
+<td><code>SLACK_TOKEN</code></td>
+<td>Slack management</td>
+</tr>
+<tr class="even">
+<td><code>MAILCHIMP_API_KEY</code></td>
+<td>Newsletter</td>
+</tr>
+<tr class="odd">
+<td><code>PLAUSIBLE_API_KEY</code></td>
+<td>Website analytics</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level2">
+<h2 id="configuration-files">Configuration files<a class="anchor" aria-label="anchor" href="#configuration-files"></a>
+</h2>
+<p>Jinx loads almost everything from data files in <code>inst/</code>,
+so most operational changes don’t need a code release — just a PR.</p>
+<ul>
+<li>
+<code>inst/config/teams.yml</code> — team definitions: roles, repos,
+notification channels.</li>
+<li>
+<code>inst/config/review-rules.yml</code> — file-path patterns that
+drive PR reviewer assignment.</li>
+<li>
+<code>inst/config/labels.yml</code> — file-path patterns that drive
+PR labelling.</li>
+<li>
+<code>inst/config/conferences.yml</code>, <code>events.yml</code>,
+<code>languages.yml</code> — module-specific lists.</li>
+<li>
+<code>inst/templates/*.md</code> — issue-comment replies, onboarding
+checklists, command help.
+<code>inst/templates/teams/&lt;name&gt;.md</code> extends the base
+onboarding checklist for a specific team.</li>
+<li>
+<code>inst/translations/</code> — message translations indexed by
+language code.</li>
+</ul>
+<p>Editing any of these is a normal PR. The bot image rebuild picks them
+up on the next push to <code>main</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="adding-a-new-command">Adding a new command<a class="anchor" aria-label="anchor" href="#adding-a-new-command"></a>
+</h2>
+<p>Every <code>/jinx &lt;verb&gt;</code> flows through the same two
+functions, defined in <a href="https://github.com/rladies/jinx/blob/main/R/commands.R" class="external-link"><code>R/commands.R</code></a>:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cmd</span> <span class="op">&lt;-</span> <span class="fu">jinx</span><span class="fu">::</span><span class="fu"><a href="../reference/cmd_parse.html">cmd_parse</a></span><span class="op">(</span><span class="st">"/jinx invite @ada to website"</span><span class="op">)</span></span>
+<span><span class="fu">jinx</span><span class="fu">::</span><span class="fu"><a href="../reference/cmd_execute.html">cmd_execute</a></span><span class="op">(</span><span class="va">cmd</span><span class="op">)</span></span></code></pre></div>
+<p>To add a new verb:</p>
+<ol style="list-style-type: decimal">
+<li>Extend <code><a href="../reference/cmd_parse.html">cmd_parse()</a></code> so it returns the structured fields
+your verb needs.</li>
+<li>Extend the dispatch in <code><a href="../reference/cmd_execute.html">cmd_execute()</a></code> to call your
+module function.</li>
+<li>Add the command to <a href="https://github.com/rladies/jinx/blob/main/inst/commands/help.md" class="external-link"><code>inst/commands/help.md</code></a>
+so <code>/jinx help</code> finds it.</li>
+<li>Cover the parser case in <code>tests/testthat/test-commands.R</code>
+and the module function in its own test file.</li>
+</ol>
+<p>That’s it. The <code>bot-commands.yml</code> workflow already calls
+<code>cmd_parse</code> + <code>cmd_execute</code> for issue-comment
+triggers, and the Cloudflare Worker dispatches Slack-side calls into the
+same workflow. You only need to touch a workflow if your verb needs a
+new schedule or a separate trigger.</p>
+</div>
+<div class="section level2">
+<h2 id="opt-another-repo-into-pr-review">Opt another repo into PR review<a class="anchor" aria-label="anchor" href="#opt-another-repo-into-pr-review"></a>
+</h2>
+<p>To add Jinx’s PR review to any RLadies+ repo, drop this workflow
+in:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># .github/workflows/jinx-review.yml</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> PR review</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="at">    </span><span class="fu">types</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">opened</span><span class="kw">,</span><span class="at"> reopened</span><span class="kw">,</span><span class="at"> synchronize</span><span class="kw">]</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="at">  </span><span class="fu">review</span><span class="kw">:</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="at">    </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> rladies/jinx/.github/workflows/reusable-pr-review.yml@main</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="at">    </span><span class="fu">secrets</span><span class="kw">:</span><span class="at"> inherit</span></span></code></pre></div>
+<p><code>secrets: inherit</code> is how the caller repo gets
+<code>JINX_APP_ID</code> and <code>JINX_PRIVATE_KEY</code> from the
+org-level secrets — no copy-pasting.</p>
+<p>The same pattern works for
+<code>reusable-welcome-contributor.yml</code>,
+<code>reusable-thank-contributor.yml</code>, and
+<code>reusable-website-blog-checklist.yml</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="the-bot-image">The bot image<a class="anchor" aria-label="anchor" href="#the-bot-image"></a>
+</h2>
+<p>Workflows run inside <code>ghcr.io/rladies/jinx-bot:latest</code>,
+which has the package and all its dependencies pre-installed. <a href="https://github.com/rladies/jinx/blob/main/.github/workflows/infra-build-bot-image.yml" class="external-link"><code>infra-build-bot-image.yml</code></a>
+rebuilds it when <code>DESCRIPTION</code>, <code>Dockerfile</code>, or
+other runtime files change on <code>main</code>. That’s why a typical
+Jinx command run finishes in a few seconds — no
+<code>install.packages</code> at run time.</p>
+<p>When you add a new R dependency:</p>
+<ol style="list-style-type: decimal">
+<li>Add it to <code>DESCRIPTION</code>.</li>
+<li>Merge to <code>main</code>.</li>
+<li>Wait for <code>infra-build-bot-image</code> to finish — until then,
+runs still use the old image and your new dependency won’t be
+there.</li>
+</ol>
+</div>
+<div class="section level2">
+<h2 id="the-cloudflare-worker">The Cloudflare Worker<a class="anchor" aria-label="anchor" href="#the-cloudflare-worker"></a>
+</h2>
+<p>The Worker at <code>https://jinx.rladies.workers.dev</code> is Jinx’s
+front door for Slack and Airtable. It’s deployed by <a href="https://github.com/rladies/jinx/blob/main/.github/workflows/infra-deploy-worker.yml" class="external-link"><code>infra-deploy-worker.yml</code></a>
+on every push to <code>worker/</code> on <code>main</code>.</p>
+<p>Worker secrets are managed through Wrangler:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="bu">cd</span> worker</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="ex">wrangler</span> secret put SLACK_SIGNING_SECRET</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="ex">wrangler</span> secret put SLACK_CLIENT_ID</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="ex">wrangler</span> secret put SLACK_CLIENT_SECRET</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="ex">wrangler</span> secret put GITHUB_PAT</span></code></pre></div>
+<p>KV namespaces (<code>SLACK_TOKENS</code>,
+<code>AIRTABLE_BASES</code>) and the Vectorize index
+(<code>rladies-content</code>) are declared in
+<code>wrangler.jsonc</code> — adding one means editing that file, not
+running a command.</p>
+<p>For what the Worker actually does end-to-end, see <a href="architecture.html">How Jinx is built</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="when-things-break">When things break<a class="anchor" aria-label="anchor" href="#when-things-break"></a>
+</h2>
+<ul>
+<li>
+<strong>A workflow run failed.</strong> Open the <a href="https://github.com/rladies/jinx/actions" class="external-link">Actions tab</a>, find the
+red run, and read the <code>cli</code> log of the failing step. Most
+module functions print their own context.</li>
+<li>
+<strong>A Slack <code>/jinx ...</code> got no reply.</strong> Tail
+the Worker (<code>wrangler tail</code> from <code>worker/</code>).
+Failures here are almost always signature verification, a missing env
+var, or a Slack scope that wasn’t granted.</li>
+<li>
+<strong>A scheduled job didn’t run.</strong> GitHub disables
+scheduled workflows on inactive repos. Trigger one manually from the
+Actions UI and the schedule resumes.</li>
+<li>
+<strong>A new command is wired but Slack says “unknown
+command”.</strong> The bot image hasn’t rebuilt yet — wait for
+<code>infra-build-bot-image</code> to finish, then try again.</li>
+</ul>
+<p>The audit log is the Actions run history. Logs for runs older than 14
+days are gone; if you need to preserve evidence, screenshot it before
+the retention window closes.</p>
+</div>
+<div class="section level2">
+<h2 id="where-to-go-next">Where to go next<a class="anchor" aria-label="anchor" href="#where-to-go-next"></a>
+</h2>
+<ul>
+<li>
+<a href="architecture.html">How Jinx is built</a> — the surface map
+between R package, workflows, and Worker.</li>
+<li>
+<a href="privacy.html">Privacy policy</a> — what data Jinx receives,
+where it goes, how to request deletion.</li>
+<li>The <a href="../reference/index.html">function reference</a> — every
+exported function, grouped by module.</li>
+</ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

@@ -2,8 +2,8 @@
 
 ### Get started
 
-- [Getting Started with
-  jinx](https://rladies.github.io/jinx/articles/getting-started.md):
+- [Getting started with
+  Jinx](https://rladies.github.io/jinx/articles/jinx.md):
 
 ### Using Jinx
 
@@ -14,8 +14,8 @@
 
 - [How Jinx is
   built](https://rladies.github.io/jinx/articles/architecture.md):
-- [Workflow Reference for RLadies+ Org
-  Admins](https://rladies.github.io/jinx/articles/workflows.md):
+- [Operating
+  Jinx](https://rladies.github.io/jinx/articles/workflows.md):
 
 ### Policies
 

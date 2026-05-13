@@ -50,18 +50,18 @@ document.addEventListener("DOMContentLoaded", function() {
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/jinx.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with jinx</a></li>
-    <li><hr class="dropdown-divider"></li>
+<li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>For users</h6></li>
     <li><a class="dropdown-item" href="../articles/slack-app.html">The Jinx Slack app</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>For admins</h6></li>
     <li><a class="dropdown-item" href="../articles/architecture.html">How Jinx is built</a></li>
-    <li><a class="dropdown-item" href="../articles/workflows.html">Workflow Reference for RLadies+ Org Admins</a></li>
+    <li><a class="dropdown-item" href="../articles/workflows.html">Operating Jinx</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
@@ -129,7 +129,7 @@ surfaces.</p>
                                   |               |
                                   |  R/, inst/    |
                                   +---------------+</code></pre>
-<p>The R package is the source of truth: every workflow boots an image
+<p>The R package is the source of truth. Every workflow boots an image
 that has it pre-installed, and the worker exists to put Slack-shaped
 inputs onto a workflow trigger so the same R code can answer them.</p>
 </div>
@@ -367,7 +367,7 @@ round-tripping through Actions would be wasteful.</p>
 </tbody>
 </table>
 <p>If a change spans surfaces, prefer one PR per surface unless they
-have to land together — the bot image rebuild + worker deploy run on
+have to land together — the bot image rebuild and worker deploy run on
 separate workflows and roll out independently.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

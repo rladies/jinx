@@ -52,18 +52,18 @@ document.addEventListener("DOMContentLoaded", function() {
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="articles/jinx.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/getting-started.html">Getting Started with jinx</a></li>
-    <li><hr class="dropdown-divider"></li>
+<li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>For users</h6></li>
     <li><a class="dropdown-item" href="articles/slack-app.html">The Jinx Slack app</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>For admins</h6></li>
     <li><a class="dropdown-item" href="articles/architecture.html">How Jinx is built</a></li>
-    <li><a class="dropdown-item" href="articles/workflows.html">Workflow Reference for RLadies+ Org Admins</a></li>
+    <li><a class="dropdown-item" href="articles/workflows.html">Operating Jinx</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="articles/index.html">More articles...</a></li>
   </ul>
@@ -86,15 +86,20 @@ document.addEventListener("DOMContentLoaded", function() {
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="jinx-">jinx <img src="reference/figures/sprites/working.svg" align="right" height="200" alt="Jinx the cat, sitting at a laptop, working"><a class="anchor" aria-label="anchor" href="#jinx-"></a>
 </h1></div>
-<p>RLadies+ operations bot — an R package that runs via GitHub Actions as <code>jinx[bot]</code>, with a Cloudflare Worker bridging Slack to the same machinery.</p>
-<p>Jinx helps with organiser onboarding, directory PR review, chapter monitoring, announcements, reports, event sync, translation checks, and Slack invites for the RLadies+ community.</p>
+<p>Jinx is the operations bot for <a href="https://rladies.org/" class="external-link">RLadies+</a>. It runs on GitHub Actions as <code>jinx[bot]</code>, with a Cloudflare Worker bridging Slack to the same machinery.</p>
+<p>Organisers reach Jinx two ways — by typing <code>/jinx ...</code> in Slack, or by posting <code>/jinx ...</code> as a comment on any issue or PR in an RLadies+ repo. Either way, the same R package answers.</p>
+<p>Day to day, Jinx handles organiser onboarding, directory PR review, chapter monitoring, announcements, reports, event sync, translation checks, and Slack invites for the RLadies+ community.</p>
 <div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
 </h2>
+<p>The <a href="https://rladies.github.io/jinx/">pkgdown site</a> is split by audience:</p>
 <ul>
-<li>User-facing docs for organisers live in the <a href="https://guide.rladies.org/" class="external-link">RLadies+ Guide</a>.</li>
-<li>Developer docs — package internals, workflows, the Slack app — live in the <a href="https://rladies.github.io/jinx/articles/">package vignettes</a>.</li>
-<li>Data-handling policy: <a href="PRIVACY.html">PRIVACY.md</a>.</li>
+<li>
+<strong>For organisers using Jinx</strong> — <a href="https://rladies.github.io/jinx/articles/jinx.html">Getting started</a> and <a href="https://rladies.github.io/jinx/articles/slack-app.html">The Jinx Slack app</a>.</li>
+<li>
+<strong>For admins maintaining Jinx</strong> — <a href="https://rladies.github.io/jinx/articles/workflows.html">Operating Jinx</a> and <a href="https://rladies.github.io/jinx/articles/architecture.html">How Jinx is built</a>.</li>
+<li>
+<strong>For everyone</strong> — day-to-day RLadies+ organising lives in the <a href="https://guide.rladies.org/" class="external-link">RLadies+ Guide</a>; data handling is in <a href="PRIVACY.html">PRIVACY.md</a>.</li>
 </ul>
 </div>
 </div>

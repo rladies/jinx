@@ -1,300 +1,199 @@
-# Workflow Reference for RLadies+ Org Admins
+# Operating Jinx
 
-This vignette walks through each admin workflow jinx supports. For setup
-and architecture details, see
-[`vignette("getting-started")`](https://rladies.github.io/jinx/articles/getting-started.md).
+This page is for the people who maintain Jinx — registering the GitHub
+App, deploying the Cloudflare Worker, wiring in new commands. If you
+just want to use Jinx, [Getting
+started](https://rladies.github.io/jinx/articles/jinx.md) is the page
+you want.
 
-## Onboarding a new team member
+For the architecture map (what runs where, who triggers it), see [How
+Jinx is built](https://rladies.github.io/jinx/articles/architecture.md).
+This page is the *operational* counterpart: what you do to stand it up,
+change it, and keep it running.
 
-**Via issue comment:**
+## Register the GitHub App
 
-    /jinx invite @username to website
+Jinx posts as `jinx[bot]` because it authenticates as a registered
+GitHub App, not a maintainer’s PAT. Set up in *Settings → Developer
+settings → GitHub Apps → New* on the org:
 
-**What happens:**
+- Name: `jinx`.
+- Permissions:
+  - Repository: Issues (R/W), Pull Requests (R/W), Contents (Read).
+  - Organization: Members (R/W), Administration (Read).
+- Events: `issue_comment`, `issues`, `pull_request`.
+- Install on the RLadies+ org.
 
-1.  [`gt_invite()`](https://rladies.github.io/jinx/reference/gt_invite.md)
-    sends an org invitation to the user
-2.  A tracking issue is created with the team-specific onboarding
-    checklist
-3.  Once the user accepts,
-    [`gt_finalize_onboarding()`](https://rladies.github.io/jinx/reference/gt_finalize_onboarding.md)
-    adds them to the appropriate team(s) and repos
-4.  The tracking issue is closed
+Save the App ID, generate a private key, and install the app on every
+repo Jinx needs to act in.
 
-**Programmatically:**
+## Wire up secrets
 
-``` r
+Two values are required for every workflow:
 
-gt_invite("octocat", "website")
-```
+- Variable `JINX_APP_ID` — the App ID from the registration above.
+- Secret `JINX_PRIVATE_KEY` — the App’s private key, pasted as-is.
 
-**Checking pending invitations:**
+Both are read by
+[`actions/create-github-app-token`](https://github.com/actions/create-github-app-token)
+at the top of every workflow. Set them at the org level so new repos
+pick them up automatically.
 
-``` r
+Module-specific secrets are only needed if you want that module’s
+features. A missing module secret is not fatal — Jinx skips the module
+and logs a hint:
 
-gt_check_invitations()
-```
+| Secret                   | Used by                |
+|--------------------------|------------------------|
+| `AIRTABLE_API_KEY`       | Airtable sync          |
+| `BSKY_USER`, `BSKY_PASS` | Bluesky announcements  |
+| `MASTODON_TOKEN`         | Mastodon announcements |
+| `LINKEDIN_ACCESS_TOKEN`  | LinkedIn announcements |
+| `SLACK_TOKEN`            | Slack management       |
+| `MAILCHIMP_API_KEY`      | Newsletter             |
+| `PLAUSIBLE_API_KEY`      | Website analytics      |
 
-## Offboarding a team member
+## Configuration files
 
-**Via issue comment:**
+Jinx loads almost everything from data files in `inst/`, so most
+operational changes don’t need a code release — just a PR.
 
-    /jinx offboard @username from blog
+- `inst/config/teams.yml` — team definitions: roles, repos, notification
+  channels.
+- `inst/config/review-rules.yml` — file-path patterns that drive PR
+  reviewer assignment.
+- `inst/config/labels.yml` — file-path patterns that drive PR labelling.
+- `inst/config/conferences.yml`, `events.yml`, `languages.yml` —
+  module-specific lists.
+- `inst/templates/*.md` — issue-comment replies, onboarding checklists,
+  command help. `inst/templates/teams/<name>.md` extends the base
+  onboarding checklist for a specific team.
+- `inst/translations/` — message translations indexed by language code.
 
-**What happens:**
+Editing any of these is a normal PR. The bot image rebuild picks them up
+on the next push to `main`.
 
-1.  [`gt_create_offboarding()`](https://rladies.github.io/jinx/reference/gt_create_offboarding.md)
-    opens an offboarding tracking issue
-2.  The issue lists cleanup steps (remove from team, repos, external
-    services)
-3.  Once complete,
-    [`gt_finalize_offboarding()`](https://rladies.github.io/jinx/reference/gt_finalize_offboarding.md)
-    removes org access and closes the issue
+## Adding a new command
 
-**Programmatically:**
-
-``` r
-
-gt_create_offboarding("octocat", "blog")
-```
-
-## Setting up a new chapter
-
-**Via issue comment:**
-
-    /jinx chapter-setup Berlin Germany
-
-**What happens:**
-
-1.  [`chapter_create_setup()`](https://rladies.github.io/jinx/reference/chapter_create_setup.md)
-    opens a setup tracking issue
-2.  The issue contains a checklist: create repos, add organizers,
-    configure Meetup, set up social media
-3.  [`chapter_create()`](https://rladies.github.io/jinx/reference/chapter_create.md)
-    generates the chapter JSON for the directory
-4.  [`chapter_create_pr()`](https://rladies.github.io/jinx/reference/chapter_create_pr.md)
-    opens a PR to add the chapter to the directory
-
-**Updating an existing chapter:**
-
-    /jinx chapter-update Berlin Germany
-
-## Monitoring chapter health
-
-**Scheduled workflow** runs periodically via
-[`chapter_check_health()`](https://rladies.github.io/jinx/reference/chapter_check_health.md).
-
-**Via issue comment:**
-
-    /jinx chapter-health
-
-**What happens:**
-
-1.  Reads chapter activity data (commits, issues, events)
-2.  Classifies chapters as active, quiet, or inactive
-3.  Posts a summary with recommendations
-
-**Outreach to inactive chapters:**
+Every `/jinx <verb>` flows through the same two functions, defined in
+[`R/commands.R`](https://github.com/rladies/jinx/blob/main/R/commands.R):
 
 ``` r
 
-statuses <- chapter_monitor_status()
-prepare_inactivity_emails(statuses)
+cmd <- jinx::cmd_parse("/jinx invite @ada to website")
+jinx::cmd_execute(cmd)
 ```
 
-## Blog post workflow
+To add a new verb:
 
-### Adding a new blog entry
+1.  Extend
+    [`cmd_parse()`](https://rladies.github.io/jinx/reference/cmd_parse.md)
+    so it returns the structured fields your verb needs.
+2.  Extend the dispatch in
+    [`cmd_execute()`](https://rladies.github.io/jinx/reference/cmd_execute.md)
+    to call your module function.
+3.  Add the command to
+    [`inst/commands/help.md`](https://github.com/rladies/jinx/blob/main/inst/commands/help.md)
+    so `/jinx help` finds it.
+4.  Cover the parser case in `tests/testthat/test-commands.R` and the
+    module function in its own test file.
 
-**Via issue comment:**
+That’s it. The `bot-commands.yml` workflow already calls `cmd_parse` +
+`cmd_execute` for issue-comment triggers, and the Cloudflare Worker
+dispatches Slack-side calls into the same workflow. You only need to
+touch a workflow if your verb needs a new schedule or a separate
+trigger.
 
-    /jinx blog-add https://example.com/my-rladies-post
+## Opt another repo into PR review
 
-**What happens:**
+To add Jinx’s PR review to any RLadies+ repo, drop this workflow in:
 
-1.  [`blog_create_entry()`](https://rladies.github.io/jinx/reference/blog_create_entry.md)
-    fetches metadata from the URL
-2.  Creates a YAML entry and opens a PR to the blog repo
-3.  [`blog_post_checklist()`](https://rladies.github.io/jinx/reference/blog_post_checklist.md)
-    adds a review checklist to the PR
-
-### Checking blog links
-
-    /jinx blog-check-links
-
-Runs
-[`blog_check_links()`](https://rladies.github.io/jinx/reference/blog_check_links.md)
-to find broken URLs across all blog entries.
-
-### Auto-merge on publish date
-
-[`website_merge_pending()`](https://rladies.github.io/jinx/reference/website_merge_pending.md)
-runs on a schedule and merges blog PRs whose publish date has arrived.
-This is triggered by the `website-merge-pending.yml` workflow.
-
-## Announcing blog posts
-
-After a blog post merges, announce it across platforms:
-
-**Via issue comment:**
-
-    /jinx announce https://rladies.org/blog/my-post/
-
-**What happens:**
-
-1.  [`announce_post()`](https://rladies.github.io/jinx/reference/announce_post.md)
-    reads the post’s YAML front matter
-2.  [`announce_create_message()`](https://rladies.github.io/jinx/reference/announce_create_message.md)
-    builds the message with hashtags
-3.  Posts to Bluesky
-    ([`announce_post_bluesky()`](https://rladies.github.io/jinx/reference/announce_post_bluesky.md)),
-    Mastodon
-    ([`announce_post_mastodon()`](https://rladies.github.io/jinx/reference/announce_post_mastodon.md)),
-    LinkedIn
-    ([`li_post_write()`](https://rladies.github.io/jinx/reference/li_post_write.md)),
-    and newsletter
-    ([`announce_send_newsletter()`](https://rladies.github.io/jinx/reference/announce_send_newsletter.md))
-
-Each platform is posted independently – failures on one do not block
-others.
-
-## Running reports
-
-### Activity reports
-
-**Via issue comment:**
-
-    /jinx report weekly
-    /jinx report monthly
-
-**Programmatically:**
-
-``` r
-
-report <- report_generate(type = "weekly")
-report_publish(report)
+``` yaml
+# .github/workflows/jinx-review.yml
+name: PR review
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+jobs:
+  review:
+    uses: rladies/jinx/.github/workflows/reusable-pr-review.yml@main
+    secrets: inherit
 ```
 
-### Chapter health reports
+`secrets: inherit` is how the caller repo gets `JINX_APP_ID` and
+`JINX_PRIVATE_KEY` from the org-level secrets — no copy-pasting.
 
-    /jinx report chapters
+The same pattern works for `reusable-welcome-contributor.yml`,
+`reusable-thank-contributor.yml`, and
+`reusable-website-blog-checklist.yml`.
 
-``` r
+## The bot image
 
-url <- chapter_report_health()
+Workflows run inside `ghcr.io/rladies/jinx-bot:latest`, which has the
+package and all its dependencies pre-installed.
+[`infra-build-bot-image.yml`](https://github.com/rladies/jinx/blob/main/.github/workflows/infra-build-bot-image.yml)
+rebuilds it when `DESCRIPTION`, `Dockerfile`, or other runtime files
+change on `main`. That’s why a typical Jinx command run finishes in a
+few seconds — no `install.packages` at run time.
+
+When you add a new R dependency:
+
+1.  Add it to `DESCRIPTION`.
+2.  Merge to `main`.
+3.  Wait for `infra-build-bot-image` to finish — until then, runs still
+    use the old image and your new dependency won’t be there.
+
+## The Cloudflare Worker
+
+The Worker at `https://jinx.rladies.workers.dev` is Jinx’s front door
+for Slack and Airtable. It’s deployed by
+[`infra-deploy-worker.yml`](https://github.com/rladies/jinx/blob/main/.github/workflows/infra-deploy-worker.yml)
+on every push to `worker/` on `main`.
+
+Worker secrets are managed through Wrangler:
+
+``` bash
+cd worker
+wrangler secret put SLACK_SIGNING_SECRET
+wrangler secret put SLACK_CLIENT_ID
+wrangler secret put SLACK_CLIENT_SECRET
+wrangler secret put GITHUB_PAT
 ```
 
-## Managing the GHA dashboard
+KV namespaces (`SLACK_TOKENS`, `AIRTABLE_BASES`) and the Vectorize index
+(`rladies-content`) are declared in `wrangler.jsonc` — adding one means
+editing that file, not running a command.
 
-    /jinx gha-dashboard
+For what the Worker actually does end-to-end, see [How Jinx is
+built](https://rladies.github.io/jinx/articles/architecture.md).
 
-**What happens:**
+## When things break
 
-1.  [`gha_generate_dashboard()`](https://rladies.github.io/jinx/reference/gha_generate_dashboard.md)
-    queries workflow run status across all org repos
-2.  [`gha_publish_dashboard()`](https://rladies.github.io/jinx/reference/gha_publish_dashboard.md)
-    posts a formatted status table as a GitHub issue
+- **A workflow run failed.** Open the [Actions
+  tab](https://github.com/rladies/jinx/actions), find the red run, and
+  read the `cli` log of the failing step. Most module functions print
+  their own context.
+- **A Slack `/jinx ...` got no reply.** Tail the Worker (`wrangler tail`
+  from `worker/`). Failures here are almost always signature
+  verification, a missing env var, or a Slack scope that wasn’t granted.
+- **A scheduled job didn’t run.** GitHub disables scheduled workflows on
+  inactive repos. Trigger one manually from the Actions UI and the
+  schedule resumes.
+- **A new command is wired but Slack says “unknown command”.** The bot
+  image hasn’t rebuilt yet — wait for `infra-build-bot-image` to finish,
+  then try again.
 
-**Scheduled workflow** runs weekly via `gha-dashboard.yml`.
+The audit log is the Actions run history. Logs for runs older than 14
+days are gone; if you need to preserve evidence, screenshot it before
+the retention window closes.
 
-## Airtable sync
+## Where to go next
 
-**Scheduled workflow** runs weekly via `airtable-sync.yml`.
-
-**Programmatically:**
-
-``` r
-
-directory_sync_airtable()
-gt_sync_airtable()
-```
-
-Syncs directory entries and global team data between Airtable and
-GitHub. Creates PRs for any changes detected.
-
-## Slack onboarding
-
-``` r
-
-slack_invite_batch(dry_run = TRUE)
-```
-
-Fetches pending invitees from Airtable and sends Slack workspace
-invitations. Use `dry_run = TRUE` (the default) to preview before
-sending.
-
-**RSS feed integration:**
-
-``` r
-
-slack_subscribe_rss()
-```
-
-Subscribes Slack channels to the RLadies+ blog RSS feed.
-
-## Directory maintenance
-
-**Validating directory PRs:**
-
-The
-[`validate_directory_pr()`](https://rladies.github.io/jinx/reference/validate_directory_pr.md)
-function runs automatically on PRs that modify directory entries. It
-checks:
-
-- YAML schema compliance
-- Filename conventions
-  ([`directory_validate_filename()`](https://rladies.github.io/jinx/reference/directory_validate_filename.md))
-- Image optimization
-  ([`directory_crop_image()`](https://rladies.github.io/jinx/reference/directory_crop_image.md),
-  [`directory_optimize_image()`](https://rladies.github.io/jinx/reference/directory_optimize_image.md))
-- Social handle verification
-  ([`directory_verify_handles()`](https://rladies.github.io/jinx/reference/directory_verify_handles.md))
-
-## Contributor recognition
-
-**List contributors for a repo:**
-
-    /jinx contributors jinx
-
-**Update the contributors list:**
-
-    /jinx contributors update jinx
-
-**Org-wide contributor stats:**
-
-    /jinx contributors org
-
-**Automated greetings:**
-
-- [`contributor_welcome()`](https://rladies.github.io/jinx/reference/contributor_welcome.md)
-  posts a welcome comment on first-time PRs
-- [`contributor_thank()`](https://rladies.github.io/jinx/reference/contributor_thank.md)
-  posts a thank-you when PRs are merged
-
-Both are triggered by the `welcome-contributor.yml` and
-`thank-contributor.yml` workflows.
-
-## PR review automation
-
-PR review runs automatically on pull requests via reusable workflows.
-
-**What happens:**
-
-1.  [`review_run()`](https://rladies.github.io/jinx/reference/review_run.md)
-    applies the rules from `review-rules.yml`
-2.  Reviewers are assigned based on file paths and team ownership
-3.  Labels are applied based on `labels.yml` mappings
-4.  [`review_check_pr_naming()`](https://rladies.github.io/jinx/reference/review_check_pr_naming.md)
-    enforces branch and title conventions
-
-**See**
-[`vignette("getting-started")`](https://rladies.github.io/jinx/articles/getting-started.md)
-for how to add PR review to other repos.
-
-## Stale issue reminders
-
-    /jinx remind stale
-
-[`gt_remind_stale()`](https://rladies.github.io/jinx/reference/gt_remind_stale.md)
-scans for onboarding/offboarding issues that have gone stale and posts
-reminder comments.
+- [How Jinx is
+  built](https://rladies.github.io/jinx/articles/architecture.md) — the
+  surface map between R package, workflows, and Worker.
+- [Privacy policy](https://rladies.github.io/jinx/articles/privacy.md) —
+  what data Jinx receives, where it goes, how to request deletion.
+- The [function
+  reference](https://rladies.github.io/jinx/reference/index.md) — every
+  exported function, grouped by module.

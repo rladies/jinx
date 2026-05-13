@@ -34,7 +34,7 @@ surfaces.
                                       |  R/, inst/    |
                                       +---------------+
 
-The R package is the source of truth: every workflow boots an image that
+The R package is the source of truth. Every workflow boots an image that
 has it pre-installed, and the worker exists to put Slack-shaped inputs
 onto a workflow trigger so the same R code can answer them.
 
@@ -186,5 +186,5 @@ through Actions would be wasteful.
 | OAuth flow, allowlist, scopes | `worker/src/slack-oauth.js` + Slack app config |
 
 If a change spans surfaces, prefer one PR per surface unless they have
-to land together — the bot image rebuild + worker deploy run on separate
-workflows and roll out independently.
+to land together — the bot image rebuild and worker deploy run on
+separate workflows and roll out independently.

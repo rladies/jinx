@@ -4,25 +4,24 @@
 help](../reference/figures/sprites/support.svg)
 
 Jinx is the RLadies+ Slack assistant. It lets organisers run `/jinx`
-commands from Slack, answers questions about the [RLadies+
+commands without leaving Slack, answers questions about the [RLadies+
 Guide](https://guide.rladies.org/) when you `@`-mention it, and routes
-new community Slack invite requests for approval.
+new community Slack invite requests to organisers for approval.
 
 ## Install the app
 
 [![Add to
 Slack](https://platform.slack-edge.com/img/add_to_slack.png)](https://jinx.rladies.workers.dev/slack/install)
 
-Clicking the button opens the standard Slack OAuth flow. You will be
-asked which workspace to install Jinx into and what permissions to
-grant. Approving stores Jinx’s bot token for that workspace in
-Cloudflare KV; revoking it later (in *Settings & administration → Manage
-apps*) drops the token automatically.
+Clicking the button opens the standard Slack OAuth flow. You pick a
+workspace, review the permissions, and approve. Approving stashes Jinx’s
+bot token for that workspace in Cloudflare KV; uninstalling it later (in
+*Settings & administration → Manage apps*) drops the token
+automatically.
 
-**Jinx only installs into the two RLadies+ workspaces** (organisers and
-community). If you try to install it elsewhere the OAuth callback will
-reject the install and nothing is written. The complete app
-configuration is open source in
+Jinx only installs into the two RLadies+ workspaces — organisers and
+community. If you try to install it elsewhere, the OAuth callback
+refuses and nothing is written. The app configuration is open source in
 [rladies/jinx](https://github.com/rladies/jinx) if you want to fork your
 own copy.
 
@@ -41,32 +40,35 @@ ones:
 - `/jinx blog-add <url>` — auto-create a blog entry PR on the website
   from a URL.
 
-The full reference, kept in sync with the package, is at
+The canonical reference, kept in sync with the package, is at
 [inst/commands/help.md](https://github.com/rladies/jinx/blob/main/inst/commands/help.md).
 
 ### Ask Jinx anything about RLadies+
 
-Mention `@Jinx` in any channel it is a member of and ask a question.
-Jinx searches the [RLadies+ Guide](https://guide.rladies.org/) and the
+Mention `@Jinx` in any channel it’s a member of and ask a question. Jinx
+searches the [RLadies+ Guide](https://guide.rladies.org/) and the
 [RLadies+ website](https://rladies.org/) for relevant content, then
 replies in-thread with sourced links.
 
     @Jinx how do I start a new chapter?
 
+React with 👍 / 👎 / ❤️ on Jinx’s answers so we can track which replies
+are useful.
+
 ### Approving Slack invites
 
 Anyone can request to join the RLadies+ community Slack via the public
-Airtable form. When a new request comes in, Jinx posts a Block Kit card
-to the organisers’ invite-approval channel with Approve / Deny buttons.
+Airtable form. When a request comes in, Jinx posts a Block Kit card to
+the organisers’ invite-approval channel with Approve / Deny buttons.
 
-- **Deny**: marks the Airtable record `denied` and replaces the card
-  with a denial note. Done.
-- **Approve**: replaces the card with a checklist (workspace menu →
+- **Deny** marks the Airtable record `denied` and replaces the card with
+  a denial note. Done.
+- **Approve** replaces the card with a checklist (workspace menu →
   *Invite people to RLadies+* → paste email) and a *Mark invite sent*
-  button. The organiser still has to do the actual invite manually —
-  Slack does not give community apps an API for that. Once the invite is
-  sent, the *Mark invite sent* button flips the Airtable record’s
-  `invited` flag and replaces the card with a final receipt.
+  button. The organiser still has to send the actual Slack invite —
+  Slack does not give community apps an API for that. Once it’s sent,
+  clicking *Mark invite sent* flips the Airtable record’s `invited` flag
+  and replaces the card with a final receipt.
 
 The Airtable `invited` field means *the invite was actually sent*, not
 just approved. Don’t flip it before the *Mark invite sent* click.
@@ -82,8 +84,8 @@ Jinx requests the following Slack scopes when you install it:
 | `chat:write`        | Post replies and approval cards                   |
 | `chat:write.public` | Post to public channels Jinx hasn’t been added to |
 
-Jinx **does not** read messages it isn’t directly mentioned in. It keeps
-no database of users or messages. Per-workspace bot tokens are stored in
+Jinx does not read messages it isn’t directly mentioned in. It keeps no
+database of users or messages. Per-workspace bot tokens live in
 Cloudflare KV; everything else is ephemeral.
 
 See [PRIVACY.md](https://github.com/rladies/jinx/blob/main/PRIVACY.md)
@@ -92,20 +94,21 @@ for the full data-handling policy.
 ## Troubleshooting
 
 - **`/jinx ...` returns “Jinx only runs in the RLadies+ organisers and
-  community workspaces”**: the workspace you’re typing from isn’t on the
-  allowlist. Check the team id with `/team-id` or your workspace admin
-  and contact the RLadies+ global team if you think it should be added.
+  community workspaces”.** The workspace you’re typing from isn’t on the
+  allowlist. Check the team id with `/team-id` or ask your workspace
+  admin, then contact the RLadies+ Global Team if you think it should be
+  added.
 - **OAuth install completes but `/jinx help` still says the same
-  thing**: the new team id needs to be added to the worker’s
-  `SLACK_ORGANIZER_TEAM_ID` or `SLACK_COMMUNITY_TEAM_ID` var, and the
+  thing.** The new team id needs to be added to the worker’s
+  `SLACK_ORGANIZER_TEAM_ID` or `SLACK_COMMUNITY_TEAM_ID` var and the
   worker redeployed. Open an issue at
   <https://github.com/rladies/jinx/issues>.
-- **Jinx doesn’t respond to `@`-mentions in a private channel**: Jinx
-  needs to be invited to the channel first (`/invite @Jinx`).
+- **Jinx doesn’t respond to `@`-mentions in a private channel.** Invite
+  Jinx to the channel first (`/invite @Jinx`).
 
 ## Source and feedback
 
 - Code: <https://github.com/rladies/jinx>
-- Issues / feature requests: <https://github.com/rladies/jinx/issues>
-- Architecture notes (worker + R package): see
-  [`AGENTS.md`](https://github.com/rladies/jinx/blob/main/.github/AGENTS.md).
+- Issues and feature requests: <https://github.com/rladies/jinx/issues>
+- Architecture notes (Worker + R package): see [How Jinx is
+  built](https://rladies.github.io/jinx/articles/architecture.md).
