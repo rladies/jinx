@@ -5,14 +5,14 @@ R package powering the RLadies+ GitHub organization bot. Deployed as a GitHub Ap
 ## Architecture
 
 - **R package** (not TypeScript/Probot) — R-centric org, maintainability
-- **GitHub App identity** via `actions/create-github-app-token@v1`
+- **GitHub App identity** via `actions/create-github-app-token@v3`
 - **`/jinx` commands** in issue comments trigger the `commands.yml` workflow
 - **Scheduled workflows** handle recurring tasks (reports, sync, monitoring)
 - **16 modules** across 50 R source files, 24 workflows, 25 templates
 
 ## Secrets
 
-All workflows use `actions/create-github-app-token@v1` with these **repo secrets** (not variables):
+All workflows use `actions/create-github-app-token@v3` (input is `client-id`, accepts the app ID stored in `JINX_APP_ID`) with these **repo secrets** (not variables):
 
 | Secret                      | Purpose                                                               |
 | --------------------------- | --------------------------------------------------------------------- |
