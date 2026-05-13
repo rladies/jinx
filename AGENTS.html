@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <ul><li>
 <strong>R package</strong> (not TypeScript/Probot) — R-centric org, maintainability</li>
 <li>
-<strong>GitHub App identity</strong> via <code>actions/create-github-app-token@v1</code>
+<strong>GitHub App identity</strong> via <code>actions/create-github-app-token@v3</code>
 </li>
 <li>
 <strong><code>/jinx</code> commands</strong> in issue comments trigger the <code>commands.yml</code> workflow</li>
@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </ul></div>
 <div class="section level2">
 <h2 id="secrets">Secrets<a class="anchor" aria-label="anchor" href="#secrets"></a></h2>
-<p>All workflows use <code>actions/create-github-app-token@v1</code> with these <strong>repo secrets</strong> (not variables):</p>
+<p>All workflows use <code>actions/create-github-app-token@v3</code> (input is <code>client-id</code>, accepts the app ID stored in <code>JINX_APP_ID</code>) with these <strong>repo secrets</strong> (not variables):</p>
 <table class="table"><colgroup><col width="28%"><col width="71%"></colgroup><thead><tr><th>Secret</th>
 <th>Purpose</th>
 </tr></thead><tbody><tr><td><code>JINX_APP_ID</code></td>

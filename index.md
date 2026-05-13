@@ -1,4 +1,4 @@
-# jinx ![Jinx the cat, sitting at a laptop, working](reference/figures/sprites/working.svg)
+# jinx ![Jinx the cat, sitting](reference/figures/sprites/sitting.svg)
 
 Jinx is the operations bot for [RLadies+](https://rladies.org/). It runs
 on GitHub Actions as `jinx[bot]`, with a Cloudflare Worker bridging
