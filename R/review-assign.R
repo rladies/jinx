@@ -8,7 +8,7 @@
 #' @return Invisibly returns `NULL`. Called for its side effects of
 #'   assigning reviewers, labelling the PR, and posting a checklist comment.
 #' @export
-review_pr <- function(owner, repo, pr_number) {
+review_run <- function(owner, repo, pr_number) {
   cli::cli_h2("Reviewing PR #{pr_number} in {owner}/{repo}")
 
   pr <- gh::gh(
@@ -28,15 +28,15 @@ review_pr <- function(owner, repo, pr_number) {
 
   file_paths <- vapply(files, function(f) f$filename, character(1))
 
-  labels <- label_pr(owner, repo, pr_number, file_paths)
-  reviewers <- assign_reviewers(
+  labels <- review_label(owner, repo, pr_number, file_paths)
+  reviewers <- review_assign(
     owner,
     repo,
     pr_number,
     file_paths,
     pr$user$login
   )
-  post_checklist(owner, repo, pr_number, file_paths)
+  review_post_checklist(owner, repo, pr_number, file_paths)
 
   cli::cli_alert_success(paste0(
     "PR #{pr_number}: {length(labels)} labels,",
@@ -57,7 +57,7 @@ review_pr <- function(owner, repo, pr_number) {
 #' @return Character vector of assigned reviewer logins.
 #' @keywords internal
 #' @noRd
-assign_reviewers <- function(
+review_assign <- function(
   owner,
   repo,
   pr_number,

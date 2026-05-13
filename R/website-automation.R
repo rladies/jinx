@@ -8,7 +8,7 @@
 #' @return Character vector of merged PR URLs (invisibly).
 #' @export
 website_merge_pending <- function(org = "rladies", repo = "rladies.github.io") {
-  pending <- fetch_pending_prs(org, repo)
+  pending <- review_fetch_pending(org, repo)
   if (length(pending) == 0) {
     cli::cli_alert_info("No pending PRs found")
     return(invisible(character(0)))
@@ -18,15 +18,15 @@ website_merge_pending <- function(org = "rladies", repo = "rladies.github.io") {
   merged <- character(0)
 
   for (pr in pending) {
-    if (pr_due_today(pr, today, org, repo)) {
-      merged <- c(merged, try_squash_merge(pr, org, repo))
+    if (review_pr_due_today(pr, today, org, repo)) {
+      merged <- c(merged, review_try_squash_merge(pr, org, repo))
     }
   }
 
   invisible(merged)
 }
 
-fetch_pending_prs <- function(org, repo) {
+review_fetch_pending <- function(org, repo) {
   prs <- gh::gh(
     "GET /repos/{owner}/{repo}/pulls",
     owner = org,
@@ -43,7 +43,7 @@ fetch_pending_prs <- function(org, repo) {
   )
 }
 
-pr_due_today <- function(pr, today, org, repo) {
+review_pr_due_today <- function(pr, today, org, repo) {
   files <- gh::gh(
     "GET /repos/{owner}/{repo}/pulls/{pr_number}/files",
     owner = org,
@@ -84,7 +84,7 @@ file_yaml_date <- function(f, pr, org, repo) {
   if (is.null(content)) NULL else extract_yaml_date(content)
 }
 
-try_squash_merge <- function(pr, org, repo) {
+review_try_squash_merge <- function(pr, org, repo) {
   tryCatch(
     {
       gh::gh(
@@ -99,7 +99,7 @@ try_squash_merge <- function(pr, org, repo) {
     },
     error = function(e) {
       cli::cli_alert_danger("Failed to merge PR #{pr$number}: {e$message}")
-      post_merge_failure_comment(org, repo, pr$number, e$message)
+      review_post_merge_failure(org, repo, pr$number, e$message)
       character(0)
     }
   )
@@ -179,7 +179,7 @@ blog_post_checklist <- function(owner, repo, pr_number) {
 #' @param org Organization name.
 #' @return Comment URL or `NULL` if author is a team member (invisibly).
 #' @export
-greet_contributor <- function(owner, repo, number, author, org = "rladies") {
+contributor_greet <- function(owner, repo, number, author, org = "rladies") {
   contributor_welcome(owner, repo, number, author, is_pr = TRUE, org = org)
 }
 
@@ -204,7 +204,7 @@ extract_yaml_date <- function(content) {
   NULL
 }
 
-post_merge_failure_comment <- function(org, repo, pr_number, reason) {
+review_post_merge_failure <- function(org, repo, pr_number, reason) {
   body <- glue::glue(
     "The automated merge for this PR failed.\n\n",
     "**Reason**: {reason}\n\n",

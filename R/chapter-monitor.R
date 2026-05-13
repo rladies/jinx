@@ -11,7 +11,7 @@
 #' @param org GitHub organization.
 #' @return Data frame with chapter status information.
 #' @export
-monitor_chapter_status <- function(
+chapter_monitor_status <- function(
   data_path = NULL,
   inactive_months = 6,
   org = "rladies"
@@ -19,7 +19,7 @@ monitor_chapter_status <- function(
   if (!is.null(data_path)) {
     chapters <- utils::read.csv(data_path, stringsAsFactors = FALSE)
   } else {
-    chapters <- fetch_chapter_data_from_archive(org)
+    chapters <- chapter_fetch_archive_data(org)
   }
 
   if (nrow(chapters) == 0) {
@@ -34,7 +34,7 @@ monitor_chapter_status <- function(
   chapters$founded_date <- as.Date(chapters$founded_date)
 
   chapters$status <- mapply(
-    classify_chapter_status,
+    chapter_classify_status,
     chapters$upcoming_events,
     chapters$last_event,
     chapters$founded_date,
@@ -65,7 +65,7 @@ monitor_chapter_status <- function(
 #'
 #' Identifies inactive chapters and prepares warning emails for organizers.
 #'
-#' @param chapters Chapter status data from [monitor_chapter_status()].
+#' @param chapters Chapter status data from [chapter_monitor_status()].
 #' @param template_path Path to email template.
 #' @param dry_run If `TRUE` (default), only returns the email data without
 #'   sending.
@@ -121,7 +121,7 @@ prepare_inactivity_emails <- function(
   invisible(emails)
 }
 
-classify_chapter_status <- function(upcoming, last, founded, cutoff) {
+chapter_classify_status <- function(upcoming, last, founded, cutoff) {
   if (isTRUE(upcoming >= 1)) {
     return("active with upcoming events")
   }
@@ -137,7 +137,7 @@ classify_chapter_status <- function(upcoming, last, founded, cutoff) {
   "unbegun"
 }
 
-fetch_chapter_data_from_archive <- function(org) {
+chapter_fetch_archive_data <- function(org) {
   health <- chapter_check_health(months = 6, org = org)
   if (nrow(health) == 0) {
     return(data.frame())

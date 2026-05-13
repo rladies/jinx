@@ -8,12 +8,12 @@
 #'   missing_keys, extra_keys.
 #' @export
 i18n_translations_validate <- function(language = NULL) {
-  languages <- translation_languages(language)
-  base_dir <- translation_base_dir()
+  languages <- i18n_languages(language)
+  base_dir <- i18n_base_dir()
   base_templates <- list.files(base_dir, pattern = "\\.md$")
 
   if (length(base_templates) == 0) {
-    return(empty_validation_df())
+    return(directory_empty_validation_df())
   }
 
   pairs <- expand.grid(
@@ -23,11 +23,11 @@ i18n_translations_validate <- function(language = NULL) {
   )
 
   if (nrow(pairs) == 0) {
-    return(empty_validation_df())
+    return(directory_empty_validation_df())
   }
 
   results <- mapply(
-    validate_one_translation,
+    i18n_validate_one,
     pairs$lang,
     pairs$tmpl,
     MoreArgs = list(base_dir = base_dir),
@@ -37,7 +37,7 @@ i18n_translations_validate <- function(language = NULL) {
   do.call(rbind, results)
 }
 
-translation_languages <- function(language) {
+i18n_languages <- function(language) {
   langs <- if (is.null(language)) {
     config <- load_languages_config()
     vapply(config$supported, function(l) l$code, character(1))
@@ -47,15 +47,15 @@ translation_languages <- function(language) {
   setdiff(langs, "en")
 }
 
-translation_base_dir <- function() {
+i18n_base_dir <- function() {
   dir <- system.file("translations", "en", package = "jinx")
   if (nzchar(dir)) dir else system.file("templates", package = "jinx")
 }
 
-validate_one_translation <- function(lang, tmpl, base_dir) {
+i18n_validate_one <- function(lang, tmpl, base_dir) {
   trans_path <- system.file("translations", lang, tmpl, package = "jinx")
   if (!nzchar(trans_path)) {
-    return(validation_row(tmpl, lang, "missing", "", ""))
+    return(directory_validation_row(tmpl, lang, "missing", "", ""))
   }
 
   base_keys <- extract_placeholder_keys(file.path(base_dir, tmpl))
@@ -64,10 +64,16 @@ validate_one_translation <- function(lang, tmpl, base_dir) {
   extra <- setdiff(trans_keys, base_keys)
 
   status <- if (length(missing) == 0 && length(extra) == 0) "ok" else "mismatch"
-  validation_row(tmpl, lang, status, toString(missing), toString(extra))
+  directory_validation_row(
+    tmpl,
+    lang,
+    status,
+    toString(missing),
+    toString(extra)
+  )
 }
 
-validation_row <- function(tmpl, lang, status, missing, extra) {
+directory_validation_row <- function(tmpl, lang, status, missing, extra) {
   data.frame(
     template = tmpl,
     language = lang,
@@ -78,7 +84,7 @@ validation_row <- function(tmpl, lang, status, missing, extra) {
   )
 }
 
-empty_validation_df <- function() {
+directory_empty_validation_df <- function() {
   data.frame(
     template = character(0),
     language = character(0),

@@ -11,7 +11,7 @@
 #' @param output_dir Directory to write the JSON file.
 #' @return File path of the created JSON (invisibly).
 #' @export
-create_chapter <- function(
+chapter_create <- function(
   city,
   country,
   organizers,

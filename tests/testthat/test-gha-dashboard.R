@@ -1,4 +1,4 @@
-describe("format_gha_dashboard", {
+describe("gha_format_dashboard", {
   it("formats dashboard data as markdown table", {
     data <- list(
       list(
@@ -33,7 +33,7 @@ describe("format_gha_dashboard", {
         )
       )
     )
-    result <- format_gha_dashboard(data)
+    result <- gha_format_dashboard(data)
     expect_true(grepl("GitHub Actions Status Report", result, fixed = TRUE))
     expect_true(grepl("jinx", result, fixed = TRUE))
     expect_true(grepl("website", result, fixed = TRUE))
@@ -44,7 +44,7 @@ describe("format_gha_dashboard", {
   })
 
   it("handles empty data", {
-    expect_identical(format_gha_dashboard(list()), "No workflow data found.")
+    expect_identical(gha_format_dashboard(list()), "No workflow data found.")
   })
 
   it("uses state when badge is NULL", {
@@ -62,7 +62,7 @@ describe("format_gha_dashboard", {
         )
       )
     )
-    result <- format_gha_dashboard(data)
+    result <- gha_format_dashboard(data)
     expect_true(grepl("disabled", result, fixed = TRUE))
   })
 })

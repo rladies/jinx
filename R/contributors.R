@@ -31,9 +31,9 @@ contributor_welcome <- function(
   first_time <- is_first_time_contributor(owner, repo, author, is_pr)
 
   message <- if (first_time) {
-    welcome_first_time_message(author, repo, is_pr)
+    contributor_welcome_first_time(author, repo, is_pr)
   } else {
-    welcome_returning_message(author, is_pr)
+    contributor_welcome_returning(author, is_pr)
   }
 
   comment <- gh::gh(
@@ -102,7 +102,7 @@ contributor_thank <- function(owner, repo, pr_number, author, org = "rladies") {
 #' @return Data frame with `login`, `contributions`, `avatar_url`, and
 #'   `profile_url` columns, sorted by contribution count.
 #' @export
-list_contributors <- function(owner, repo, include_bots = FALSE) {
+contributor_list <- function(owner, repo, include_bots = FALSE) {
   contributors <- tryCatch(
     gh::gh(
       "GET /repos/{owner}/{repo}/contributors",
@@ -163,12 +163,12 @@ list_contributors <- function(owner, repo, include_bots = FALSE) {
 #' Creates a markdown table or image grid of contributors for
 #' inclusion in README or other documents.
 #'
-#' @param contributors Data frame from [list_contributors()].
+#' @param contributors Data frame from [contributor_list()].
 #' @param format Output format: `"table"` or `"grid"`.
 #' @param cols Number of columns for grid format. Defaults to 7.
 #' @return Character string with markdown content.
 #' @export
-format_contributors <- function(
+contributor_format <- function(
   contributors,
   format = c("table", "grid"),
   cols = 7
@@ -180,9 +180,9 @@ format_contributors <- function(
   }
 
   if (format == "table") {
-    format_contributors_table(contributors)
+    contributor_format_table(contributors)
   } else {
-    format_contributors_grid(contributors, cols)
+    contributor_format_grid(contributors, cols)
   }
 }
 
@@ -198,13 +198,13 @@ format_contributors <- function(
 #' @param format Format for the contributor list.
 #' @return PR URL if changes were made, `NULL` otherwise (invisibly).
 #' @export
-contributors_update <- function(
+contributor_update <- function(
   owner,
   repo,
   file_path = ".github/contributors.md",
   format = "grid"
 ) {
-  contributors <- list_contributors(owner, repo)
+  contributors <- contributor_list(owner, repo)
   if (nrow(contributors) == 0) {
     return(invisible(NULL))
   }
@@ -212,7 +212,7 @@ contributors_update <- function(
   content <- paste0(
     "# Contributors\n\n",
     "Thanks to all our contributors!\n\n",
-    format_contributors(contributors, format = format),
+    contributor_format(contributors, format = format),
     "\n\n_Last updated: ",
     Sys.Date(),
     "_\n",
@@ -307,7 +307,7 @@ contributors_update <- function(
 #' @return Data frame with `login`, `repos`, `total_contributions`,
 #'   `avatar_url`, and `profile_url`.
 #' @export
-list_org_contributors <- function(
+contributor_list_org <- function(
   org = "rladies",
   exclude_pattern = "^meetup-"
 ) {
@@ -437,7 +437,7 @@ is_bot <- function(login) {
   grepl("\\[bot\\]$", login) || login %in% c("github-actions", "dependabot")
 }
 
-welcome_first_time_message <- function(author, repo, is_pr) {
+contributor_welcome_first_time <- function(author, repo, is_pr) {
   type <- if (is_pr) "pull request" else "issue"
   glue::glue(
     "Welcome to **{repo}**, @{author}! ",
@@ -448,7 +448,7 @@ welcome_first_time_message <- function(author, repo, is_pr) {
   )
 }
 
-welcome_returning_message <- function(author, is_pr) {
+contributor_welcome_returning <- function(author, is_pr) {
   type <- if (is_pr) "pull request" else "issue"
   glue::glue(
     "Thanks for the {type}, @{author}! ",
@@ -457,7 +457,7 @@ welcome_returning_message <- function(author, is_pr) {
   )
 }
 
-format_contributors_table <- function(contributors) {
+contributor_format_table <- function(contributors) {
   header <- paste0(
     "| Avatar | Contributor | Contributions |\n",
     "|--------|-------------|---------------|\n"
@@ -476,7 +476,7 @@ format_contributors_table <- function(contributors) {
   paste0(header, paste(rows, collapse = "\n"), "\n")
 }
 
-format_contributors_grid <- function(contributors, cols) {
+contributor_format_grid <- function(contributors, cols) {
   rows <- ceiling(nrow(contributors) / cols)
   cells <- vapply(
     seq_len(nrow(contributors)),

@@ -9,14 +9,14 @@
 #' @param org GitHub organization. Defaults to `"rladies"`.
 #' @return The created issue URL (invisibly).
 #' @export
-global_team_finalize_onboarding <- function(
+gt_finalize_onboarding <- function(
   username,
   team,
   name = username,
   org = "rladies"
 ) {
   config <- load_teams_config()
-  team_def <- team_by_slug(team, config)
+  team_def <- team_get_by_slug(team, config)
 
   if (is.null(team_def)) {
     cli::cli_abort("Unknown team {.val {team}}")
@@ -51,26 +51,10 @@ global_team_finalize_onboarding <- function(
   if (!is.null(team_def$notify_teams)) {
     notify_teams <- unique(c(notify_teams, team_def$notify_teams))
   }
-  notify_issue_teams(org, "global-team", issue$number, notify_teams)
+  review_notify_teams(org, "global-team", issue$number, notify_teams)
 
   cli::cli_alert_success("Created onboarding issue: {issue$html_url}")
   invisible(issue$html_url)
-}
-
-#' @rdname global_team_finalize_onboarding
-#' @export
-gt_finalize_onboarding <- function(
-  username,
-  team,
-  name = username,
-  org = "rladies"
-) {
-  global_team_finalize_onboarding(
-    username = username,
-    team = team,
-    name = name,
-    org = org
-  )
 }
 
 #' Notify teams by commenting on an issue with @-mentions
@@ -80,7 +64,7 @@ gt_finalize_onboarding <- function(
 #' @param teams Character vector of team slugs to mention.
 #' @keywords internal
 #' @noRd
-notify_issue_teams <- function(org, repo, issue_number, teams) {
+review_notify_teams <- function(org, repo, issue_number, teams) {
   if (length(teams) == 0) {
     return(invisible())
   }

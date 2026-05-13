@@ -3,12 +3,12 @@
 #' Calculates month-over-month changes and rolling averages from
 #' chapter activity data.
 #'
-#' @param activity_data Data frame from [collect_chapter_activity()].
+#' @param activity_data Data frame from [analytics_collect_chapter_activity()].
 #' @return Data frame with trend columns added.
 #' @importFrom stats aggregate
 #' @importFrom utils head
 #' @export
-compute_activity_trends <- function(activity_data) {
+analytics_compute_trends <- function(activity_data) {
   if (nrow(activity_data) == 0) {
     return(data.frame(
       month = character(0),
@@ -30,7 +30,7 @@ compute_activity_trends <- function(activity_data) {
     NA_real_,
     diff(monthly$commits) / head(monthly$commits, -1) * 100
   )
-  monthly$sparkline <- compute_sparkline(monthly$commits)
+  monthly$sparkline <- analytics_compute_sparkline(monthly$commits)
 
   names(monthly)[names(monthly) == "commits"] <- "total_commits"
   monthly
@@ -38,11 +38,11 @@ compute_activity_trends <- function(activity_data) {
 
 #' Format analytics as markdown
 #'
-#' @param trends Data frame from [compute_activity_trends()].
-#' @param contributor_growth Data frame from [collect_contributor_growth()].
+#' @param trends Data frame from [analytics_compute_trends()].
+#' @param contributor_growth Data frame from [analytics_collect_contributor_growth()].
 #' @return Formatted markdown string.
 #' @export
-format_analytics_markdown <- function(trends, contributor_growth) {
+analytics_format_markdown <- function(trends, contributor_growth) {
   template_path <- system.file(
     "templates",
     "analytics-dashboard.md",
@@ -122,7 +122,7 @@ format_analytics_markdown <- function(trends, contributor_growth) {
   }
 }
 
-compute_sparkline <- function(values) {
+analytics_compute_sparkline <- function(values) {
   if (length(values) == 0) {
     return(character(0))
   }
@@ -145,7 +145,7 @@ compute_sparkline <- function(values) {
   vapply(indices, function(i) blocks[i], character(1))
 }
 
-compute_growth_rate <- function(values) {
+analytics_compute_growth_rate <- function(values) {
   if (length(values) < 2) {
     return(NA_real_)
   }

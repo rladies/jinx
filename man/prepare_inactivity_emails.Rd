@@ -7,7 +7,7 @@
 prepare_inactivity_emails(chapters, template_path = NULL, dry_run = TRUE)
 }
 \arguments{
-\item{chapters}{Chapter status data from \code{\link[=monitor_chapter_status]{monitor_chapter_status()}}.}
+\item{chapters}{Chapter status data from \code{\link[=chapter_monitor_status]{chapter_monitor_status()}}.}
 
 \item{template_path}{Path to email template.}
 

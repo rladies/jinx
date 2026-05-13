@@ -8,7 +8,7 @@
 #' @param exclude_pattern Regex pattern to exclude repos.
 #' @return Data frame with columns: chapter, month, commits, prs, issues.
 #' @export
-collect_chapter_activity <- function(
+analytics_collect_chapter_activity <- function(
   org = "rladies",
   months = 12,
   exclude_pattern = "^meetup-"
@@ -30,7 +30,7 @@ collect_chapter_activity <- function(
   for (r in repos) {
     tryCatch(
       {
-        stats <- collect_monthly_stats(org, r$name, since)
+        stats <- analytics_collect_monthly_stats(org, r$name, since)
         if (!is.null(stats) && nrow(stats) > 0) {
           all_data[[length(all_data) + 1]] <- stats
         }
@@ -68,7 +68,7 @@ collect_chapter_activity <- function(
 #' @return Data frame with columns: month, new_contributors,
 #'   total_contributors, active_repos.
 #' @export
-collect_contributor_growth <- function(org = "rladies", months = 12) {
+analytics_collect_contributor_growth <- function(org = "rladies", months = 12) {
   cli::cli_h2("Collecting contributor growth for {org}")
 
   events <- gh::gh(
@@ -122,7 +122,7 @@ collect_contributor_growth <- function(org = "rladies", months = 12) {
   do.call(rbind, rows)
 }
 
-collect_monthly_stats <- function(org, repo, since) {
+analytics_collect_monthly_stats <- function(org, repo, since) {
   commits <- tryCatch(
     {
       gh::gh(

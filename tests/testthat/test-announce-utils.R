@@ -34,14 +34,14 @@ describe("random_emoji", {
   })
 })
 
-describe("create_announcement_message", {
+describe("announce_create_message", {
   it("includes title, description, url, and tags", {
     fm <- list(
       title = "Test Post",
       description = "A great post",
       tags = c("R", "Data")
     )
-    msg <- create_announcement_message(fm, "https://example.com")
+    msg <- announce_create_message(fm, "https://example.com")
     expect_true(grepl("Test Post", msg, fixed = TRUE))
     expect_true(grepl("A great post", msg, fixed = TRUE))
     expect_true(grepl("https://example.com", msg))
@@ -50,15 +50,15 @@ describe("create_announcement_message", {
   })
 })
 
-describe("command_parse for announce", {
+describe("cmd_parse for announce", {
   it("parses announce command", {
-    cmd <- command_parse("/jinx announce https://rladies.org/blog/post")
+    cmd <- cmd_parse("/jinx announce https://rladies.org/blog/post")
     expect_identical(cmd$action, "announce")
     expect_identical(cmd$url, "https://rladies.org/blog/post")
   })
 
   it("returns error for missing url", {
-    cmd <- command_parse("/jinx announce")
+    cmd <- cmd_parse("/jinx announce")
     expect_identical(cmd$action, "error")
   })
 })

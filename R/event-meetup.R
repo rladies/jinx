@@ -6,7 +6,7 @@
 #' @return Data frame with columns: title, date, url, rsvp_count, source,
 #'   chapter.
 #' @noRd
-meetup_list_events <- function(
+event_meetup_list <- function(
   group_urlname,
   months = 3,
   api_key = Sys.getenv("MEETUP_API_KEY")
@@ -44,7 +44,7 @@ meetup_list_events <- function(
   result <- httr2::resp_body_json(resp)
   edges <- result$data$groupByUrlname$pastEvents$edges %||% list()
 
-  events <- lapply(edges, function(e) meetup_event_to_df(e$node, group_urlname))
+  events <- lapply(edges, function(e) event_meetup_to_df(e$node, group_urlname))
   events <- Filter(
     function(e) {
       !is.null(e) && e$date >= as.Date(substr(since, 1, 10))
@@ -53,7 +53,7 @@ meetup_list_events <- function(
   )
 
   if (length(events) == 0) {
-    return(empty_event_df())
+    return(event_empty_df())
   }
 
   do.call(rbind, events)
@@ -65,7 +65,7 @@ meetup_list_events <- function(
 #' @param group_urlname Group URL name used as chapter identifier.
 #' @return Single-row data frame, or `NULL` if node is invalid.
 #' @noRd
-meetup_event_to_df <- function(node, group_urlname) {
+event_meetup_to_df <- function(node, group_urlname) {
   if (is.null(node) || is.null(node$title)) {
     return(NULL)
   }

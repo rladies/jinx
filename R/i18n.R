@@ -11,7 +11,7 @@
 #'   `render_template()`.
 #' @return Rendered template as a single character string.
 #' @export
-translate_template <- function(
+i18n_translate_template <- function(
   template_name,
   language = "en",
   variables = list()
@@ -45,7 +45,7 @@ translate_template <- function(
 #'
 #' @return Data frame with columns: code, name, native_name, direction.
 #' @export
-list_supported_languages <- function() {
+i18n_list_languages <- function() {
   config <- load_languages_config()
   langs <- config$supported %||% list()
 
@@ -81,7 +81,7 @@ list_supported_languages <- function() {
 #' @param org GitHub organization.
 #' @return Language code string.
 #' @export
-get_chapter_language <- function(chapter, org = "rladies") {
+chapter_get_language <- function(chapter, org = "rladies") {
   tryCatch(
     {
       content <- gh::gh(

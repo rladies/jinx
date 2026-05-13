@@ -4,7 +4,7 @@
 #' @return Escaped string.
 #' @keywords internal
 #' @noRd
-escape_linkedin_chars <- function(x) {
+li_escape_chars <- function(x) {
   chars <- c(
     "\\|",
     "\\{",
@@ -114,7 +114,7 @@ li_urn_me <- function() {
 #' @return LinkedIn post ID (invisibly).
 #' @export
 li_post_write <- function(author, text, image = NULL, image_alt = "") {
-  text <- escape_linkedin_chars(text)
+  text <- li_escape_chars(text)
 
   body <- list(
     author = author,

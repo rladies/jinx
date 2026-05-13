@@ -4,7 +4,7 @@
 #' @param url URL of the post.
 #' @return API response (invisibly).
 #' @export
-send_newsletter <- function(frontmatter, url) {
+announce_send_newsletter <- function(frontmatter, url) {
   httr2::request("https://api.convertkit.com/v3/broadcasts") |>
     httr2::req_body_json(
       list(

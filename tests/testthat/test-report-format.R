@@ -106,7 +106,7 @@ describe("report_format_markdown", {
   })
 })
 
-describe("format_chapter_report", {
+describe("chapter_format_report", {
   it("formats chapter health data", {
     health <- data.frame(
       chapter = c("Buenos Aires", "London", "Berlin"),
@@ -115,7 +115,7 @@ describe("format_chapter_report", {
       months_inactive = c(1L, 9L, 0L),
       stringsAsFactors = FALSE
     )
-    result <- format_chapter_report(health, months = 6)
+    result <- chapter_format_report(health, months = 6)
     expect_true(grepl("Chapter Health Report", result, fixed = TRUE))
     expect_true(grepl("Active chapters.*2", result))
     expect_true(grepl("Inactive chapters.*1", result))
@@ -131,7 +131,7 @@ describe("format_chapter_report", {
       months_inactive = c(1L, 0L),
       stringsAsFactors = FALSE
     )
-    result <- format_chapter_report(health, months = 6)
+    result <- chapter_format_report(health, months = 6)
     expect_true(grepl("All chapters are active", result, fixed = TRUE))
   })
 
@@ -143,7 +143,7 @@ describe("format_chapter_report", {
       months_inactive = c(6L, 14L, 9L),
       stringsAsFactors = FALSE
     )
-    result <- format_chapter_report(health, months = 6)
+    result <- chapter_format_report(health, months = 6)
     bravo_pos <- regexpr("Bravo", result, fixed = TRUE)
     charlie_pos <- regexpr("Charlie", result, fixed = TRUE)
     alpha_pos <- regexpr("Alpha", result, fixed = TRUE)

@@ -5,7 +5,7 @@
 #' @param image_alt Alt text for the image.
 #' @return Post response (invisibly).
 #' @export
-post_bluesky <- function(text, image = NULL, image_alt = NULL) {
+announce_post_bluesky <- function(text, image = NULL, image_alt = NULL) {
   resp <- bskyr::bs_post(
     text = text,
     images = image,

@@ -9,7 +9,7 @@
 #' @param directory_repo Directory repository name.
 #' @return PR URL if changes found, `NULL` otherwise (invisibly).
 #' @export
-sync_directory_airtable <- function(
+directory_sync_airtable <- function(
   base_id = "appM6GuE0Jl1UI9qx",
   api_key = Sys.getenv("AIRTABLE_API_KEY"),
   org = "rladies",
@@ -38,7 +38,7 @@ sync_directory_airtable <- function(
     return(invisible(NULL))
   }
 
-  pr_url <- create_directory_pr(changed, org, directory_repo)
+  pr_url <- directory_create_pr(changed, org, directory_repo)
   cli::cli_alert_success("PR created with {length(changed)} changes: {pr_url}")
   invisible(pr_url)
 }
@@ -54,7 +54,7 @@ sync_directory_airtable <- function(
 #' @param website_repo Website repository name.
 #' @return PR URL if changes found, `NULL` otherwise (invisibly).
 #' @export
-sync_global_team_airtable <- function(
+gt_sync_airtable <- function(
   base_id = "appZjaV7eM0Y9FsHZ",
   api_key = Sys.getenv("AIRTABLE_API_KEY"),
   org = "rladies",
@@ -85,7 +85,7 @@ sync_global_team_airtable <- function(
       name = m$fields$Name %||% "",
       role = as.list(roles),
       start = m$fields[["Start date"]],
-      img = extract_airtable_photo(m$fields$photo)
+      img = airtable_extract_photo(m$fields$photo)
     )
   })
 
@@ -95,7 +95,7 @@ sync_global_team_airtable <- function(
       role = as.list(strsplit(a$fields$History %||% "", ",\\s*")[[1]]),
       start = a$fields[["Start Date"]],
       end = a$fields[["End Date"]],
-      img = extract_airtable_photo(a$fields$photo),
+      img = airtable_extract_photo(a$fields$photo),
       airtable_id = a$id
     )
   })
@@ -105,22 +105,6 @@ sync_global_team_airtable <- function(
   )
 
   list(current = current, alumni = alumni_list)
-}
-
-#' @rdname sync_global_team_airtable
-#' @export
-sync_gt_airtable <- function(
-  base_id = "appZjaV7eM0Y9FsHZ",
-  api_key = Sys.getenv("AIRTABLE_API_KEY"),
-  org = "rladies",
-  website_repo = "rladies.github.io"
-) {
-  sync_global_team_airtable(
-    base_id = base_id,
-    api_key = api_key,
-    org = org,
-    website_repo = website_repo
-  )
 }
 
 airtable_list_records <- function(base_id, table, api_key) {
@@ -180,7 +164,7 @@ airtable_to_directory_entry <- function(record) {
   list(slug = slug, data = entry, airtable_id = record$id)
 }
 
-extract_airtable_photo <- function(photo_field) {
+airtable_extract_photo <- function(photo_field) {
   if (is.null(photo_field) || length(photo_field) == 0) {
     return(NULL)
   }
@@ -221,6 +205,6 @@ write_directory_entries <- function(entries, org, repo) {
   changed
 }
 
-create_directory_pr <- function(changed, org, repo) {
+directory_create_pr <- function(changed, org, repo) {
   glue::glue("https://github.com/{org}/{repo}/pulls")
 }

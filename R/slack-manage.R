@@ -15,7 +15,7 @@ slack_invitees_base_id <- function() {
 #' @param dry_run If `TRUE` (default), only returns prepared emails.
 #' @return Data frame of prepared emails (invisibly).
 #' @export
-slack_invites_send <- function(
+slack_invite_batch <- function(
   invite_link,
   base_id = slack_invitees_base_id(),
   api_key = Sys.getenv("AIRTABLE_API_KEY"),
@@ -98,7 +98,7 @@ slack_invites_send <- function(
 #' @return A single status string suitable for posting back as a PR
 #'   comment.
 #' @export
-slack_invite_send <- function(
+slack_invite_request <- function(
   email,
   channel = Sys.getenv("SLACK_INVITE_REQUEST_CHANNEL"),
   base_id = slack_invitees_base_id(),
@@ -119,7 +119,7 @@ slack_invite_send <- function(
     return(glue::glue("Invalid email address: `{email}`"))
   }
 
-  text <- invite_request_message(email)
+  text <- review_invite_message(email)
   resp <- slack_post_message(text, channel, token)
 
   if (!isTRUE(resp$ok)) {
@@ -145,7 +145,7 @@ is_valid_email <- function(email) {
   ))
 }
 
-invite_request_message <- function(email) {
+review_invite_message <- function(email) {
   glue::glue(
     ":wave: *Slack invite requested* for `{email}`.\n",
     "An admin needs to send the invite:\n",
@@ -195,7 +195,7 @@ airtable_mark_invited <- function(
 #' @param token Slack API token.
 #' @return API response (invisibly).
 #' @export
-subscribe_slack_rss <- function(
+slack_subscribe_rss <- function(
   rss_url,
   channel = "rladiesblogs",
   token = Sys.getenv("SLACK_TOKEN")

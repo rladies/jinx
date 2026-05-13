@@ -15,9 +15,9 @@ describe("is_bot", {
   })
 })
 
-describe("welcome_first_time_message", {
+describe("contributor_welcome_first_time", {
   it("generates PR welcome message", {
-    msg <- welcome_first_time_message("octocat", "jinx", is_pr = TRUE)
+    msg <- contributor_welcome_first_time("octocat", "jinx", is_pr = TRUE)
     expect_true(grepl("Welcome to **jinx**", msg, fixed = TRUE))
     expect_true(grepl("@octocat", msg, fixed = TRUE))
     expect_true(grepl("pull request", msg, fixed = TRUE))
@@ -25,26 +25,26 @@ describe("welcome_first_time_message", {
   })
 
   it("generates issue welcome message", {
-    msg <- welcome_first_time_message("octocat", "jinx", is_pr = FALSE)
+    msg <- contributor_welcome_first_time("octocat", "jinx", is_pr = FALSE)
     expect_true(grepl("issue", msg, fixed = TRUE))
     expect_false(grepl("pull request", msg, fixed = TRUE))
   })
 })
 
-describe("welcome_returning_message", {
+describe("contributor_welcome_returning", {
   it("generates returning PR message", {
-    msg <- welcome_returning_message("octocat", is_pr = TRUE)
+    msg <- contributor_welcome_returning("octocat", is_pr = TRUE)
     expect_true(grepl("@octocat", msg, fixed = TRUE))
     expect_true(grepl("pull request", msg, fixed = TRUE))
   })
 
   it("generates returning issue message", {
-    msg <- welcome_returning_message("octocat", is_pr = FALSE)
+    msg <- contributor_welcome_returning("octocat", is_pr = FALSE)
     expect_true(grepl("issue", msg, fixed = TRUE))
   })
 })
 
-describe("format_contributors_table", {
+describe("contributor_format_table", {
   it("formats as markdown table", {
     df <- data.frame(
       login = c("alice", "bob"),
@@ -53,7 +53,7 @@ describe("format_contributors_table", {
       profile_url = c("https://github.com/alice", "https://github.com/bob"),
       stringsAsFactors = FALSE
     )
-    result <- format_contributors_table(df)
+    result <- contributor_format_table(df)
     expect_true(grepl("| Avatar | Contributor", result, fixed = TRUE))
     expect_true(grepl("@alice", result, fixed = TRUE))
     expect_true(grepl("@bob", result, fixed = TRUE))
@@ -61,7 +61,7 @@ describe("format_contributors_table", {
   })
 })
 
-describe("format_contributors_grid", {
+describe("contributor_format_grid", {
   it("formats as image grid", {
     df <- data.frame(
       login = c("alice", "bob"),
@@ -70,7 +70,7 @@ describe("format_contributors_grid", {
       profile_url = c("https://github.com/alice", "https://github.com/bob"),
       stringsAsFactors = FALSE
     )
-    result <- format_contributors_grid(df, cols = 7)
+    result <- contributor_format_grid(df, cols = 7)
     expect_true(grepl("alice", result, fixed = TRUE))
     expect_true(grepl("bob", result, fixed = TRUE))
     expect_true(grepl("<img", result, fixed = TRUE))
@@ -84,13 +84,13 @@ describe("format_contributors_grid", {
       profile_url = rep("https://github.com/user", 5),
       stringsAsFactors = FALSE
     )
-    result <- format_contributors_grid(df, cols = 3)
+    result <- contributor_format_grid(df, cols = 3)
     lines <- strsplit(result, "\n\n")[[1]]
     expect_length(lines, 2)
   })
 })
 
-describe("format_contributors", {
+describe("contributor_format", {
   it("returns empty message for empty data", {
     df <- data.frame(
       login = character(0),
@@ -99,7 +99,7 @@ describe("format_contributors", {
       profile_url = character(0),
       stringsAsFactors = FALSE
     )
-    expect_identical(format_contributors(df), "No contributors yet.")
+    expect_identical(contributor_format(df), "No contributors yet.")
   })
 
   it("dispatches to table format", {
@@ -110,7 +110,7 @@ describe("format_contributors", {
       profile_url = "url",
       stringsAsFactors = FALSE
     )
-    result <- format_contributors(df, format = "table")
+    result <- contributor_format(df, format = "table")
     expect_true(grepl("Avatar", result, fixed = TRUE))
   })
 
@@ -122,7 +122,7 @@ describe("format_contributors", {
       profile_url = "url",
       stringsAsFactors = FALSE
     )
-    result <- format_contributors(df, format = "grid")
+    result <- contributor_format(df, format = "grid")
     expect_true(grepl("<img", result, fixed = TRUE))
   })
 })

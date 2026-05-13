@@ -1,22 +1,22 @@
-describe("compute_sparkline", {
+describe("analytics_compute_sparkline", {
   it("generates sparkline characters for values", {
-    result <- compute_sparkline(c(1, 5, 3, 8, 2))
+    result <- analytics_compute_sparkline(c(1, 5, 3, 8, 2))
     expect_length(result, 5)
     expect_true(all(nchar(result) == 1))
   })
 
   it("handles constant values", {
-    result <- compute_sparkline(c(5, 5, 5))
+    result <- analytics_compute_sparkline(c(5, 5, 5))
     expect_length(result, 3)
     expect_length(unique(result), 1)
   })
 
   it("returns empty for empty input", {
-    expect_length(compute_sparkline(numeric(0)), 0)
+    expect_length(analytics_compute_sparkline(numeric(0)), 0)
   })
 })
 
-describe("compute_activity_trends", {
+describe("analytics_compute_trends", {
   it("computes month-over-month changes", {
     data <- data.frame(
       chapter = c("repo-a", "repo-a", "repo-b", "repo-b"),
@@ -26,7 +26,7 @@ describe("compute_activity_trends", {
       issues = c(0L, 0L, 0L, 0L),
       stringsAsFactors = FALSE
     )
-    result <- compute_activity_trends(data)
+    result <- analytics_compute_trends(data)
     expect_s3_class(result, "data.frame")
     expect_identical(nrow(result), 2L)
     expect_true("total_commits" %in% names(result))
@@ -44,22 +44,22 @@ describe("compute_activity_trends", {
       issues = integer(0),
       stringsAsFactors = FALSE
     )
-    result <- compute_activity_trends(empty)
+    result <- analytics_compute_trends(empty)
     expect_identical(nrow(result), 0L)
   })
 })
 
-describe("compute_growth_rate", {
+describe("analytics_compute_growth_rate", {
   it("computes percentage growth", {
-    expect_identical(compute_growth_rate(c(100, 150)), 50)
+    expect_identical(analytics_compute_growth_rate(c(100, 150)), 50)
   })
 
   it("returns NA for single value", {
-    expect_true(is.na(compute_growth_rate(100)))
+    expect_true(is.na(analytics_compute_growth_rate(100)))
   })
 })
 
-describe("format_analytics_markdown", {
+describe("analytics_format_markdown", {
   it("formats trends and growth into markdown", {
     trends <- data.frame(
       month = c("2024-01", "2024-02"),
@@ -75,7 +75,7 @@ describe("format_analytics_markdown", {
       active_repos = c(0L, 0L),
       stringsAsFactors = FALSE
     )
-    result <- format_analytics_markdown(trends, growth)
+    result <- analytics_format_markdown(trends, growth)
     expect_true(grepl("Analytics Dashboard", result, fixed = TRUE))
     expect_true(grepl("2024-01", result, fixed = TRUE))
     expect_true(grepl("2024-02", result, fixed = TRUE))
@@ -96,14 +96,14 @@ describe("format_analytics_markdown", {
       active_repos = integer(0),
       stringsAsFactors = FALSE
     )
-    result <- format_analytics_markdown(empty_t, empty_g)
+    result <- analytics_format_markdown(empty_t, empty_g)
     expect_true(grepl("No data", result, fixed = TRUE))
   })
 })
 
 describe("analytics command parsing", {
   it("parses /jinx analytics", {
-    cmd <- command_parse("/jinx analytics")
+    cmd <- cmd_parse("/jinx analytics")
     expect_identical(cmd$action, "analytics")
   })
 })

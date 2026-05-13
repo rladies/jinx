@@ -41,11 +41,11 @@ announce_post <- function(
     }
   )
 
-  body <- create_announcement_message(frontmatter, short)
+  body <- announce_create_message(frontmatter, short)
 
   if ("bluesky" %in% platforms) {
     tryCatch(
-      post_bluesky(body, image, frontmatter$image_alt),
+      announce_post_bluesky(body, image, frontmatter$image_alt),
       error = function(e) cli::cli_alert_danger("Bluesky failed: {e$message}")
     )
   }
@@ -62,14 +62,14 @@ announce_post <- function(
 
   if ("mastodon" %in% platforms) {
     tryCatch(
-      post_mastodon(body, image, frontmatter$image_alt),
+      announce_post_mastodon(body, image, frontmatter$image_alt),
       error = function(e) cli::cli_alert_danger("Mastodon failed: {e$message}")
     )
   }
 
   if (newsletter) {
     tryCatch(
-      send_newsletter(frontmatter, url),
+      announce_send_newsletter(frontmatter, url),
       error = function(e) {
         cli::cli_alert_danger("Newsletter failed: {e$message}")
       }

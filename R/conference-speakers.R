@@ -84,7 +84,7 @@ cfp_recommend_speaker <- function(
 #' @param repo Repository where CFP issues are tracked.
 #' @return Data frame with columns: speaker, expertise, recommended_by.
 #' @export
-list_speaker_recommendations <- function(
+conference_list_speakers <- function(
   conference,
   org = "rladies",
   repo = "global-team"

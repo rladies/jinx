@@ -78,8 +78,8 @@ gt_create_offboarding("octocat", "blog")
 1. `chapter_create_setup()` opens a setup tracking issue
 2. The issue contains a checklist: create repos, add organizers, configure
    Meetup, set up social media
-3. `create_chapter()` generates the chapter JSON for the directory
-4. `create_chapter_json_pr()` opens a PR to add the chapter to the directory
+3. `chapter_create()` generates the chapter JSON for the directory
+4. `chapter_create_pr()` opens a PR to add the chapter to the directory
 
 **Updating an existing chapter:**
 ```
@@ -104,7 +104,7 @@ gt_create_offboarding("octocat", "blog")
 **Outreach to inactive chapters:**
 ```{r}
 #| eval: false
-statuses <- monitor_chapter_status()
+statuses <- chapter_monitor_status()
 prepare_inactivity_emails(statuses)
 ```
 
@@ -149,9 +149,9 @@ After a blog post merges, announce it across platforms:
 **What happens:**
 
 1. `announce_post()` reads the post's YAML front matter
-2. `create_announcement_message()` builds the message with hashtags
-3. Posts to Bluesky (`post_bluesky()`), Mastodon (`post_mastodon()`),
-   LinkedIn (`li_post_write()`), and newsletter (`send_newsletter()`)
+2. `announce_create_message()` builds the message with hashtags
+3. Posts to Bluesky (`announce_post_bluesky()`), Mastodon (`announce_post_mastodon()`),
+   LinkedIn (`li_post_write()`), and newsletter (`announce_send_newsletter()`)
 
 Each platform is posted independently -- failures on one do not block others.
 
@@ -203,8 +203,8 @@ url <- chapter_report_health()
 **Programmatically:**
 ```{r}
 #| eval: false
-sync_directory_airtable()
-sync_gt_airtable()
+directory_sync_airtable()
+gt_sync_airtable()
 ```
 
 Syncs directory entries and global team data between Airtable and GitHub.
@@ -214,7 +214,7 @@ Creates PRs for any changes detected.
 
 ```{r}
 #| eval: false
-slack_invites_send(dry_run = TRUE)
+slack_invite_batch(dry_run = TRUE)
 ```
 
 Fetches pending invitees from Airtable and sends Slack workspace
@@ -223,7 +223,7 @@ invitations. Use `dry_run = TRUE` (the default) to preview before sending.
 **RSS feed integration:**
 ```{r}
 #| eval: false
-subscribe_slack_rss()
+slack_subscribe_rss()
 ```
 
 Subscribes Slack channels to the RLadies+ blog RSS feed.
@@ -236,9 +236,9 @@ The `validate_directory_pr()` function runs automatically on PRs that
 modify directory entries. It checks:
 
 - YAML schema compliance
-- Filename conventions (`validate_entry_filename()`)
-- Image optimization (`crop_directory_image()`, `optimize_image()`)
-- Social handle verification (`verify_social_handles()`)
+- Filename conventions (`directory_validate_filename()`)
+- Image optimization (`directory_crop_image()`, `directory_optimize_image()`)
+- Social handle verification (`directory_verify_handles()`)
 
 ## Contributor recognition
 
@@ -271,10 +271,10 @@ PR review runs automatically on pull requests via reusable workflows.
 
 **What happens:**
 
-1. `review_pr()` applies the rules from `review-rules.yml`
+1. `review_run()` applies the rules from `review-rules.yml`
 2. Reviewers are assigned based on file paths and team ownership
 3. Labels are applied based on `labels.yml` mappings
-4. `check_pr_naming()` enforces branch and title conventions
+4. `review_check_pr_naming()` enforces branch and title conventions
 
 **See** `vignette("getting-started")` for how to add PR review to other
 repos.

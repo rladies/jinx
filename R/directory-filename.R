@@ -7,7 +7,7 @@
 #' @return A named list with `valid` (logical) and `issues` (character
 #'   vector of problems found).
 #' @export
-validate_entry_filename <- function(filename) {
+directory_validate_filename <- function(filename) {
   issues <- character()
 
   if (!grepl("\\.json$", filename)) {

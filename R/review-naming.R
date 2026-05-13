@@ -7,7 +7,7 @@
 #' @param pr_number PR number.
 #' @return Data frame with filename and valid columns.
 #' @export
-check_pr_naming <- function(owner, repo, pr_number) {
+review_check_pr_naming <- function(owner, repo, pr_number) {
   files <- gh::gh(
     "GET /repos/{owner}/{repo}/pulls/{pr_number}/files",
     owner = owner,
@@ -17,11 +17,11 @@ check_pr_naming <- function(owner, repo, pr_number) {
   )
 
   file_paths <- vapply(files, function(f) f$filename, character(1))
-  results <- check_naming_conventions(file_paths, repo)
+  results <- review_check_naming(file_paths, repo)
 
   violations <- results[!results$valid, ]
   if (nrow(violations) > 0) {
-    body <- format_naming_violations(violations)
+    body <- review_format_violations(violations)
     gh::gh(
       "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
       owner = owner,
@@ -37,7 +37,7 @@ check_pr_naming <- function(owner, repo, pr_number) {
   results
 }
 
-check_naming_conventions <- function(file_paths, repo) {
+review_check_naming <- function(file_paths, repo) {
   results <- data.frame(
     filename = file_paths,
     valid = TRUE,
@@ -71,7 +71,7 @@ check_naming_conventions <- function(file_paths, repo) {
   results
 }
 
-format_naming_violations <- function(violations) {
+review_format_violations <- function(violations) {
   rows <- vapply(
     seq_len(nrow(violations)),
     function(i) {

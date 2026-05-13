@@ -21,21 +21,21 @@ describe("is_valid_email", {
   })
 })
 
-describe("invite_request_message", {
+describe("review_invite_message", {
   it("includes the email and admin instructions", {
-    msg <- invite_request_message("ada@example.com")
+    msg <- review_invite_message("ada@example.com")
     expect_match(as.character(msg), "ada@example.com", fixed = TRUE)
     expect_match(as.character(msg), "Invite people to RLadies", fixed = TRUE)
   })
 })
 
-describe("slack_invite_send", {
+describe("slack_invite_request", {
   it("aborts when SLACK_TOKEN is not set", {
     withr::with_envvar(
       c(SLACK_TOKEN = "", AIRTABLE_API_KEY = "key"),
       {
         expect_error(
-          slack_invite_send("ada@example.com"),
+          slack_invite_request("ada@example.com"),
           "SLACK_TOKEN"
         )
       }
@@ -51,7 +51,7 @@ describe("slack_invite_send", {
     withr::with_envvar(
       c(SLACK_TOKEN = "xoxb-test", AIRTABLE_API_KEY = "key"),
       {
-        result <- slack_invite_send("not-an-email")
+        result <- slack_invite_request("not-an-email")
         expect_match(as.character(result), "Invalid email address")
       }
     )
@@ -80,7 +80,7 @@ describe("slack_invite_send", {
         SLACK_INVITE_REQUEST_CHANNEL = "organisers"
       ),
       {
-        result <- slack_invite_send("ada@example.com")
+        result <- slack_invite_request("ada@example.com")
         expect_match(
           as.character(result),
           "Invite request for ada@example.com posted to #organisers"
@@ -111,7 +111,7 @@ describe("slack_invite_send", {
         SLACK_INVITE_REQUEST_CHANNEL = ""
       ),
       {
-        slack_invite_send("ada@example.com")
+        slack_invite_request("ada@example.com")
       }
     )
     expect_identical(post_args$channel, "global-team")
@@ -130,7 +130,7 @@ describe("slack_invite_send", {
     withr::with_envvar(
       c(SLACK_TOKEN = "xoxb-test", AIRTABLE_API_KEY = ""),
       {
-        result <- slack_invite_send("ada@example.com")
+        result <- slack_invite_request("ada@example.com")
         expect_match(as.character(result), "posted to #")
       }
     )
@@ -152,7 +152,7 @@ describe("slack_invite_send", {
       c(SLACK_TOKEN = "xoxb-test", AIRTABLE_API_KEY = "secret"),
       {
         expect_error(
-          slack_invite_send("ada@example.com"),
+          slack_invite_request("ada@example.com"),
           "channel_not_found"
         )
       }

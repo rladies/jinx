@@ -35,7 +35,7 @@ chapter_create_setup <- function(
     labels = list("new chapter")
   )
 
-  assign_onboarding_team(org, onboarding_repo, issue$number)
+  review_assign_onboarding(org, onboarding_repo, issue$number)
 
   cli::cli_alert_success("Chapter setup issue created: {issue$html_url}")
   invisible(issue$html_url)
@@ -71,7 +71,7 @@ chapter_create_update <- function(
     labels = list("chapter update")
   )
 
-  assign_onboarding_team(org, onboarding_repo, issue$number)
+  review_assign_onboarding(org, onboarding_repo, issue$number)
 
   cli::cli_alert_success("Chapter update issue created: {issue$html_url}")
   invisible(issue$html_url)
@@ -93,7 +93,7 @@ chapter_create_update <- function(
 #' @param website_repo Website repository name.
 #' @return PR URL (invisibly).
 #' @export
-create_chapter_json_pr <- function(
+chapter_create_pr <- function(
   city,
   country,
   region = NULL,
@@ -201,7 +201,7 @@ create_chapter_json_pr <- function(
   invisible(pr$html_url)
 }
 
-assign_onboarding_team <- function(org, repo, issue_number) {
+review_assign_onboarding <- function(org, repo, issue_number) {
   config <- load_teams_config()
   team <- config$teams[["chapter-onboarding"]]
 
