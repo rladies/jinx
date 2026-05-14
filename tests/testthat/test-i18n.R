@@ -64,9 +64,9 @@ describe("extract_placeholder_keys", {
   })
 })
 
-describe("i18n_coverage_check", {
+describe("i18n_check_coverage", {
   it("returns coverage data frame", {
-    result <- i18n_coverage_check()
+    result <- i18n_check_coverage()
     expect_s3_class(result, "data.frame")
     expect_true(all(
       c("language", "total_templates", "translated", "coverage_pct") %in%
