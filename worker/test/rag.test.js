@@ -9,8 +9,8 @@ import {
 const NOW = 1_715_000_000;
 const ONE_YEAR = 365 * 24 * 60 * 60;
 
-function match({ id, score, source_type, date = 0, url = "" }) {
-  return { id, score, metadata: { source_type, date, url } };
+function match({ id, score, source_type, date = 0, lastmod = 0, url = "" }) {
+  return { id, score, metadata: { source_type, date, lastmod, url } };
 }
 
 describe("rerank_matches", () => {
@@ -121,6 +121,66 @@ describe("rerank_matches", () => {
       NOW
     );
     expect(unaffected.adjusted_score).toBeCloseTo(0.8 * 1.25, 5);
+  });
+
+  it("treats lastmod within the 1y grace window as fully maintained", () => {
+    const [fresh] = rerank_matches(
+      [
+        match({
+          id: "fresh",
+          score: 0.8,
+          source_type: "site",
+          lastmod: NOW - 6 * 30 * 24 * 60 * 60,
+        }),
+      ],
+      NOW
+    );
+    expect(fresh.adjusted_score).toBeCloseTo(0.8 * 1.05, 5);
+  });
+
+  it("floors staleness at 0.85 once lastmod is two or more years old", () => {
+    const [stale] = rerank_matches(
+      [
+        match({
+          id: "stale",
+          score: 0.8,
+          source_type: "site",
+          lastmod: NOW - 3 * ONE_YEAR,
+        }),
+      ],
+      NOW
+    );
+    expect(stale.adjusted_score).toBeCloseTo(0.8 * 1.05 * 0.85, 5);
+  });
+
+  it("breaks ties between equally relevant chunks by lastmod", () => {
+    const out = rerank_matches(
+      [
+        match({
+          id: "untouched",
+          score: 0.8,
+          source_type: "site",
+          lastmod: NOW - 3 * ONE_YEAR,
+        }),
+        match({
+          id: "maintained",
+          score: 0.8,
+          source_type: "site",
+          lastmod: NOW - 30 * 24 * 60 * 60,
+        }),
+      ],
+      NOW
+    );
+    expect(out[0].id).toBe("maintained");
+    expect(out[1].id).toBe("untouched");
+  });
+
+  it("treats missing lastmod as evergreen (factor 1.0)", () => {
+    const [x] = rerank_matches(
+      [match({ id: "x", score: 0.7, source_type: "guide", lastmod: 0 })],
+      NOW
+    );
+    expect(x.adjusted_score).toBeCloseTo(0.7 * 1.25, 5);
   });
 });
 

@@ -57,6 +57,8 @@ export async function gatherHugoSiteSource(src) {
       path: url_path(page.url),
       url: page.url,
       fallbackTitle: page.title,
+      date: page.date,
+      lastmod: page.lastmod,
     });
     for (let i = 0; i < chunks.length; i++) {
       out.push({ ...chunks[i], chunk_idx: i });
@@ -87,11 +89,14 @@ function extract_page(html, url, src) {
   const $ = cheerio.load(html);
   const title = strip_suffix(($("title").first().text() || "").trim(), src.titleSuffix);
   const description = ($('meta[name="description"]').attr("content") || "").trim();
-  const date = parse_date(
-    $('meta[property="article:published_time"]').attr("content") ||
-      $('meta[property="article:modified_time"]').attr("content") ||
-      ""
+  const published = parse_date(
+    $('meta[property="article:published_time"]').attr("content") || ""
   );
+  const modified = parse_date(
+    $('meta[property="article:modified_time"]').attr("content") || ""
+  );
+  const date = published || modified;
+  const lastmod = modified || published;
 
   const main = $("main").first();
   const article = main.length ? main : $("article").first();
@@ -103,7 +108,7 @@ function extract_page(html, url, src) {
   if (description) markdown = `${description}\n\n${markdown}`;
   if (title && !markdown.startsWith(`# ${title}`)) markdown = `# ${title}\n\n${markdown}`;
 
-  return { url, title, description, date, markdown };
+  return { url, title, description, date, lastmod, markdown };
 }
 
 function is_english(url, src) {

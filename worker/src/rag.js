@@ -15,6 +15,9 @@ const SOURCE_WEIGHTS = {
 };
 const DEFAULT_SOURCE_WEIGHT = 1.0;
 const RECENCY_HALF_LIFE_SECONDS = 730 * 24 * 60 * 60;
+const STALENESS_GRACE_SECONDS = 365 * 24 * 60 * 60;
+const STALENESS_FLOOR_SECONDS = 730 * 24 * 60 * 60;
+const STALENESS_FLOOR = 0.85;
 
 const SYSTEM_PROMPT = `You are Jinx, the friendly familiar of RLadies+ — a global organization promoting gender diversity in the R community. Jinx uses they/them pronouns.
 
@@ -116,10 +119,12 @@ export function rerank_matches(matches, now_seconds) {
       const source_weight =
         SOURCE_WEIGHTS[m.metadata?.source_type] ?? DEFAULT_SOURCE_WEIGHT;
       const recency = recency_factor(m.metadata?.date, now_seconds);
+      const staleness = staleness_factor(m.metadata?.lastmod, now_seconds);
       const audience = audience_penalty(m.metadata?.url);
       return {
         ...m,
-        adjusted_score: m.score * source_weight * recency * audience,
+        adjusted_score:
+          m.score * source_weight * recency * staleness * audience,
       };
     })
     .sort((a, b) => b.adjusted_score - a.adjusted_score);
@@ -129,6 +134,20 @@ function recency_factor(date_seconds, now_seconds) {
   if (!date_seconds || date_seconds <= 0) return 1.0;
   const age = Math.max(0, now_seconds - date_seconds);
   return Math.pow(0.5, age / RECENCY_HALF_LIFE_SECONDS);
+}
+
+// Rewards pages whose git history shows recent maintenance. Asymmetric and
+// gentler than recency_factor: within the grace window it is a no-op, then
+// tapers linearly to a floor — meant to break ties between near-equivalent
+// matches without burying correct-but-untouched reference docs.
+function staleness_factor(lastmod_seconds, now_seconds) {
+  if (!lastmod_seconds || lastmod_seconds <= 0) return 1.0;
+  const age = Math.max(0, now_seconds - lastmod_seconds);
+  if (age <= STALENESS_GRACE_SECONDS) return 1.0;
+  if (age >= STALENESS_FLOOR_SECONDS) return STALENESS_FLOOR;
+  const span = STALENESS_FLOOR_SECONDS - STALENESS_GRACE_SECONDS;
+  const t = (age - STALENESS_GRACE_SECONDS) / span;
+  return 1.0 - t * (1.0 - STALENESS_FLOOR);
 }
 
 // Guide pages under /global-team/ are maintainer-facing meta-docs
