@@ -114,6 +114,7 @@ for (let i = 0; i < all.length; i += BATCH) {
         text: c.text,
         source_type: c.source_type,
         date: c.date || 0,
+        lastmod: c.lastmod || c.date || 0,
       },
     });
   }
