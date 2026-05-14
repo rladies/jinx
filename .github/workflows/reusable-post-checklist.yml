@@ -1,4 +1,4 @@
-name: Reusable · Website Blog Checklist
+name: Reusable · Post Checklist
 
 on:
   workflow_call:
@@ -26,12 +26,12 @@ jobs:
           private-key: ${{ secrets.JINX_PRIVATE_KEY }}
           owner: rladies
 
-      - name: Post blog checklist
+      - name: Post content checklist
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           Rscript -e '
-            jinx::website_blog_checklist(
+            jinx::gh_post_checklist(
               owner = "${{ github.repository_owner }}",
               repo = "${{ github.event.repository.name }}",
               pr_number = ${{ github.event.pull_request.number }}

@@ -90,10 +90,9 @@ reference:
       - contains("airtable")
 
   - title: Website automation
-    desc: Website PR management and blog review
+    desc: Website PR management
     contents:
       - website_merge_pending
-      - website_blog_checklist
 
   - title: Chapter monitoring
     desc: Chapter activity monitoring and outreach

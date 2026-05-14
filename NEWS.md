@@ -8,17 +8,20 @@
   - `contributor_welcome()` → `gh_welcome_contributor()`
   - `contributor_thank()` → `gh_thank_contributor()`
   - `contributor_greet()` → `gh_greet_contributor()`
-- `blog_post_checklist()` → `website_blog_checklist()` (it has always
-  been a website-automation function).
-- `chapter_get_language()` → `i18n_chapter_language()` (it has always
-  lived in `R/i18n.R`).
+  - `blog_post_checklist()` → `gh_post_checklist()` (also generalised:
+    the message now opens with "Thank you for submitting a post" so it
+    applies to blog _and_ news content equally; the path filter on the
+    caller workflow already covers both).
+- `chapter_get_language()` → `i18n_get_chapter_language()` (it has
+  always lived in `R/i18n.R`, now follows the `<module>_<verb>_*`
+  pattern).
 - Internal helpers `directory_validation_row()` and
   `directory_empty_validation_df()` in `R/i18n-validate.R` renamed to
   `i18n_validation_row()` / `i18n_empty_validation_df()` (they validate
   translations, not directory entries).
-- Reusable workflows updated to call the new names: `reusable-welcome-
-contributor.yml`, `reusable-thank-contributor.yml`,
-  `reusable-website-blog-checklist.yml`.
+- Reusable workflows: `reusable-website-blog-checklist.yml` →
+  `reusable-post-checklist.yml`. `reusable-welcome-contributor.yml`
+  and `reusable-thank-contributor.yml` updated to call the new names.
 
 # jinx 0.1.0
 
