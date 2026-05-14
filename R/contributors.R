@@ -304,8 +304,9 @@ contributor_update <- function(
 #'
 #' @param org GitHub organization.
 #' @param exclude_pattern Regex to exclude repos.
-#' @return Data frame with `login`, `repos`, `total_contributions`,
-#'   `avatar_url`, and `profile_url`.
+#' @return Data frame with `login`, `repos`, `contributions`,
+#'   `avatar_url`, and `profile_url`. `contributions` is the sum across
+#'   all repos; `repos` is the count of distinct repos contributed to.
 #' @export
 contributor_list_org <- function(
   org = "rladies",
@@ -360,7 +361,7 @@ contributor_list_org <- function(
     return(data.frame(
       login = character(0),
       repos = integer(0),
-      total_contributions = integer(0),
+      contributions = integer(0),
       avatar_url = character(0),
       profile_url = character(0),
       stringsAsFactors = FALSE
@@ -374,13 +375,13 @@ contributor_list_org <- function(
       function(x) length(unique(x$repos)),
       integer(1)
     ),
-    total_contributions = vapply(all_contribs, function(x) x$total, integer(1)),
+    contributions = vapply(all_contribs, function(x) x$total, integer(1)),
     avatar_url = vapply(all_contribs, function(x) x$avatar_url, character(1)),
     profile_url = vapply(all_contribs, function(x) x$profile_url, character(1)),
     stringsAsFactors = FALSE
   )
 
-  df <- df[order(-df$total_contributions), ]
+  df <- df[order(-df$contributions), ]
   row.names(df) <- NULL
   cli::cli_alert_success(
     "Found {nrow(df)} unique contributors across {length(repos)} repos"

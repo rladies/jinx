@@ -1,3 +1,22 @@
+# jinx (development version)
+
+## Bug fixes
+
+- `contributor_list_org()` now returns its sum column as `contributions`
+  instead of `total_contributions`, matching `contributor_list()` so the
+  result can be passed directly to `contributor_format()`. This fixes a
+  `vapply` error in `cmd_execute("contributors-org")`.
+- `cmd_execute("website-analytics")` now returns the pre-rendered
+  markdown from `website_generate_report()` instead of re-running the
+  formatter on the wrapper list.
+
+## Tests
+
+- Added `test-commands-integration.R`, an end-to-end test for every
+  `cmd_execute()` branch that wires a producer to a formatter. Mocks
+  each producer with its documented return shape so future column
+  renames or wrapper changes fail loudly.
+
 # jinx 0.1.0
 
 Initial release. jinx automates organisational workflows for the RLadies+
