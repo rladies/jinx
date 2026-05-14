@@ -2,6 +2,18 @@
 
 ## jinx (development version)
 
+### Module reorganisation
+
+- Two i18n exports renamed to match the `<module>_<verb>_<object>`
+  pattern:
+  - `i18n_translations_validate()` →
+    [`i18n_validate_translations()`](https://rladies.github.io/jinx/reference/i18n_validate_translations.md)
+  - `i18n_coverage_check()` →
+    [`i18n_check_coverage()`](https://rladies.github.io/jinx/reference/i18n_check_coverage.md)
+- `cmd_execute("translate-status")` /
+  `cmd_execute("translate-validate")`, the `ci-i18n-validate.yml`
+  workflow, and the integration tests all updated to the new names.
+
 ### Bug fixes
 
 - [`contributor_list_org()`](https://rladies.github.io/jinx/reference/contributor_list_org.md)

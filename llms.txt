@@ -293,13 +293,13 @@ CFP tracking and speaker recommendations
 
 Template translations
 
-- [`i18n_coverage_check()`](https://rladies.github.io/jinx/reference/i18n_coverage_check.md)
+- [`i18n_check_coverage()`](https://rladies.github.io/jinx/reference/i18n_check_coverage.md)
   : Check translation coverage across languages
 - [`i18n_list_languages()`](https://rladies.github.io/jinx/reference/i18n_list_languages.md)
   : List supported languages
 - [`i18n_translate_template()`](https://rladies.github.io/jinx/reference/i18n_translate_template.md)
   : Translate a template with language fallback
-- [`i18n_translations_validate()`](https://rladies.github.io/jinx/reference/i18n_translations_validate.md)
+- [`i18n_validate_translations()`](https://rladies.github.io/jinx/reference/i18n_validate_translations.md)
   : Validate translations for placeholder consistency
 - [`chapter_get_language()`](https://rladies.github.io/jinx/reference/chapter_get_language.md)
   : Get a chapter's preferred language
