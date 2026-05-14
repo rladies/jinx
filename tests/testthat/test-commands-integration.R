@@ -1,5 +1,5 @@
 describe("cmd_execute integration: producer to formatter", {
-  it("contributors-list runs end-to-end with realistic contributor_list output", {
+  it("contributors-list runs end-to-end with realistic producer output", {
     local_mocked_bindings(
       contributor_list = function(owner, repo, ...) {
         data.frame(
