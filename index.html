@@ -91,6 +91,76 @@ document.addEventListener("DOMContentLoaded", function() {
 <p>Organisers reach Jinx two ways — by typing <code>/jinx ...</code> in Slack, or by posting <code>/jinx ...</code> as a comment on any issue or PR in an RLadies+ repo. Either way, the same R package answers.</p>
 <p>Day to day, Jinx handles organiser onboarding, directory PR review, chapter monitoring, announcements, reports, event sync, translation checks, and Slack invites for the RLadies+ community.</p>
 <div class="section level2">
+<h2 id="reusable-workflows">Reusable workflows<a class="anchor" aria-label="anchor" href="#reusable-workflows"></a>
+</h2>
+<p>Jinx ships a handful of reusable GitHub Actions workflows that any RLadies+ repo can adopt with a few lines of YAML. They’re in <a href=".github/workflows/"><code>.github/workflows/</code></a> and start with <code>reusable-</code>:</p>
+<table class="table">
+<colgroup>
+<col width="24%">
+<col width="75%">
+</colgroup>
+<thead><tr>
+<th>Workflow</th>
+<th>What it does</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>reusable-welcome-contributor.yml</code></td>
+<td>Posts a first-time welcome on a new PR or issue. Accepts an optional <code>extra_message</code> for project-specific reminders.</td>
+</tr>
+<tr>
+<td><code>reusable-thank-contributor.yml</code></td>
+<td>Posts a thank-you on a merged PR (different message for first-time vs returning).</td>
+</tr>
+<tr>
+<td><code>reusable-website-blog-checklist.yml</code></td>
+<td>Posts the blog-review checklist on a PR that touches blog content.</td>
+</tr>
+<tr>
+<td><code>reusable-pr-review.yml</code></td>
+<td>Calls <code><a href="reference/review_run.html">jinx::review_run()</a></code> to label and assign reviewers based on the rules bundled in jinx.</td>
+</tr>
+</tbody>
+</table>
+<div class="section level3">
+<h3 id="caller-requirements">Caller requirements<a class="anchor" aria-label="anchor" href="#caller-requirements"></a>
+</h3>
+<p>Every reusable runs inside the <a href="https://github.com/rladies/jinx/pkgs/container/jinx-bot" class="external-link"><code>ghcr.io/rladies/jinx-bot</code></a> container. For the runner to pull that image, <strong>the calling workflow must grant the job <code>packages: read</code></strong>. The simplest pattern is a workflow-level block:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">permissions</span><span class="kw">:</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="at">  </span><span class="fu">contents</span><span class="kw">:</span><span class="at"> read</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="at">  </span><span class="fu">packages</span><span class="kw">:</span><span class="at"> read</span></span></code></pre></div>
+<p>Without this, you’ll see <code>Error response from daemon: denied</code> at the docker pull step and the job fails before the welcome/thank/checklist runs.</p>
+<p><code>JINX_APP_ID</code> and <code>JINX_PRIVATE_KEY</code> are configured as <strong>org-level secrets</strong> in <code>rladies</code>, so any repo in the org inherits them automatically — no per-repo configuration needed for the secrets themselves. The <strong>jinx GitHub App</strong> does need to be installed on the calling repo, which is true org-wide today.</p>
+<p>A minimal caller looks like:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> Hello on PR or Issue</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="at">    </span><span class="fu">types</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">opened</span><span class="kw">,</span><span class="at"> closed</span><span class="kw">]</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="at">  </span><span class="fu">issues</span><span class="kw">:</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="at">    </span><span class="fu">types</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">opened</span><span class="kw">]</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="fu">permissions</span><span class="kw">:</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="at">  </span><span class="fu">contents</span><span class="kw">:</span><span class="at"> read</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="at">  </span><span class="fu">packages</span><span class="kw">:</span><span class="at"> read</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="at">  </span><span class="fu">welcome</span><span class="kw">:</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="at">    </span><span class="fu">if</span><span class="kw">:</span><span class="at"> github.event.action == 'opened'</span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="at">    </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> rladies/jinx/.github/workflows/reusable-welcome-contributor.yml@main</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="at">    </span><span class="fu">secrets</span><span class="kw">:</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="at">      </span><span class="fu">JINX_APP_ID</span><span class="kw">:</span><span class="at"> ${{ secrets.JINX_APP_ID }}</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="at">      </span><span class="fu">JINX_PRIVATE_KEY</span><span class="kw">:</span><span class="at"> ${{ secrets.JINX_PRIVATE_KEY }}</span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="at">  </span><span class="fu">thank</span><span class="kw">:</span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="at">    </span><span class="fu">if</span><span class="kw">:</span><span class="at"> github.event_name == 'pull_request' &amp;&amp; github.event.action == 'closed' &amp;&amp; github.event.pull_request.merged == true</span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="at">    </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> rladies/jinx/.github/workflows/reusable-thank-contributor.yml@main</span></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a><span class="at">    </span><span class="fu">secrets</span><span class="kw">:</span></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a><span class="at">      </span><span class="fu">JINX_APP_ID</span><span class="kw">:</span><span class="at"> ${{ secrets.JINX_APP_ID }}</span></span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a><span class="at">      </span><span class="fu">JINX_PRIVATE_KEY</span><span class="kw">:</span><span class="at"> ${{ secrets.JINX_PRIVATE_KEY }}</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
 </h2>
 <p>The <a href="https://rladies.github.io/jinx/">pkgdown site</a> is split by audience:</p>
