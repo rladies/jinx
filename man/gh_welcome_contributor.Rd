@@ -10,7 +10,8 @@ gh_welcome_contributor(
   number,
   author,
   is_pr = TRUE,
-  org = "rladies"
+  org = "rladies",
+  extra_message = NULL
 )
 }
 \arguments{
@@ -25,6 +26,11 @@ gh_welcome_contributor(
 \item{is_pr}{Whether this is a PR (TRUE) or issue (FALSE).}
 
 \item{org}{Organization name.}
+
+\item{extra_message}{Optional extra markdown to append after the
+standard welcome message (e.g. a project-specific reminder).
+Ignored when blank or \code{NULL}. The jinx signature is preserved as
+the final paragraph.}
 }
 \value{
 Comment URL or \code{NULL} if author is a team member (invisibly).

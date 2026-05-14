@@ -1,5 +1,20 @@
 # jinx (development version)
 
+## Welcome reusable improvements
+
+- `gh_welcome_contributor()` and `gh_greet_contributor()` gained an
+  `extra_message` argument. The string is appended after the standard
+  welcome and before the jinx signature, so callers can add a
+  project-specific reminder (e.g. "remember to add yourself to
+  `.zenodo.json`") without forking the function.
+- `reusable-welcome-contributor.yml` now accepts a matching
+  `extra_message` workflow input and forwards it via an environment
+  variable (no string interpolation into the R source, so the input is
+  safe to set to any markdown).
+- The reusable also fires on `pull_request_target` opens, so callers
+  that need to welcome fork-PR authors can switch their trigger
+  without losing the welcome step.
+
 ## Module reorganisation
 
 - New `gh_*` module for reusable GitHub PR/issue automation. Functions

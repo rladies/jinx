@@ -4,7 +4,14 @@
 \alias{gh_greet_contributor}
 \title{Greet a new PR author}
 \usage{
-gh_greet_contributor(owner, repo, number, author, org = "rladies")
+gh_greet_contributor(
+  owner,
+  repo,
+  number,
+  author,
+  org = "rladies",
+  extra_message = NULL
+)
 }
 \arguments{
 \item{owner}{Repository owner.}
@@ -16,6 +23,9 @@ gh_greet_contributor(owner, repo, number, author, org = "rladies")
 \item{author}{GitHub login of the author.}
 
 \item{org}{Organization name.}
+
+\item{extra_message}{Optional extra markdown to append after the
+standard welcome message.}
 }
 \value{
 Comment URL or \code{NULL} if author is a team member (invisibly).

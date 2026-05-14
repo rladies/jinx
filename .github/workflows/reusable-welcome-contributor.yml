@@ -2,6 +2,15 @@ name: Reusable · Welcome Contributor
 
 on:
   workflow_call:
+    inputs:
+      extra_message:
+        description: >-
+          Optional extra markdown appended after the standard welcome
+          message (e.g. a project-specific reminder). Ignored when
+          blank.
+        required: false
+        type: string
+        default: ""
     secrets:
       JINX_APP_ID:
         required: true
@@ -16,7 +25,7 @@ jobs:
   welcome:
     runs-on: ubuntu-latest
     if: >-
-      (github.event_name == 'pull_request' && github.event.action == 'opened') ||
+      ((github.event_name == 'pull_request' || github.event_name == 'pull_request_target') && github.event.action == 'opened') ||
       (github.event_name == 'issues' && github.event.action == 'opened')
     container:
       image: ghcr.io/rladies/jinx-bot:latest
@@ -32,9 +41,10 @@ jobs:
       - name: Welcome contributor
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          EXTRA_MESSAGE: ${{ inputs.extra_message }}
         run: |
           Rscript -e '
-            is_pr <- "${{ github.event_name }}" == "pull_request"
+            is_pr <- "${{ github.event_name }}" != "issues"
             number <- if (is_pr) {
               ${{ github.event.pull_request.number || 0 }}
             } else {
@@ -45,11 +55,13 @@ jobs:
             } else {
               "${{ github.event.issue.user.login }}"
             }
+            extra <- Sys.getenv("EXTRA_MESSAGE", "")
             jinx::gh_welcome_contributor(
               owner = "${{ github.repository_owner }}",
               repo = "${{ github.event.repository.name }}",
               number = number,
               author = author,
-              is_pr = is_pr
+              is_pr = is_pr,
+              extra_message = if (nzchar(extra)) extra else NULL
             )
           '
