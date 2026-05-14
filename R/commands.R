@@ -392,7 +392,7 @@ cmd_execute <- function(command) {
     },
     "website-analytics" = {
       data <- website_generate_report(period = command$period)
-      website_format_analytics(data)
+      data$markdown
     },
     "cfp-list" = {
       cfps <- cfp_list_open()
