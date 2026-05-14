@@ -83,10 +83,21 @@ document.addEventListener("DOMContentLoaded", function() {
 <code><a href="../reference/contributor_list_org.html">contributor_list_org()</a></code> now returns its sum column as <code>contributions</code> instead of <code>total_contributions</code>, matching <code><a href="../reference/contributor_list.html">contributor_list()</a></code> so the result can be passed directly to <code><a href="../reference/contributor_format.html">contributor_format()</a></code>. This fixes a <code>vapply</code> error in <code>cmd_execute("contributors-org")</code>.</li>
 <li>
 <code>cmd_execute("website-analytics")</code> now returns the pre-rendered markdown from <code><a href="../reference/website_generate_report.html">website_generate_report()</a></code> instead of re-running the formatter on the wrapper list.</li>
+<li>Fixed seven scheduled/reusable workflows that called functions which do not exist as exports. These calls would have failed silently the next time the workflow ran:
+<ul><li>
+<code>ops-event-sync.yml</code>: <code>events_sync_chapters</code> / <code>events_create_summary</code> / <code>events_publish_summary</code> → <code>event_*</code> (singular).</li>
+<li>
+<code>reusable-pr-review.yml</code>: <code>review_pr</code> → <code>review_run</code>.</li>
+<li>
+<code>ops-update-contributors.yml</code>: <code>contributors_update</code> → <code>contributor_update</code>. Also corrected <code>awesome-rladies-blogs</code> → <code>awesome-rladies-creations</code> in the default repo list.</li>
+<li>
+<code>ops-airtable-sync.yml</code>: <code>sync_directory_airtable</code> → <code>directory_sync_airtable</code>; <code>sync_gt_airtable</code> → <code>gt_sync_airtable</code>.</li>
+</ul></li>
 </ul></div>
 <div class="section level3">
 <h3 id="tests-development-version">Tests<a class="anchor" aria-label="anchor" href="#tests-development-version"></a></h3>
 <ul><li>Added <code>test-commands-integration.R</code>, an end-to-end test for every <code><a href="../reference/cmd_execute.html">cmd_execute()</a></code> branch that wires a producer to a formatter. Mocks each producer with its documented return shape so future column renames or wrapper changes fail loudly.</li>
+<li>Added <code>test-workflows.R</code>, a guard test that scans every YAML in <code>.github/workflows/</code> and asserts every <code>jinx::function()</code> reference resolves to a current export. Catches function renames and stale workflow code before they ship.</li>
 </ul></div>
 </div>
     <div class="section level2">

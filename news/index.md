@@ -27,6 +27,18 @@
   markdown from
   [`website_generate_report()`](https://rladies.github.io/jinx/reference/website_generate_report.md)
   instead of re-running the formatter on the wrapper list.
+- Fixed seven scheduled/reusable workflows that called functions which
+  do not exist as exports. These calls would have failed silently the
+  next time the workflow ran:
+  - `ops-event-sync.yml`: `events_sync_chapters` /
+    `events_create_summary` / `events_publish_summary` → `event_*`
+    (singular).
+  - `reusable-pr-review.yml`: `review_pr` → `review_run`.
+  - `ops-update-contributors.yml`: `contributors_update` →
+    `contributor_update`. Also corrected `awesome-rladies-blogs` →
+    `awesome-rladies-creations` in the default repo list.
+  - `ops-airtable-sync.yml`: `sync_directory_airtable` →
+    `directory_sync_airtable`; `sync_gt_airtable` → `gt_sync_airtable`.
 
 ### Tests
 
@@ -35,6 +47,10 @@
   branch that wires a producer to a formatter. Mocks each producer with
   its documented return shape so future column renames or wrapper
   changes fail loudly.
+- Added `test-workflows.R`, a guard test that scans every YAML in
+  `.github/workflows/` and asserts every `jinx::function()` reference
+  resolves to a current export. Catches function renames and stale
+  workflow code before they ship.
 
 ## jinx 0.1.0
 
