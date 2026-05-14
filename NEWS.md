@@ -1,5 +1,15 @@
 # jinx (development version)
 
+## Module reorganisation
+
+- Two i18n exports renamed to match the `<module>_<verb>_<object>`
+  pattern:
+  - `i18n_translations_validate()` → `i18n_validate_translations()`
+  - `i18n_coverage_check()` → `i18n_check_coverage()`
+- `cmd_execute("translate-status")` / `cmd_execute("translate-validate")`,
+  the `ci-i18n-validate.yml` workflow, and the integration tests all
+  updated to the new names.
+
 ## Bug fixes
 
 - `contributor_list_org()` now returns its sum column as `contributions`

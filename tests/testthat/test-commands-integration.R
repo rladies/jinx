@@ -276,9 +276,9 @@ describe("cmd_execute integration: producer to formatter", {
     expect_true(grepl("useR! 2026", result, fixed = TRUE))
   })
 
-  it("translate-status formats i18n_coverage_check output", {
+  it("translate-status formats i18n_check_coverage output", {
     local_mocked_bindings(
-      i18n_coverage_check = function(...) {
+      i18n_check_coverage = function(...) {
         data.frame(
           language = c("es", "de"),
           total_templates = c(10L, 10L),
@@ -294,9 +294,9 @@ describe("cmd_execute integration: producer to formatter", {
     expect_true(grepl("**de**: 5/10 (50%)", result, fixed = TRUE))
   })
 
-  it("translate-validate reports issues from i18n_translations_validate", {
+  it("translate-validate reports issues from i18n_validate_translations", {
     local_mocked_bindings(
-      i18n_translations_validate = function(language, ...) {
+      i18n_validate_translations = function(language, ...) {
         data.frame(
           template = c("welcome.md", "thanks.md"),
           language = c("es", "es"),
@@ -315,7 +315,7 @@ describe("cmd_execute integration: producer to formatter", {
 
   it("translate-validate reports all-clear with no issues", {
     local_mocked_bindings(
-      i18n_translations_validate = function(...) {
+      i18n_validate_translations = function(...) {
         data.frame(
           template = "welcome.md",
           language = "es",
