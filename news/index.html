@@ -63,12 +63,27 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<ul><li>
+<code><a href="../reference/contributor_list_org.html">contributor_list_org()</a></code> now returns its sum column as <code>contributions</code> instead of <code>total_contributions</code>, matching <code><a href="../reference/contributor_list.html">contributor_list()</a></code> so the result can be passed directly to <code><a href="../reference/contributor_format.html">contributor_format()</a></code>. This fixes a <code>vapply</code> error in <code>cmd_execute("contributors-org")</code>.</li>
+<li>
+<code>cmd_execute("website-analytics")</code> now returns the pre-rendered markdown from <code><a href="../reference/website_generate_report.html">website_generate_report()</a></code> instead of re-running the formatter on the wrapper list.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="tests-development-version">Tests<a class="anchor" aria-label="anchor" href="#tests-development-version"></a></h3>
+<ul><li>Added <code>test-commands-integration.R</code>, an end-to-end test for every <code><a href="../reference/cmd_execute.html">cmd_execute()</a></code> branch that wires a producer to a formatter. Mocks each producer with its documented return shape so future column renames or wrapper changes fail loudly.</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="jinx-010">jinx 0.1.0<a class="anchor" aria-label="anchor" href="#jinx-010"></a></h2>
 <p>Initial release. jinx automates organisational workflows for the RLadies+ GitHub org: chapter onboarding and health, directory validation, blog and announcement publishing, PR review, Airtable sync, Slack, analytics, events, CFP coordination, and i18n.</p>
 <p>Exported functions follow a <code>&lt;module&gt;_&lt;verb&gt;[_&lt;object&gt;]</code> schema so they group cleanly by autocomplete. Short prefixes are used for established acronyms (<code>cmd_</code>, <code>gt_</code>, <code>li_</code>, <code>cfp_</code>, <code>gha_</code>, <code>i18n_</code>).</p>
 <p>Triggered via <code>/jinx</code> issue comments (<code><a href="../reference/cmd_parse.html">cmd_parse()</a></code> / <code><a href="../reference/cmd_execute.html">cmd_execute()</a></code>) and 24 GitHub Actions workflows. Ships with a pkgdown site, Getting Started and Workflow Reference vignettes, and starter translations for Spanish, Portuguese, and French.</p>
 </div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

@@ -20,5 +20,6 @@ contributor_list_org(org = "rladies", exclude_pattern = "^meetup-")
 
 ## Value
 
-Data frame with `login`, `repos`, `total_contributions`, `avatar_url`,
-and `profile_url`.
+Data frame with `login`, `repos`, `contributions`, `avatar_url`, and
+`profile_url`. `contributions` is the sum across all repos; `repos` is
+the count of distinct repos contributed to.

@@ -1,5 +1,29 @@
 # Changelog
 
+## jinx (development version)
+
+### Bug fixes
+
+- [`contributor_list_org()`](https://rladies.github.io/jinx/reference/contributor_list_org.md)
+  now returns its sum column as `contributions` instead of
+  `total_contributions`, matching
+  [`contributor_list()`](https://rladies.github.io/jinx/reference/contributor_list.md)
+  so the result can be passed directly to
+  [`contributor_format()`](https://rladies.github.io/jinx/reference/contributor_format.md).
+  This fixes a `vapply` error in `cmd_execute("contributors-org")`.
+- `cmd_execute("website-analytics")` now returns the pre-rendered
+  markdown from
+  [`website_generate_report()`](https://rladies.github.io/jinx/reference/website_generate_report.md)
+  instead of re-running the formatter on the wrapper list.
+
+### Tests
+
+- Added `test-commands-integration.R`, an end-to-end test for every
+  [`cmd_execute()`](https://rladies.github.io/jinx/reference/cmd_execute.md)
+  branch that wires a producer to a formatter. Mocks each producer with
+  its documented return shape so future column renames or wrapper
+  changes fail loudly.
+
 ## jinx 0.1.0
 
 Initial release. jinx automates organisational workflows for the
