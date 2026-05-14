@@ -1,9 +1,7 @@
-<<<<<<< HEAD:.github/workflows/reusable-post-checklist.yml
-name: Reusable · Post Checklist
-=======
-# Reusable: posts the blog-review checklist on a PR that touches
-# blog content. The caller is expected to gate this with a `paths:`
-# filter so it only fires on relevant changes.
+# Reusable: posts a content review checklist on a PR (blog posts,
+# news posts, or any markdown-driven content). The caller is expected
+# to gate this with a `paths:` filter so it only fires on relevant
+# changes.
 #
 # Caller requirements:
 #   - permissions: contents: read, packages: read  (needed to pull
@@ -14,8 +12,7 @@ name: Reusable · Post Checklist
 #   - jinx[bot] GitHub App installed on the calling repo
 #
 # See README.md ("Reusable workflows") for the full caller example.
-name: Reusable · Website Blog Checklist
->>>>>>> origin/main:.github/workflows/reusable-website-blog-checklist.yml
+name: Reusable · Post Checklist
 
 on:
   workflow_call:
