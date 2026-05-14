@@ -32,7 +32,7 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           Rscript -e '
-            jinx::review_pr(
+            jinx::review_run(
               owner = "${{ github.repository_owner }}",
               repo = "${{ github.event.repository.name }}",
               pr_number = ${{ github.event.pull_request.number }}

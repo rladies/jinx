@@ -44,14 +44,14 @@ jobs:
           Rscript -e '
             repo <- "${{ inputs.repo }}"
             if (nzchar(repo)) {
-              jinx::contributors_update("rladies", repo)
+              jinx::contributor_update("rladies", repo)
             } else {
               repos <- c("rladies.github.io", "directory",
-                         "awesome-rladies-blogs", "meetup_archive",
+                         "awesome-rladies-creations", "meetup_archive",
                          "rladiesguide", "jinx")
               for (r in repos) {
                 tryCatch(
-                  jinx::contributors_update("rladies", r),
+                  jinx::contributor_update("rladies", r),
                   error = function(e) {
                     cli::cli_alert_warning("Failed for {r}: {e$message}")
                   }

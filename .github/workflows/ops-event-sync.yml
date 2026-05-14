@@ -42,7 +42,7 @@ jobs:
           MEETUPR_JWT_ISSUER: ${{ secrets.MEETUPR_JWT_ISSUER }}
         run: |
           Rscript -e '
-            events <- jinx::events_sync_chapters(dry_run = FALSE)
-            summary <- jinx::events_create_summary(events, "weekly")
-            jinx::events_publish_summary(summary)
+            events <- jinx::event_sync_chapters(dry_run = FALSE)
+            summary <- jinx::event_create_summary(events, "weekly")
+            jinx::event_publish_summary(summary)
           '
