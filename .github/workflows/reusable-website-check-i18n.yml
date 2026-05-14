@@ -1,0 +1,232 @@
+# Reusable: audits a Hugo site for i18n completeness.
+#
+# Two checks, both run regardless of which trigger fires:
+#   1. Content page translations: for every content directory changed
+#      in the PR, verify that an `_index.<lang>.md` (or
+#      `index.<lang>.md`) exists for each configured language. Missing
+#      pages are reported, never failed — translations are usually
+#      added in follow-up PRs.
+#   2. i18n string table: if an `i18n/` directory exists, diff the
+#      keys in each `<lang>.yaml` against the base language. Missing
+#      keys are reported.
+#
+# Posts a single sticky "i18n Coverage" comment on the PR. Updates
+# the same comment on subsequent runs.
+#
+# Caller requirements:
+#   - permissions: contents: read, pull-requests: write, issues: write
+#     (the GITHUB_TOKEN is used to post the comment via the jinx app
+#     token; pull-requests/issues write is needed for that)
+#   - secrets: JINX_APP_ID, JINX_PRIVATE_KEY (rladies org-level)
+#   - jinx[bot] GitHub App installed on the calling repo
+#
+# See README.md ("Reusable workflows") for the full caller example.
+name: Reusable · Website Check i18n
+
+on:
+  workflow_call:
+    inputs:
+      languages:
+        description: >-
+          Space-separated language codes to check, including the base
+          language (e.g. "en es pt fr"). Required because language
+          discovery from Hugo config varies between sites.
+        type: string
+        required: true
+      base_language:
+        description: >-
+          Base language code (used as the reference for content and
+          string completeness).
+        type: string
+        default: "en"
+      content_path:
+        description: Hugo content directory to scan.
+        type: string
+        default: content
+      i18n_path:
+        description: >-
+          Hugo i18n strings directory. Optional — skipped silently if
+          the directory does not exist.
+        type: string
+        default: i18n
+    secrets:
+      JINX_APP_ID:
+        required: true
+      JINX_PRIVATE_KEY:
+        required: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  check:
+    name: Translation coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+          owner: rladies
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Check content page translations
+        id: pages
+        env:
+          LANGS: ${{ inputs.languages }}
+          BASE_LANG: ${{ inputs.base_language }}
+          CONTENT: ${{ inputs.content_path }}
+        run: |
+          set -euo pipefail
+          CHANGED_DIRS=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- "${CONTENT}/" \
+            | xargs -I{} dirname {} \
+            | sort -u \
+            | grep -Ev '(^|/)_[^/]+(/|$)' \
+            || true)
+
+          MISSING=""
+          for dir in $CHANGED_DIRS; do
+            [ ! -d "$dir" ] && continue
+            shopt -s nullglob
+            pages=("$dir"/_index*.md "$dir"/index*.md)
+            shopt -u nullglob
+            [ ${#pages[@]} -eq 0 ] && continue
+            for lang in $LANGS; do
+              if [ "$lang" = "$BASE_LANG" ]; then
+                found=false
+                for f in "$dir"/_index.md "$dir"/_index.${BASE_LANG}.md "$dir"/index.md "$dir"/index.${BASE_LANG}.md; do
+                  [ -f "$f" ] && found=true && break
+                done
+              else
+                found=false
+                for f in "$dir"/_index.${lang}.md "$dir"/index.${lang}.md; do
+                  [ -f "$f" ] && found=true && break
+                done
+              fi
+              if [ "$found" = "false" ]; then
+                MISSING="${MISSING}\n${dir} (${lang})"
+              fi
+            done
+          done
+
+          if [ -n "$MISSING" ]; then
+            printf "%b" "$MISSING" > missing-content.txt
+          fi
+
+      - name: Check i18n string table (optional)
+        id: strings
+        env:
+          BASE_LANG: ${{ inputs.base_language }}
+          I18N_DIR: ${{ inputs.i18n_path }}
+        run: |
+          if [ ! -d "$I18N_DIR" ]; then
+            echo "No $I18N_DIR/ directory — skipping string check."
+            exit 0
+          fi
+          cat > check-strings.js << 'SCRIPT'
+          const fs = require('fs');
+          const path = require('path');
+
+          const i18nDir = process.env.I18N_DIR;
+          const baseLang = process.env.BASE_LANG;
+
+          function parseKeys(filePath) {
+            const content = fs.readFileSync(filePath, 'utf8');
+            const keys = new Set();
+            for (const line of content.split('\n')) {
+              const match = line.match(/^([a-z0-9_-]+):/i);
+              if (match) keys.add(match[1]);
+            }
+            return keys;
+          }
+
+          const baseFile = path.join(i18nDir, `${baseLang}.yaml`);
+          if (!fs.existsSync(baseFile)) {
+            process.exit(0);
+          }
+
+          const baseKeys = parseKeys(baseFile);
+          const langs = fs.readdirSync(i18nDir)
+            .filter(f => f.endsWith('.yaml'))
+            .map(f => path.basename(f, '.yaml'))
+            .filter(l => l !== baseLang);
+
+          let md = '';
+          for (const lang of langs) {
+            const langKeys = parseKeys(path.join(i18nDir, `${lang}.yaml`));
+            const missing = [...baseKeys].filter(k => !langKeys.has(k));
+            if (missing.length > 0) {
+              md += `**${lang}** is missing ${missing.length} key(s): ${missing.map(k => '`' + k + '`').join(', ')}\n`;
+            }
+          }
+
+          fs.writeFileSync('i18n-strings.md', md);
+          SCRIPT
+          node check-strings.js
+
+      - name: Post i18n coverage comment
+        uses: actions/github-script@v9
+        if: always()
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const fs = require('fs');
+            let md = '## i18n Coverage\n\n';
+
+            const stringReport = fs.existsSync('i18n-strings.md')
+              ? fs.readFileSync('i18n-strings.md', 'utf8') : '';
+            const contentMissing = fs.existsSync('missing-content.txt')
+              ? fs.readFileSync('missing-content.txt', 'utf8').trim() : '';
+
+            if (!stringReport && !contentMissing) {
+              md += ':white_check_mark: All translations are up to date.\n';
+            } else {
+              if (stringReport) {
+                md += '### i18n strings\n\n' + stringReport + '\n';
+              }
+              if (contentMissing) {
+                md += '### Content pages missing translations\n\n';
+                md += 'These changed content directories are missing translations:\n\n';
+                for (const line of contentMissing.split('\n').filter(Boolean)) {
+                  md += `- \`${line.trim()}\`\n`;
+                }
+                md += '\n> Translations are recommended for all configured ';
+                md += 'languages. Missing language files fall back to the ';
+                md += 'default content language.\n';
+              }
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const marker = '## i18n Coverage';
+            const existing = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes(marker)
+            );
+            const body = md + '\n\n*Updated: ' + new Date().toISOString() + '*';
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
