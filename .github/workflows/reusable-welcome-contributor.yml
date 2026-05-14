@@ -45,7 +45,7 @@ jobs:
             } else {
               "${{ github.event.issue.user.login }}"
             }
-            jinx::contributor_welcome(
+            jinx::gh_welcome_contributor(
               owner = "${{ github.repository_owner }}",
               repo = "${{ github.event.repository.name }}",
               number = number,

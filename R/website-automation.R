@@ -114,7 +114,7 @@ review_try_squash_merge <- function(pr, org, repo) {
 #' @param pr_number PR number.
 #' @return Comment URL (invisibly).
 #' @export
-blog_post_checklist <- function(owner, repo, pr_number) {
+website_blog_checklist <- function(owner, repo, pr_number) {
   checklist <- paste(
     "Thank you for submitting a blogpost to RLadies+!",
     "",
@@ -166,21 +166,6 @@ blog_post_checklist <- function(owner, repo, pr_number) {
   )
 
   invisible(comment$html_url)
-}
-
-#' Post a greeting on new PRs/issues from non-team members
-#'
-#' Delegates to [contributor_welcome()] for first-time detection.
-#'
-#' @param owner Repository owner.
-#' @param repo Repository name.
-#' @param number Issue or PR number.
-#' @param author GitHub login of the author.
-#' @param org Organization name.
-#' @return Comment URL or `NULL` if author is a team member (invisibly).
-#' @export
-contributor_greet <- function(owner, repo, number, author, org = "rladies") {
-  contributor_welcome(owner, repo, number, author, is_pr = TRUE, org = org)
 }
 
 extract_yaml_date <- function(content) {

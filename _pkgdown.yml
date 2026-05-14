@@ -90,9 +90,10 @@ reference:
       - contains("airtable")
 
   - title: Website automation
-    desc: Website PR management and contributor greetings
+    desc: Website PR management and blog review
     contents:
       - website_merge_pending
+      - website_blog_checklist
 
   - title: Chapter monitoring
     desc: Chapter activity monitoring and outreach
@@ -114,6 +115,11 @@ reference:
     desc: Contributor tracking and recognition
     contents:
       - starts_with("contributor_")
+
+  - title: GitHub helpers
+    desc: Reusable PR/issue automation across repos
+    contents:
+      - starts_with("gh_")
 
   - title: Events
     desc: Chapter event management
@@ -143,7 +149,6 @@ reference:
     desc: Template translations
     contents:
       - starts_with("i18n_")
-      - chapter_get_language
 
   - title: Configuration
     desc: Config loading utilities

@@ -1,3 +1,25 @@
+# jinx (development version)
+
+## Module reorganisation
+
+- New `gh_*` module for reusable GitHub PR/issue automation. Functions
+  moved out of the contributor/website modules so they can be wired into
+  any repo, not just the website:
+  - `contributor_welcome()` → `gh_welcome_contributor()`
+  - `contributor_thank()` → `gh_thank_contributor()`
+  - `contributor_greet()` → `gh_greet_contributor()`
+- `blog_post_checklist()` → `website_blog_checklist()` (it has always
+  been a website-automation function).
+- `chapter_get_language()` → `i18n_chapter_language()` (it has always
+  lived in `R/i18n.R`).
+- Internal helpers `directory_validation_row()` and
+  `directory_empty_validation_df()` in `R/i18n-validate.R` renamed to
+  `i18n_validation_row()` / `i18n_empty_validation_df()` (they validate
+  translations, not directory entries).
+- Reusable workflows updated to call the new names: `reusable-welcome-
+contributor.yml`, `reusable-thank-contributor.yml`,
+  `reusable-website-blog-checklist.yml`.
+
 # jinx 0.1.0
 
 Initial release. jinx automates organisational workflows for the RLadies+
