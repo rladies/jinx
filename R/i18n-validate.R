@@ -13,7 +13,7 @@ i18n_validate_translations <- function(language = NULL) {
   base_templates <- list.files(base_dir, pattern = "\\.md$")
 
   if (length(base_templates) == 0) {
-    return(directory_empty_validation_df())
+    return(i18n_empty_validation_df())
   }
 
   pairs <- expand.grid(
@@ -23,7 +23,7 @@ i18n_validate_translations <- function(language = NULL) {
   )
 
   if (nrow(pairs) == 0) {
-    return(directory_empty_validation_df())
+    return(i18n_empty_validation_df())
   }
 
   results <- mapply(
@@ -55,7 +55,7 @@ i18n_base_dir <- function() {
 i18n_validate_one <- function(lang, tmpl, base_dir) {
   trans_path <- system.file("translations", lang, tmpl, package = "jinx")
   if (!nzchar(trans_path)) {
-    return(directory_validation_row(tmpl, lang, "missing", "", ""))
+    return(i18n_validation_row(tmpl, lang, "missing", "", ""))
   }
 
   base_keys <- extract_placeholder_keys(file.path(base_dir, tmpl))
@@ -64,7 +64,7 @@ i18n_validate_one <- function(lang, tmpl, base_dir) {
   extra <- setdiff(trans_keys, base_keys)
 
   status <- if (length(missing) == 0 && length(extra) == 0) "ok" else "mismatch"
-  directory_validation_row(
+  i18n_validation_row(
     tmpl,
     lang,
     status,
@@ -73,7 +73,7 @@ i18n_validate_one <- function(lang, tmpl, base_dir) {
   )
 }
 
-directory_validation_row <- function(tmpl, lang, status, missing, extra) {
+i18n_validation_row <- function(tmpl, lang, status, missing, extra) {
   data.frame(
     template = tmpl,
     language = lang,
@@ -84,7 +84,7 @@ directory_validation_row <- function(tmpl, lang, status, missing, extra) {
   )
 }
 
-directory_empty_validation_df <- function() {
+i18n_empty_validation_df <- function() {
   data.frame(
     template = character(0),
     language = character(0),

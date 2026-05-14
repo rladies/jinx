@@ -81,7 +81,7 @@ i18n_list_languages <- function() {
 #' @param org GitHub organization.
 #' @return Language code string.
 #' @export
-chapter_get_language <- function(chapter, org = "rladies") {
+i18n_get_chapter_language <- function(chapter, org = "rladies") {
   tryCatch(
     {
       content <- gh::gh(

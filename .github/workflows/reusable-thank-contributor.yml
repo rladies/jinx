@@ -44,7 +44,7 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           Rscript -e '
-            jinx::contributor_thank(
+            jinx::gh_thank_contributor(
               owner = "${{ github.repository_owner }}",
               repo = "${{ github.event.repository.name }}",
               pr_number = ${{ github.event.pull_request.number }},
