@@ -66,38 +66,23 @@ document.addEventListener("DOMContentLoaded", function() {
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
 <h3 id="module-reorganisation-development-version">Module reorganisation<a class="anchor" aria-label="anchor" href="#module-reorganisation-development-version"></a></h3>
-<ul><li>Two i18n exports renamed to match the <code>&lt;module&gt;_&lt;verb&gt;_&lt;object&gt;</code> pattern:
+<ul><li>New <code>gh_*</code> module for reusable GitHub PR/issue automation. Functions moved out of the contributor/website modules so they can be wired into any repo, not just the website:
 <ul><li>
-<code>i18n_translations_validate()</code> → <code><a href="../reference/i18n_validate_translations.html">i18n_validate_translations()</a></code>
+<code>contributor_welcome()</code> → <code><a href="../reference/gh_welcome_contributor.html">gh_welcome_contributor()</a></code>
 </li>
 <li>
-<code>i18n_coverage_check()</code> → <code><a href="../reference/i18n_check_coverage.html">i18n_check_coverage()</a></code>
+<code>contributor_thank()</code> → <code><a href="../reference/gh_thank_contributor.html">gh_thank_contributor()</a></code>
 </li>
+<li>
+<code>contributor_greet()</code> → <code><a href="../reference/gh_greet_contributor.html">gh_greet_contributor()</a></code>
+</li>
+<li>
+<code>blog_post_checklist()</code> → <code><a href="../reference/gh_post_checklist.html">gh_post_checklist()</a></code> (also generalised: the message now opens with “Thank you for submitting a post” so it applies to blog <em>and</em> news content equally; the path filter on the caller workflow already covers both).</li>
 </ul></li>
 <li>
-<code>cmd_execute("translate-status")</code> / <code>cmd_execute("translate-validate")</code>, the <code>ci-i18n-validate.yml</code> workflow, and the integration tests all updated to the new names.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
-<ul><li>
-<code><a href="../reference/contributor_list_org.html">contributor_list_org()</a></code> now returns its sum column as <code>contributions</code> instead of <code>total_contributions</code>, matching <code><a href="../reference/contributor_list.html">contributor_list()</a></code> so the result can be passed directly to <code><a href="../reference/contributor_format.html">contributor_format()</a></code>. This fixes a <code>vapply</code> error in <code>cmd_execute("contributors-org")</code>.</li>
-<li>
-<code>cmd_execute("website-analytics")</code> now returns the pre-rendered markdown from <code><a href="../reference/website_generate_report.html">website_generate_report()</a></code> instead of re-running the formatter on the wrapper list.</li>
-<li>Fixed seven scheduled/reusable workflows that called functions which do not exist as exports. These calls would have failed silently the next time the workflow ran:
-<ul><li>
-<code>ops-event-sync.yml</code>: <code>events_sync_chapters</code> / <code>events_create_summary</code> / <code>events_publish_summary</code> → <code>event_*</code> (singular).</li>
-<li>
-<code>reusable-pr-review.yml</code>: <code>review_pr</code> → <code>review_run</code>.</li>
-<li>
-<code>ops-update-contributors.yml</code>: <code>contributors_update</code> → <code>contributor_update</code>. Also corrected <code>awesome-rladies-blogs</code> → <code>awesome-rladies-creations</code> in the default repo list.</li>
-<li>
-<code>ops-airtable-sync.yml</code>: <code>sync_directory_airtable</code> → <code>directory_sync_airtable</code>; <code>sync_gt_airtable</code> → <code>gt_sync_airtable</code>.</li>
-</ul></li>
-</ul></div>
-<div class="section level3">
-<h3 id="tests-development-version">Tests<a class="anchor" aria-label="anchor" href="#tests-development-version"></a></h3>
-<ul><li>Added <code>test-commands-integration.R</code>, an end-to-end test for every <code><a href="../reference/cmd_execute.html">cmd_execute()</a></code> branch that wires a producer to a formatter. Mocks each producer with its documented return shape so future column renames or wrapper changes fail loudly.</li>
-<li>Added <code>test-workflows.R</code>, a guard test that scans every YAML in <code>.github/workflows/</code> and asserts every <code>jinx::function()</code> reference resolves to a current export. Catches function renames and stale workflow code before they ship.</li>
+<code>chapter_get_language()</code> → <code><a href="../reference/i18n_get_chapter_language.html">i18n_get_chapter_language()</a></code> (it has always lived in <code>R/i18n.R</code>, now follows the <code>&lt;module&gt;_&lt;verb&gt;_*</code> pattern).</li>
+<li>Internal helpers <code>directory_validation_row()</code> and <code>directory_empty_validation_df()</code> in <code>R/i18n-validate.R</code> renamed to <code>i18n_validation_row()</code> / <code>i18n_empty_validation_df()</code> (they validate translations, not directory entries).</li>
+<li>Reusable workflows: <code>reusable-website-blog-checklist.yml</code> → <code>reusable-post-checklist.yml</code>. <code>reusable-welcome-contributor.yml</code> and <code>reusable-thank-contributor.yml</code> updated to call the new names.</li>
 </ul></div>
 </div>
     <div class="section level2">

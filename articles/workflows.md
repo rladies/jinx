@@ -124,8 +124,7 @@ jobs:
 `JINX_PRIVATE_KEY` from the org-level secrets — no copy-pasting.
 
 The same pattern works for `reusable-welcome-contributor.yml`,
-`reusable-thank-contributor.yml`, and
-`reusable-website-blog-checklist.yml`.
+`reusable-thank-contributor.yml`, and `reusable-post-checklist.yml`.
 
 ## The bot image
 

@@ -26,7 +26,6 @@
 <url><loc>https://rladies.github.io/jinx/reference/announce_send_newsletter.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/blog_check_links.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/blog_create_entry.html</loc></url>
-<url><loc>https://rladies.github.io/jinx/reference/blog_post_checklist.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cfp_check_deadlines.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cfp_create_issue.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cfp_list_open.html</loc></url>
@@ -36,7 +35,6 @@
 <url><loc>https://rladies.github.io/jinx/reference/chapter_create_pr.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_create_setup.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_create_update.html</loc></url>
-<url><loc>https://rladies.github.io/jinx/reference/chapter_get_language.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_monitor_status.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_report_health.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cmd_execute.html</loc></url>
@@ -44,12 +42,9 @@
 <url><loc>https://rladies.github.io/jinx/reference/conference_generate_report.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/conference_list_speakers.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/contributor_format.html</loc></url>
-<url><loc>https://rladies.github.io/jinx/reference/contributor_greet.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/contributor_list.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/contributor_list_org.html</loc></url>
-<url><loc>https://rladies.github.io/jinx/reference/contributor_thank.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/contributor_update.html</loc></url>
-<url><loc>https://rladies.github.io/jinx/reference/contributor_welcome.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/directory_crop_image.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/directory_optimize_image.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/directory_sync_airtable.html</loc></url>
@@ -59,6 +54,10 @@
 <url><loc>https://rladies.github.io/jinx/reference/event_list_chapter.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/event_publish_summary.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/event_sync_chapters.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/gh_greet_contributor.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/gh_post_checklist.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/gh_thank_contributor.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/gh_welcome_contributor.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gha_generate_dashboard.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gha_publish_dashboard.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gt_check_invitations.html</loc></url>
@@ -69,6 +68,7 @@
 <url><loc>https://rladies.github.io/jinx/reference/gt_remind_stale.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gt_sync_airtable.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/i18n_check_coverage.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/i18n_get_chapter_language.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/i18n_list_languages.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/i18n_translate_template.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/i18n_validate_translations.html</loc></url>

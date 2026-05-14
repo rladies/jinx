@@ -90,8 +90,6 @@ Blog content management
   : Check blog URLs and RSS feeds for broken links
 - [`blog_create_entry()`](https://rladies.github.io/jinx/reference/blog_create_entry.md)
   : Auto-generate a blog entry JSON from a URL
-- [`blog_post_checklist()`](https://rladies.github.io/jinx/reference/blog_post_checklist.md)
-  : Post blog PR checklist
 - [`validate_blog_entry()`](https://rladies.github.io/jinx/reference/validate_blog_entry.md)
   : Validate blog entry JSON files against schema
 
@@ -143,7 +141,7 @@ Airtable bidirectional sync
 
 ## Website automation
 
-Website PR management and contributor greetings
+Website PR management
 
 - [`website_merge_pending()`](https://rladies.github.io/jinx/reference/website_merge_pending.md)
   : Auto-merge PRs with pending label when date matches
@@ -185,18 +183,25 @@ Contributor tracking and recognition
 
 - [`contributor_format()`](https://rladies.github.io/jinx/reference/contributor_format.md)
   : Generate a contributors markdown section
-- [`contributor_greet()`](https://rladies.github.io/jinx/reference/contributor_greet.md)
-  : Post a greeting on new PRs/issues from non-team members
 - [`contributor_list()`](https://rladies.github.io/jinx/reference/contributor_list.md)
   : List contributors for a repository
 - [`contributor_list_org()`](https://rladies.github.io/jinx/reference/contributor_list_org.md)
   : Collect contributors across multiple repos
-- [`contributor_thank()`](https://rladies.github.io/jinx/reference/contributor_thank.md)
-  : Thank a contributor when their PR is merged
 - [`contributor_update()`](https://rladies.github.io/jinx/reference/contributor_update.md)
   : Generate and update a contributors list for a repo
-- [`contributor_welcome()`](https://rladies.github.io/jinx/reference/contributor_welcome.md)
-  : Welcome a first-time contributor
+
+## GitHub helpers
+
+Reusable PR/issue automation across repos
+
+- [`gh_greet_contributor()`](https://rladies.github.io/jinx/reference/gh_greet_contributor.md)
+  : Greet a new PR author
+- [`gh_post_checklist()`](https://rladies.github.io/jinx/reference/gh_post_checklist.md)
+  : Post a content review checklist on a PR
+- [`gh_thank_contributor()`](https://rladies.github.io/jinx/reference/gh_thank_contributor.md)
+  : Thank a contributor when their PR is merged
+- [`gh_welcome_contributor()`](https://rladies.github.io/jinx/reference/gh_welcome_contributor.md)
+  : Welcome a contributor on a new PR or issue
 
 ## Events
 
@@ -264,14 +269,14 @@ Template translations
 
 - [`i18n_check_coverage()`](https://rladies.github.io/jinx/reference/i18n_check_coverage.md)
   : Check translation coverage across languages
+- [`i18n_get_chapter_language()`](https://rladies.github.io/jinx/reference/i18n_get_chapter_language.md)
+  : Get a chapter's preferred language
 - [`i18n_list_languages()`](https://rladies.github.io/jinx/reference/i18n_list_languages.md)
   : List supported languages
 - [`i18n_translate_template()`](https://rladies.github.io/jinx/reference/i18n_translate_template.md)
   : Translate a template with language fallback
 - [`i18n_validate_translations()`](https://rladies.github.io/jinx/reference/i18n_validate_translations.md)
   : Validate translations for placeholder consistency
-- [`chapter_get_language()`](https://rladies.github.io/jinx/reference/chapter_get_language.md)
-  : Get a chapter's preferred language
 
 ## Configuration
 
