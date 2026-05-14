@@ -81,7 +81,8 @@ shorter thank-you. No-op for bots and global team members.</p>
 <span>  <span class="va">number</span>,</span>
 <span>  <span class="va">author</span>,</span>
 <span>  is_pr <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  org <span class="op">=</span> <span class="st">"rladies"</span></span>
+<span>  org <span class="op">=</span> <span class="st">"rladies"</span>,</span>
+<span>  extra_message <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -111,6 +112,13 @@ shorter thank-you. No-op for bots and global team members.</p>
 
 <dt id="arg-org">org<a class="anchor" aria-label="anchor" href="#arg-org"></a></dt>
 <dd><p>Organization name.</p></dd>
+
+
+<dt id="arg-extra-message">extra_message<a class="anchor" aria-label="anchor" href="#arg-extra-message"></a></dt>
+<dd><p>Optional extra markdown to append after the
+standard welcome message (e.g. a project-specific reminder).
+Ignored when blank or <code>NULL</code>. The jinx signature is preserved as
+the final paragraph.</p></dd>
 
 </dl></div>
     <div class="section level2">

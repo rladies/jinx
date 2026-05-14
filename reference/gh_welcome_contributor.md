@@ -13,7 +13,8 @@ gh_welcome_contributor(
   number,
   author,
   is_pr = TRUE,
-  org = "rladies"
+  org = "rladies",
+  extra_message = NULL
 )
 ```
 
@@ -42,6 +43,12 @@ gh_welcome_contributor(
 - org:
 
   Organization name.
+
+- extra_message:
+
+  Optional extra markdown to append after the standard welcome message
+  (e.g. a project-specific reminder). Ignored when blank or `NULL`. The
+  jinx signature is preserved as the final paragraph.
 
 ## Value
 

@@ -65,6 +65,14 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="welcome-reusable-improvements-development-version">Welcome reusable improvements<a class="anchor" aria-label="anchor" href="#welcome-reusable-improvements-development-version"></a></h3>
+<ul><li>
+<code><a href="../reference/gh_welcome_contributor.html">gh_welcome_contributor()</a></code> and <code><a href="../reference/gh_greet_contributor.html">gh_greet_contributor()</a></code> gained an <code>extra_message</code> argument. The string is appended after the standard welcome and before the jinx signature, so callers can add a project-specific reminder (e.g. “remember to add yourself to <code>.zenodo.json</code>”) without forking the function.</li>
+<li>
+<code>reusable-welcome-contributor.yml</code> now accepts a matching <code>extra_message</code> workflow input and forwards it via an environment variable (no string interpolation into the R source, so the input is safe to set to any markdown).</li>
+<li>The reusable also fires on <code>pull_request_target</code> opens, so callers that need to welcome fork-PR authors can switch their trigger without losing the welcome step.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="module-reorganisation-development-version">Module reorganisation<a class="anchor" aria-label="anchor" href="#module-reorganisation-development-version"></a></h3>
 <ul><li>New <code>gh_*</code> module for reusable GitHub PR/issue automation. Functions moved out of the contributor/website modules so they can be wired into any repo, not just the website:
 <ul><li>

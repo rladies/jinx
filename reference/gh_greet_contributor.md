@@ -8,7 +8,14 @@ any repo.
 ## Usage
 
 ``` r
-gh_greet_contributor(owner, repo, number, author, org = "rladies")
+gh_greet_contributor(
+  owner,
+  repo,
+  number,
+  author,
+  org = "rladies",
+  extra_message = NULL
+)
 ```
 
 ## Arguments
@@ -32,6 +39,10 @@ gh_greet_contributor(owner, repo, number, author, org = "rladies")
 - org:
 
   Organization name.
+
+- extra_message:
+
+  Optional extra markdown to append after the standard welcome message.
 
 ## Value
 
