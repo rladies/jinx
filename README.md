@@ -8,6 +8,70 @@ Either way, the same R package answers.
 
 Day to day, Jinx handles organiser onboarding, directory PR review, chapter monitoring, announcements, reports, event sync, translation checks, and Slack invites for the RLadies+ community.
 
+## Reusable workflows
+
+Jinx ships a handful of reusable GitHub Actions workflows that any RLadies+
+repo can adopt with a few lines of YAML. They're in [`.github/workflows/`](.github/workflows/)
+and start with `reusable-`:
+
+| Workflow                              | What it does                                                                                                         |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `reusable-welcome-contributor.yml`    | Posts a first-time welcome on a new PR or issue. Accepts an optional `extra_message` for project-specific reminders. |
+| `reusable-thank-contributor.yml`      | Posts a thank-you on a merged PR (different message for first-time vs returning).                                    |
+| `reusable-website-blog-checklist.yml` | Posts the blog-review checklist on a PR that touches blog content.                                                   |
+| `reusable-pr-review.yml`              | Calls `jinx::review_run()` to label and assign reviewers based on the rules bundled in jinx.                         |
+
+### Caller requirements
+
+Every reusable runs inside the [`ghcr.io/rladies/jinx-bot`](https://github.com/rladies/jinx/pkgs/container/jinx-bot) container.
+For the runner to pull that image, **the calling workflow must grant the job
+`packages: read`**. The simplest pattern is a workflow-level block:
+
+```yaml
+permissions:
+  contents: read
+  packages: read
+```
+
+Without this, you'll see `Error response from daemon: denied` at the docker
+pull step and the job fails before the welcome/thank/checklist runs.
+
+`JINX_APP_ID` and `JINX_PRIVATE_KEY` are configured as **org-level secrets** in
+`rladies`, so any repo in the org inherits them automatically — no per-repo
+configuration needed for the secrets themselves. The **jinx GitHub App** does
+need to be installed on the calling repo, which is true org-wide today.
+
+A minimal caller looks like:
+
+```yaml
+name: Hello on PR or Issue
+
+on:
+  pull_request:
+    types: [opened, closed]
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  welcome:
+    if: github.event.action == 'opened'
+    uses: rladies/jinx/.github/workflows/reusable-welcome-contributor.yml@main
+    secrets:
+      JINX_APP_ID: ${{ secrets.JINX_APP_ID }}
+      JINX_PRIVATE_KEY: ${{ secrets.JINX_PRIVATE_KEY }}
+
+  thank:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    uses: rladies/jinx/.github/workflows/reusable-thank-contributor.yml@main
+    secrets:
+      JINX_APP_ID: ${{ secrets.JINX_APP_ID }}
+      JINX_PRIVATE_KEY: ${{ secrets.JINX_PRIVATE_KEY }}
+```
+
 ## Documentation
 
 The [pkgdown site](https://rladies.github.io/jinx/) is split by audience:

@@ -392,7 +392,7 @@ cmd_execute <- function(command) {
     },
     "website-analytics" = {
       data <- website_generate_report(period = command$period)
-      website_format_analytics(data)
+      data$markdown
     },
     "cfp-list" = {
       cfps <- cfp_list_open()
@@ -418,7 +418,7 @@ cmd_execute <- function(command) {
       )
     },
     "translate-status" = {
-      coverage <- i18n_coverage_check()
+      coverage <- i18n_check_coverage()
       lines <- glue::glue_data(
         coverage,
         paste0(
@@ -429,7 +429,7 @@ cmd_execute <- function(command) {
       paste("## Translation Coverage\n", paste(lines, collapse = "\n"))
     },
     "translate-validate" = {
-      results <- i18n_translations_validate(language = command$language)
+      results <- i18n_validate_translations(language = command$language)
       issues <- results[results$status != "ok", ]
       if (nrow(issues) == 0) {
         "All translations are valid."

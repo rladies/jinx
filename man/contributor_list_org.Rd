@@ -12,8 +12,9 @@ contributor_list_org(org = "rladies", exclude_pattern = "^meetup-")
 \item{exclude_pattern}{Regex to exclude repos.}
 }
 \value{
-Data frame with \code{login}, \code{repos}, \code{total_contributions},
-\code{avatar_url}, and \code{profile_url}.
+Data frame with \code{login}, \code{repos}, \code{contributions},
+\code{avatar_url}, and \code{profile_url}. \code{contributions} is the sum across
+all repos; \code{repos} is the count of distinct repos contributed to.
 }
 \description{
 Aggregates contributor data across all non-meetup repos in the org.

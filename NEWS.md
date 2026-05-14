@@ -38,4 +38,3 @@ Triggered via `/jinx` issue comments (`cmd_parse()` / `cmd_execute()`) and
 24 GitHub Actions workflows. Ships with a pkgdown site, Getting Started
 and Workflow Reference vignettes, and starter translations for Spanish,
 Portuguese, and French.
-

@@ -49,9 +49,9 @@ jobs:
           Rscript -e '
             target <- "${{ inputs.target }}"
             if (target == "" || target == "directory") {
-              jinx::sync_directory_airtable()
+              jinx::directory_sync_airtable()
             }
             if (target == "" || target == "global-team") {
-              jinx::sync_gt_airtable()
+              jinx::gt_sync_airtable()
             }
           '

@@ -1,3 +1,15 @@
+# Reusable: posts a thank-you on a merged PR (different message for
+# first-time vs returning contributors).
+#
+# Caller requirements:
+#   - permissions: contents: read, packages: read  (needed to pull
+#     ghcr.io/rladies/jinx-bot — without packages: read the docker
+#     pull fails with "denied")
+#   - secrets: JINX_APP_ID, JINX_PRIVATE_KEY (both available as
+#     rladies org-level secrets)
+#   - jinx[bot] GitHub App installed on the calling repo
+#
+# See README.md ("Reusable workflows") for the full caller example.
 name: Reusable · Thank Contributor
 
 on:

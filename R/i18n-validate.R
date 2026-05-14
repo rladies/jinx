@@ -7,7 +7,7 @@
 #' @return Data frame with columns: template, language, status,
 #'   missing_keys, extra_keys.
 #' @export
-i18n_translations_validate <- function(language = NULL) {
+i18n_validate_translations <- function(language = NULL) {
   languages <- i18n_languages(language)
   base_dir <- i18n_base_dir()
   base_templates <- list.files(base_dir, pattern = "\\.md$")
@@ -100,7 +100,7 @@ i18n_empty_validation_df <- function() {
 #' @return Data frame with columns: language, total_templates, translated,
 #'   coverage_pct.
 #' @export
-i18n_coverage_check <- function() {
+i18n_check_coverage <- function() {
   config <- load_languages_config()
   languages <- vapply(config$supported, function(l) l$code, character(1))
   languages <- setdiff(languages, "en")
