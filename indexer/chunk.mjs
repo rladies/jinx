@@ -4,7 +4,8 @@ const MIN_CHARS = 200;
 export function chunkMarkdown(markdown, meta) {
   const { body, frontmatter } = stripFrontmatter(markdown);
   const sections = splitBySections(body);
-  const date = parseDate(frontmatter.date);
+  const date = meta.date || parseDate(frontmatter.date);
+  const lastmod = meta.lastmod || parseDate(frontmatter.lastmod) || date;
 
   const out = [];
   for (const section of sections) {
@@ -20,6 +21,7 @@ export function chunkMarkdown(markdown, meta) {
         path: meta.path,
         url: meta.url,
         date,
+        lastmod,
       });
     }
   }
