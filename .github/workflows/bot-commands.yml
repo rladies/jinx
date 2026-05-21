@@ -26,11 +26,28 @@ jobs:
       - name: Mask Slack metadata
         if: github.event_name == 'repository_dispatch'
         run: |
+          echo "::add-mask::${{ github.event.client_payload.team_id }}"
           echo "::add-mask::${{ github.event.client_payload.channel_id }}"
           echo "::add-mask::${{ github.event.client_payload.response_url }}"
           echo "::add-mask::${{ github.event.client_payload.user_name }}"
           echo "::add-mask::${{ github.event.client_payload.user_id }}"
           echo "::add-mask::${{ github.event.client_payload.command }}"
+
+      - name: Verify Slack workspace
+        if: github.event_name == 'repository_dispatch'
+        env:
+          TEAM_ID: ${{ github.event.client_payload.team_id }}
+          ORGANIZER_TEAM_ID: ${{ vars.SLACK_ORGANIZER_TEAM_ID }}
+          COMMUNITY_TEAM_ID: ${{ vars.SLACK_COMMUNITY_TEAM_ID }}
+        run: |
+          if [ -z "$ORGANIZER_TEAM_ID" ] && [ -z "$COMMUNITY_TEAM_ID" ]; then
+            echo "::error::Neither SLACK_ORGANIZER_TEAM_ID nor SLACK_COMMUNITY_TEAM_ID set as org/repo vars"
+            exit 1
+          fi
+          if [ "$TEAM_ID" != "$ORGANIZER_TEAM_ID" ] && [ "$TEAM_ID" != "$COMMUNITY_TEAM_ID" ]; then
+            echo "::error::Slack team_id not in allowlist; refusing to run"
+            exit 1
+          fi
 
       - uses: actions/create-github-app-token@v3
         id: app-token
@@ -82,39 +99,18 @@ jobs:
       - name: Reply to Slack
         if: always() && github.event_name == 'repository_dispatch'
         env:
-          SLACK_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
-          SLACK_CHANNEL: ${{ github.event.client_payload.channel_id }}
           SLACK_RESPONSE_URL: ${{ github.event.client_payload.response_url }}
           RUN_URL: https://github.com/rladies/jinx/actions/runs/${{ github.run_id }}
         run: |
-          if [ -f jinx_response.txt ]; then
-            MSG=$(cat jinx_response.txt)
-          else
-            MSG="😿 Something went wrong. <${RUN_URL}|View logs>"
+          if [ -z "$SLACK_RESPONSE_URL" ]; then
+            echo "::warning::No response_url in payload; skipping Slack reply"
+            exit 0
           fi
-
-          # Try slack_post_message, fall back to response_url
-          Rscript -e '
-            msg <- readLines("jinx_response.txt", warn = FALSE) |> paste(collapse = "\n")
-            tryCatch(
-              jinx::slack_post_message(
-                text = msg,
-                channel = Sys.getenv("SLACK_CHANNEL")
-              ),
-              error = function(e) {
-                cli::cli_alert_warning("slack_post_message failed: {e$message}, using response_url")
-                response_url <- Sys.getenv("SLACK_RESPONSE_URL")
-                if (nzchar(response_url)) {
-                  httr2::request(response_url) |>
-                    httr2::req_body_json(list(response_type = "ephemeral", text = msg)) |>
-                    httr2::req_perform()
-                }
-              }
-            )
-          ' || {
-            if [ -n "$SLACK_RESPONSE_URL" ]; then
-              curl -sS -X POST "$SLACK_RESPONSE_URL" \
-                -H "Content-Type: application/json" \
-                -d "{\"response_type\":\"ephemeral\",\"text\":\"😿 Something went wrong. <${RUN_URL}|View logs>\"}"
-            fi
-          }
+          if [ -f jinx_response.txt ]; then
+            MSG=$(jq -Rs . < jinx_response.txt)
+          else
+            MSG=$(printf '😿 Something went wrong. <%s|View logs>' "$RUN_URL" | jq -Rs .)
+          fi
+          curl -sS -X POST "$SLACK_RESPONSE_URL" \
+            -H "Content-Type: application/json" \
+            -d "{\"response_type\":\"in_channel\",\"text\":${MSG}}"

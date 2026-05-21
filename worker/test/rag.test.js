@@ -1,6 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
+  is_event_question,
+  merge_matches,
   rag_build_messages,
+  rag_question_answer,
   rag_repair_links,
   rag_source_urls,
   rerank_matches,
@@ -71,7 +74,7 @@ describe("rerank_matches", () => {
     expect(out[0].adjusted_score).toBeCloseTo(0.6, 5);
   });
 
-  it("boosts upcoming events (future date clamps recency to 1.0)", () => {
+  it("boosts upcoming events with a 1.6× multiplier on top of the source weight", () => {
     const upcoming = match({
       id: "upcoming",
       score: 0.7,
@@ -79,7 +82,41 @@ describe("rerank_matches", () => {
       date: NOW + 30 * 24 * 60 * 60,
     });
     const [out] = rerank_matches([upcoming], NOW);
-    expect(out.adjusted_score).toBeCloseTo(0.7 * 1.05, 5);
+    expect(out.adjusted_score).toBeCloseTo(0.7 * 1.05 * 1.6, 5);
+  });
+
+  it("does not boost past events (no upcoming multiplier when date <= now)", () => {
+    const past = match({
+      id: "past",
+      score: 0.7,
+      source_type: "events",
+      date: NOW - 30 * 24 * 60 * 60,
+    });
+    const [out] = rerank_matches([past], NOW);
+    const recency = Math.pow(0.5, (30 * 24 * 60 * 60) / (730 * 24 * 60 * 60));
+    expect(out.adjusted_score).toBeCloseTo(0.7 * 1.05 * recency, 5);
+  });
+
+  it("ranks an upcoming event above a past event at equal cosine score", () => {
+    const out = rerank_matches(
+      [
+        match({
+          id: "past",
+          score: 0.8,
+          source_type: "events",
+          date: NOW - 60 * 24 * 60 * 60,
+        }),
+        match({
+          id: "upcoming",
+          score: 0.8,
+          source_type: "events",
+          date: NOW + 7 * 24 * 60 * 60,
+        }),
+      ],
+      NOW
+    );
+    expect(out[0].id).toBe("upcoming");
+    expect(out[1].id).toBe("past");
   });
 
   it("ranks an upcoming event above a community creation at equal cosine score", () => {
@@ -97,6 +134,21 @@ describe("rerank_matches", () => {
     );
     expect(out[0].id).toBe("event");
     expect(out[1].id).toBe("creation");
+  });
+
+  it("does not apply the upcoming boost to non-event sources with a future date", () => {
+    const [out] = rerank_matches(
+      [
+        match({
+          id: "site",
+          score: 0.7,
+          source_type: "site",
+          date: NOW + 30 * 24 * 60 * 60,
+        }),
+      ],
+      NOW
+    );
+    expect(out.adjusted_score).toBeCloseTo(0.7 * 1.05, 5);
   });
 
   it("applies the youtube source weight (0.9)", () => {
@@ -320,5 +372,285 @@ describe("rag_source_urls", () => {
       {},
     ]);
     expect(urls).toEqual(["https://a.example", "https://b.example"]);
+  });
+});
+
+describe("is_event_question", () => {
+  it("matches direct event vocabulary", () => {
+    expect(is_event_question("any upcoming events?")).toBe(true);
+    expect(is_event_question("what events are coming up?")).toBe(true);
+    expect(is_event_question("when is the next meetup?")).toBe(true);
+    expect(is_event_question("are there any workshops soon?")).toBe(true);
+    expect(is_event_question("what's happening this month?")).toBe(true);
+  });
+
+  it("matches event-noun queries even without a time qualifier", () => {
+    expect(is_event_question("any events in London?")).toBe(true);
+    expect(is_event_question("what meetups do we have?")).toBe(true);
+  });
+
+  it("does not match unrelated questions", () => {
+    expect(is_event_question("how do I start a chapter?")).toBe(false);
+    expect(is_event_question("where is the code of conduct?")).toBe(false);
+    expect(is_event_question("")).toBe(false);
+    expect(is_event_question(null)).toBe(false);
+    expect(is_event_question(undefined)).toBe(false);
+  });
+});
+
+describe("rag_question_answer dual retrieval", () => {
+  function makeKv(initial = {}) {
+    const store = new Map(Object.entries(initial));
+    return {
+      async get(key, mode) {
+        if (!store.has(key)) return null;
+        const raw = store.get(key);
+        return mode === "json" ? JSON.parse(raw) : raw;
+      },
+      async put(key, value) {
+        store.set(key, typeof value === "string" ? value : JSON.stringify(value));
+      },
+      _dump() {
+        return Object.fromEntries(store);
+      },
+    };
+  }
+
+  function makeMockEnv({
+    primaryMatches,
+    eventMatches,
+    llmResponse = "OK",
+    kv = makeKv(),
+  } = {}) {
+    const queryCalls = [];
+    const aiCalls = [];
+    return {
+      env: {
+        SLACK_TOKENS: kv,
+        AI: {
+          run: vi.fn(async (model, body) => {
+            aiCalls.push({ model, body });
+            if (model === "@cf/baai/bge-base-en-v1.5") {
+              return { data: [[0.1, 0.2, 0.3]] };
+            }
+            return { response: llmResponse };
+          }),
+        },
+        RAG_INDEX: {
+          query: vi.fn(async (_emb, opts) => {
+            queryCalls.push(opts);
+            return queryCalls.length === 1
+              ? { matches: primaryMatches }
+              : { matches: eventMatches };
+          }),
+        },
+      },
+      queryCalls,
+      aiCalls,
+      kv,
+    };
+  }
+
+  it("issues only one index query for non-event questions", async () => {
+    const { env, queryCalls } = makeMockEnv({
+      primaryMatches: [
+        {
+          id: "g1",
+          score: 0.8,
+          metadata: { url: "https://x", title: "T", text: "t", source_type: "guide" },
+        },
+      ],
+      eventMatches: [],
+    });
+    await rag_question_answer(env, "how do I start a chapter?");
+    expect(queryCalls).toHaveLength(1);
+  });
+
+  it("issues a second event-pool query for event questions", async () => {
+    const { env, queryCalls, aiCalls } = makeMockEnv({
+      primaryMatches: [
+        {
+          id: "g1",
+          score: 0.8,
+          metadata: { url: "https://x", title: "T", text: "t", source_type: "guide" },
+        },
+      ],
+      eventMatches: [
+        {
+          id: "e1",
+          score: 0.6,
+          metadata: {
+            url: "https://meetup/e1",
+            title: "Upcoming workshop",
+            text: "Status: upcoming",
+            source_type: "events",
+            date: Date.now() / 1000 + 86400,
+          },
+        },
+      ],
+    });
+    await rag_question_answer(env, "any upcoming events?");
+    expect(queryCalls).toHaveLength(2);
+    expect(aiCalls.filter((c) => c.model === "@cf/baai/bge-base-en-v1.5")).toHaveLength(2);
+  });
+
+  it("surfaces upcoming events from the event pool when the primary query misses them", async () => {
+    const llmInputs = [];
+    const { env } = makeMockEnv({
+      primaryMatches: [
+        {
+          id: "g1",
+          score: 0.7,
+          metadata: { url: "https://guide", title: "Guide", text: "guide text", source_type: "guide" },
+        },
+      ],
+      eventMatches: [
+        {
+          id: "e1",
+          score: 0.55,
+          metadata: {
+            url: "https://meetup/e1",
+            title: "RLadies+ London — June workshop",
+            text: "Status: upcoming\nWhen: 2026-06-15",
+            source_type: "events",
+            date: Date.now() / 1000 + 30 * 86400,
+          },
+        },
+      ],
+    });
+    env.AI.run = vi.fn(async (model, body) => {
+      if (model === "@cf/baai/bge-base-en-v1.5") return { data: [[0.1]] };
+      llmInputs.push(body);
+      return { response: "OK" };
+    });
+    await rag_question_answer(env, "any upcoming events?");
+    const userMsg = llmInputs[0].messages.find((m) => m.role === "user").content;
+    expect(userMsg).toContain("RLadies+ London — June workshop");
+  });
+
+  it("caches the event-pool embedding in KV after the first call", async () => {
+    const kv = makeKv();
+    const { env, aiCalls } = makeMockEnv({
+      primaryMatches: [
+        {
+          id: "g1",
+          score: 0.8,
+          metadata: { url: "https://g", title: "G", text: "g", source_type: "guide" },
+        },
+      ],
+      eventMatches: [
+        {
+          id: "e1",
+          score: 0.6,
+          metadata: {
+            url: "https://meetup/e1",
+            title: "Workshop",
+            text: "Status: upcoming",
+            source_type: "events",
+            date: Date.now() / 1000 + 86400,
+          },
+        },
+      ],
+      kv,
+    });
+    await rag_question_answer(env, "any upcoming events?");
+    const embedCallsAfterFirst = aiCalls.filter(
+      (c) => c.model === "@cf/baai/bge-base-en-v1.5"
+    ).length;
+    expect(embedCallsAfterFirst).toBe(2);
+    expect(kv._dump()["rag:event_embedding:v1"]).toBeTruthy();
+
+    await rag_question_answer(env, "next meetup?");
+    const embedCallsAfterSecond = aiCalls.filter(
+      (c) => c.model === "@cf/baai/bge-base-en-v1.5"
+    ).length;
+    expect(embedCallsAfterSecond).toBe(3);
+  });
+
+  it("falls back to a fresh embed when the cached value is corrupt", async () => {
+    const kv = makeKv({ "rag:event_embedding:v1": "not-an-array" });
+    const { env, aiCalls } = makeMockEnv({
+      primaryMatches: [
+        {
+          id: "g1",
+          score: 0.8,
+          metadata: { url: "https://g", title: "G", text: "g", source_type: "guide" },
+        },
+      ],
+      eventMatches: [
+        {
+          id: "e1",
+          score: 0.6,
+          metadata: {
+            url: "https://meetup/e1",
+            title: "W",
+            text: "Status: upcoming",
+            source_type: "events",
+            date: Date.now() / 1000 + 86400,
+          },
+        },
+      ],
+      kv,
+    });
+    await rag_question_answer(env, "any upcoming events?");
+    const embedCalls = aiCalls.filter(
+      (c) => c.model === "@cf/baai/bge-base-en-v1.5"
+    ).length;
+    expect(embedCalls).toBe(2);
+  });
+
+  it("filters event-pool results to source_type=events", async () => {
+    const { env, queryCalls } = makeMockEnv({
+      primaryMatches: [
+        {
+          id: "g1",
+          score: 0.8,
+          metadata: { url: "https://g", title: "G", text: "g", source_type: "guide" },
+        },
+      ],
+      eventMatches: [
+        {
+          id: "y1",
+          score: 0.9,
+          metadata: { url: "https://y", title: "Y", text: "y", source_type: "youtube" },
+        },
+      ],
+    });
+    const llmInputs = [];
+    env.AI.run = vi.fn(async (model, body) => {
+      if (model === "@cf/baai/bge-base-en-v1.5") return { data: [[0.1]] };
+      llmInputs.push(body);
+      return { response: "OK" };
+    });
+    await rag_question_answer(env, "any upcoming events?");
+    expect(queryCalls).toHaveLength(2);
+    const userMsg = llmInputs[0].messages.find((m) => m.role === "user").content;
+    expect(userMsg).not.toContain("y1");
+    expect(userMsg).not.toContain("Title: Y");
+  });
+});
+
+describe("merge_matches", () => {
+  it("appends extras not already present and dedupes by id", () => {
+    const primary = [
+      { id: "a", score: 0.8, metadata: {} },
+      { id: "b", score: 0.7, metadata: {} },
+    ];
+    const extra = [
+      { id: "b", score: 0.9, metadata: {} },
+      { id: "c", score: 0.6, metadata: {} },
+    ];
+    const merged = merge_matches(primary, extra);
+    expect(merged.map((m) => m.id)).toEqual(["a", "b", "c"]);
+    expect(merged.find((m) => m.id === "b").score).toBe(0.7);
+  });
+
+  it("preserves primary order", () => {
+    const primary = [
+      { id: "x", score: 0.9, metadata: {} },
+      { id: "y", score: 0.8, metadata: {} },
+    ];
+    const merged = merge_matches(primary, []);
+    expect(merged.map((m) => m.id)).toEqual(["x", "y"]);
   });
 });

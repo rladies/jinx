@@ -1,6 +1,11 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { slack_command_handle } from "../src/slash-command.js";
+import { github_dispatch_send } from "../src/github-dispatch.js";
 import { makeEnv, makeCtx } from "./_helpers.js";
+
+vi.mock("../src/github-dispatch.js", () => ({
+  github_dispatch_send: vi.fn(async () => undefined),
+}));
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -82,5 +87,20 @@ describe("slack_command_handle", () => {
     const json = await res.json();
     expect(json.response_type).toBe("ephemeral");
     expect(json.text).toMatch(/report-weekly/);
+  });
+
+  it("includes team_id in the GitHub dispatch payload", async () => {
+    const env = makeEnv({ JINX_APP_ID: "1", JINX_PRIVATE_KEY: "x" });
+    const ctx = makeCtx();
+    await slack_command_handle(
+      env,
+      ctx,
+      makeBody({ team_id: "T_COM", text: "report-weekly" })
+    );
+    await ctx.flush();
+    expect(github_dispatch_send).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ team_id: "T_COM", command: "report-weekly" })
+    );
   });
 });
