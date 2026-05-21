@@ -19,32 +19,29 @@ chunk_markdown <- function(
 ) {
   parts <- strip_frontmatter(markdown)
   sections <- split_by_sections(parts$body)
-  date <- meta$date %||% parse_unix_date(parts$frontmatter$date)
+  date <- meta$date %||% parse_unix_date(parts$frontmatter$date) %||% 0L
   lastmod <- meta$lastmod %||%
     parse_unix_date(parts$frontmatter$lastmod) %||%
     date
+  title <- parts$frontmatter$title %||% meta$fallback_title %||% ""
 
-  out <- list()
-  for (section in sections) {
-    pieces <- split_to_target(section$body, target_chars)
-    for (piece in pieces) {
-      text <- trimws(piece)
-      if (nchar(text) < min_chars) {
-        next
-      }
-      out[[length(out) + 1L]] <- list(
+  per_section <- lapply(sections, function(section) {
+    pieces <- trimws(split_to_target(section$body, target_chars))
+    pieces <- pieces[nchar(pieces) >= min_chars]
+    lapply(pieces, function(text) {
+      list(
         text = text,
         heading = section$heading,
-        title = parts$frontmatter$title %||% meta$fallback_title %||% "",
+        title = title,
         repo = meta$repo,
         path = meta$path,
         url = meta$url,
-        date = date %||% 0L,
-        lastmod = lastmod %||% 0L
+        date = date,
+        lastmod = lastmod
       )
-    }
-  }
-  out
+    })
+  })
+  unlist(per_section, recursive = FALSE)
 }
 
 #' @keywords internal
@@ -69,23 +66,28 @@ strip_frontmatter <- function(md) {
 #' @keywords internal
 split_by_sections <- function(body) {
   lines <- strsplit(body, "\r?\n", perl = TRUE)[[1]]
-  sections <- list()
-  current <- list(heading = "", body = "")
-  for (line in lines) {
-    h <- regmatches(line, regexec("^(#{1,3})\\s+(.*)$", line))[[1]]
-    if (length(h) == 3 && nchar(h[2]) <= 2) {
-      if (nzchar(trimws(current$body))) {
-        sections[[length(sections) + 1L]] <- current
-      }
-      current <- list(heading = trimws(h[3]), body = "")
+  if (!length(lines)) {
+    return(list())
+  }
+  is_heading <- grepl("^#{1,2}\\s+", lines)
+  group <- cumsum(is_heading)
+  by_group <- split(seq_along(lines), group)
+  sections <- lapply(seq_along(by_group), function(gi) {
+    idx <- by_group[[gi]]
+    g <- as.integer(names(by_group)[gi])
+    if (g == 0L) {
+      heading <- ""
+      body_lines <- lines[idx]
     } else {
-      current$body <- paste0(current$body, line, "\n")
+      heading <- trimws(sub("^#{1,2}\\s+", "", lines[idx[1]]))
+      body_lines <- lines[idx[-1]]
     }
-  }
-  if (nzchar(trimws(current$body))) {
-    sections[[length(sections) + 1L]] <- current
-  }
-  sections
+    list(
+      heading = heading,
+      body = paste0(paste(body_lines, collapse = "\n"), "\n")
+    )
+  })
+  Filter(function(s) nzchar(trimws(s$body)), sections)
 }
 
 #' @keywords internal
@@ -94,18 +96,35 @@ split_to_target <- function(text, target) {
     return(text)
   }
   paragraphs <- strsplit(text, "\n\\s*\n", perl = TRUE)[[1]]
+  pack_pieces(paragraphs, target, sep = "\n\n", hard = hard_split)
+}
+
+#' @keywords internal
+hard_split <- function(text, target) {
+  sentences <- strsplit(text, "(?<=[.!?])\\s+", perl = TRUE)[[1]]
+  pack_pieces(sentences, target, sep = " ", hard = chunk_chars)
+}
+
+#' @keywords internal
+chunk_chars <- function(text, target) {
+  starts <- seq(1L, nchar(text), by = target)
+  substring(text, starts, starts + target - 1L)
+}
+
+#' @keywords internal
+pack_pieces <- function(pieces, target, sep, hard) {
   out <- character()
   buf <- ""
-  for (p in paragraphs) {
+  for (p in pieces) {
     if (nchar(p) > target) {
       if (nzchar(buf)) {
         out <- c(out, buf)
         buf <- ""
       }
-      out <- c(out, hard_split(p, target))
+      out <- c(out, hard(p, target))
       next
     }
-    candidate <- if (nzchar(buf)) paste0(buf, "\n\n", p) else p
+    candidate <- if (nzchar(buf)) paste0(buf, sep, p) else p
     if (nzchar(buf) && nchar(candidate) > target) {
       out <- c(out, buf)
       buf <- p
@@ -113,39 +132,7 @@ split_to_target <- function(text, target) {
       buf <- candidate
     }
   }
-  if (nzchar(buf)) {
-    out <- c(out, buf)
-  }
-  out
-}
-
-#' @keywords internal
-hard_split <- function(text, target) {
-  sentences <- strsplit(text, "(?<=[.!?])\\s+", perl = TRUE)[[1]]
-  out <- character()
-  buf <- ""
-  for (s in sentences) {
-    if (nchar(s) > target) {
-      if (nzchar(buf)) {
-        out <- c(out, buf)
-        buf <- ""
-      }
-      starts <- seq(1L, nchar(s), by = target)
-      out <- c(out, substring(s, starts, starts + target - 1L))
-      next
-    }
-    candidate <- if (nzchar(buf)) paste(buf, s) else s
-    if (nzchar(buf) && nchar(candidate) > target) {
-      out <- c(out, buf)
-      buf <- s
-    } else {
-      buf <- candidate
-    }
-  }
-  if (nzchar(buf)) {
-    out <- c(out, buf)
-  }
-  out
+  if (nzchar(buf)) c(out, buf) else out
 }
 
 #' @keywords internal

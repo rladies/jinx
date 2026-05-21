@@ -2,14 +2,13 @@
 % Please edit documentation in R/rag-http.R
 \name{rag_fetch_text}
 \alias{rag_fetch_text}
-\title{Fetch a URL as text with a single retry on transient failure}
+\title{Perform an httr2 request and return its body as text}
 \usage{
-rag_fetch_text(url, headers = character(), retries = 1L)
+rag_fetch_text(req, retries = 1L)
 }
 \arguments{
-\item{url}{URL to fetch.}
-
-\item{headers}{Optional named character vector of extra headers.}
+\item{req}{An \link[httr2:request]{httr2::request} object (already configured with
+path, query, auth, body, etc.).}
 
 \item{retries}{Number of retries on transient errors.}
 }
@@ -17,8 +16,9 @@ rag_fetch_text(url, headers = character(), retries = 1L)
 Response body as a character string, or \code{NULL} on failure.
 }
 \description{
-Returns \code{NULL} for 4xx (treats them as not-found) and after retries on
-5xx / network errors. Used by source gatherers that prefer to skip
-missing pages rather than abort the whole indexer run.
+Treats every non-2xx response as a soft failure: warns on
+unexpected statuses, returns \code{NULL} on 4xx/5xx and on network
+errors. Designed so source gatherers can skip a missing page
+rather than abort the whole indexer run.
 }
 \keyword{internal}

@@ -2,14 +2,13 @@
 % Please edit documentation in R/rag-http.R
 \name{rag_fetch_json}
 \alias{rag_fetch_json}
-\title{Fetch a URL and parse its body as JSON}
+\title{Perform an httr2 request and parse its body as JSON}
 \usage{
-rag_fetch_json(url, headers = character(), retries = 1L)
+rag_fetch_json(req, retries = 1L)
 }
 \arguments{
-\item{url}{URL to fetch.}
-
-\item{headers}{Optional named character vector of extra headers.}
+\item{req}{An \link[httr2:request]{httr2::request} object (already configured with
+path, query, auth, body, etc.).}
 
 \item{retries}{Number of retries on transient errors.}
 }
@@ -17,6 +16,6 @@ rag_fetch_json(url, headers = character(), retries = 1L)
 Parsed JSON, or \code{NULL} on failure.
 }
 \description{
-Fetch a URL and parse its body as JSON
+Perform an httr2 request and parse its body as JSON
 }
 \keyword{internal}

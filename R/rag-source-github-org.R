@@ -35,74 +35,76 @@ gather_github_org <- function(src) {
     "{length(teams)} teams, {length(repos)} repos ({length(live_repos)} live)"
   )
 
-  out <- list()
+  team_chunks <- Filter(
+    Negate(is.null),
+    lapply(teams, team_to_chunk, src = src)
+  )
+  repo_chunks <- unlist(
+    lapply(live_repos, repo_to_chunks, token = token),
+    recursive = FALSE
+  ) %||%
+    list()
 
-  for (team in teams) {
-    if (!is.null(team$privacy) && !identical(team$privacy, "closed")) {
-      next
-    }
-    out[[length(out) + 1L]] <- list(
-      text = render_team_text(team),
-      heading = "",
-      title = paste0("Team: ", team$name),
-      repo = paste0(src$org, "/.teams"),
-      path = team$slug,
-      url = team$html_url %||%
-        paste0("https://github.com/orgs/", src$org, "/teams/", team$slug),
-      date = 0L,
-      lastmod = 0L,
-      chunk_idx = 0L
-    )
+  chunks <- c(team_chunks, repo_chunks)
+  cli::cli_alert_info("github-org: {length(chunks)} chunks")
+  chunks
+}
+
+team_to_chunk <- function(team, src) {
+  if (!is.null(team$privacy) && !identical(team$privacy, "closed")) {
+    return(NULL)
   }
+  list(
+    text = render_team_text(team),
+    heading = "",
+    title = paste0("Team: ", team$name),
+    repo = paste0(src$org, "/.teams"),
+    path = team$slug,
+    url = team$html_url %||%
+      paste0("https://github.com/orgs/", src$org, "/teams/", team$slug),
+    date = 0L,
+    lastmod = 0L,
+    chunk_idx = 0L
+  )
+}
 
-  for (repo in live_repos) {
-    out[[length(out) + 1L]] <- list(
-      text = render_repo_meta_text(repo),
-      heading = "",
-      title = repo$full_name,
+repo_to_chunks <- function(repo, token) {
+  meta_chunk <- list(
+    text = render_repo_meta_text(repo),
+    heading = "",
+    title = repo$full_name,
+    repo = repo$full_name,
+    path = "_meta",
+    url = repo$html_url,
+    date = 0L,
+    lastmod = 0L,
+    chunk_idx = 0L
+  )
+  readme <- gh_fetch_readme(repo$full_name)
+  if (is.null(readme) || !nzchar(trimws(readme))) {
+    return(list(meta_chunk))
+  }
+  readme_chunks <- assign_chunk_idx(chunk_markdown(
+    readme,
+    meta = list(
       repo = repo$full_name,
-      path = "_meta",
+      path = "README.md",
       url = repo$html_url,
-      date = 0L,
-      lastmod = 0L,
-      chunk_idx = 0L
+      fallback_title = paste0(repo$full_name, " README")
     )
-
-    readme <- gh_fetch_readme(repo$full_name)
-    if (!is.null(readme) && nzchar(trimws(readme))) {
-      readme_chunks <- chunk_markdown(
-        readme,
-        meta = list(
-          repo = repo$full_name,
-          path = "README.md",
-          url = repo$html_url,
-          fallback_title = paste0(repo$full_name, " README")
-        )
-      )
-      for (i in seq_along(readme_chunks)) {
-        readme_chunks[[i]]$chunk_idx <- i - 1L
-        out[[length(out) + 1L]] <- readme_chunks[[i]]
-      }
-    }
-  }
-
-  cli::cli_alert_info("github-org: {length(out)} chunks")
-  out
+  ))
+  c(list(meta_chunk), readme_chunks)
 }
 
 render_team_text <- function(team) {
-  lines <- c(
-    paste0("Team name: ", team$name),
-    paste0("Slug: ", team$slug),
-    paste0("Description: ", team$description %||% "(no description)")
+  fields <- c(
+    `Team name` = team$name,
+    Slug = team$slug,
+    Description = team$description %||% "(no description)",
+    `Parent team` = if (!is.null(team$parent)) team$parent$name,
+    Visibility = team$privacy
   )
-  if (!is.null(team$parent)) {
-    lines <- c(lines, paste0("Parent team: ", team$parent$name))
-  }
-  if (!is.null(team$privacy)) {
-    lines <- c(lines, paste0("Visibility: ", team$privacy))
-  }
-  paste(lines, collapse = "\n")
+  paste(paste0(names(fields), ": ", fields), collapse = "\n")
 }
 
 render_repo_meta_text <- function(repo) {
@@ -111,16 +113,16 @@ render_repo_meta_text <- function(repo) {
   } else {
     "(none)"
   }
-  lines <- c(
-    paste0("Repository: ", repo$full_name),
-    paste0("Description: ", repo$description %||% "(no description)"),
-    paste0("Primary language: ", repo$language %||% "n/a"),
-    paste0("Topics: ", topics),
-    paste0("License: ", repo$license$spdx_id %||% "n/a"),
-    paste0("Homepage: ", repo$homepage %||% repo$html_url),
-    paste0("Visibility: ", if (isTRUE(repo$private)) "private" else "public")
+  fields <- c(
+    Repository = repo$full_name,
+    Description = repo$description %||% "(no description)",
+    `Primary language` = repo$language %||% "n/a",
+    Topics = topics,
+    License = repo$license$spdx_id %||% "n/a",
+    Homepage = repo$homepage %||% repo$html_url,
+    Visibility = if (isTRUE(repo$private)) "private" else "public"
   )
-  paste(lines, collapse = "\n")
+  paste(paste0(names(fields), ": ", fields), collapse = "\n")
 }
 
 gh_fetch_readme <- function(full_name) {

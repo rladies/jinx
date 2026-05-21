@@ -1,6 +1,26 @@
 YOUTUBE_API <- "https://www.googleapis.com/youtube/v3"
 YOUTUBE_MAX_DESCRIPTION_CHARS <- 4000L
 
+#' Build a base YouTube Data API v3 request
+#'
+#' Returns an [httr2::request] with the API base URL and `key` query
+#' parameter attached. Callers append path + extra query params:
+#'
+#' ```r
+#' youtube_request(key) |>
+#'   httr2::req_url_path_append("channels") |>
+#'   httr2::req_url_query(part = "contentDetails", id = channel_id)
+#' ```
+#'
+#' @param api_key YouTube Data API key.
+#' @return [httr2::request] object.
+#' @keywords internal
+youtube_request <- function(api_key) {
+  httr2::request(YOUTUBE_API) |>
+    httr2::req_url_query(key = api_key) |>
+    httr2::req_user_agent(RAG_USER_AGENT)
+}
+
 #' Gather chunks from a YouTube channel's uploads playlist
 #'
 #' Requires `YOUTUBE_API_KEY` in the environment. Pages through every
@@ -28,44 +48,46 @@ gather_youtube_channel <- function(src) {
   items <- youtube_playlist_items(uploads_id, api_key)
   cli::cli_alert_info("youtube-channel: {length(items)} videos in playlist")
 
-  out <- list()
-  for (item in items) {
-    snippet <- item$snippet %||% list()
-    video_id <- snippet$resourceId$videoId
-    if (is.null(video_id)) {
-      next
-    }
-    title <- snippet$title %||% "Untitled video"
-    if (title %in% c("Private video", "Deleted video")) {
-      next
-    }
-    description <- substr(
-      snippet$description %||% "",
-      1L,
-      YOUTUBE_MAX_DESCRIPTION_CHARS
-    )
-    published <- rag_parse_date(snippet$publishedAt)
-    url <- paste0("https://www.youtube.com/watch?v=", video_id)
-    out[[length(out) + 1L]] <- list(
-      text = format_youtube_video(title, snippet$publishedAt, description),
-      heading = "YouTube",
-      title = title,
-      repo = src$repo %||% "rladies/youtube",
-      path = paste0("video/", video_id),
-      url = url,
-      date = published,
-      lastmod = published,
-      chunk_idx = 0L
-    )
+  chunks <- lapply(items, video_to_chunk, src = src)
+  Filter(Negate(is.null), chunks)
+}
+
+video_to_chunk <- function(item, src) {
+  snippet <- item$snippet %||% list()
+  video_id <- snippet$resourceId$videoId
+  if (is.null(video_id)) {
+    return(NULL)
   }
-  out
+  title <- snippet$title %||% "Untitled video"
+  if (title %in% c("Private video", "Deleted video")) {
+    return(NULL)
+  }
+
+  description <- substr(
+    snippet$description %||% "",
+    1L,
+    YOUTUBE_MAX_DESCRIPTION_CHARS
+  )
+  published <- rag_parse_date(snippet$publishedAt)
+  list(
+    text = format_youtube_video(title, snippet$publishedAt, description),
+    heading = "YouTube",
+    title = title,
+    repo = src$repo %||% "rladies/youtube",
+    path = paste0("video/", video_id),
+    url = paste0("https://www.youtube.com/watch?v=", video_id),
+    date = published,
+    lastmod = published,
+    chunk_idx = 0L
+  )
 }
 
 format_youtube_video <- function(title, published_at, description) {
-  lines <- paste0("Title: ", title)
-  if (!is.null(published_at) && nzchar(published_at)) {
-    lines <- c(lines, paste0("Published: ", published_at))
-  }
+  fields <- c(
+    Title = title,
+    Published = if (length(published_at) && nzchar(published_at)) published_at
+  )
+  lines <- paste0(names(fields), ": ", fields)
   if (nzchar(description)) {
     lines <- c(lines, "", trimws(description))
   }
@@ -73,35 +95,34 @@ format_youtube_video <- function(title, published_at, description) {
 }
 
 youtube_uploads_playlist <- function(channel_id, api_key) {
-  url <- paste0(
-    YOUTUBE_API,
-    "/channels?part=contentDetails&id=",
-    utils::URLencode(channel_id, reserved = TRUE),
-    "&key=",
-    api_key
-  )
-  body <- rag_fetch_json(url)
+  body <- youtube_request(api_key) |>
+    httr2::req_url_path_append("channels") |>
+    httr2::req_url_query(part = "contentDetails", id = channel_id) |>
+    rag_fetch_json()
   body$items[[1]]$contentDetails$relatedPlaylists$uploads
 }
 
 youtube_playlist_items <- function(playlist_id, api_key) {
+  base <- youtube_request(api_key) |>
+    httr2::req_url_path_append("playlistItems") |>
+    httr2::req_url_query(
+      part = "snippet",
+      maxResults = 50L,
+      playlistId = playlist_id
+    )
   out <- list()
   page_token <- ""
   repeat {
-    url <- paste0(
-      YOUTUBE_API,
-      "/playlistItems?part=snippet&maxResults=50&playlistId=",
-      utils::URLencode(playlist_id, reserved = TRUE),
-      "&key=",
-      api_key,
-      if (nzchar(page_token)) paste0("&pageToken=", page_token) else ""
-    )
-    body <- rag_fetch_json(url)
+    req <- if (nzchar(page_token)) {
+      httr2::req_url_query(base, pageToken = page_token)
+    } else {
+      base
+    }
+    body <- rag_fetch_json(req)
     if (is.null(body)) {
       break
     }
-    items <- body$items %||% list()
-    out <- c(out, items)
+    out <- c(out, body$items %||% list())
     if (is.null(body$nextPageToken) || !nzchar(body$nextPageToken)) {
       break
     }

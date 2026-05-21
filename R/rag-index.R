@@ -27,8 +27,7 @@ rag_index_build <- function(
   if (!nzchar(api_token)) {
     cli::cli_abort("CLOUDFLARE_API_TOKEN is not set.")
   }
-  account_id <- account_id %||%
-    Sys.getenv("CLOUDFLARE_ACCOUNT_ID", unset = NA)
+  account_id <- account_id %||% Sys.getenv("CLOUDFLARE_ACCOUNT_ID", unset = NA)
   if (is.na(account_id) || !nzchar(account_id)) {
     account_id <- cloudflare_account_id(api_token)
   }
@@ -38,52 +37,13 @@ rag_index_build <- function(
     sources <- load_rag_sources()
   }
 
-  chunks <- list()
-  for (src in sources) {
-    cli::cli_alert_info("Gathering {.field {src$source_type}} ({src$type})")
-    src_chunks <- gather_rag_source(src)
-    for (c in src_chunks) {
-      c$source_type <- src$source_type
-      chunks[[length(chunks) + 1L]] <- c
-    }
-  }
+  chunks <- gather_all_chunks(sources)
   cli::cli_alert_success("Total chunks: {length(chunks)}")
   if (length(chunks) == 0L) {
     cli::cli_abort("No chunks produced - aborting upsert.")
   }
 
-  vectors <- list()
-  total <- length(chunks)
-  for (i in seq(1L, total, by = batch_size)) {
-    j <- min(i + batch_size - 1L, total)
-    batch <- chunks[i:j]
-    embeds <- cloudflare_embed(
-      vapply(batch, function(c) c$text, character(1)),
-      account_id = account_id,
-      api_token = api_token,
-      model = model
-    )
-    for (k in seq_along(batch)) {
-      c <- batch[[k]]
-      vectors[[length(vectors) + 1L]] <- list(
-        id = rag_chunk_id(c$repo, c$path, c$chunk_idx),
-        values = embeds[[k]],
-        metadata = list(
-          url = c$url,
-          title = c$title,
-          heading = c$heading,
-          repo = c$repo,
-          path = c$path,
-          text = c$text,
-          source_type = c$source_type,
-          date = c$date %||% 0L,
-          lastmod = c$lastmod %||% c$date %||% 0L
-        )
-      )
-    }
-    cli::cli_alert_info("Embedded {j}/{total}")
-  }
-
+  vectors <- embed_chunks(chunks, account_id, api_token, model, batch_size)
   result <- cloudflare_vectorize_upsert(
     vectors,
     account_id = account_id,
@@ -94,6 +54,58 @@ rag_index_build <- function(
     "Upserted {length(vectors)} vectors to {.field {index_name}}."
   )
   invisible(list(chunks = chunks, upsert = result))
+}
+
+gather_all_chunks <- function(sources) {
+  per_source <- lapply(sources, function(src) {
+    cli::cli_alert_info("Gathering {.field {src$source_type}} ({src$type})")
+    src_chunks <- gather_rag_source(src)
+    lapply(src_chunks, function(c) {
+      c$source_type <- src$source_type
+      c
+    })
+  })
+  unlist(per_source, recursive = FALSE) %||% list()
+}
+
+embed_chunks <- function(chunks, account_id, api_token, model, batch_size) {
+  total <- length(chunks)
+  batches <- split(chunks, ceiling(seq_along(chunks) / batch_size))
+  per_batch <- Map(
+    function(batch, i) {
+      embeds <- cloudflare_embed(
+        vapply(batch, function(c) c$text, character(1)),
+        account_id = account_id,
+        api_token = api_token,
+        model = model
+      )
+      cli::cli_alert_info(
+        "Embedded {min(i * batch_size, total)}/{total}"
+      )
+      Map(chunk_to_vector, batch, embeds)
+    },
+    batches,
+    seq_along(batches)
+  )
+  unlist(per_batch, recursive = FALSE)
+}
+
+chunk_to_vector <- function(chunk, embedding) {
+  list(
+    id = rag_chunk_id(chunk$repo, chunk$path, chunk$chunk_idx),
+    values = embedding,
+    metadata = list(
+      url = chunk$url,
+      title = chunk$title,
+      heading = chunk$heading,
+      repo = chunk$repo,
+      path = chunk$path,
+      text = chunk$text,
+      source_type = chunk$source_type,
+      date = chunk$date %||% 0L,
+      lastmod = chunk$lastmod %||% chunk$date %||% 0L
+    )
+  )
 }
 
 #' Load the configured RAG source list

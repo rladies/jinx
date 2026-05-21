@@ -1,4 +1,4 @@
-# jinx (development version)
+# jinx 0.1.1
 
 ## RAG: indexer moved to R
 

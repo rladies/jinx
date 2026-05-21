@@ -9,31 +9,45 @@
 #' @return List of chunk records.
 #' @keywords internal
 gather_github_files <- function(src) {
-  root_env <- src$root_env %||% "JINX_PATH"
-  root <- Sys.getenv(root_env, unset = "..")
-  out <- list()
-  for (entry in src$files) {
-    abs_path <- file.path(root, entry$path)
-    if (!file.exists(abs_path)) {
-      cli::cli_warn("github-files: {entry$path} missing at {abs_path}")
-      next
-    }
-    md <- readLines(abs_path, warn = FALSE, encoding = "UTF-8") |>
-      paste(collapse = "\n")
-    chunks <- chunk_markdown(
-      md,
-      meta = list(
-        repo = src$repo,
-        path = entry$path,
-        url = entry$url,
-        fallback_title = entry$title %||% entry$path
-      )
-    )
-    for (i in seq_along(chunks)) {
-      chunks[[i]]$chunk_idx <- i - 1L
-      out[[length(out) + 1L]] <- chunks[[i]]
-    }
+  root <- Sys.getenv(src$root_env %||% "JINX_PATH", unset = "..")
+  per_file <- lapply(src$files, local_file_chunks, root = root, src = src)
+  chunks <- unlist(Filter(Negate(is.null), per_file), recursive = FALSE) %||%
+    list()
+  cli::cli_alert_info("github-files: {length(chunks)} chunks from {src$repo}")
+  chunks
+}
+
+local_file_chunks <- function(entry, root, src) {
+  abs_path <- file.path(root, entry$path)
+  if (!file.exists(abs_path)) {
+    cli::cli_warn("github-files: {entry$path} missing at {abs_path}")
+    return(NULL)
   }
-  cli::cli_alert_info("github-files: {length(out)} chunks from {src$repo}")
-  out
+  md <- paste(
+    readLines(abs_path, warn = FALSE, encoding = "UTF-8"),
+    collapse = "\n"
+  )
+  chunks <- chunk_markdown(
+    md,
+    meta = list(
+      repo = src$repo,
+      path = entry$path,
+      url = entry$url,
+      fallback_title = entry$title %||% entry$path
+    )
+  )
+  assign_chunk_idx(chunks)
+}
+
+#' Assign zero-based `chunk_idx` to each element of a chunk list
+#' @keywords internal
+assign_chunk_idx <- function(chunks) {
+  Map(
+    function(chunk, idx) {
+      chunk$chunk_idx <- idx
+      chunk
+    },
+    chunks,
+    seq_along(chunks) - 1L
+  )
 }

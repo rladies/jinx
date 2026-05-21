@@ -10,30 +10,25 @@ AWESOME_MIN_CHARS <- 60L
 #' @return List of chunk records.
 #' @keywords internal
 gather_awesome_creations <- function(src) {
-  out <- list()
-  for (feed in src$feeds) {
-    items <- rag_fetch_json(feed$url)
-    if (!is.list(items) || length(items) == 0L) {
-      cli::cli_alert_warning("awesome-creations: no array at {feed$url}")
-      next
-    }
-    kept <- 0L
-    for (item in items) {
-      chunk <- format_awesome_item(item, feed, src)
-      if (is.null(chunk)) {
-        next
-      }
-      if (nchar(chunk$text) < AWESOME_MIN_CHARS) {
-        next
-      }
-      out[[length(out) + 1L]] <- chunk
-      kept <- kept + 1L
-    }
-    cli::cli_alert_info(
-      "awesome-creations: {kept}/{length(items)} from {feed$kind}"
-    )
+  per_feed <- lapply(src$feeds, gather_awesome_feed, src = src)
+  unlist(per_feed, recursive = FALSE) %||% list()
+}
+
+gather_awesome_feed <- function(feed, src) {
+  items <- rag_fetch_json(httr2::request(feed$url))
+  if (!is.list(items) || length(items) == 0L) {
+    cli::cli_alert_warning("awesome-creations: no array at {feed$url}")
+    return(list())
   }
-  out
+  chunks <- lapply(items, format_awesome_item, feed = feed, src = src)
+  chunks <- Filter(
+    function(c) !is.null(c) && nchar(c$text) >= AWESOME_MIN_CHARS,
+    chunks
+  )
+  cli::cli_alert_info(
+    "awesome-creations: {length(chunks)}/{length(items)} from {feed$kind}"
+  )
+  chunks
 }
 
 format_awesome_item <- function(item, feed, src) {
@@ -52,23 +47,17 @@ format_awesome_package <- function(pkg, src) {
   if (is.null(url) || !nzchar(url)) {
     return(NULL)
   }
-  lines <- c(
-    paste0("Package: ", pkg$name),
-    paste0("Title: ", pkg$title %||% pkg$name)
-  )
+
   authors <- format_authors(pkg$authors)
-  if (nzchar(authors)) {
-    lines <- c(lines, paste0("Authors: ", authors))
-  }
-  if (!is.null(pkg$repo_url)) {
-    lines <- c(lines, paste0("Repository: ", pkg$repo_url))
-  }
-  if (!is.null(pkg$pkdown_url)) {
-    lines <- c(lines, paste0("Documentation: ", pkg$pkdown_url))
-  }
-  if (!is.null(pkg$last_updated)) {
-    lines <- c(lines, paste0("Last updated: ", pkg$last_updated))
-  }
+  fields <- c(
+    Package = pkg$name,
+    Title = pkg$title %||% pkg$name,
+    Authors = if (nzchar(authors)) authors,
+    Repository = pkg$repo_url,
+    Documentation = pkg$pkdown_url,
+    `Last updated` = pkg$last_updated
+  )
+  lines <- paste0(names(fields), ": ", fields)
   if (!is.null(pkg$description) && nzchar(pkg$description)) {
     lines <- c(lines, "", trimws(gsub("\\s+", " ", pkg$description)))
   }
@@ -95,17 +84,14 @@ format_awesome_content <- function(item, src) {
     return(NULL)
   }
   url <- normalise_awesome_url(item$url)
-  lines <- c(
-    paste0("Title: ", item$title %||% url),
-    paste0("Type: ", item$type %||% "content")
-  )
-  if (!is.null(item$language)) {
-    lines <- c(lines, paste0("Language: ", item$language))
-  }
   authors <- format_authors(item$authors)
-  if (nzchar(authors)) {
-    lines <- c(lines, paste0("Authors: ", authors))
-  }
+  fields <- c(
+    Title = item$title %||% url,
+    Type = item$type %||% "content",
+    Language = item$language,
+    Authors = if (nzchar(authors)) authors
+  )
+  lines <- paste0(names(fields), ": ", fields)
   if (!is.null(item$description) && nzchar(item$description)) {
     lines <- c(lines, "", trimws(gsub("\\s+", " ", item$description)))
   }
@@ -139,8 +125,6 @@ normalise_awesome_url <- function(raw) {
 }
 
 slugify_awesome <- function(s) {
-  s <- tolower(as.character(s))
-  s <- gsub("[^a-z0-9]+", "-", s)
-  s <- gsub("(^-+|-+$)", "", s)
+  s <- gsub("(^-+|-+$)", "", gsub("[^a-z0-9]+", "-", tolower(as.character(s))))
   substr(s, 1L, 80L)
 }

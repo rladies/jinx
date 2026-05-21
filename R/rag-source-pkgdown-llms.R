@@ -25,29 +25,32 @@ gather_pkgdown_llms <- function(src) {
   )
   cli::cli_alert_info("{length(repos)} repos with root DESCRIPTION")
 
-  out <- list()
-  for (repo in repos) {
-    base_url <- paste0("https://rladies.github.io/", repo$name)
-    text <- rag_fetch_text(paste0(base_url, "/llms.txt"))
-    if (is.null(text) || !nzchar(text)) {
-      next
-    }
-    chunks <- chunk_markdown(
-      text,
-      meta = list(
-        repo = repo$full_name,
-        path = "llms.txt",
-        url = base_url,
-        fallback_title = paste0(repo$name, " (R package)")
-      )
-    )
-    for (i in seq_along(chunks)) {
-      chunks[[i]]$chunk_idx <- i - 1L
-      out[[length(out) + 1L]] <- chunks[[i]]
-    }
+  per_repo <- lapply(repos, pkgdown_llms_chunks)
+  chunks <- unlist(Filter(Negate(is.null), per_repo), recursive = FALSE) %||%
+    list()
+  cli::cli_alert_info("pkgdown-llms: {length(chunks)} chunks")
+  chunks
+}
+
+pkgdown_llms_chunks <- function(repo) {
+  base <- httr2::request("https://rladies.github.io") |>
+    httr2::req_url_path_append(repo$name)
+  text <- base |>
+    httr2::req_url_path_append("llms.txt") |>
+    rag_fetch_text()
+  if (is.null(text) || !nzchar(text)) {
+    return(NULL)
   }
-  cli::cli_alert_info("pkgdown-llms: {length(out)} chunks")
-  out
+  chunks <- chunk_markdown(
+    text,
+    meta = list(
+      repo = repo$full_name,
+      path = "llms.txt",
+      url = base$url,
+      fallback_title = paste0(repo$name, " (R package)")
+    )
+  )
+  assign_chunk_idx(chunks)
 }
 
 gh_list_org_r_repos <- function(org) {

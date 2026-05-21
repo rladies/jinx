@@ -1,3 +1,24 @@
+CLOUDFLARE_API <- "https://api.cloudflare.com/client/v4"
+
+#' Build a base authenticated Cloudflare API request
+#'
+#' Returns an [httr2::request] pointed at the v4 API root, with the
+#' bearer token attached. Callers append path segments per endpoint:
+#'
+#' ```r
+#' cloudflare_request(token) |>
+#'   httr2::req_url_path_append("accounts", id, "ai", "run", model)
+#' ```
+#'
+#' @param api_token Cloudflare API token.
+#' @return [httr2::request] object.
+#' @keywords internal
+cloudflare_request <- function(api_token) {
+  httr2::request(CLOUDFLARE_API) |>
+    httr2::req_auth_bearer_token(api_token) |>
+    httr2::req_user_agent(RAG_USER_AGENT)
+}
+
 #' Embed texts with a Cloudflare Workers AI model
 #'
 #' Calls the Cloudflare REST endpoint
@@ -15,17 +36,10 @@ cloudflare_embed <- function(
   api_token,
   model = "@cf/baai/bge-base-en-v1.5"
 ) {
-  resp <- httr2::request(
-    sprintf(
-      "https://api.cloudflare.com/client/v4/accounts/%s/ai/run/%s",
-      account_id,
-      model
-    )
-  ) |>
-    httr2::req_headers(Authorization = paste("Bearer", api_token)) |>
+  resp <- cloudflare_request(api_token) |>
+    httr2::req_url_path_append("accounts", account_id, "ai", "run", model) |>
     httr2::req_body_json(list(text = as.list(texts))) |>
     httr2::req_perform()
-
   body <- httr2::resp_body_json(resp)
   lapply(body$result$data, as.numeric)
 }
@@ -54,20 +68,18 @@ cloudflare_vectorize_upsert <- function(
     ),
     collapse = "\n"
   )
-  resp <- httr2::request(
-    sprintf(
-      "https://api.cloudflare.com/client/v4/accounts/%s/vectorize/v2/indexes/%s/upsert",
+  resp <- cloudflare_request(api_token) |>
+    httr2::req_url_path_append(
+      "accounts",
       account_id,
-      index_name
-    )
-  ) |>
-    httr2::req_headers(
-      Authorization = paste("Bearer", api_token),
-      `Content-Type` = "application/x-ndjson"
+      "vectorize",
+      "v2",
+      "indexes",
+      index_name,
+      "upsert"
     ) |>
     httr2::req_body_raw(ndjson, type = "application/x-ndjson") |>
     httr2::req_perform()
-
   httr2::resp_body_json(resp)
 }
 
@@ -79,11 +91,10 @@ cloudflare_vectorize_upsert <- function(
 #' @return Account ID string.
 #' @export
 cloudflare_account_id <- function(api_token) {
-  resp <- httr2::request("https://api.cloudflare.com/client/v4/accounts") |>
-    httr2::req_headers(Authorization = paste("Bearer", api_token)) |>
+  resp <- cloudflare_request(api_token) |>
+    httr2::req_url_path_append("accounts") |>
     httr2::req_perform()
-  body <- httr2::resp_body_json(resp)
-  accounts <- body$result %||% list()
+  accounts <- httr2::resp_body_json(resp)$result %||% list()
   if (length(accounts) == 0L) {
     cli::cli_abort("Cloudflare token has no accessible accounts.")
   }
