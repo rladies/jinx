@@ -1,4 +1,29 @@
-RAG_USER_AGENT <- "rladies-jinx-indexer/0.1 (+https://github.com/rladies/jinx)"
+#' Default User-Agent string used by the RAG indexer's HTTP calls
+#'
+#' Exposed as a function (rather than a hidden package constant) so
+#' every helper that needs a User-Agent default can list it in its
+#' signature, e.g. `cloudflare_request(token, user_agent = rag_user_agent())`.
+#'
+#' @return Character scalar.
+#' @keywords internal
+rag_user_agent <- function() {
+  "rladies-jinx-indexer/0.1 (+https://github.com/rladies/jinx)"
+}
+
+#' Build a plain httr2 request with the indexer's User-Agent attached
+#'
+#' Use for "bare" URL fetches (sitemaps, Hugo pages, generic JSON
+#' feeds) that don't go through one of the API-specific base-request
+#' helpers (`cloudflare_request`, `github_request`, `youtube_request`).
+#'
+#' @param url Target URL.
+#' @param user_agent User-Agent header to attach.
+#' @return [httr2::request] object.
+#' @keywords internal
+rag_request <- function(url, user_agent = rag_user_agent()) {
+  httr2::request(url) |>
+    httr2::req_user_agent(user_agent)
+}
 
 #' Perform an httr2 request and return its body as text
 #'
@@ -7,14 +32,16 @@ RAG_USER_AGENT <- "rladies-jinx-indexer/0.1 (+https://github.com/rladies/jinx)"
 #' errors. Designed so source gatherers can skip a missing page
 #' rather than abort the whole indexer run.
 #'
+#' Caller is responsible for attaching a User-Agent (via
+#' `rag_request()` or one of the API-specific base-request helpers).
+#'
 #' @param req An [httr2::request] object (already configured with
-#'   path, query, auth, body, etc.).
+#'   path, query, auth, body, headers).
 #' @param retries Number of retries on transient errors.
 #' @return Response body as a character string, or `NULL` on failure.
 #' @keywords internal
 rag_fetch_text <- function(req, retries = 1L) {
   req <- req |>
-    httr2::req_user_agent(RAG_USER_AGENT) |>
     httr2::req_retry(max_tries = retries + 1L) |>
     httr2::req_error(is_error = function(resp) FALSE)
   resp <- tryCatch(httr2::req_perform(req), error = function(e) NULL)

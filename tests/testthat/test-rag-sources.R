@@ -224,8 +224,9 @@ describe("hugo URL helpers", {
   })
 
   it("is_skipped_url matches the configured skip patterns", {
-    expect_true(is_skipped_url("https://x/directory/jane-doe"))
-    expect_false(is_skipped_url("https://x/directory/"))
+    patterns <- c("^/directory/[^/]+/?$")
+    expect_true(is_skipped_url("https://x/directory/jane-doe", patterns))
+    expect_false(is_skipped_url("https://x/directory/", patterns))
   })
 
   it("normalise_hugo_url drops trailing index.html", {

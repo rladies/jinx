@@ -4,10 +4,12 @@
 \alias{gather_awesome_creations}
 \title{Gather chunks from RLadies+ awesome-creations feeds}
 \usage{
-gather_awesome_creations(src)
+gather_awesome_creations(src, min_chars = src$min_chars \%||\% 60L)
 }
 \arguments{
 \item{src}{Source spec list.}
+
+\item{min_chars}{Drop chunks shorter than this many characters.}
 }
 \value{
 List of chunk records.

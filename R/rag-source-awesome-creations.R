@@ -1,5 +1,3 @@
-AWESOME_MIN_CHARS <- 60L
-
 #' Gather chunks from RLadies+ awesome-creations feeds
 #'
 #' Reads one or more JSON feeds (packages or content) and emits one
@@ -7,22 +5,28 @@ AWESOME_MIN_CHARS <- 60L
 #' `kind` of "package" or "content", and `url`).
 #'
 #' @param src Source spec list.
+#' @param min_chars Drop chunks shorter than this many characters.
 #' @return List of chunk records.
 #' @keywords internal
-gather_awesome_creations <- function(src) {
-  per_feed <- lapply(src$feeds, gather_awesome_feed, src = src)
+gather_awesome_creations <- function(src, min_chars = src$min_chars %||% 60L) {
+  per_feed <- lapply(
+    src$feeds,
+    gather_awesome_feed,
+    src = src,
+    min_chars = min_chars
+  )
   unlist(per_feed, recursive = FALSE) %||% list()
 }
 
-gather_awesome_feed <- function(feed, src) {
-  items <- rag_fetch_json(httr2::request(feed$url))
+gather_awesome_feed <- function(feed, src, min_chars) {
+  items <- rag_fetch_json(rag_request(feed$url))
   if (!is.list(items) || length(items) == 0L) {
     cli::cli_alert_warning("awesome-creations: no array at {feed$url}")
     return(list())
   }
   chunks <- lapply(items, format_awesome_item, feed = feed, src = src)
   chunks <- Filter(
-    function(c) !is.null(c) && nchar(c$text) >= AWESOME_MIN_CHARS,
+    function(c) !is.null(c) && nchar(c$text) >= min_chars,
     chunks
   )
   cli::cli_alert_info(

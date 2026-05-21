@@ -4,10 +4,15 @@
 \alias{gather_pkgdown_llms}
 \title{Gather chunks from pkgdown llms.txt files across an org's R packages}
 \usage{
-gather_pkgdown_llms(src)
+gather_pkgdown_llms(
+  src,
+  pkgdown_base_url = src$pkgdown_base_url \%||\% "https://rladies.github.io"
+)
 }
 \arguments{
 \item{src}{Source spec list.}
+
+\item{pkgdown_base_url}{Base URL for the org's pkgdown sites.}
 }
 \value{
 List of chunk records.

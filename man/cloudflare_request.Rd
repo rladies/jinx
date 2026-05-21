@@ -4,10 +4,18 @@
 \alias{cloudflare_request}
 \title{Build a base authenticated Cloudflare API request}
 \usage{
-cloudflare_request(api_token)
+cloudflare_request(
+  api_token,
+  user_agent = rag_user_agent(),
+  base_url = "https://api.cloudflare.com/client/v4"
+)
 }
 \arguments{
 \item{api_token}{Cloudflare API token.}
+
+\item{user_agent}{User-Agent header to attach.}
+
+\item{base_url}{Cloudflare API base URL.}
 }
 \value{
 \link[httr2:request]{httr2::request} object.

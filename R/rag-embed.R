@@ -1,5 +1,3 @@
-CLOUDFLARE_API <- "https://api.cloudflare.com/client/v4"
-
 #' Build a base authenticated Cloudflare API request
 #'
 #' Returns an [httr2::request] pointed at the v4 API root, with the
@@ -11,12 +9,18 @@ CLOUDFLARE_API <- "https://api.cloudflare.com/client/v4"
 #' ```
 #'
 #' @param api_token Cloudflare API token.
+#' @param user_agent User-Agent header to attach.
+#' @param base_url Cloudflare API base URL.
 #' @return [httr2::request] object.
 #' @keywords internal
-cloudflare_request <- function(api_token) {
-  httr2::request(CLOUDFLARE_API) |>
+cloudflare_request <- function(
+  api_token,
+  user_agent = rag_user_agent(),
+  base_url = "https://api.cloudflare.com/client/v4"
+) {
+  httr2::request(base_url) |>
     httr2::req_auth_bearer_token(api_token) |>
-    httr2::req_user_agent(RAG_USER_AGENT)
+    httr2::req_user_agent(user_agent)
 }
 
 #' Embed texts with a Cloudflare Workers AI model

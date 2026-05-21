@@ -4,10 +4,23 @@
 \alias{gather_hugo_site}
 \title{Gather chunks from a Hugo site by crawling its sitemap}
 \usage{
-gather_hugo_site(src)
+gather_hugo_site(
+  src,
+  min_chars = src$min_chars \%||\% 200L,
+  skip_path_patterns = src$skip_path_patterns \%||\% c("^/directory/[^/]+/?$"),
+  progress_every = src$progress_every \%||\% 100L
+)
 }
 \arguments{
 \item{src}{Source spec list.}
+
+\item{min_chars}{Drop pages whose extracted markdown is shorter
+than this many characters.}
+
+\item{skip_path_patterns}{Perl-compatible regex patterns; URLs
+whose path matches any of them are skipped.}
+
+\item{progress_every}{Log a progress line every N URLs.}
 }
 \value{
 List of chunk records.

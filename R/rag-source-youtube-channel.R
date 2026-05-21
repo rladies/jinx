@@ -1,6 +1,3 @@
-YOUTUBE_API <- "https://www.googleapis.com/youtube/v3"
-YOUTUBE_MAX_DESCRIPTION_CHARS <- 4000L
-
 #' Build a base YouTube Data API v3 request
 #'
 #' Returns an [httr2::request] with the API base URL and `key` query
@@ -13,12 +10,18 @@ YOUTUBE_MAX_DESCRIPTION_CHARS <- 4000L
 #' ```
 #'
 #' @param api_key YouTube Data API key.
+#' @param user_agent User-Agent header to attach.
+#' @param base_url YouTube Data API base URL.
 #' @return [httr2::request] object.
 #' @keywords internal
-youtube_request <- function(api_key) {
-  httr2::request(YOUTUBE_API) |>
+youtube_request <- function(
+  api_key,
+  user_agent = rag_user_agent(),
+  base_url = "https://www.googleapis.com/youtube/v3"
+) {
+  httr2::request(base_url) |>
     httr2::req_url_query(key = api_key) |>
-    httr2::req_user_agent(RAG_USER_AGENT)
+    httr2::req_user_agent(user_agent)
 }
 
 #' Gather chunks from a YouTube channel's uploads playlist
@@ -29,9 +32,13 @@ youtube_request <- function(api_key) {
 #' `repo`.
 #'
 #' @param src Source spec list.
+#' @param max_description_chars Cap on bytes of description kept per video.
 #' @return List of chunk records.
 #' @keywords internal
-gather_youtube_channel <- function(src) {
+gather_youtube_channel <- function(
+  src,
+  max_description_chars = src$max_description_chars %||% 4000L
+) {
   api_key <- Sys.getenv("YOUTUBE_API_KEY", unset = "")
   if (!nzchar(api_key)) {
     cli::cli_alert_warning("YOUTUBE_API_KEY not set - skipping youtube-channel")
@@ -48,11 +55,16 @@ gather_youtube_channel <- function(src) {
   items <- youtube_playlist_items(uploads_id, api_key)
   cli::cli_alert_info("youtube-channel: {length(items)} videos in playlist")
 
-  chunks <- lapply(items, video_to_chunk, src = src)
+  chunks <- lapply(
+    items,
+    video_to_chunk,
+    src = src,
+    max_description_chars = max_description_chars
+  )
   Filter(Negate(is.null), chunks)
 }
 
-video_to_chunk <- function(item, src) {
+video_to_chunk <- function(item, src, max_description_chars) {
   snippet <- item$snippet %||% list()
   video_id <- snippet$resourceId$videoId
   if (is.null(video_id)) {
@@ -66,7 +78,7 @@ video_to_chunk <- function(item, src) {
   description <- substr(
     snippet$description %||% "",
     1L,
-    YOUTUBE_MAX_DESCRIPTION_CHARS
+    max_description_chars
   )
   published <- rag_parse_date(snippet$publishedAt)
   list(
@@ -75,7 +87,9 @@ video_to_chunk <- function(item, src) {
     title = title,
     repo = src$repo %||% "rladies/youtube",
     path = paste0("video/", video_id),
-    url = paste0("https://www.youtube.com/watch?v=", video_id),
+    url = httr2::request("https://www.youtube.com/watch") |>
+      httr2::req_url_query(v = video_id) |>
+      _$url,
     date = published,
     lastmod = published,
     chunk_idx = 0L

@@ -4,10 +4,18 @@
 \alias{github_request}
 \title{Build a base authenticated GitHub API request}
 \usage{
-github_request(token)
+github_request(
+  token,
+  user_agent = rag_user_agent(),
+  base_url = "https://api.github.com"
+)
 }
 \arguments{
 \item{token}{GitHub bearer token.}
+
+\item{user_agent}{User-Agent header to attach.}
+
+\item{base_url}{GitHub REST API base URL.}
 }
 \value{
 \link[httr2:request]{httr2::request} object.

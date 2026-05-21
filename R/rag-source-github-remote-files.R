@@ -1,5 +1,3 @@
-GH_API <- "https://api.github.com"
-
 #' Build a base authenticated GitHub API request
 #'
 #' Returns an [httr2::request] pointed at the GitHub REST root with
@@ -9,16 +7,22 @@ GH_API <- "https://api.github.com"
 #' contents).
 #'
 #' @param token GitHub bearer token.
+#' @param user_agent User-Agent header to attach.
+#' @param base_url GitHub REST API base URL.
 #' @return [httr2::request] object.
 #' @keywords internal
-github_request <- function(token) {
-  httr2::request(GH_API) |>
+github_request <- function(
+  token,
+  user_agent = rag_user_agent(),
+  base_url = "https://api.github.com"
+) {
+  httr2::request(base_url) |>
     httr2::req_auth_bearer_token(token) |>
     httr2::req_headers(
       Accept = "application/vnd.github+json",
       `X-GitHub-Api-Version` = "2022-11-28"
     ) |>
-    httr2::req_user_agent(RAG_USER_AGENT)
+    httr2::req_user_agent(user_agent)
 }
 
 #' Gather chunks from individually-listed files in a remote GitHub repo

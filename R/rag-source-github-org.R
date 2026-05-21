@@ -61,7 +61,9 @@ team_to_chunk <- function(team, src) {
     repo = paste0(src$org, "/.teams"),
     path = team$slug,
     url = team$html_url %||%
-      paste0("https://github.com/orgs/", src$org, "/teams/", team$slug),
+      (httr2::request("https://github.com") |>
+        httr2::req_url_path_append("orgs", src$org, "teams", team$slug) |>
+        _$url),
     date = 0L,
     lastmod = 0L,
     chunk_idx = 0L

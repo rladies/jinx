@@ -8,7 +8,7 @@ rag_fetch_text(req, retries = 1L)
 }
 \arguments{
 \item{req}{An \link[httr2:request]{httr2::request} object (already configured with
-path, query, auth, body, etc.).}
+path, query, auth, body, headers).}
 
 \item{retries}{Number of retries on transient errors.}
 }
@@ -20,5 +20,9 @@ Treats every non-2xx response as a soft failure: warns on
 unexpected statuses, returns \code{NULL} on 4xx/5xx and on network
 errors. Designed so source gatherers can skip a missing page
 rather than abort the whole indexer run.
+}
+\details{
+Caller is responsible for attaching a User-Agent (via
+\code{rag_request()} or one of the API-specific base-request helpers).
 }
 \keyword{internal}

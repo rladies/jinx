@@ -1,7 +1,3 @@
-HUGO_SITE_MIN_CHARS <- 200L
-HUGO_SKIP_PATH_PATTERNS <- c("^/directory/[^/]+/?$")
-HUGO_PROGRESS_EVERY <- 100L
-
 #' Gather chunks from a Hugo site by crawling its sitemap
 #'
 #' Walks the sitemap (and any nested sitemap-index), filters out
@@ -12,21 +8,40 @@ HUGO_PROGRESS_EVERY <- 100L
 #' `sitemap`. Optional: `title_suffix`, `language_roots`.
 #'
 #' @param src Source spec list.
+#' @param min_chars Drop pages whose extracted markdown is shorter
+#'   than this many characters.
+#' @param skip_path_patterns Perl-compatible regex patterns; URLs
+#'   whose path matches any of them are skipped.
+#' @param progress_every Log a progress line every N URLs.
 #' @return List of chunk records.
 #' @keywords internal
-gather_hugo_site <- function(src) {
+gather_hugo_site <- function(
+  src,
+  min_chars = src$min_chars %||% 200L,
+  skip_path_patterns = src$skip_path_patterns %||% c("^/directory/[^/]+/?$"),
+  progress_every = src$progress_every %||% 100L
+) {
   cli::cli_alert_info("Crawling {src$repo} via {src$sitemap}")
   urls <- collect_sitemap_urls(src$sitemap)
   cli::cli_alert_info("  {length(urls)} URLs from sitemap")
 
   keep <- vapply(urls, is_english_url, logical(1), src = src) &
-    !vapply(urls, is_skipped_url, logical(1))
+    !vapply(urls, is_skipped_url, logical(1), patterns = skip_path_patterns)
   filtered <- urls[keep]
   cli::cli_alert_info("  {length(filtered)} to crawl after filters")
 
   per_url <- lapply(
     seq_along(filtered),
-    function(i) hugo_url_chunks(filtered[[i]], i, length(filtered), src)
+    function(i) {
+      hugo_url_chunks(
+        filtered[[i]],
+        i,
+        length(filtered),
+        src,
+        min_chars = min_chars,
+        progress_every = progress_every
+      )
+    }
   )
   chunks <- unlist(Filter(Negate(is.null), per_url), recursive = FALSE) %||%
     list()
@@ -34,16 +49,16 @@ gather_hugo_site <- function(src) {
   chunks
 }
 
-hugo_url_chunks <- function(url, i, total, src) {
-  if (i %% HUGO_PROGRESS_EVERY == 0L) {
+hugo_url_chunks <- function(url, i, total, src, min_chars, progress_every) {
+  if (i %% progress_every == 0L) {
     cli::cli_alert_info("  ...{i}/{total}")
   }
-  html <- rag_fetch_text(httr2::request(url))
+  html <- rag_fetch_text(rag_request(url))
   if (is.null(html)) {
     return(NULL)
   }
   page <- extract_hugo_page(html, normalise_hugo_url(url), src)
-  if (is.null(page) || nchar(page$markdown) < HUGO_SITE_MIN_CHARS) {
+  if (is.null(page) || nchar(page$markdown) < min_chars) {
     return(NULL)
   }
   assign_chunk_idx(chunk_markdown(
@@ -59,11 +74,11 @@ hugo_url_chunks <- function(url, i, total, src) {
   ))
 }
 
-collect_sitemap_urls <- function(url, depth = 0L) {
-  if (depth > 2L) {
+collect_sitemap_urls <- function(url, depth = 0L, max_depth = 2L) {
+  if (depth > max_depth) {
     return(character())
   }
-  xml <- rag_fetch_text(httr2::request(url))
+  xml <- rag_fetch_text(rag_request(url))
   if (is.null(xml)) {
     return(character())
   }
@@ -82,7 +97,12 @@ collect_sitemap_urls <- function(url, depth = 0L) {
   if (!is_index) {
     return(locs)
   }
-  unlist(lapply(locs, collect_sitemap_urls, depth = depth + 1L))
+  unlist(lapply(
+    locs,
+    collect_sitemap_urls,
+    depth = depth + 1L,
+    max_depth = max_depth
+  ))
 }
 
 extract_hugo_page <- function(html, url, src) {
@@ -181,10 +201,10 @@ is_english_url <- function(url, src) {
   !(first %in% unlist(src$language_roots$others %||% list()))
 }
 
-is_skipped_url <- function(url) {
+is_skipped_url <- function(url, patterns) {
   path <- httr2::url_parse(url)$path %||% "/"
   any(vapply(
-    HUGO_SKIP_PATH_PATTERNS,
+    patterns,
     function(p) grepl(p, path, perl = TRUE),
     logical(1)
   ))

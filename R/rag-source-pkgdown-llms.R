@@ -6,9 +6,13 @@
 #' Requires `GITHUB_TOKEN`. Required `src` fields: `org`.
 #'
 #' @param src Source spec list.
+#' @param pkgdown_base_url Base URL for the org's pkgdown sites.
 #' @return List of chunk records.
 #' @keywords internal
-gather_pkgdown_llms <- function(src) {
+gather_pkgdown_llms <- function(
+  src,
+  pkgdown_base_url = src$pkgdown_base_url %||% "https://rladies.github.io"
+) {
   token <- Sys.getenv("GITHUB_TOKEN", unset = "")
   if (!nzchar(token)) {
     cli::cli_alert_warning("GITHUB_TOKEN not set - skipping pkgdown-llms")
@@ -25,15 +29,19 @@ gather_pkgdown_llms <- function(src) {
   )
   cli::cli_alert_info("{length(repos)} repos with root DESCRIPTION")
 
-  per_repo <- lapply(repos, pkgdown_llms_chunks)
+  per_repo <- lapply(
+    repos,
+    pkgdown_llms_chunks,
+    pkgdown_base_url = pkgdown_base_url
+  )
   chunks <- unlist(Filter(Negate(is.null), per_repo), recursive = FALSE) %||%
     list()
   cli::cli_alert_info("pkgdown-llms: {length(chunks)} chunks")
   chunks
 }
 
-pkgdown_llms_chunks <- function(repo) {
-  base <- httr2::request("https://rladies.github.io") |>
+pkgdown_llms_chunks <- function(repo, pkgdown_base_url) {
+  base <- rag_request(pkgdown_base_url) |>
     httr2::req_url_path_append(repo$name)
   text <- base |>
     httr2::req_url_path_append("llms.txt") |>

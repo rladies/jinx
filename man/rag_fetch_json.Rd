@@ -8,7 +8,7 @@ rag_fetch_json(req, retries = 1L)
 }
 \arguments{
 \item{req}{An \link[httr2:request]{httr2::request} object (already configured with
-path, query, auth, body, etc.).}
+path, query, auth, body, headers).}
 
 \item{retries}{Number of retries on transient errors.}
 }

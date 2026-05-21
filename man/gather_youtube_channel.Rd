@@ -4,10 +4,15 @@
 \alias{gather_youtube_channel}
 \title{Gather chunks from a YouTube channel's uploads playlist}
 \usage{
-gather_youtube_channel(src)
+gather_youtube_channel(
+  src,
+  max_description_chars = src$max_description_chars \%||\% 4000L
+)
 }
 \arguments{
 \item{src}{Source spec list.}
+
+\item{max_description_chars}{Cap on bytes of description kept per video.}
 }
 \value{
 List of chunk records.

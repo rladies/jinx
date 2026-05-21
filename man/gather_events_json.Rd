@@ -4,17 +4,26 @@
 \alias{gather_events_json}
 \title{Gather chunks from a meetup events JSON feed}
 \usage{
-gather_events_json(src)
+gather_events_json(
+  src,
+  past_window_seconds = src$past_window_seconds \%||\% (365L * 24L * 60L * 60L),
+  min_chars = src$min_chars \%||\% 80L
+)
 }
 \arguments{
 \item{src}{Source spec list.}
+
+\item{past_window_seconds}{Drop \code{past} events older than this many
+seconds before now.}
+
+\item{min_chars}{Drop chunks shorter than this many characters.}
 }
 \value{
 List of chunk records.
 }
 \description{
 Reads an array of meetup events, drops cancelled events and past
-events older than one year, and emits one chunk per remaining event.
-Required \code{src} fields: \code{url}, \code{repo}.
+events older than \code{past_window_seconds}, and emits one chunk per
+remaining event. Required \code{src} fields: \code{url}, \code{repo}.
 }
 \keyword{internal}

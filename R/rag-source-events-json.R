@@ -1,30 +1,40 @@
-EVENTS_PAST_WINDOW_SECONDS <- 365L * 24L * 60L * 60L
-EVENTS_MIN_CHARS <- 80L
-
 #' Gather chunks from a meetup events JSON feed
 #'
 #' Reads an array of meetup events, drops cancelled events and past
-#' events older than one year, and emits one chunk per remaining event.
-#' Required `src` fields: `url`, `repo`.
+#' events older than `past_window_seconds`, and emits one chunk per
+#' remaining event. Required `src` fields: `url`, `repo`.
 #'
 #' @param src Source spec list.
+#' @param past_window_seconds Drop `past` events older than this many
+#'   seconds before now.
+#' @param min_chars Drop chunks shorter than this many characters.
 #' @return List of chunk records.
 #' @keywords internal
-gather_events_json <- function(src) {
-  events <- rag_fetch_json(httr2::request(src$url))
+gather_events_json <- function(
+  src,
+  past_window_seconds = src$past_window_seconds %||% (365L * 24L * 60L * 60L),
+  min_chars = src$min_chars %||% 80L
+) {
+  events <- rag_fetch_json(rag_request(src$url))
   if (!is.list(events) || length(events) == 0L) {
     cli::cli_alert_warning("events-json: no array at {src$url}")
     return(list())
   }
 
-  cutoff <- as.integer(Sys.time()) - EVENTS_PAST_WINDOW_SECONDS
-  chunks <- lapply(events, event_to_chunk, src = src, cutoff = cutoff)
+  cutoff <- as.integer(Sys.time()) - past_window_seconds
+  chunks <- lapply(
+    events,
+    event_to_chunk,
+    src = src,
+    cutoff = cutoff,
+    min_chars = min_chars
+  )
   chunks <- Filter(Negate(is.null), chunks)
   cli::cli_alert_info("events-json: {length(chunks)} chunks")
   chunks
 }
 
-event_to_chunk <- function(ev, src, cutoff) {
+event_to_chunk <- function(ev, src, cutoff, min_chars) {
   if (identical(ev$status, "cancelled")) {
     return(NULL)
   }
@@ -34,7 +44,7 @@ event_to_chunk <- function(ev, src, cutoff) {
   }
 
   text <- format_event(ev)
-  if (nchar(text) < EVENTS_MIN_CHARS) {
+  if (nchar(text) < min_chars) {
     return(NULL)
   }
 

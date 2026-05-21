@@ -4,10 +4,18 @@
 \alias{youtube_request}
 \title{Build a base YouTube Data API v3 request}
 \usage{
-youtube_request(api_key)
+youtube_request(
+  api_key,
+  user_agent = rag_user_agent(),
+  base_url = "https://www.googleapis.com/youtube/v3"
+)
 }
 \arguments{
 \item{api_key}{YouTube Data API key.}
+
+\item{user_agent}{User-Agent header to attach.}
+
+\item{base_url}{YouTube Data API base URL.}
 }
 \value{
 \link[httr2:request]{httr2::request} object.
