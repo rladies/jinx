@@ -2,6 +2,38 @@
 
 ## jinx (development version)
 
+### RAG: surface upcoming events
+
+- The reranker now applies a 1.6× boost to `events` chunks whose `date`
+  is in the future, so the handful of upcoming events in the index float
+  to the top of the top-5 instead of being drowned out by the much
+  larger pool of past events kept on the 365-day trailing window.
+- For questions that look like event queries (“upcoming events”, “when’s
+  the next meetup”, “any workshops soon?”, etc.), the retriever now runs
+  a second targeted query against the index using a fixed event-shaped
+  prompt and merges the resulting `events` chunks into the candidate
+  pool before reranking. This rescues upcoming events whose cosine
+  similarity to the user’s casual phrasing would otherwise have left
+  them outside the top-20. The fixed event-shaped prompt’s embedding is
+  memoised in KV under `rag:event_embedding:v1` so the second retrieval
+  only costs one extra vector query (no second embed call) after the
+  first warm-up.
+- The Jinx system prompt now tells the model to use the “When:” /
+  “Status:” lines on event chunks, prefer `Status: upcoming` when the
+  user asks about future events, and own it honestly if no upcoming
+  events are in the retrieved sources rather than substituting a past
+  one.
+
+### Slash-command reply routing
+
+- `/jinx` slash commands from the community workspace previously failed
+  with `channel_not_found` because the GHA workflow used the organisers’
+  bot token to post into a community channel ID. The worker now forwards
+  `team_id` in the dispatch payload, the workflow verifies it against
+  `SLACK_ORGANIZER_TEAM_ID` / `SLACK_COMMUNITY_TEAM_ID` repo vars, and
+  the reply step posts via the workspace-agnostic `response_url` instead
+  of `chat.postMessage`.
+
 ### Welcome reusable improvements
 
 - [`gh_welcome_contributor()`](https://rladies.github.io/jinx/reference/gh_welcome_contributor.md)
