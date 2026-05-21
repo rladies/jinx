@@ -2,8 +2,19 @@ import { coding_decline_message, is_coding_question } from "./intent.js";
 import { no_match_quip } from "./quips.js";
 
 const RETRIEVE_K = 20;
+const EVENT_RETRIEVE_K = 15;
 const TOP_K = 5;
 const MIN_SCORE = 0.4;
+
+const EVENT_RETRIEVAL_QUERY =
+  "upcoming RLadies+ chapter event meetup workshop talk session when where";
+
+// Bump the version suffix if EVENT_RETRIEVAL_QUERY changes or the embed
+// model is swapped — the cached vector becomes stale instantly otherwise.
+const EVENT_EMBEDDING_KV_KEY = "rag:event_embedding:v1";
+
+const EVENT_INTENT_RE =
+  /\b(event|events|meetup|meetups|workshop|workshops|talk|talks|session|sessions|happening|coming up|upcoming|soon|scheduled|next event|next meetup|when is the next|what.?s on|what.?s happening)\b/i;
 
 const SOURCE_WEIGHTS = {
   guide: 1.25,
@@ -21,6 +32,7 @@ const RECENCY_HALF_LIFE_SECONDS = 730 * 24 * 60 * 60;
 const STALENESS_GRACE_SECONDS = 365 * 24 * 60 * 60;
 const STALENESS_FLOOR_SECONDS = 730 * 24 * 60 * 60;
 const STALENESS_FLOOR = 0.85;
+const UPCOMING_EVENT_BOOST = 1.6;
 
 const SYSTEM_PROMPT = `You are Jinx, the friendly familiar of RLadies+ — a global organization promoting gender diversity in the R community. Jinx uses they/them pronouns.
 
@@ -35,6 +47,7 @@ Rules:
 - A little whimsy is welcome (a purr, a paw, a stretch) — sparingly, and only when it doesn't crowd the answer. Skip it entirely for sensitive topics (code of conduct, safety, accessibility).
 - **Branding is non-negotiable**: always write the organisation name as *RLadies+* — one word, no hyphen, trailing plus. Never write "R-Ladies", "R-Ladies+", "RLadies" (without the plus), or "R Ladies". This applies even when the source material you are quoting uses an older variant; correct it silently. The only exceptions are literal URLs and handles (e.g. *r-ladies.slack.com*, the *@rladies* GitHub org) which must stay as-is.
 - If the sources don't contain enough to answer an in-scope question, say so honestly — own it cheerfully ("my whiskers came up empty on that one") — and suggest asking a maintainer or checking the guide directly.
+- Event entries include "When:" and "Status: upcoming" or "Status: past" lines. When the user asks about *upcoming*, *next*, or *coming up* events, only use chunks marked "Status: upcoming" and quote the "When:" date; ignore past events for that question. If no upcoming events are in the sources, say so honestly rather than substituting a past one.
 
 Linking (do this — it is not optional):
 - Always include 1–2 inline Slack-formatted links in your answer, drawn from the URLs marked "Source URL:" in the material below. Wrap a relevant phrase, never a bare URL.
@@ -53,7 +66,7 @@ export async function rag_question_answer(env, query) {
   }
 
   const embedding = await rag_query_embed(env, query);
-  const matches = await rag_chunks_retrieve(env, embedding);
+  const matches = await rag_chunks_retrieve(env, embedding, query);
 
   if (matches.length === 0) {
     return { answer: no_match_quip() };
@@ -107,13 +120,72 @@ async function rag_query_embed(env, text) {
   return result.data[0];
 }
 
-async function rag_chunks_retrieve(env, embedding) {
-  const results = await env.RAG_INDEX.query(embedding, {
+async function rag_chunks_retrieve(env, embedding, query) {
+  const primary = await env.RAG_INDEX.query(embedding, {
     topK: RETRIEVE_K,
     returnMetadata: "all",
   });
-  const raw = (results.matches || []).filter((m) => m.score >= MIN_SCORE);
+  let raw = (primary.matches || []).filter((m) => m.score >= MIN_SCORE);
+
+  if (is_event_question(query)) {
+    const event_pool = await rag_event_pool_retrieve(env);
+    raw = merge_matches(raw, event_pool);
+  }
+
   return rerank_matches(raw, Date.now() / 1000).slice(0, TOP_K);
+}
+
+async function rag_event_pool_retrieve(env) {
+  try {
+    const embedding = await rag_event_embedding_get(env);
+    const results = await env.RAG_INDEX.query(embedding, {
+      topK: EVENT_RETRIEVE_K,
+      returnMetadata: "all",
+    });
+    return (results.matches || []).filter(
+      (m) => m.metadata?.source_type === "events" && m.score >= MIN_SCORE
+    );
+  } catch (e) {
+    console.warn("event-pool retrieval failed:", e.message);
+    return [];
+  }
+}
+
+async function rag_event_embedding_get(env) {
+  if (env.SLACK_TOKENS) {
+    const cached = await env.SLACK_TOKENS.get(
+      EVENT_EMBEDDING_KV_KEY,
+      "json"
+    ).catch(() => null);
+    if (Array.isArray(cached) && cached.length > 0) return cached;
+  }
+  const embedding = await rag_query_embed(env, EVENT_RETRIEVAL_QUERY);
+  if (env.SLACK_TOKENS && Array.isArray(embedding)) {
+    await env.SLACK_TOKENS.put(
+      EVENT_EMBEDDING_KV_KEY,
+      JSON.stringify(embedding)
+    ).catch((e) =>
+      console.warn("event-embedding cache write failed:", e.message)
+    );
+  }
+  return embedding;
+}
+
+export function is_event_question(query) {
+  if (!query || typeof query !== "string") return false;
+  return EVENT_INTENT_RE.test(query);
+}
+
+export function merge_matches(primary, extra) {
+  const seen = new Set(primary.map((m) => m.id));
+  const merged = [...primary];
+  for (const m of extra) {
+    if (!seen.has(m.id)) {
+      merged.push(m);
+      seen.add(m.id);
+    }
+  }
+  return merged;
 }
 
 export function rerank_matches(matches, now_seconds) {
@@ -124,10 +196,15 @@ export function rerank_matches(matches, now_seconds) {
       const recency = recency_factor(m.metadata?.date, now_seconds);
       const staleness = staleness_factor(m.metadata?.lastmod, now_seconds);
       const audience = audience_penalty(m.metadata?.url);
+      const upcoming = upcoming_event_boost(
+        m.metadata?.source_type,
+        m.metadata?.date,
+        now_seconds
+      );
       return {
         ...m,
         adjusted_score:
-          m.score * source_weight * recency * staleness * audience,
+          m.score * source_weight * recency * staleness * audience * upcoming,
       };
     })
     .sort((a, b) => b.adjusted_score - a.adjusted_score);
@@ -159,4 +236,14 @@ function staleness_factor(lastmod_seconds, now_seconds) {
 function audience_penalty(url) {
   if (typeof url !== "string") return 1.0;
   return /\/global-team\//.test(url) ? 0.7 : 1.0;
+}
+
+// Most event chunks in the index are past events kept on a 365d trailing
+// window. Without this boost a past event with marginally better cosine
+// similarity outranks the handful of genuinely upcoming events the user
+// almost certainly meant to ask about.
+function upcoming_event_boost(source_type, date_seconds, now_seconds) {
+  if (source_type !== "events") return 1.0;
+  if (!date_seconds || date_seconds <= now_seconds) return 1.0;
+  return UPCOMING_EVENT_BOOST;
 }

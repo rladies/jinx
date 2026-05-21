@@ -48,6 +48,7 @@ export async function slack_command_handle(env, ctx, body) {
 
   const dispatchPromise = github_dispatch_send(env, {
     command,
+    team_id: teamId,
     user_id: params.get("user_id") || "",
     user_name: params.get("user_name") || "",
     channel_id: params.get("channel_id") || "",
