@@ -12,18 +12,11 @@ jobs:
   index:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    container:
+      image: ghcr.io/rladies/jinx-bot:latest
     steps:
       - name: Checkout jinx
         uses: actions/checkout@v6
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: "20"
-
-      - name: Install indexer dependencies
-        working-directory: indexer
-        run: npm install --no-audit --no-fund
 
       - name: Mint jinx-familiar App token
         id: app-token
@@ -33,12 +26,12 @@ jobs:
           private-key: ${{ secrets.JINX_PRIVATE_KEY }}
           owner: rladies
 
-      - name: Run indexer
-        working-directory: indexer
+      - name: Build RAG index
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           VECTORIZE_INDEX: rladies-content
-        run: node index.mjs
+          JINX_PATH: ${{ github.workspace }}
+        run: Rscript -e 'jinx::rag_index_build()'

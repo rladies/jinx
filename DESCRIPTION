@@ -23,9 +23,12 @@ Imports:
     jsonvalidate,
     lubridate,
     magick,
+    openssl,
     rmarkdown,
     rtoot,
+    rvest,
     stringr,
+    xml2,
     yaml
 Suggests:
     httptest2,

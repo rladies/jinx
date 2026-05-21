@@ -1,5 +1,26 @@
 # jinx (development version)
 
+## RAG: indexer moved to R
+
+- The content indexer that feeds the Slack bot's Cloudflare Vectorize
+  store has been moved from the standalone Node `indexer/` directory
+  into the R package. All 8 sources (`hugo-site`, `github-org`,
+  `pkgdown-llms`, `github-files`, `github-remote-files`, `events-json`,
+  `awesome-creations`, `youtube-channel`) are now configured in
+  `inst/config/rag-sources.yml` and implemented as
+  `gather_<type>()` functions under `R/rag-source-*.R`. Adding a new
+  source is one new R file plus a YAML entry — see the
+  [RAG indexer](../articles/rag-indexer.html) article.
+- Vector IDs remain `sha256("{repo}|{path}|{chunk_idx}")[1:32]`, so
+  the R re-index updates the existing `rladies-content` index in place
+  rather than orphaning vectors.
+- Hugo pages are now extracted with `rvest` + `rmarkdown::pandoc_convert()`
+  (`html → gfm-raw_html`) instead of cheerio + turndown. Pandoc emits
+  proper GFM pipe tables where turndown produced flat key/value text;
+  other output differs only cosmetically (`-` vs `*` bullets).
+- `bot-index-content.yml` now uses `r-lib/actions/setup-r` and calls
+  `jinx::rag_index_build()`.
+
 ## RAG: surface upcoming events
 
 - The reranker now applies a 1.6× boost to `events` chunks whose
