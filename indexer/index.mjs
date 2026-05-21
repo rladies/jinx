@@ -4,6 +4,9 @@ import { gatherGithubOrgSource } from "./sources/github.mjs";
 import { gatherPkgdownLlmsSource } from "./sources/pkgdown.mjs";
 import { gatherGithubFilesSource } from "./sources/github-files.mjs";
 import { gatherGithubRemoteFilesSource } from "./sources/github-remote-files.mjs";
+import { gatherEventsJsonSource } from "./sources/events-json.mjs";
+import { gatherAwesomeCreationsSource } from "./sources/awesome-creations.mjs";
+import { gatherYoutubeChannelSource } from "./sources/youtube-channel.mjs";
 
 const JINX_REPO_ROOT = process.env.JINX_PATH || "..";
 
@@ -74,6 +77,33 @@ const SOURCES = [
       },
     ],
   },
+  {
+    type: "events-json",
+    source_type: "events",
+    repo: "rladies/meetup_archive",
+    url: "https://raw.githubusercontent.com/rladies/meetup_archive/refs/heads/main/data/events.json",
+  },
+  {
+    type: "awesome-creations",
+    source_type: "awesome-creations",
+    repo: "rladies/awesome-rladies-creations",
+    feeds: [
+      {
+        kind: "package",
+        url: "https://raw.githubusercontent.com/rladies/awesome-rladies-creations/main/data/website/awesome_packages.json",
+      },
+      {
+        kind: "content",
+        url: "https://raw.githubusercontent.com/rladies/awesome-rladies-creations/main/data/website/awesome_content.json",
+      },
+    ],
+  },
+  {
+    type: "youtube-channel",
+    source_type: "youtube",
+    repo: "rladies/youtube",
+    channelId: "UCDgj5-mFohWZ5irWSFMFcng",
+  },
 ];
 
 const CLOUDFLARE_API_TOKEN = required("CLOUDFLARE_API_TOKEN");
@@ -135,6 +165,12 @@ async function gather(src) {
       return gatherGithubFilesSource(src);
     case "github-remote-files":
       return gatherGithubRemoteFilesSource(src);
+    case "events-json":
+      return gatherEventsJsonSource(src);
+    case "awesome-creations":
+      return gatherAwesomeCreationsSource(src);
+    case "youtube-channel":
+      return gatherYoutubeChannelSource(src);
     default:
       console.error(`Unknown source type: ${src.type}`);
       return [];

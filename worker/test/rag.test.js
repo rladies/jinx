@@ -71,6 +71,42 @@ describe("rerank_matches", () => {
     expect(out[0].adjusted_score).toBeCloseTo(0.6, 5);
   });
 
+  it("boosts upcoming events (future date clamps recency to 1.0)", () => {
+    const upcoming = match({
+      id: "upcoming",
+      score: 0.7,
+      source_type: "events",
+      date: NOW + 30 * 24 * 60 * 60,
+    });
+    const [out] = rerank_matches([upcoming], NOW);
+    expect(out.adjusted_score).toBeCloseTo(0.7 * 1.05, 5);
+  });
+
+  it("ranks an upcoming event above a community creation at equal cosine score", () => {
+    const out = rerank_matches(
+      [
+        match({ id: "creation", score: 0.8, source_type: "awesome-creations" }),
+        match({
+          id: "event",
+          score: 0.8,
+          source_type: "events",
+          date: NOW + 7 * 24 * 60 * 60,
+        }),
+      ],
+      NOW
+    );
+    expect(out[0].id).toBe("event");
+    expect(out[1].id).toBe("creation");
+  });
+
+  it("applies the youtube source weight (0.9)", () => {
+    const [out] = rerank_matches(
+      [match({ id: "y", score: 0.8, source_type: "youtube" })],
+      NOW
+    );
+    expect(out.adjusted_score).toBeCloseTo(0.8 * 0.9, 5);
+  });
+
   it("ranks the canonical CoC above its maintainer meta-doc at equal cosine score", () => {
     const out = rerank_matches(
       [

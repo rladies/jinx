@@ -9,8 +9,11 @@ const SOURCE_WEIGHTS = {
   guide: 1.25,
   site: 1.05,
   "jinx-docs": 1.05,
+  events: 1.05,
   pkgdown: 0.95,
   "github-files": 0.95,
+  "awesome-creations": 0.9,
+  youtube: 0.9,
   "github-org": 0.85,
 };
 const DEFAULT_SOURCE_WEIGHT = 1.0;
