@@ -1,0 +1,70 @@
+- type: hugo-site
+  source_type: guide
+  repo: rladies/rladiesguide
+  sitemap: https://guide.rladies.org/sitemap.xml
+  title_suffix: " :: R-Ladies organizational guidance"
+  language_roots:
+    english: en
+    others: [es]
+
+- type: hugo-site
+  source_type: site
+  repo: rladies/rladies.github.io
+  sitemap: https://rladies.org/sitemap.xml
+  title_suffix: " - RLadies+ Global"
+  language_roots:
+    english: ~
+    others: [es, fr, pt]
+
+- type: github-org
+  source_type: github-org
+  org: rladies
+
+- type: pkgdown-llms
+  source_type: pkgdown
+  org: rladies
+
+- type: github-files
+  source_type: jinx-docs
+  repo: rladies/jinx
+  root_env: JINX_PATH
+  files:
+    - path: inst/commands/help.md
+      url: https://github.com/rladies/jinx/blob/main/inst/commands/help.md
+      title: Jinx slash command reference
+    - path: NEWS.md
+      url: https://rladies.org/jinx/news/index.html
+      title: Jinx release notes
+    - path: PRIVACY.md
+      url: https://rladies.org/jinx/articles/privacy.html
+      title: Jinx privacy policy
+
+- type: github-remote-files
+  source_type: github-files
+  repo: rladies/glamour
+  files:
+    - path: README.md
+      url: https://github.com/rladies/glamour#readme
+      title: Glamour - Quarto extension for RLadies+
+    - path: CHANGELOG.md
+      url: https://github.com/rladies/glamour/blob/main/CHANGELOG.md
+      title: Glamour changelog
+
+- type: events-json
+  source_type: events
+  repo: rladies/meetup_archive
+  url: https://raw.githubusercontent.com/rladies/meetup_archive/refs/heads/main/data/events.json
+
+- type: awesome-creations
+  source_type: awesome-creations
+  repo: rladies/awesome-rladies-creations
+  feeds:
+    - kind: package
+      url: https://raw.githubusercontent.com/rladies/awesome-rladies-creations/main/data/website/awesome_packages.json
+    - kind: content
+      url: https://raw.githubusercontent.com/rladies/awesome-rladies-creations/main/data/website/awesome_content.json
+
+- type: youtube-channel
+  source_type: youtube
+  repo: rladies/youtube
+  channel_id: UCDgj5-mFohWZ5irWSFMFcng
