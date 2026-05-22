@@ -2,11 +2,11 @@
 % Please edit documentation in R/rag-source-youtube-channel.R
 \name{video_to_chunk}
 \alias{video_to_chunk}
-\title{Convert a YouTube playlistItem into a chunk record, skipping private/deleted videos}
+\title{Convert a YouTube playlistItem to a chunk, skipping private/deleted videos}
 \usage{
 video_to_chunk(item, src, max_description_chars)
 }
 \description{
-Convert a YouTube playlistItem into a chunk record, skipping private/deleted videos
+Convert a YouTube playlistItem to a chunk, skipping private/deleted videos
 }
 \keyword{internal}

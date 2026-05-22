@@ -64,7 +64,7 @@ gather_youtube_channel <- function(
   Filter(Negate(is.null), chunks)
 }
 
-#' Convert a YouTube playlistItem into a chunk record, skipping private/deleted videos
+#' Convert a YouTube playlistItem to a chunk, skipping private/deleted videos
 #' @keywords internal
 video_to_chunk <- function(item, src, max_description_chars) {
   snippet <- item$snippet %or% list()

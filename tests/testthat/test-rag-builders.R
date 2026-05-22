@@ -1,34 +1,36 @@
 library(httr2)
 
+hugo_src <- list(title_suffix = "", language_roots = list())
+
 describe("extract_hugo_page", {
   it("returns empty title and description when both meta tags are absent", {
-    html <- "<!doctype html><html><head></head><body><main>just body content here that is long enough</main></body></html>"
-    page <- extract_hugo_page(
-      html,
-      "http://x/",
-      list(title_suffix = "", language_roots = list())
+    html <- paste0(
+      "<!doctype html><html><head></head><body>",
+      "<main>just body content here that is long enough</main>",
+      "</body></html>"
     )
+    page <- extract_hugo_page(html, "http://x/", hugo_src)
     expect_identical(page$title, "")
     expect_identical(page$description, "")
   })
 
-  it("does not embed the literal string NA in markdown when title and description are missing", {
-    html <- "<!doctype html><html><head></head><body><main>just body content</main></body></html>"
-    page <- extract_hugo_page(
-      html,
-      "http://x/",
-      list(title_suffix = "", language_roots = list())
+  it("never embeds literal NA when title and description are absent", {
+    html <- paste0(
+      "<!doctype html><html><head></head><body>",
+      "<main>just body content</main></body></html>"
     )
+    page <- extract_hugo_page(html, "http://x/", hugo_src)
     expect_false(grepl("NA", page$markdown, fixed = TRUE))
   })
 
   it("captures title and description when both are present", {
-    html <- "<!doctype html><html><head><title>Hello</title><meta name='description' content='Desc'></head><body><main>body text</main></body></html>"
-    page <- extract_hugo_page(
-      html,
-      "http://x/",
-      list(title_suffix = "", language_roots = list())
+    html <- paste0(
+      "<!doctype html><html><head>",
+      "<title>Hello</title>",
+      "<meta name='description' content='Desc'>",
+      "</head><body><main>body text</main></body></html>"
     )
+    page <- extract_hugo_page(html, "http://x/", hugo_src)
     expect_identical(page$title, "Hello")
     expect_identical(page$description, "Desc")
     expect_match(page$markdown, "Hello")
@@ -36,29 +38,24 @@ describe("extract_hugo_page", {
   })
 
   it("falls back to <article> when <main> is missing", {
-    html <- "<!doctype html><html><head><title>T</title></head><body><article>article body content</article></body></html>"
-    page <- extract_hugo_page(
-      html,
-      "http://x/",
-      list(title_suffix = "", language_roots = list())
+    html <- paste0(
+      "<!doctype html><html><head><title>T</title></head><body>",
+      "<article>article body content</article></body></html>"
     )
+    page <- extract_hugo_page(html, "http://x/", hugo_src)
     expect_false(is.null(page))
     expect_match(page$markdown, "article body")
   })
 
   it("returns NULL when neither <main> nor <article> is present", {
     html <- "<!doctype html><html><body><div>nope</div></body></html>"
-    page <- extract_hugo_page(
-      html,
-      "http://x/",
-      list(title_suffix = "", language_roots = list())
-    )
+    page <- extract_hugo_page(html, "http://x/", hugo_src)
     expect_null(page)
   })
 })
 
 describe("chunk_to_vector", {
-  it("builds a vector record with 32-char hex id, embedding values, and metadata", {
+  it("builds a vector record with hex id, values, and metadata", {
     chunk <- list(
       text = "hello",
       heading = "H",
@@ -364,7 +361,7 @@ describe("assign_chunk_idx", {
 })
 
 describe("gather_rag_source dispatch", {
-  it("dispatches events-json to gather_events_json without error on empty array", {
+  it("dispatches events-json on empty array without erroring", {
     local_mocked_responses(list(response(body = charToRaw("[]"))))
     result <- gather_rag_source(list(
       type = "events-json",

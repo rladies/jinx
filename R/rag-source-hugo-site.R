@@ -114,7 +114,7 @@ collect_sitemap_urls <- function(url, depth = 0L, max_depth = 2L) {
   ))
 }
 
-#' Extract title, description, dates, and main-content markdown from a Hugo HTML page
+#' Extract title, description, dates, and main-content markdown from a Hugo page
 #' @keywords internal
 extract_hugo_page <- function(html, url, src) {
   doc <- tryCatch(

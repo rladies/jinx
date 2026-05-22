@@ -2,11 +2,11 @@
 % Please edit documentation in R/rag-source-hugo-site.R
 \name{extract_hugo_page}
 \alias{extract_hugo_page}
-\title{Extract title, description, dates, and main-content markdown from a Hugo HTML page}
+\title{Extract title, description, dates, and main-content markdown from a Hugo page}
 \usage{
 extract_hugo_page(html, url, src)
 }
 \description{
-Extract title, description, dates, and main-content markdown from a Hugo HTML page
+Extract title, description, dates, and main-content markdown from a Hugo page
 }
 \keyword{internal}

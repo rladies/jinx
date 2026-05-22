@@ -104,9 +104,10 @@ cloudflare_account_id <- function(api_token) {
     cli::cli_abort("Cloudflare token has no accessible accounts.")
   }
   if (length(accounts) > 1L) {
-    cli::cli_abort(
-      "Token has access to {length(accounts)} accounts; set CLOUDFLARE_ACCOUNT_ID explicitly."
-    )
+    cli::cli_abort(c(
+      "Token has access to {length(accounts)} accounts.",
+      i = "Set CLOUDFLARE_ACCOUNT_ID explicitly."
+    ))
   }
   accounts[[1]]$id
 }
