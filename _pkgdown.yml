@@ -153,3 +153,14 @@ reference:
     desc: Config loading utilities
     contents:
       - starts_with("load_")
+
+  - title: RAG indexer
+    desc: Build the Cloudflare Vectorize index that powers the Slack bot
+    contents:
+      - rag_index_build
+      - gather_rag_source
+      - chunk_markdown
+      - rag_chunk_id
+      - cloudflare_embed
+      - cloudflare_vectorize_upsert
+      - cloudflare_account_id
