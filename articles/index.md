@@ -14,6 +14,7 @@
 
 - [How Jinx is
   built](https://rladies.github.io/jinx/articles/architecture.md):
+- [RAG indexer](https://rladies.github.io/jinx/articles/rag-indexer.md):
 - [Operating
   Jinx](https://rladies.github.io/jinx/articles/workflows.md):
 

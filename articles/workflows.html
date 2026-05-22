@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     <a class="navbar-brand me-2" href="../index.html">jinx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,6 +61,7 @@ document.addEventListener("DOMContentLoaded", function() {
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>For admins</h6></li>
     <li><a class="dropdown-item" href="../articles/architecture.html">How Jinx is built</a></li>
+    <li><a class="dropdown-item" href="../articles/rag-indexer.html">RAG indexer</a></li>
     <li><a class="dropdown-item" href="../articles/workflows.html">Operating Jinx</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
@@ -273,6 +274,16 @@ Jinx command run finishes in a few seconds — no
 runs still use the old image and your new dependency won’t be
 there.</li>
 </ol>
+</div>
+<div class="section level2">
+<h2 id="the-rag-index">The RAG index<a class="anchor" aria-label="anchor" href="#the-rag-index"></a>
+</h2>
+<p>The Slack bot answers questions by retrieving from a Cloudflare
+Vectorize index that’s built by Jinx on a weekly schedule. That builder
+lives in <code>R/rag-*.R</code> and is configured by
+<code>inst/config/rag-sources.yml</code>. See the <a href="rag-indexer.html">RAG indexer</a> article for the contributor
+guide — what each source does, how to add a new one, and which env vars
+the workflow needs.</p>
 </div>
 <div class="section level2">
 <h2 id="the-cloudflare-worker">The Cloudflare Worker<a class="anchor" aria-label="anchor" href="#the-cloudflare-worker"></a>

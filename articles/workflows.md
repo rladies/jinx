@@ -142,6 +142,16 @@ When you add a new R dependency:
 3.  Wait for `infra-build-bot-image` to finish — until then, runs still
     use the old image and your new dependency won’t be there.
 
+## The RAG index
+
+The Slack bot answers questions by retrieving from a Cloudflare
+Vectorize index that’s built by Jinx on a weekly schedule. That builder
+lives in `R/rag-*.R` and is configured by `inst/config/rag-sources.yml`.
+See the [RAG
+indexer](https://rladies.github.io/jinx/articles/rag-indexer.md) article
+for the contributor guide — what each source does, how to add a new one,
+and which env vars the workflow needs.
+
 ## The Cloudflare Worker
 
 The Worker at `https://jinx.rladies.workers.dev` is Jinx’s front door

@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     <a class="navbar-brand me-2" href="../index.html">jinx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,7 @@ document.addEventListener("DOMContentLoaded", function() {
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>For admins</h6></li>
     <li><a class="dropdown-item" href="../articles/architecture.html">How Jinx is built</a></li>
+    <li><a class="dropdown-item" href="../articles/rag-indexer.html">RAG indexer</a></li>
     <li><a class="dropdown-item" href="../articles/workflows.html">Operating Jinx</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
@@ -63,20 +64,33 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.1.1" id="jinx-011">jinx 0.1.1<a class="anchor" aria-label="anchor" href="#jinx-011"></a></h2>
 <div class="section level3">
-<h3 id="rag-surface-upcoming-events-development-version">RAG: surface upcoming events<a class="anchor" aria-label="anchor" href="#rag-surface-upcoming-events-development-version"></a></h3>
+<h3 id="rag-indexer-moved-to-r-0-1-1">RAG: indexer moved to R<a class="anchor" aria-label="anchor" href="#rag-indexer-moved-to-r-0-1-1"></a></h3>
+<ul><li>The content indexer that feeds the Slack bot’s Cloudflare Vectorize store has been moved from the standalone Node <code>indexer/</code> directory into the R package. All 8 sources (<code>hugo-site</code>, <code>github-org</code>, <code>pkgdown-llms</code>, <code>github-files</code>, <code>github-remote-files</code>, <code>events-json</code>, <code>awesome-creations</code>, <code>youtube-channel</code>) are now configured in <code>inst/config/rag-sources.yml</code> and implemented as <code>gather_&lt;type&gt;()</code> functions under <code>R/rag-source-*.R</code>. Adding a new source is one new R file plus a YAML entry — see the <a href="../articles/rag-indexer.html">RAG indexer</a> article.</li>
+<li>Vector IDs remain <code>sha256("{repo}|{path}|{chunk_idx}")[1:32]</code>, so the R re-index updates the existing <code>rladies-content</code> index in place rather than orphaning vectors.</li>
+<li>Hugo pages are now extracted with <code>rvest</code> + <code><a href="https://pkgs.rstudio.com/rmarkdown/reference/pandoc_convert.html" class="external-link">rmarkdown::pandoc_convert()</a></code> (<code>html → gfm-raw_html</code>) instead of cheerio + turndown. Pandoc emits proper GFM pipe tables where turndown produced flat key/value text; other output differs only cosmetically (<code>-</code> vs <code>*</code> bullets).</li>
+<li>
+<code>bot-index-content.yml</code> now uses <code>r-lib/actions/setup-r</code> and calls <code><a href="../reference/rag_index_build.html">jinx::rag_index_build()</a></code>.</li>
+<li>Hugo page fetches are parallelised via <code><a href="https://httr2.r-lib.org/reference/req_perform_parallel.html" class="external-link">httr2::req_perform_parallel</a></code> (<code>max_active = 8</code>) to match the throughput of the JS pool the indexer replaced.</li>
+<li>
+<code><a href="../reference/gather_rag_source.html">gather_rag_source()</a></code> now hard-errors on an unknown source type so a YAML typo in <code>inst/config/rag-sources.yml</code> aborts the run rather than silently skipping a source on the weekly cron.</li>
+<li>Cloudflare API calls (embed, upsert, account-id discovery) inherit a <code>req_retry(max_tries = 3)</code> policy via the base <code><a href="../reference/cloudflare_request.html">cloudflare_request()</a></code> helper, so a transient 5xx no longer kills the whole indexer.</li>
+<li>Fixed NA propagation in <code><a href="../reference/extract_hugo_page.html">extract_hugo_page()</a></code> that could embed the literal string <code>"NA"</code> into chunk text when a Hugo page was missing a <code>&lt;title&gt;</code> or <code>&lt;meta name="description"&gt;</code> tag.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="rag-surface-upcoming-events-0-1-1">RAG: surface upcoming events<a class="anchor" aria-label="anchor" href="#rag-surface-upcoming-events-0-1-1"></a></h3>
 <ul><li>The reranker now applies a 1.6× boost to <code>events</code> chunks whose <code>date</code> is in the future, so the handful of upcoming events in the index float to the top of the top-5 instead of being drowned out by the much larger pool of past events kept on the 365-day trailing window.</li>
 <li>For questions that look like event queries (“upcoming events”, “when’s the next meetup”, “any workshops soon?”, etc.), the retriever now runs a second targeted query against the index using a fixed event-shaped prompt and merges the resulting <code>events</code> chunks into the candidate pool before reranking. This rescues upcoming events whose cosine similarity to the user’s casual phrasing would otherwise have left them outside the top-20. The fixed event-shaped prompt’s embedding is memoised in KV under <code>rag:event_embedding:v1</code> so the second retrieval only costs one extra vector query (no second embed call) after the first warm-up.</li>
 <li>The Jinx system prompt now tells the model to use the “When:” / “Status:” lines on event chunks, prefer <code>Status: upcoming</code> when the user asks about future events, and own it honestly if no upcoming events are in the retrieved sources rather than substituting a past one.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="slash-command-reply-routing-development-version">Slash-command reply routing<a class="anchor" aria-label="anchor" href="#slash-command-reply-routing-development-version"></a></h3>
+<h3 id="slash-command-reply-routing-0-1-1">Slash-command reply routing<a class="anchor" aria-label="anchor" href="#slash-command-reply-routing-0-1-1"></a></h3>
 <ul><li>
 <code>/jinx</code> slash commands from the community workspace previously failed with <code>channel_not_found</code> because the GHA workflow used the organisers’ bot token to post into a community channel ID. The worker now forwards <code>team_id</code> in the dispatch payload, the workflow verifies it against <code>SLACK_ORGANIZER_TEAM_ID</code> / <code>SLACK_COMMUNITY_TEAM_ID</code> repo vars, and the reply step posts via the workspace-agnostic <code>response_url</code> instead of <code>chat.postMessage</code>.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="welcome-reusable-improvements-development-version">Welcome reusable improvements<a class="anchor" aria-label="anchor" href="#welcome-reusable-improvements-development-version"></a></h3>
+<h3 id="welcome-reusable-improvements-0-1-1">Welcome reusable improvements<a class="anchor" aria-label="anchor" href="#welcome-reusable-improvements-0-1-1"></a></h3>
 <ul><li>
 <code><a href="../reference/gh_welcome_contributor.html">gh_welcome_contributor()</a></code> and <code><a href="../reference/gh_greet_contributor.html">gh_greet_contributor()</a></code> gained an <code>extra_message</code> argument. The string is appended after the standard welcome and before the jinx signature, so callers can add a project-specific reminder (e.g. “remember to add yourself to <code>.zenodo.json</code>”) without forking the function.</li>
 <li>
@@ -84,7 +98,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <li>The reusable also fires on <code>pull_request_target</code> opens, so callers that need to welcome fork-PR authors can switch their trigger without losing the welcome step.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="module-reorganisation-development-version">Module reorganisation<a class="anchor" aria-label="anchor" href="#module-reorganisation-development-version"></a></h3>
+<h3 id="module-reorganisation-0-1-1">Module reorganisation<a class="anchor" aria-label="anchor" href="#module-reorganisation-0-1-1"></a></h3>
 <ul><li>New <code>gh_*</code> module for reusable GitHub PR/issue automation. Functions moved out of the contributor/website modules so they can be wired into any repo, not just the website:
 <ul><li>
 <code>contributor_welcome()</code> → <code><a href="../reference/gh_welcome_contributor.html">gh_welcome_contributor()</a></code>

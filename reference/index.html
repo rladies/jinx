@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     <a class="navbar-brand me-2" href="../index.html">jinx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,7 @@ document.addEventListener("DOMContentLoaded", function() {
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>For admins</h6></li>
     <li><a class="dropdown-item" href="../articles/architecture.html">How Jinx is built</a></li>
+    <li><a class="dropdown-item" href="../articles/rag-indexer.html">RAG indexer</a></li>
     <li><a class="dropdown-item" href="../articles/workflows.html">Operating Jinx</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
@@ -883,6 +884,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
         <dt>
 
+          <code><a href="load_rag_sources.html">load_rag_sources()</a></code>
+
+        </dt>
+        <dd>Load the configured RAG source list</dd>
+
+        <dt>
+
           <code><a href="load_review_rules.html">load_review_rules()</a></code>
 
         </dt>
@@ -894,6 +902,64 @@ document.addEventListener("DOMContentLoaded", function() {
 
         </dt>
         <dd>Load teams configuration</dd>
+      </dl></div><div class="section level2">
+      <h2 id="rag-indexer">RAG indexer<a class="anchor" aria-label="anchor" href="#rag-indexer"></a></h2>
+
+      <div class="section-desc"><p>Build the Cloudflare Vectorize index that powers the Slack bot</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="rag_index_build.html">rag_index_build()</a></code>
+
+        </dt>
+        <dd>Build the Jinx RAG index</dd>
+
+        <dt>
+
+          <code><a href="gather_rag_source.html">gather_rag_source()</a></code>
+
+        </dt>
+        <dd>Dispatch a source spec to the appropriate gather function</dd>
+
+        <dt>
+
+          <code><a href="chunk_markdown.html">chunk_markdown()</a></code>
+
+        </dt>
+        <dd>Chunk markdown into retrieval-sized pieces</dd>
+
+        <dt>
+
+          <code><a href="rag_chunk_id.html">rag_chunk_id()</a></code>
+
+        </dt>
+        <dd>Stable vector ID for a chunk</dd>
+
+        <dt>
+
+          <code><a href="cloudflare_embed.html">cloudflare_embed()</a></code>
+
+        </dt>
+        <dd>Embed texts with a Cloudflare Workers AI model</dd>
+
+        <dt>
+
+          <code><a href="cloudflare_vectorize_upsert.html">cloudflare_vectorize_upsert()</a></code>
+
+        </dt>
+        <dd>Upsert vectors into a Cloudflare Vectorize index</dd>
+
+        <dt>
+
+          <code><a href="cloudflare_account_id.html">cloudflare_account_id()</a></code>
+
+        </dt>
+        <dd>Discover the Cloudflare account ID for a token</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

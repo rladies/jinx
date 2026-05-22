@@ -1,6 +1,45 @@
 # Changelog
 
-## jinx (development version)
+## jinx 0.1.1
+
+### RAG: indexer moved to R
+
+- The content indexer that feeds the Slack bot’s Cloudflare Vectorize
+  store has been moved from the standalone Node `indexer/` directory
+  into the R package. All 8 sources (`hugo-site`, `github-org`,
+  `pkgdown-llms`, `github-files`, `github-remote-files`, `events-json`,
+  `awesome-creations`, `youtube-channel`) are now configured in
+  `inst/config/rag-sources.yml` and implemented as `gather_<type>()`
+  functions under `R/rag-source-*.R`. Adding a new source is one new R
+  file plus a YAML entry — see the [RAG
+  indexer](https://rladies.github.io/jinx/articles/rag-indexer.md)
+  article.
+- Vector IDs remain `sha256("{repo}|{path}|{chunk_idx}")[1:32]`, so the
+  R re-index updates the existing `rladies-content` index in place
+  rather than orphaning vectors.
+- Hugo pages are now extracted with `rvest` +
+  [`rmarkdown::pandoc_convert()`](https://pkgs.rstudio.com/rmarkdown/reference/pandoc_convert.html)
+  (`html → gfm-raw_html`) instead of cheerio + turndown. Pandoc emits
+  proper GFM pipe tables where turndown produced flat key/value text;
+  other output differs only cosmetically (`-` vs `*` bullets).
+- `bot-index-content.yml` now uses `r-lib/actions/setup-r` and calls
+  [`jinx::rag_index_build()`](https://rladies.github.io/jinx/reference/rag_index_build.md).
+- Hugo page fetches are parallelised via
+  [`httr2::req_perform_parallel`](https://httr2.r-lib.org/reference/req_perform_parallel.html)
+  (`max_active = 8`) to match the throughput of the JS pool the indexer
+  replaced.
+- [`gather_rag_source()`](https://rladies.github.io/jinx/reference/gather_rag_source.md)
+  now hard-errors on an unknown source type so a YAML typo in
+  `inst/config/rag-sources.yml` aborts the run rather than silently
+  skipping a source on the weekly cron.
+- Cloudflare API calls (embed, upsert, account-id discovery) inherit a
+  `req_retry(max_tries = 3)` policy via the base
+  [`cloudflare_request()`](https://rladies.github.io/jinx/reference/cloudflare_request.md)
+  helper, so a transient 5xx no longer kills the whole indexer.
+- Fixed NA propagation in
+  [`extract_hugo_page()`](https://rladies.github.io/jinx/reference/extract_hugo_page.md)
+  that could embed the literal string `"NA"` into chunk text when a Hugo
+  page was missing a `<title>` or `<meta name="description">` tag.
 
 ### RAG: surface upcoming events
 

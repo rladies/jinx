@@ -284,7 +284,28 @@ Config loading utilities
 
 - [`load_labels_config()`](https://rladies.github.io/jinx/reference/load_labels_config.md)
   : Load file-path to label mappings
+- [`load_rag_sources()`](https://rladies.github.io/jinx/reference/load_rag_sources.md)
+  : Load the configured RAG source list
 - [`load_review_rules()`](https://rladies.github.io/jinx/reference/load_review_rules.md)
   : Load PR review rules
 - [`load_teams_config()`](https://rladies.github.io/jinx/reference/load_teams_config.md)
   : Load teams configuration
+
+## RAG indexer
+
+Build the Cloudflare Vectorize index that powers the Slack bot
+
+- [`rag_index_build()`](https://rladies.github.io/jinx/reference/rag_index_build.md)
+  : Build the Jinx RAG index
+- [`gather_rag_source()`](https://rladies.github.io/jinx/reference/gather_rag_source.md)
+  : Dispatch a source spec to the appropriate gather function
+- [`chunk_markdown()`](https://rladies.github.io/jinx/reference/chunk_markdown.md)
+  : Chunk markdown into retrieval-sized pieces
+- [`rag_chunk_id()`](https://rladies.github.io/jinx/reference/rag_chunk_id.md)
+  : Stable vector ID for a chunk
+- [`cloudflare_embed()`](https://rladies.github.io/jinx/reference/cloudflare_embed.md)
+  : Embed texts with a Cloudflare Workers AI model
+- [`cloudflare_vectorize_upsert()`](https://rladies.github.io/jinx/reference/cloudflare_vectorize_upsert.md)
+  : Upsert vectors into a Cloudflare Vectorize index
+- [`cloudflare_account_id()`](https://rladies.github.io/jinx/reference/cloudflare_account_id.md)
+  : Discover the Cloudflare account ID for a token
