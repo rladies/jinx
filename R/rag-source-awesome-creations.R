@@ -77,7 +77,7 @@ format_awesome_package <- function(pkg, src) {
     heading = "R package",
     title = paste0(
       pkg$name,
-      " — ",
+      " - ",
       pkg$title %or% "R package by an RLadies+ member"
     ),
     repo = src$repo,
