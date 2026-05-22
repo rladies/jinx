@@ -17,9 +17,9 @@
 #' @keywords internal
 gather_hugo_site <- function(
   src,
-  min_chars = src$min_chars %||% 200L,
-  skip_path_patterns = src$skip_path_patterns %||% c("^/directory/[^/]+/?$"),
-  progress_every = src$progress_every %||% 100L
+  min_chars = src$min_chars %or% 200L,
+  skip_path_patterns = src$skip_path_patterns %or% c("^/directory/[^/]+/?$"),
+  progress_every = src$progress_every %or% 100L
 ) {
   cli::cli_alert_info("Crawling {src$repo} via {src$sitemap}")
   urls <- collect_sitemap_urls(src$sitemap)
@@ -28,52 +28,61 @@ gather_hugo_site <- function(
   keep <- vapply(urls, is_english_url, logical(1), src = src) &
     !vapply(urls, is_skipped_url, logical(1), patterns = skip_path_patterns)
   filtered <- urls[keep]
-  cli::cli_alert_info("  {length(filtered)} to crawl after filters")
+  total <- length(filtered)
+  cli::cli_alert_info("  {total} to crawl after filters")
 
-  per_url <- lapply(
-    seq_along(filtered),
-    function(i) {
-      hugo_url_chunks(
-        filtered[[i]],
-        i,
-        length(filtered),
-        src,
-        min_chars = min_chars,
-        progress_every = progress_every
-      )
-    }
+  reqs <- lapply(filtered, rag_request)
+  resps <- httr2::req_perform_parallel(
+    reqs,
+    max_active = 8L,
+    on_error = "continue"
   )
-  chunks <- unlist(Filter(Negate(is.null), per_url), recursive = FALSE) %||%
+
+  done <- 0L
+  per_url <- lapply(seq_along(filtered), function(i) {
+    done <<- done + 1L
+    if (done %% progress_every == 0L) {
+      cli::cli_alert_info("  ...{done}/{total}")
+    }
+    resp <- resps[[i]]
+    if (!inherits(resp, "httr2_response")) {
+      return(NULL)
+    }
+    if (httr2::resp_status(resp) >= 400L) {
+      return(NULL)
+    }
+    html <- tryCatch(
+      httr2::resp_body_string(resp),
+      error = function(e) NULL
+    )
+    if (is.null(html)) {
+      return(NULL)
+    }
+    url <- filtered[[i]]
+    page <- extract_hugo_page(html, normalise_hugo_url(url), src)
+    if (is.null(page) || nchar(page$markdown) < min_chars) {
+      return(NULL)
+    }
+    assign_chunk_idx(chunk_markdown(
+      page$markdown,
+      meta = list(
+        repo = src$repo,
+        path = url_path(page$url),
+        url = page$url,
+        fallback_title = page$title,
+        date = page$date,
+        lastmod = page$lastmod
+      )
+    ))
+  })
+  chunks <- unlist(Filter(Negate(is.null), per_url), recursive = FALSE) %or%
     list()
   cli::cli_alert_info("  {length(chunks)} chunks total")
   chunks
 }
 
-hugo_url_chunks <- function(url, i, total, src, min_chars, progress_every) {
-  if (i %% progress_every == 0L) {
-    cli::cli_alert_info("  ...{i}/{total}")
-  }
-  html <- rag_fetch_text(rag_request(url))
-  if (is.null(html)) {
-    return(NULL)
-  }
-  page <- extract_hugo_page(html, normalise_hugo_url(url), src)
-  if (is.null(page) || nchar(page$markdown) < min_chars) {
-    return(NULL)
-  }
-  assign_chunk_idx(chunk_markdown(
-    page$markdown,
-    meta = list(
-      repo = src$repo,
-      path = url_path(page$url),
-      url = page$url,
-      fallback_title = page$title,
-      date = page$date,
-      lastmod = page$lastmod
-    )
-  ))
-}
-
+#' Walk a sitemap (and any nested sitemap-index) and return all <loc> URLs
+#' @keywords internal
 collect_sitemap_urls <- function(url, depth = 0L, max_depth = 2L) {
   if (depth > max_depth) {
     return(character())
@@ -105,6 +114,8 @@ collect_sitemap_urls <- function(url, depth = 0L, max_depth = 2L) {
   ))
 }
 
+#' Extract title, description, dates, and main-content markdown from a Hugo HTML page
+#' @keywords internal
 extract_hugo_page <- function(html, url, src) {
   doc <- tryCatch(
     rvest::read_html(html, encoding = "UTF-8"),
@@ -114,14 +125,18 @@ extract_hugo_page <- function(html, url, src) {
     return(NULL)
   }
   title <- rvest::html_text2(rvest::html_element(doc, "title"))
-  title <- strip_suffix(trimws(title %||% ""), src$title_suffix %||% "")
-  description <- trimws(
-    rvest::html_attr(
-      rvest::html_element(doc, "meta[name='description']"),
-      "content"
-    ) %||%
-      ""
+  title <- if (is.na(title) || is.null(title)) "" else title
+  title <- strip_suffix(trimws(title), src$title_suffix %or% "")
+
+  description <- rvest::html_attr(
+    rvest::html_element(doc, "meta[name='description']"),
+    "content"
   )
+  description <- if (is.na(description) || is.null(description)) {
+    ""
+  } else {
+    trimws(description)
+  }
   published <- rag_parse_date(
     rvest::html_attr(
       rvest::html_element(doc, "meta[property='article:published_time']"),
@@ -167,6 +182,8 @@ extract_hugo_page <- function(html, url, src) {
   )
 }
 
+#' Convert an HTML node to GitHub-flavoured markdown via pandoc
+#' @keywords internal
 html_node_to_markdown <- function(node) {
   in_file <- tempfile(fileext = ".html")
   out_file <- tempfile(fileext = ".md")
@@ -188,8 +205,10 @@ html_node_to_markdown <- function(node) {
   paste(readLines(out_file, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
 }
 
+#' Test whether a URL's first path segment is the English language root
+#' @keywords internal
 is_english_url <- function(url, src) {
-  parts <- strsplit(httr2::url_parse(url)$path %||% "/", "/", fixed = TRUE)[[1]]
+  parts <- strsplit(httr2::url_parse(url)$path %or% "/", "/", fixed = TRUE)[[1]]
   first <- parts[nzchar(parts)][1]
   if (is.na(first) || is.null(first)) {
     return(TRUE)
@@ -198,11 +217,13 @@ is_english_url <- function(url, src) {
   if (!is.null(english) && nzchar(english) && identical(first, english)) {
     return(TRUE)
   }
-  !(first %in% unlist(src$language_roots$others %||% list()))
+  !(first %in% unlist(src$language_roots$others %or% list()))
 }
 
+#' Test whether a URL's path matches any of the configured skip patterns
+#' @keywords internal
 is_skipped_url <- function(url, patterns) {
-  path <- httr2::url_parse(url)$path %||% "/"
+  path <- httr2::url_parse(url)$path %or% "/"
   any(vapply(
     patterns,
     function(p) grepl(p, path, perl = TRUE),
@@ -210,10 +231,16 @@ is_skipped_url <- function(url, patterns) {
   ))
 }
 
+#' Normalise a Hugo URL by stripping a trailing /index.html
+#' @keywords internal
 normalise_hugo_url <- function(url) sub("/index\\.html$", "/", url)
 
-url_path <- function(url) httr2::url_parse(url)$path %||% "/"
+#' Return the path component of a URL, defaulting to "/"
+#' @keywords internal
+url_path <- function(url) httr2::url_parse(url)$path %or% "/"
 
+#' Strip a trailing suffix from a string if present
+#' @keywords internal
 strip_suffix <- function(s, suffix) {
   if (!nzchar(suffix)) {
     return(s)

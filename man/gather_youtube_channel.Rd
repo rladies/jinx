@@ -6,7 +6,7 @@
 \usage{
 gather_youtube_channel(
   src,
-  max_description_chars = src$max_description_chars \%||\% 4000L
+  max_description_chars = src$max_description_chars \%or\% 4000L
 )
 }
 \arguments{

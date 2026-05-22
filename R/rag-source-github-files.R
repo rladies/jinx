@@ -9,14 +9,16 @@
 #' @return List of chunk records.
 #' @keywords internal
 gather_github_files <- function(src) {
-  root <- Sys.getenv(src$root_env %||% "JINX_PATH", unset = "..")
+  root <- Sys.getenv(src$root_env %or% "JINX_PATH", unset = "..")
   per_file <- lapply(src$files, local_file_chunks, root = root, src = src)
-  chunks <- unlist(Filter(Negate(is.null), per_file), recursive = FALSE) %||%
+  chunks <- unlist(Filter(Negate(is.null), per_file), recursive = FALSE) %or%
     list()
   cli::cli_alert_info("github-files: {length(chunks)} chunks from {src$repo}")
   chunks
 }
 
+#' Read a local markdown file and chunk it, attaching repo/url metadata
+#' @keywords internal
 local_file_chunks <- function(entry, root, src) {
   abs_path <- file.path(root, entry$path)
   if (!file.exists(abs_path)) {
@@ -33,7 +35,7 @@ local_file_chunks <- function(entry, root, src) {
       repo = src$repo,
       path = entry$path,
       url = entry$url,
-      fallback_title = entry$title %||% entry$path
+      fallback_title = entry$title %or% entry$path
     )
   )
   assign_chunk_idx(chunks)

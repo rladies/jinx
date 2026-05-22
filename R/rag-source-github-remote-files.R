@@ -43,7 +43,7 @@ gather_github_remote_files <- function(src) {
     return(list())
   }
   per_file <- lapply(src$files, remote_file_chunks, src = src, token = token)
-  chunks <- unlist(Filter(Negate(is.null), per_file), recursive = FALSE) %||%
+  chunks <- unlist(Filter(Negate(is.null), per_file), recursive = FALSE) %or%
     list()
   cli::cli_alert_info(
     "github-remote-files: {length(chunks)} chunks from {src$repo}"
@@ -51,6 +51,8 @@ gather_github_remote_files <- function(src) {
   chunks
 }
 
+#' Fetch a file's raw contents from the GitHub API and chunk the markdown
+#' @keywords internal
 remote_file_chunks <- function(entry, src, token) {
   md <- github_request(token) |>
     httr2::req_url_path_append("repos", src$repo, "contents", entry$path) |>
@@ -66,7 +68,7 @@ remote_file_chunks <- function(entry, src, token) {
       repo = src$repo,
       path = entry$path,
       url = entry$url,
-      fallback_title = entry$title %||% paste0(src$repo, "/", entry$path)
+      fallback_title = entry$title %or% paste0(src$repo, "/", entry$path)
     )
   )
   assign_chunk_idx(chunks)

@@ -7,7 +7,11 @@
 #' @return Character scalar.
 #' @keywords internal
 rag_user_agent <- function() {
-  "rladies-jinx-indexer/0.1 (+https://github.com/rladies/jinx)"
+  paste0(
+    "rladies-jinx-indexer/",
+    utils::packageVersion("jinx"),
+    " (+https://github.com/rladies/jinx)"
+  )
 }
 
 #' Build a plain httr2 request with the indexer's User-Agent attached
@@ -79,5 +83,5 @@ rag_fetch_json <- function(req, retries = 1L) {
 #' Parse a date string (or numeric) to unix seconds, returning 0 on failure
 #' @keywords internal
 rag_parse_date <- function(raw) {
-  parse_unix_date(raw) %||% 0L
+  parse_unix_date(raw) %or% 0L
 }

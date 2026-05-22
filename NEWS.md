@@ -20,6 +20,18 @@
   other output differs only cosmetically (`-` vs `*` bullets).
 - `bot-index-content.yml` now uses `r-lib/actions/setup-r` and calls
   `jinx::rag_index_build()`.
+- Hugo page fetches are parallelised via `httr2::req_perform_parallel`
+  (`max_active = 8`) to match the throughput of the JS pool the
+  indexer replaced.
+- `gather_rag_source()` now hard-errors on an unknown source type so a
+  YAML typo in `inst/config/rag-sources.yml` aborts the run rather
+  than silently skipping a source on the weekly cron.
+- Cloudflare API calls (embed, upsert, account-id discovery) inherit a
+  `req_retry(max_tries = 3)` policy via the base `cloudflare_request()`
+  helper, so a transient 5xx no longer kills the whole indexer.
+- Fixed NA propagation in `extract_hugo_page()` that could embed the
+  literal string `"NA"` into chunk text when a Hugo page was missing a
+  `<title>` or `<meta name="description">` tag.
 
 ## RAG: surface upcoming events
 

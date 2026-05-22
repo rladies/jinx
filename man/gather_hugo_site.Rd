@@ -6,9 +6,9 @@
 \usage{
 gather_hugo_site(
   src,
-  min_chars = src$min_chars \%||\% 200L,
-  skip_path_patterns = src$skip_path_patterns \%||\% c("^/directory/[^/]+/?$"),
-  progress_every = src$progress_every \%||\% 100L
+  min_chars = src$min_chars \%or\% 200L,
+  skip_path_patterns = src$skip_path_patterns \%or\% c("^/directory/[^/]+/?$"),
+  progress_every = src$progress_every \%or\% 100L
 )
 }
 \arguments{

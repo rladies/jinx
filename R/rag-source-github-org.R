@@ -42,7 +42,7 @@ gather_github_org <- function(src) {
   repo_chunks <- unlist(
     lapply(live_repos, repo_to_chunks, token = token),
     recursive = FALSE
-  ) %||%
+  ) %or%
     list()
 
   chunks <- c(team_chunks, repo_chunks)
@@ -50,6 +50,8 @@ gather_github_org <- function(src) {
   chunks
 }
 
+#' Render a GitHub team to a labelled chunk record
+#' @keywords internal
 team_to_chunk <- function(team, src) {
   if (!is.null(team$privacy) && !identical(team$privacy, "closed")) {
     return(NULL)
@@ -60,7 +62,7 @@ team_to_chunk <- function(team, src) {
     title = paste0("Team: ", team$name),
     repo = paste0(src$org, "/.teams"),
     path = team$slug,
-    url = team$html_url %||%
+    url = team$html_url %or%
       (httr2::request("https://github.com") |>
         httr2::req_url_path_append("orgs", src$org, "teams", team$slug) |>
         _$url),
@@ -70,6 +72,8 @@ team_to_chunk <- function(team, src) {
   )
 }
 
+#' Render a GitHub repo to metadata and README chunks
+#' @keywords internal
 repo_to_chunks <- function(repo, token) {
   meta_chunk <- list(
     text = render_repo_meta_text(repo),
@@ -82,7 +86,7 @@ repo_to_chunks <- function(repo, token) {
     lastmod = 0L,
     chunk_idx = 0L
   )
-  readme <- gh_fetch_readme(repo$full_name)
+  readme <- gh_fetch_readme(repo$full_name, token)
   if (is.null(readme) || !nzchar(trimws(readme))) {
     return(list(meta_chunk))
   }
@@ -98,17 +102,21 @@ repo_to_chunks <- function(repo, token) {
   c(list(meta_chunk), readme_chunks)
 }
 
+#' Render a GitHub team to a labelled text block
+#' @keywords internal
 render_team_text <- function(team) {
   fields <- c(
     `Team name` = team$name,
     Slug = team$slug,
-    Description = team$description %||% "(no description)",
+    Description = team$description %or% "(no description)",
     `Parent team` = if (!is.null(team$parent)) team$parent$name,
-    Visibility = team$privacy
+    Visibility = team$privacy %or% "unknown"
   )
   paste(paste0(names(fields), ": ", fields), collapse = "\n")
 }
 
+#' Render a GitHub repo's metadata to a labelled text block
+#' @keywords internal
 render_repo_meta_text <- function(repo) {
   topics <- if (length(repo$topics)) {
     paste(unlist(repo$topics), collapse = ", ")
@@ -117,30 +125,21 @@ render_repo_meta_text <- function(repo) {
   }
   fields <- c(
     Repository = repo$full_name,
-    Description = repo$description %||% "(no description)",
-    `Primary language` = repo$language %||% "n/a",
+    Description = repo$description %or% "(no description)",
+    `Primary language` = repo$language %or% "n/a",
     Topics = topics,
-    License = repo$license$spdx_id %||% "n/a",
-    Homepage = repo$homepage %||% repo$html_url,
+    License = repo$license$spdx_id %or% "n/a",
+    Homepage = repo$homepage %or% repo$html_url,
     Visibility = if (isTRUE(repo$private)) "private" else "public"
   )
   paste(paste0(names(fields), ": ", fields), collapse = "\n")
 }
 
-gh_fetch_readme <- function(full_name) {
-  tryCatch(
-    {
-      result <- gh::gh(
-        "/repos/{full_name}/readme",
-        full_name = full_name,
-        .accept = "application/vnd.github.raw"
-      )
-      as.character(result)
-    },
-    http_error_404 = function(e) NULL,
-    error = function(e) {
-      cli::cli_warn("README {full_name}: {conditionMessage(e)}")
-      NULL
-    }
-  )
+#' Fetch a repo's raw README via the GitHub API
+#' @keywords internal
+gh_fetch_readme <- function(full_name, token) {
+  github_request(token) |>
+    httr2::req_url_path_append("repos", full_name, "readme") |>
+    httr2::req_headers(Accept = "application/vnd.github.raw") |>
+    rag_fetch_text()
 }

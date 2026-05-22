@@ -6,7 +6,7 @@
 \usage{
 gather_pkgdown_llms(
   src,
-  pkgdown_base_url = src$pkgdown_base_url \%||\% "https://rladies.github.io"
+  pkgdown_base_url = src$pkgdown_base_url \%or\% "https://rladies.github.io"
 )
 }
 \arguments{

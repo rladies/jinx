@@ -6,8 +6,8 @@
 \usage{
 gather_events_json(
   src,
-  past_window_seconds = src$past_window_seconds \%||\% (365L * 24L * 60L * 60L),
-  min_chars = src$min_chars \%||\% 80L
+  past_window_seconds = src$past_window_seconds \%or\% (365L * 24L * 60L * 60L),
+  min_chars = src$min_chars \%or\% 80L
 )
 }
 \arguments{

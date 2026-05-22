@@ -37,7 +37,7 @@ youtube_request <- function(
 #' @keywords internal
 gather_youtube_channel <- function(
   src,
-  max_description_chars = src$max_description_chars %||% 4000L
+  max_description_chars = src$max_description_chars %or% 4000L
 ) {
   api_key <- Sys.getenv("YOUTUBE_API_KEY", unset = "")
   if (!nzchar(api_key)) {
@@ -64,19 +64,21 @@ gather_youtube_channel <- function(
   Filter(Negate(is.null), chunks)
 }
 
+#' Convert a YouTube playlistItem into a chunk record, skipping private/deleted videos
+#' @keywords internal
 video_to_chunk <- function(item, src, max_description_chars) {
-  snippet <- item$snippet %||% list()
+  snippet <- item$snippet %or% list()
   video_id <- snippet$resourceId$videoId
   if (is.null(video_id)) {
     return(NULL)
   }
-  title <- snippet$title %||% "Untitled video"
+  title <- snippet$title %or% "Untitled video"
   if (title %in% c("Private video", "Deleted video")) {
     return(NULL)
   }
 
   description <- substr(
-    snippet$description %||% "",
+    snippet$description %or% "",
     1L,
     max_description_chars
   )
@@ -85,7 +87,7 @@ video_to_chunk <- function(item, src, max_description_chars) {
     text = format_youtube_video(title, snippet$publishedAt, description),
     heading = "YouTube",
     title = title,
-    repo = src$repo %||% "rladies/youtube",
+    repo = src$repo %or% "rladies/youtube",
     path = paste0("video/", video_id),
     url = httr2::request("https://www.youtube.com/watch") |>
       httr2::req_url_query(v = video_id) |>
@@ -96,6 +98,8 @@ video_to_chunk <- function(item, src, max_description_chars) {
   )
 }
 
+#' Format a YouTube video's title, publish date, and description as chunk text
+#' @keywords internal
 format_youtube_video <- function(title, published_at, description) {
   fields <- c(
     Title = title,
@@ -108,6 +112,8 @@ format_youtube_video <- function(title, published_at, description) {
   paste(lines, collapse = "\n")
 }
 
+#' Look up the uploads-playlist id for a YouTube channel
+#' @keywords internal
 youtube_uploads_playlist <- function(channel_id, api_key) {
   body <- youtube_request(api_key) |>
     httr2::req_url_path_append("channels") |>
@@ -116,6 +122,8 @@ youtube_uploads_playlist <- function(channel_id, api_key) {
   body$items[[1]]$contentDetails$relatedPlaylists$uploads
 }
 
+#' Page through a YouTube playlist, returning the full list of snippet items
+#' @keywords internal
 youtube_playlist_items <- function(playlist_id, api_key) {
   base <- youtube_request(api_key) |>
     httr2::req_url_path_append("playlistItems") |>
@@ -136,7 +144,7 @@ youtube_playlist_items <- function(playlist_id, api_key) {
     if (is.null(body)) {
       break
     }
-    out <- c(out, body$items %||% list())
+    out <- c(out, body$items %or% list())
     if (is.null(body$nextPageToken) || !nzchar(body$nextPageToken)) {
       break
     }

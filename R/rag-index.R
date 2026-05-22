@@ -27,11 +27,11 @@ rag_index_build <- function(
   if (!nzchar(api_token)) {
     cli::cli_abort("CLOUDFLARE_API_TOKEN is not set.")
   }
-  account_id <- account_id %||% Sys.getenv("CLOUDFLARE_ACCOUNT_ID", unset = NA)
+  account_id <- account_id %or% Sys.getenv("CLOUDFLARE_ACCOUNT_ID", unset = NA)
   if (is.na(account_id) || !nzchar(account_id)) {
     account_id <- cloudflare_account_id(api_token)
   }
-  index_name <- index_name %||%
+  index_name <- index_name %or%
     Sys.getenv("VECTORIZE_INDEX", unset = "rladies-content")
   if (is.null(sources)) {
     sources <- load_rag_sources()
@@ -56,25 +56,29 @@ rag_index_build <- function(
   invisible(list(chunks = chunks, upsert = result))
 }
 
+#' Gather chunks from every configured source
+#' @keywords internal
 gather_all_chunks <- function(sources) {
   per_source <- lapply(sources, function(src) {
     cli::cli_alert_info("Gathering {.field {src$source_type}} ({src$type})")
     src_chunks <- gather_rag_source(src)
-    lapply(src_chunks, function(c) {
-      c$source_type <- src$source_type
-      c
+    lapply(src_chunks, function(chunk) {
+      chunk$source_type <- src$source_type
+      chunk
     })
   })
-  unlist(per_source, recursive = FALSE) %||% list()
+  unlist(per_source, recursive = FALSE) %or% list()
 }
 
+#' Embed chunks in batches and convert to Vectorize vector records
+#' @keywords internal
 embed_chunks <- function(chunks, account_id, api_token, model, batch_size) {
   total <- length(chunks)
   batches <- split(chunks, ceiling(seq_along(chunks) / batch_size))
   per_batch <- Map(
     function(batch, i) {
       embeds <- cloudflare_embed(
-        vapply(batch, function(c) c$text, character(1)),
+        vapply(batch, function(chunk) chunk$text, character(1)),
         account_id = account_id,
         api_token = api_token,
         model = model
@@ -90,6 +94,8 @@ embed_chunks <- function(chunks, account_id, api_token, model, batch_size) {
   unlist(per_batch, recursive = FALSE)
 }
 
+#' Convert one chunk + its embedding to a Vectorize vector record
+#' @keywords internal
 chunk_to_vector <- function(chunk, embedding) {
   list(
     id = rag_chunk_id(chunk$repo, chunk$path, chunk$chunk_idx),
@@ -102,8 +108,8 @@ chunk_to_vector <- function(chunk, embedding) {
       path = chunk$path,
       text = chunk$text,
       source_type = chunk$source_type,
-      date = chunk$date %||% 0L,
-      lastmod = chunk$lastmod %||% chunk$date %||% 0L
+      date = chunk$date %or% 0L,
+      lastmod = chunk$lastmod %or% chunk$date %or% 0L
     )
   )
 }
@@ -136,8 +142,7 @@ gather_rag_source <- function(src) {
     error = function(e) NULL
   )
   if (is.null(fn)) {
-    cli::cli_warn("Unknown source type: {.val {src$type}}")
-    return(list())
+    cli::cli_abort("Unknown source type: {.val {src$type}}")
   }
   fn(src)
 }

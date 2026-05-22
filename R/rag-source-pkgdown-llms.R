@@ -11,7 +11,7 @@
 #' @keywords internal
 gather_pkgdown_llms <- function(
   src,
-  pkgdown_base_url = src$pkgdown_base_url %||% "https://rladies.github.io"
+  pkgdown_base_url = src$pkgdown_base_url %or% "https://rladies.github.io"
 ) {
   token <- Sys.getenv("GITHUB_TOKEN", unset = "")
   if (!nzchar(token)) {
@@ -34,12 +34,14 @@ gather_pkgdown_llms <- function(
     pkgdown_llms_chunks,
     pkgdown_base_url = pkgdown_base_url
   )
-  chunks <- unlist(Filter(Negate(is.null), per_repo), recursive = FALSE) %||%
+  chunks <- unlist(Filter(Negate(is.null), per_repo), recursive = FALSE) %or%
     list()
   cli::cli_alert_info("pkgdown-llms: {length(chunks)} chunks")
   chunks
 }
 
+#' Fetch one repo's pkgdown `llms.txt` and chunk it
+#' @keywords internal
 pkgdown_llms_chunks <- function(repo, pkgdown_base_url) {
   base <- rag_request(pkgdown_base_url) |>
     httr2::req_url_path_append(repo$name)
@@ -61,6 +63,8 @@ pkgdown_llms_chunks <- function(repo, pkgdown_base_url) {
   assign_chunk_idx(chunks)
 }
 
+#' List non-archived, non-disabled R-language repos in a GitHub org
+#' @keywords internal
 gh_list_org_r_repos <- function(org) {
   repos <- gh::gh(
     "/orgs/{org}/repos",
@@ -76,6 +80,8 @@ gh_list_org_r_repos <- function(org) {
   )
 }
 
+#' Check whether a repo contains a file at the given path via the GitHub API
+#' @keywords internal
 gh_has_path <- function(full_name, path) {
   result <- tryCatch(
     gh::gh(

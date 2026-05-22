@@ -8,16 +8,18 @@
 #' @param min_chars Drop chunks shorter than this many characters.
 #' @return List of chunk records.
 #' @keywords internal
-gather_awesome_creations <- function(src, min_chars = src$min_chars %||% 60L) {
+gather_awesome_creations <- function(src, min_chars = src$min_chars %or% 60L) {
   per_feed <- lapply(
     src$feeds,
     gather_awesome_feed,
     src = src,
     min_chars = min_chars
   )
-  unlist(per_feed, recursive = FALSE) %||% list()
+  unlist(per_feed, recursive = FALSE) %or% list()
 }
 
+#' Fetch one awesome-creations feed and format each item into a chunk
+#' @keywords internal
 gather_awesome_feed <- function(feed, src, min_chars) {
   items <- rag_fetch_json(rag_request(feed$url))
   if (!is.list(items) || length(items) == 0L) {
@@ -35,6 +37,8 @@ gather_awesome_feed <- function(feed, src, min_chars) {
   chunks
 }
 
+#' Dispatch an awesome-creations item to the package or content formatter
+#' @keywords internal
 format_awesome_item <- function(item, feed, src) {
   if (identical(feed$kind, "package")) {
     format_awesome_package(item, src)
@@ -43,11 +47,13 @@ format_awesome_item <- function(item, feed, src) {
   }
 }
 
+#' Build a chunk record for one awesome-creations package entry
+#' @keywords internal
 format_awesome_package <- function(pkg, src) {
   if (is.null(pkg$name) || !nzchar(pkg$name)) {
     return(NULL)
   }
-  url <- pkg$pkdown_url %||% pkg$repo_url
+  url <- pkg$pkdown_url %or% pkg$repo_url
   if (is.null(url) || !nzchar(url)) {
     return(NULL)
   }
@@ -55,7 +61,7 @@ format_awesome_package <- function(pkg, src) {
   authors <- format_authors(pkg$authors)
   fields <- c(
     Package = pkg$name,
-    Title = pkg$title %||% pkg$name,
+    Title = pkg$title %or% pkg$name,
     Authors = if (nzchar(authors)) authors,
     Repository = pkg$repo_url,
     Documentation = pkg$pkdown_url,
@@ -72,7 +78,7 @@ format_awesome_package <- function(pkg, src) {
     title = paste0(
       pkg$name,
       " — ",
-      pkg$title %||% "R package by an RLadies+ member"
+      pkg$title %or% "R package by an RLadies+ member"
     ),
     repo = src$repo,
     path = paste0("package/", pkg$name),
@@ -83,6 +89,8 @@ format_awesome_package <- function(pkg, src) {
   )
 }
 
+#' Build a chunk record for one awesome-creations content entry
+#' @keywords internal
 format_awesome_content <- function(item, src) {
   if (is.null(item$url) || !nzchar(item$url)) {
     return(NULL)
@@ -90,8 +98,8 @@ format_awesome_content <- function(item, src) {
   url <- normalise_awesome_url(item$url)
   authors <- format_authors(item$authors)
   fields <- c(
-    Title = item$title %||% url,
-    Type = item$type %||% "content",
+    Title = item$title %or% url,
+    Type = item$type %or% "content",
     Language = item$language,
     Authors = if (nzchar(authors)) authors
   )
@@ -101,10 +109,10 @@ format_awesome_content <- function(item, src) {
   }
   list(
     text = paste(lines, collapse = "\n"),
-    heading = item$type %||% "Community content",
-    title = item$title %||% url,
+    heading = item$type %or% "Community content",
+    title = item$title %or% url,
     repo = src$repo,
-    path = paste0("content/", slugify_awesome(item$title %||% url)),
+    path = paste0("content/", slugify_awesome(item$title %or% url)),
     url = url,
     date = 0L,
     lastmod = 0L,
@@ -112,14 +120,18 @@ format_awesome_content <- function(item, src) {
   )
 }
 
+#' Collapse a list of author records into a comma-separated names string
+#' @keywords internal
 format_authors <- function(authors) {
   if (!is.list(authors) || length(authors) == 0L) {
     return("")
   }
-  names_v <- vapply(authors, function(a) a$name %||% "", character(1))
+  names_v <- vapply(authors, function(a) a$name %or% "", character(1))
   paste(names_v[nzchar(names_v)], collapse = ", ")
 }
 
+#' Prefix bare host strings with `https://` so awesome URLs are absolute
+#' @keywords internal
 normalise_awesome_url <- function(raw) {
   s <- trimws(as.character(raw))
   if (grepl("^https?://", s, ignore.case = TRUE)) {
@@ -128,6 +140,8 @@ normalise_awesome_url <- function(raw) {
   paste0("https://", s)
 }
 
+#' Slugify a string into a lowercase hyphenated path fragment (max 80 chars)
+#' @keywords internal
 slugify_awesome <- function(s) {
   s <- gsub("(^-+|-+$)", "", gsub("[^a-z0-9]+", "-", tolower(as.character(s))))
   substr(s, 1L, 80L)

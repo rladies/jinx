@@ -141,7 +141,7 @@ for (i in seq_along(chunks)) {
 Anything you put in the YAML is passed to your gather function as the `src` argument.
 `source_type` is what shows up on the retrieved chunk's metadata — the indexer sets it on every chunk your function returns, so you don't need to set it yourself.
 
-**Step 4.** Add tests. Pure formatting/parsing helpers go in `tests/testthat/test-rag-sources.R`; HTTP-touching helpers should be mocked with `httr2::local_mocked_responses()` (see [`test-rag-embed.R`](https://github.com/rladies/jinx/blob/main/tests/testthat/test-rag-embed.R) for the pattern).
+**Step 4.** Add tests. Pure formatting/parsing helpers go in `tests/testthat/test-rag-sources.R`; HTTP-touching helpers should be mocked with `local_mocked_responses()` (put `library(httr2)` at the top of the test file so you don't need the `httr2::` prefix — see [`test-rag-embed.R`](https://github.com/rladies/jinx/blob/main/tests/testthat/test-rag-embed.R) for the pattern).
 
 That's the whole contributor surface.
 You don't have to touch the orchestrator, the dispatcher, or the embed/upsert logic.

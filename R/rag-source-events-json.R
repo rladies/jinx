@@ -12,8 +12,8 @@
 #' @keywords internal
 gather_events_json <- function(
   src,
-  past_window_seconds = src$past_window_seconds %||% (365L * 24L * 60L * 60L),
-  min_chars = src$min_chars %||% 80L
+  past_window_seconds = src$past_window_seconds %or% (365L * 24L * 60L * 60L),
+  min_chars = src$min_chars %or% 80L
 ) {
   events <- rag_fetch_json(rag_request(src$url))
   if (!is.list(events) || length(events) == 0L) {
@@ -21,7 +21,7 @@ gather_events_json <- function(
     return(list())
   }
 
-  cutoff <- as.integer(Sys.time()) - past_window_seconds
+  cutoff <- as.numeric(Sys.time()) - past_window_seconds
   chunks <- lapply(
     events,
     event_to_chunk,
@@ -34,11 +34,13 @@ gather_events_json <- function(
   chunks
 }
 
+#' Convert a meetup event record into a chunk record
+#' @keywords internal
 event_to_chunk <- function(ev, src, cutoff, min_chars) {
   if (identical(ev$status, "cancelled")) {
     return(NULL)
   }
-  ts <- rag_parse_date(ev$datetime_utc %||% ev$datetime)
+  ts <- rag_parse_date(ev$datetime_utc %or% ev$datetime)
   if (identical(ev$status, "past") && ts > 0L && ts < cutoff) {
     return(NULL)
   }
@@ -49,12 +51,12 @@ event_to_chunk <- function(ev, src, cutoff, min_chars) {
   }
 
   id <- as.character(
-    ev$id %||% ev$link %||% paste0(ev$group_urlname, "-", ts)
+    ev$id %or% ev$link %or% paste0(ev$group_urlname, "-", ts)
   )
   list(
     text = text,
-    heading = ev$group_name %||% "",
-    title = ev$title %||% "Untitled event",
+    heading = ev$group_name %or% "",
+    title = ev$title %or% "Untitled event",
     repo = src$repo,
     path = paste0("event/", id),
     url = ev$link,
@@ -64,14 +66,17 @@ event_to_chunk <- function(ev, src, cutoff, min_chars) {
   )
 }
 
+#' Format a meetup event as a labelled text block
+#' @keywords internal
 format_event <- function(ev) {
   status_label <- if (identical(ev$status, "active")) "upcoming" else "past"
+  venue <- format_event_venue(ev)
   fields <- c(
     Title = ev$title,
     Chapter = ev$group_name,
-    When = ev$datetime %||% ev$datetime_utc,
+    When = ev$datetime %or% ev$datetime_utc,
     Status = if (!is.null(ev$status)) status_label,
-    Where = nz(format_event_venue(ev)),
+    Where = if (nzchar(venue)) venue,
     Attendance = if (!is.null(ev$going)) as.character(ev$going)
   )
   lines <- paste0(names(fields), ": ", fields)
@@ -81,17 +86,19 @@ format_event <- function(ev) {
   paste(lines, collapse = "\n")
 }
 
+#' Build a comma-separated venue string from event fields
+#' @keywords internal
 format_event_venue <- function(ev) {
   parts <- c(ev$venue_name, ev$venue_address, ev$venue_city, ev$venue_country)
   parts <- parts[lengths(parts) > 0L & nzchar(parts)]
   if (length(parts) == 0L) {
-    return(ev$location %||% "")
+    return(ev$location %or% "")
   }
   paste(parts, collapse = ", ")
 }
 
+#' Strip HTML tags and collapse whitespace
+#' @keywords internal
 strip_html <- function(s) {
   trimws(gsub("\\s+", " ", gsub("<[^>]+>", " ", s)))
 }
-
-nz <- function(x) if (length(x) && nzchar(x)) x else NULL

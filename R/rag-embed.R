@@ -20,7 +20,8 @@ cloudflare_request <- function(
 ) {
   httr2::request(base_url) |>
     httr2::req_auth_bearer_token(api_token) |>
-    httr2::req_user_agent(user_agent)
+    httr2::req_user_agent(user_agent) |>
+    httr2::req_retry(max_tries = 3)
 }
 
 #' Embed texts with a Cloudflare Workers AI model
@@ -98,7 +99,7 @@ cloudflare_account_id <- function(api_token) {
   resp <- cloudflare_request(api_token) |>
     httr2::req_url_path_append("accounts") |>
     httr2::req_perform()
-  accounts <- httr2::resp_body_json(resp)$result %||% list()
+  accounts <- httr2::resp_body_json(resp)$result %or% list()
   if (length(accounts) == 0L) {
     cli::cli_abort("Cloudflare token has no accessible accounts.")
   }

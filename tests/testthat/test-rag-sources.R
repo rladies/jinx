@@ -19,12 +19,11 @@ describe("gather_rag_source", {
     expect_type(chunks, "list")
   })
 
-  it("warns and returns empty list for unknown type", {
-    expect_warning(
-      result <- gather_rag_source(list(type = "no-such-source")),
+  it("aborts on unknown source type", {
+    expect_error(
+      gather_rag_source(list(type = "no-such-source")),
       "Unknown source type"
     )
-    expect_identical(result, list())
   })
 })
 

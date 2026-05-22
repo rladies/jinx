@@ -19,11 +19,11 @@ chunk_markdown <- function(
 ) {
   parts <- strip_frontmatter(markdown)
   sections <- split_by_sections(parts$body)
-  date <- meta$date %||% parse_unix_date(parts$frontmatter$date) %||% 0L
-  lastmod <- meta$lastmod %||%
-    parse_unix_date(parts$frontmatter$lastmod) %||%
+  date <- meta$date %or% parse_unix_date(parts$frontmatter$date) %or% 0L
+  lastmod <- meta$lastmod %or%
+    parse_unix_date(parts$frontmatter$lastmod) %or%
     date
-  title <- parts$frontmatter$title %||% meta$fallback_title %||% ""
+  title <- parts$frontmatter$title %or% meta$fallback_title %or% ""
 
   per_section <- lapply(sections, function(section) {
     pieces <- trimws(split_to_target(section$body, target_chars))
@@ -44,6 +44,7 @@ chunk_markdown <- function(
   unlist(per_section, recursive = FALSE)
 }
 
+#' Strip YAML frontmatter from a markdown document
 #' @keywords internal
 strip_frontmatter <- function(md) {
   if (length(md) != 1L || !nzchar(md)) {
@@ -63,6 +64,7 @@ strip_frontmatter <- function(md) {
   list(body = m[3], frontmatter = fm)
 }
 
+#' Split markdown body into sections by H1/H2 headings
 #' @keywords internal
 split_by_sections <- function(body) {
   lines <- strsplit(body, "\r?\n", perl = TRUE)[[1]]
@@ -90,6 +92,7 @@ split_by_sections <- function(body) {
   Filter(function(s) nzchar(trimws(s$body)), sections)
 }
 
+#' Split text into paragraph-aligned pieces near a target size
 #' @keywords internal
 split_to_target <- function(text, target) {
   if (nchar(text) <= target) {
@@ -99,18 +102,21 @@ split_to_target <- function(text, target) {
   pack_pieces(paragraphs, target, sep = "\n\n", hard = hard_split)
 }
 
+#' Split oversized text by sentence boundaries
 #' @keywords internal
 hard_split <- function(text, target) {
   sentences <- strsplit(text, "(?<=[.!?])\\s+", perl = TRUE)[[1]]
   pack_pieces(sentences, target, sep = " ", hard = chunk_chars)
 }
 
+#' Split text into fixed-width character chunks
 #' @keywords internal
 chunk_chars <- function(text, target) {
   starts <- seq(1L, nchar(text), by = target)
   substring(text, starts, starts + target - 1L)
 }
 
+#' Greedily pack text pieces into chunks under a target size
 #' @keywords internal
 pack_pieces <- function(pieces, target, sep, hard) {
   out <- character()
@@ -135,6 +141,7 @@ pack_pieces <- function(pieces, target, sep, hard) {
   if (nzchar(buf)) c(out, buf) else out
 }
 
+#' Parse a date value into unix seconds
 #' @keywords internal
 parse_unix_date <- function(raw) {
   if (
@@ -162,4 +169,4 @@ parse_unix_date <- function(raw) {
   as.integer(unclass(parsed))
 }
 
-`%||%` <- function(a, b) if (is.null(a) || identical(a, "")) b else a
+`%or%` <- function(a, b) if (is.null(a) || identical(a, "")) b else a

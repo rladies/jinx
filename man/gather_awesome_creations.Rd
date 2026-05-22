@@ -4,7 +4,7 @@
 \alias{gather_awesome_creations}
 \title{Gather chunks from RLadies+ awesome-creations feeds}
 \usage{
-gather_awesome_creations(src, min_chars = src$min_chars \%||\% 60L)
+gather_awesome_creations(src, min_chars = src$min_chars \%or\% 60L)
 }
 \arguments{
 \item{src}{Source spec list.}
