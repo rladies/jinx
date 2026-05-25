@@ -144,16 +144,14 @@ pack_pieces <- function(pieces, target, sep, hard) {
 #' Parse a date value into unix seconds
 #' @keywords internal
 parse_unix_date <- function(raw) {
-  if (
-    is.null(raw) ||
-      identical(raw, "") ||
-      identical(raw, 0L) ||
-      identical(raw, 0)
-  ) {
+  if (is_blank(raw) || identical(raw, 0L) || identical(raw, 0)) {
     return(NULL)
   }
   if (is.numeric(raw)) {
     return(as.integer(raw))
+  }
+  if (!is.character(raw)) {
+    return(NULL)
   }
   parsed <- suppressWarnings(as.POSIXct(raw, tz = "UTC"))
   if (is.na(parsed)) {
@@ -169,4 +167,24 @@ parse_unix_date <- function(raw) {
   as.integer(unclass(parsed))
 }
 
-`%or%` <- function(a, b) if (is.null(a) || identical(a, "")) b else a
+#' Test whether a value should be treated as "missing" by `%or%`
+#'
+#' Catches NULL, zero-length vectors and lists (including the
+#' empty-JSON-object case `list()` from `jsonlite::fromJSON`), and
+#' length-1 atomic values that are `NA` or `""`.
+#'
+#' @keywords internal
+is_blank <- function(x) {
+  if (is.null(x)) {
+    return(TRUE)
+  }
+  if (length(x) == 0L) {
+    return(TRUE)
+  }
+  if (length(x) == 1L && is.atomic(x)) {
+    return(is.na(x) || identical(unname(x), ""))
+  }
+  FALSE
+}
+
+`%or%` <- function(a, b) if (is_blank(a)) b else a

@@ -60,6 +60,19 @@ describe("parse_unix_date", {
     expect_null(parse_unix_date(0))
   })
 
+  it("returns NULL for empty JSON objects parsed as list()", {
+    expect_null(parse_unix_date(list()))
+  })
+
+  it("returns NULL for non-character, non-numeric inputs (e.g. named lists)", {
+    expect_null(parse_unix_date(list(x = 1)))
+  })
+
+  it("returns NULL for NA without erroring", {
+    expect_null(parse_unix_date(NA))
+    expect_null(parse_unix_date(NA_character_))
+  })
+
   it("parses ISO 8601 to unix seconds", {
     expect_identical(parse_unix_date("2024-01-02T00:00:00Z"), 1704153600L)
   })

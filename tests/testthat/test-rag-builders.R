@@ -2,6 +2,83 @@ library(httr2)
 
 hugo_src <- list(title_suffix = "", language_roots = list())
 
+describe("is_blank", {
+  it("treats NULL, empty list, and zero-length vectors as blank", {
+    expect_true(is_blank(NULL))
+    expect_true(is_blank(list()))
+    expect_true(is_blank(character(0)))
+  })
+
+  it("treats length-1 NA and empty string as blank", {
+    expect_true(is_blank(NA))
+    expect_true(is_blank(NA_character_))
+    expect_true(is_blank(""))
+  })
+
+  it("treats non-blank atomic values and non-empty lists as not blank", {
+    expect_false(is_blank("x"))
+    expect_false(is_blank(0))
+    expect_false(is_blank(list(x = 1)))
+  })
+})
+
+describe("`%or%`", {
+  it("falls through empty JSON object (parsed as list()) to fallback", {
+    expect_identical(list() %or% "fallback", "fallback")
+  })
+
+  it("falls through NA to fallback", {
+    expect_identical(NA_character_ %or% "fallback", "fallback")
+  })
+
+  it("chains: both blank yields the final blank value, not an error", {
+    expect_identical(list() %or% list() %or% "z", "z")
+  })
+})
+
+describe("format_awesome_package with malformed URLs", {
+  it("returns NULL when both pkdown_url and repo_url parse as list()", {
+    pkg <- list(
+      name = "ADTSA",
+      title = "X",
+      description = "y",
+      pkdown_url = list(),
+      repo_url = list()
+    )
+    expect_null(format_awesome_package(pkg, list(repo = "rladies/x")))
+  })
+
+  it("falls back to repo_url when pkdown_url is an empty list", {
+    pkg <- list(
+      name = "foo",
+      pkdown_url = list(),
+      repo_url = "https://github.com/x/foo"
+    )
+    chunk <- format_awesome_package(pkg, list(repo = "rladies/x"))
+    expect_identical(chunk$url, "https://github.com/x/foo")
+  })
+
+  it("omits Repository and Documentation lines when those fields are list()", {
+    pkg <- list(
+      name = "foo",
+      pkdown_url = list(),
+      repo_url = "https://github.com/x/foo"
+    )
+    chunk <- format_awesome_package(pkg, list(repo = "rladies/x"))
+    expect_match(chunk$text, "Repository:", fixed = TRUE)
+    expect_false(grepl("Documentation:", chunk$text, fixed = TRUE))
+  })
+})
+
+describe("format_awesome_content with malformed url", {
+  it("returns NULL when item$url is an empty list", {
+    expect_null(format_awesome_content(
+      list(url = list(), title = "T"),
+      list(repo = "r")
+    ))
+  })
+})
+
 describe("extract_hugo_page", {
   it("returns empty title and description when both meta tags are absent", {
     html <- paste0(
