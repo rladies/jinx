@@ -64,6 +64,15 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
+<div class="section level3">
+<h3 id="rag-tolerate-malformed-json-fields-development-version">RAG: tolerate malformed JSON fields<a class="anchor" aria-label="anchor" href="#rag-tolerate-malformed-json-fields-development-version"></a></h3>
+<ul><li>The <code>awesome-rladies-creations</code> packages feed has 41 entries where <code>pkdown_url</code> and/or <code>repo_url</code> parse as empty JSON objects (<code><a href="https://rdrr.io/r/base/Paren.html" class="external-link">{}</a></code>) rather than strings or <code>null</code>. The scheduled indexer crashed mid-run on 2026-05-24 with <code>missing value where TRUE/FALSE needed</code> when one of these reached <code><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar()</a></code>. The custom <code>%or%</code> operator and the downstream <code><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar()</a></code> checks now go through a new <code><a href="../reference/is_blank.html">is_blank()</a></code> helper that treats NULL, zero-length vectors and lists, NA, and the empty string uniformly as “missing”. Regression tests pin the empty-list and NA cases.</li>
+<li>
+<code><a href="../reference/parse_unix_date.html">parse_unix_date()</a></code> no longer errors when handed an empty list or any other non-character / non-numeric value; it returns <code>NULL</code>, matching its behaviour for <code>NULL</code> and <code>""</code>.</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.1" id="jinx-011">jinx 0.1.1<a class="anchor" aria-label="anchor" href="#jinx-011"></a></h2>
 <div class="section level3">
 <h3 id="rag-indexer-moved-to-r-0-1-1">RAG: indexer moved to R<a class="anchor" aria-label="anchor" href="#rag-indexer-moved-to-r-0-1-1"></a></h3>

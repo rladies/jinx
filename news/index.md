@@ -1,5 +1,27 @@
 # Changelog
 
+## jinx (development version)
+
+### RAG: tolerate malformed JSON fields
+
+- The `awesome-rladies-creations` packages feed has 41 entries where
+  `pkdown_url` and/or `repo_url` parse as empty JSON objects
+  ([`{}`](https://rdrr.io/r/base/Paren.html)) rather than strings or
+  `null`. The scheduled indexer crashed mid-run on 2026-05-24 with
+  `missing value where TRUE/FALSE needed` when one of these reached
+  [`nzchar()`](https://rdrr.io/r/base/nchar.html). The custom `%or%`
+  operator and the downstream
+  [`nzchar()`](https://rdrr.io/r/base/nchar.html) checks now go through
+  a new
+  [`is_blank()`](https://rladies.github.io/jinx/reference/is_blank.md)
+  helper that treats NULL, zero-length vectors and lists, NA, and the
+  empty string uniformly as “missing”. Regression tests pin the
+  empty-list and NA cases.
+- [`parse_unix_date()`](https://rladies.github.io/jinx/reference/parse_unix_date.md)
+  no longer errors when handed an empty list or any other non-character
+  / non-numeric value; it returns `NULL`, matching its behaviour for
+  `NULL` and `""`.
+
 ## jinx 0.1.1
 
 ### RAG: indexer moved to R
