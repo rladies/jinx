@@ -80,7 +80,7 @@ format_event <- function(ev) {
     Attendance = if (!is.null(ev$going)) as.character(ev$going)
   )
   lines <- paste0(names(fields), ": ", fields)
-  if (!is.null(ev$description) && nzchar(ev$description)) {
+  if (!is_blank(ev$description)) {
     lines <- c(lines, "", trimws(strip_html(ev$description)))
   }
   paste(lines, collapse = "\n")

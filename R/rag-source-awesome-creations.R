@@ -50,11 +50,11 @@ format_awesome_item <- function(item, feed, src) {
 #' Build a chunk record for one awesome-creations package entry
 #' @keywords internal
 format_awesome_package <- function(pkg, src) {
-  if (is.null(pkg$name) || !nzchar(pkg$name)) {
+  if (is_blank(pkg$name)) {
     return(NULL)
   }
   url <- pkg$pkdown_url %or% pkg$repo_url
-  if (is.null(url) || !nzchar(url)) {
+  if (is_blank(url)) {
     return(NULL)
   }
 
@@ -63,12 +63,12 @@ format_awesome_package <- function(pkg, src) {
     Package = pkg$name,
     Title = pkg$title %or% pkg$name,
     Authors = if (nzchar(authors)) authors,
-    Repository = pkg$repo_url,
-    Documentation = pkg$pkdown_url,
-    `Last updated` = pkg$last_updated
+    Repository = if (!is_blank(pkg$repo_url)) pkg$repo_url,
+    Documentation = if (!is_blank(pkg$pkdown_url)) pkg$pkdown_url,
+    `Last updated` = if (!is_blank(pkg$last_updated)) pkg$last_updated
   )
   lines <- paste0(names(fields), ": ", fields)
-  if (!is.null(pkg$description) && nzchar(pkg$description)) {
+  if (!is_blank(pkg$description)) {
     lines <- c(lines, "", trimws(gsub("\\s+", " ", pkg$description)))
   }
   date <- rag_parse_date(pkg$last_updated)
@@ -92,7 +92,7 @@ format_awesome_package <- function(pkg, src) {
 #' Build a chunk record for one awesome-creations content entry
 #' @keywords internal
 format_awesome_content <- function(item, src) {
-  if (is.null(item$url) || !nzchar(item$url)) {
+  if (is_blank(item$url)) {
     return(NULL)
   }
   url <- normalise_awesome_url(item$url)
@@ -100,11 +100,11 @@ format_awesome_content <- function(item, src) {
   fields <- c(
     Title = item$title %or% url,
     Type = item$type %or% "content",
-    Language = item$language,
+    Language = if (!is_blank(item$language)) item$language,
     Authors = if (nzchar(authors)) authors
   )
   lines <- paste0(names(fields), ": ", fields)
-  if (!is.null(item$description) && nzchar(item$description)) {
+  if (!is_blank(item$description)) {
     lines <- c(lines, "", trimws(gsub("\\s+", " ", item$description)))
   }
   list(
