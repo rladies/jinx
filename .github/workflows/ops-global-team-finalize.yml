@@ -13,14 +13,21 @@ on:
         description: Team slug
         required: true
 
+concurrency:
+  group: ops-global-team-finalize-${{ inputs.username }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
 jobs:
   finalize:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: actions/create-github-app-token@v3
         id: app-token
@@ -40,11 +47,14 @@ jobs:
       - name: Finalize global team onboarding
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          USERNAME: ${{ inputs.username }}
+          TEAM: ${{ inputs.team }}
+          NAME: ${{ inputs.name }}
         run: |
           Rscript -e '
             jinx::gt_finalize_onboarding(
-              username = "${{ inputs.username }}",
-              team = "${{ inputs.team }}",
-              name = "${{ inputs.name }}"
+              username = Sys.getenv("USERNAME"),
+              team     = Sys.getenv("TEAM"),
+              name     = Sys.getenv("NAME")
             )
           '

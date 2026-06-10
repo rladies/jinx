@@ -208,6 +208,7 @@ async function rag_event_embedding_get(env) {
     await env.SLACK_TOKENS.put(
       EVENT_EMBEDDING_KV_KEY,
       JSON.stringify(embedding),
+      { expirationTtl: 30 * 24 * 60 * 60 },
     ).catch((e) =>
       console.warn("event-embedding cache write failed:", e.message),
     );

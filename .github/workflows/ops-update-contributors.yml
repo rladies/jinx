@@ -9,12 +9,17 @@ on:
         description: "Repository to update (leave empty for all key repos)"
         required: false
 
+concurrency:
+  group: ops-update-contributors-${{ inputs.repo || 'all' }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Generate app token
         id: app-token
@@ -27,6 +32,7 @@ jobs:
       - name: Checkout jinx
         uses: actions/checkout@v6
         with:
+          persist-credentials: false
           repository: rladies/jinx
 
       - name: Setup R
@@ -40,9 +46,10 @@ jobs:
       - name: Update contributors list
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO: ${{ inputs.repo }}
         run: |
           Rscript -e '
-            repo <- "${{ inputs.repo }}"
+            repo <- Sys.getenv("REPO")
             if (nzchar(repo)) {
               jinx::contributor_update("rladies", repo)
             } else {

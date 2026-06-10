@@ -143,7 +143,9 @@ export async function slack_event_handle(env, ctx, body) {
   if (event.type === "reaction_added") {
     if (!slack_team_is_allowed(env, teamId))
       return new Response("", { status: 200 });
-    ctx.waitUntil(slack_event_handle_reaction(env, teamId, event));
+    ctx.waitUntil(
+      slack_event_handle_reaction(env, teamId, event, payload.event_id),
+    );
     return new Response("", { status: 200 });
   }
 
@@ -287,6 +289,10 @@ async function slack_thread_history(env, teamId, channel, threadTs, currentTs) {
     }),
   ]);
   if (!res) return [];
+  if (!botUserId) {
+    console.warn("thread history dropped: bot_user_id missing from team KV");
+    return [];
+  }
   const out = [];
   for (const m of res.messages || []) {
     if (!m || !m.text || m.subtype) continue;
@@ -294,7 +300,7 @@ async function slack_thread_history(env, teamId, channel, threadTs, currentTs) {
     const content = slack_event_strip_mention(m.text || "");
     if (!content) continue;
     out.push({
-      role: botUserId && m.user === botUserId ? "assistant" : "user",
+      role: m.user === botUserId ? "assistant" : "user",
       content,
     });
   }
@@ -309,12 +315,21 @@ async function slack_bot_user_id(env, teamId) {
   return team?.bot_user_id || null;
 }
 
-async function slack_event_handle_reaction(env, teamId, event) {
+async function slack_event_handle_reaction(env, teamId, event, eventId) {
   if (event.item?.type !== "message") return;
   if (!env.SLACK_TOKENS) return;
 
   const botUserId = await slack_bot_user_id(env, teamId);
   if (!botUserId || event.item_user !== botUserId) return;
+
+  if (eventId) {
+    const dedupeKey = `reaction_seen:${eventId}`;
+    const seen = await env.SLACK_TOKENS.get(dedupeKey).catch(() => null);
+    if (seen) return;
+    await env.SLACK_TOKENS.put(dedupeKey, "1", {
+      expirationTtl: 24 * 60 * 60,
+    }).catch((e) => console.warn("reaction_seen write failed:", e));
+  }
 
   const day = new Date().toISOString().slice(0, 10);
   const reaction = (event.reaction || "").split("::")[0];
@@ -547,9 +562,13 @@ async function slack_dm_open(env, teamId, userId) {
   }
 }
 
-function slack_event_strip_mention(text) {
+export function slack_event_strip_mention(text) {
   if (!text) return "";
-  return text.replace(/<@[A-Z0-9]+>/g, "").trim();
+  return text
+    .replace(/<@[A-Z0-9]+(\|[^>]+)?>/g, "")
+    .replace(/<!subteam\^[A-Z0-9]+(\|[^>]+)?>/g, "")
+    .replace(/<!(channel|here|everyone)>/g, "")
+    .trim();
 }
 
 function slack_event_format_answer_markdown(answer) {

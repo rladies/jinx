@@ -31,11 +31,14 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       IMAGE_BASE: ghcr.io/rladies/jinx-bot
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Compute image tag
         id: meta

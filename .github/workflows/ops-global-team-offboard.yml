@@ -30,14 +30,21 @@ on:
         description: GitHub username (without @)
         required: true
 
+concurrency:
+  group: ops-global-team-offboard-${{ inputs.username }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
 jobs:
   offboard:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: actions/create-github-app-token@v3
         id: app-token
@@ -57,11 +64,14 @@ jobs:
       - name: Create offboarding issue
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          USERNAME: ${{ inputs.username }}
+          TEAM: ${{ inputs.team }}
+          NAME: ${{ inputs.name }}
         run: |
           Rscript -e '
             jinx::gt_create_offboarding(
-              username = "${{ inputs.username }}",
-              team = "${{ inputs.team }}",
-              name = "${{ inputs.name }}"
+              username = Sys.getenv("USERNAME"),
+              team     = Sys.getenv("TEAM"),
+              name     = Sys.getenv("NAME")
             )
           '

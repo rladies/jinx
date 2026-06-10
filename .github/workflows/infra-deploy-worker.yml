@@ -21,11 +21,14 @@ jobs:
   test:
     name: Unit-test worker
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: worker
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v6
         with:
@@ -41,8 +44,11 @@ jobs:
     name: Validate worker
     needs: test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Validate worker bundle
         run: npx --yes wrangler@4 deploy --dry-run --outdir /tmp/worker-dist
@@ -52,8 +58,11 @@ jobs:
     needs: validate
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Deploy to Cloudflare
         env:

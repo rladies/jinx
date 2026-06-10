@@ -27,6 +27,7 @@ permissions:
 jobs:
   thank:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: github.event.pull_request.merged == true
     container:
       image: ghcr.io/rladies/jinx-bot:latest
