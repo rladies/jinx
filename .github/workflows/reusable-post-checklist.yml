@@ -29,6 +29,7 @@ permissions:
 jobs:
   checklist:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     container:
       image: ghcr.io/rladies/jinx-bot:latest
     steps:

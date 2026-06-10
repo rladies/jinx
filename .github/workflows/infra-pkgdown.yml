@@ -25,6 +25,7 @@ permissions:
 jobs:
   pkgdown:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     concurrency:
       group: pkgdown-${{ github.event_name }}
       cancel-in-progress: true
@@ -34,6 +35,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: r-lib/actions/setup-pandoc@v2
 

@@ -5,12 +5,17 @@ on:
     - cron: "58 10 * * *"
   workflow_dispatch:
 
+concurrency:
+  group: ops-website-merge-pending
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
 jobs:
   merge:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Generate app token
         id: app-token
@@ -23,6 +28,7 @@ jobs:
       - name: Checkout jinx
         uses: actions/checkout@v6
         with:
+          persist-credentials: false
           repository: rladies/jinx
 
       - name: Setup R

@@ -1,5 +1,65 @@
 # jinx (development version)
 
+## Post-review hardening
+
+- **First-time contributor check actually works.** `is_first_time_contributor()`
+  was passing `creator=` to `GET /repos/{owner}/{repo}/pulls`, which the API
+  silently ignores — every author looked like a first-timer until a repo had
+  more than one PR total, and like a returning contributor after that. Now
+  uses `GET /search/issues` with `is:pr/is:issue + author:` to count
+  authored items correctly.
+- **Slack mention stripping handles all forms.** `slack_event_strip_mention()`
+  now removes `<@U…|display>` user mentions, `<!subteam^S…|name>` group
+  mentions, and `<!channel|here|everyone>` broadcasts in addition to the
+  bare `<@U…>` form. Previously the bot's own past mentions could leak into
+  thread history as user turns.
+- **Slack thread history fails closed without `bot_user_id`.** If the
+  team KV record has no cached `bot_user_id` (older installs),
+  `slack_thread_history()` now drops the whole history rather than
+  relabelling every prior bot reply as `role: "user"`.
+- **Slack API retries 429 + 5xx once.** `slack_api_call()` honours
+  `Retry-After` (capped at 5s) before raising, so a single rate-limited
+  post no longer aborts the answer path with the failure quip.
+- **Reaction events deduped by `event_id`.** `slack_event_handle_reaction()`
+  now skips duplicate Slack retries of the same `reaction_added` event so
+  the daily counters stop double-incrementing.
+- **Workflow-input injection lane closed.** `ops-chapter-onboarding`,
+  `ops-global-team-invite`, `ops-global-team-finalize`,
+  `ops-global-team-offboard`, `ops-update-contributors`, and
+  `ops-airtable-sync` now move every `${{ inputs.* }}` into an `env:`
+  block and read it from `Sys.getenv()` inside Rscript. The invite
+  workflow also builds its JSON artifact with `jq` instead of `echo` so
+  a `'` in a name no longer crashes the run.
+- **Workflow hardening.** All `actions/checkout` steps now set
+  `persist-credentials: false`, all ops/CI/infra/reusable workflows get
+  `timeout-minutes: 15`, and every self-racing ops workflow gets a
+  `concurrency:` group key (the directory sync, contributors update,
+  per-username invite/offboard, etc.).
+- **`gh_branch_upsert(force = FALSE)` returns the real head.** Previously
+  it returned the _base_ SHA when the branch already existed, which was
+  wrong for any caller that wanted to act on the branch tip.
+  Now reads the existing branch's head SHA instead.
+- **Airtable sync retries.** `airtable_list_records()` now wraps each
+  paginated request in `req_retry(max_tries = 3)`, so a 429 mid-sync no
+  longer aborts the whole pull.
+- **Directory slug collisions.** Two records named "Maria" used to
+  collide on `maria.json`. `airtable_to_directory_entry()` now appends a
+  6-char hash of the Airtable record id to the slug.
+- **Contributors update stops daily commit churn.** The equality check
+  used to compare the rendered file verbatim, including
+  `_Last updated: {Sys.Date()}_`, so it always diffed and committed
+  daily even when no contributors had changed. The check now strips that
+  line before comparing.
+- **`is_team_member` fails open on transient errors.** A real 404 still
+  returns `FALSE`, but a network blip or 5xx returns `TRUE` (with a
+  warning) so we don't spam the global team with first-timer welcomes
+  during a GitHub hiccup.
+- **`review_assign_onboarding` surfaces errors.** Comment-post failures
+  now emit a `cli_alert_warning` instead of being swallowed silently,
+  so a failed `cc @rladies/...` tag is visible in the run log.
+- **Event-embedding KV write gets a 30-day TTL** so a stale vector
+  doesn't outlive the model behind it.
+
 ## Slack bot: remember the thread
 
 - The Slack Q&A bot now reads prior turns in the same thread via

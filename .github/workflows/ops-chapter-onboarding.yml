@@ -17,12 +17,17 @@ on:
         description: Chapter country
         required: true
 
+concurrency:
+  group: ops-chapter-onboarding-${{ inputs.city }}-${{ inputs.country }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
 jobs:
   onboard:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Generate app token
         id: app-token
@@ -35,6 +40,7 @@ jobs:
       - name: Checkout jinx
         uses: actions/checkout@v6
         with:
+          persist-credentials: false
           repository: rladies/jinx
 
       - name: Setup R
@@ -48,18 +54,21 @@ jobs:
       - name: Run chapter onboarding
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          ACTION: ${{ inputs.action }}
+          CITY: ${{ inputs.city }}
+          COUNTRY: ${{ inputs.country }}
         run: |
           Rscript -e '
-            if ("${{ inputs.action }}" == "setup") {
+            action  <- Sys.getenv("ACTION")
+            city    <- Sys.getenv("CITY")
+            country <- Sys.getenv("COUNTRY")
+            if (action == "setup") {
               jinx::chapter_create_setup(
-                city = "${{ inputs.city }}",
-                country = "${{ inputs.country }}",
+                city = city,
+                country = country,
                 organizers = character(0)
               )
             } else {
-              jinx::chapter_create_update(
-                city = "${{ inputs.city }}",
-                country = "${{ inputs.country }}"
-              )
+              jinx::chapter_create_update(city = city, country = country)
             }
           '

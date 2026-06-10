@@ -9,7 +9,7 @@ describe("airtable_to_directory_entry", {
       )
     )
     result <- airtable_to_directory_entry(record)
-    expect_identical(result$slug, "jane-doe")
+    expect_match(result$slug, "^jane-doe-[0-9a-f]{6}$")
     expect_identical(result$data$name, "Jane Doe")
     expect_identical(result$data$github, "janedoe")
     expect_identical(result$data$twitter, "jane_doe")
@@ -32,7 +32,19 @@ describe("airtable_to_directory_entry", {
       fields = list(Name = "Maria del Carmen")
     )
     result <- airtable_to_directory_entry(record)
-    expect_identical(result$slug, "maria-del-carmen")
+    expect_match(result$slug, "^maria-del-carmen-[0-9a-f]{6}$")
+  })
+
+  it("disambiguates same-name records with the airtable id", {
+    a <- airtable_to_directory_entry(list(
+      id = "recAAA",
+      fields = list(Name = "Maria")
+    ))
+    b <- airtable_to_directory_entry(list(
+      id = "recBBB",
+      fields = list(Name = "Maria")
+    ))
+    expect_false(a$slug == b$slug)
   })
 
   it("omits empty social fields", {

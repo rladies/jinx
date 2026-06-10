@@ -141,7 +141,10 @@ contributor_update <- function(
 
   if (!is.null(existing)) {
     existing_content <- rawToChar(jsonlite::base64_dec(existing$content))
-    if (trimws(existing_content) == trimws(content)) {
+    if (
+      contributor_strip_date(existing_content) ==
+        contributor_strip_date(content)
+    ) {
       cli::cli_alert_info("Contributors list is up to date")
       return(invisible(NULL))
     }
@@ -304,4 +307,8 @@ contributor_format_grid <- function(contributors, cols) {
   )
 
   paste(grid_rows, collapse = "\n\n")
+}
+
+contributor_strip_date <- function(text) {
+  trimws(sub("_Last updated: [0-9-]+_", "", text))
 }

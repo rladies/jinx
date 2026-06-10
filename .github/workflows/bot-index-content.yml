@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout jinx
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Mint jinx-familiar App token
         id: app-token

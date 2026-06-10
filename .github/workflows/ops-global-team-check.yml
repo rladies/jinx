@@ -5,14 +5,21 @@ on:
     - cron: "0 */6 * * *"
   workflow_dispatch: {}
 
+concurrency:
+  group: ops-global-team-check
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: actions/create-github-app-token@v3
         id: app-token

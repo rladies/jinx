@@ -13,12 +13,17 @@ on:
           - directory
           - global-team
 
+concurrency:
+  group: ops-airtable-sync-${{ inputs.target || 'all' }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Generate app token
         id: app-token
@@ -31,6 +36,7 @@ jobs:
       - name: Checkout jinx
         uses: actions/checkout@v6
         with:
+          persist-credentials: false
           repository: rladies/jinx
 
       - name: Setup R
@@ -45,9 +51,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+          TARGET: ${{ inputs.target }}
         run: |
           Rscript -e '
-            target <- "${{ inputs.target }}"
+            target <- Sys.getenv("TARGET")
             if (target == "" || target == "directory") {
               jinx::directory_sync_airtable()
             }
