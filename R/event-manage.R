@@ -143,31 +143,6 @@ event_create_summary <- function(events, period = c("weekly", "monthly")) {
   )
 }
 
-#' Publish event summary as a GitHub issue
-#'
-#' @param summary Formatted summary from [event_create_summary()].
-#' @param org GitHub organization.
-#' @param target_repo Repository to publish to.
-#' @return Issue URL (invisibly).
-#' @export
-event_publish_summary <- function(
-  summary,
-  org = "rladies",
-  target_repo = "global-team"
-) {
-  issue <- gh::gh(
-    "POST /repos/{owner}/{repo}/issues",
-    owner = org,
-    repo = target_repo,
-    title = cli::format_inline("Event Summary - {Sys.Date()}"),
-    body = summary,
-    labels = list("report", "events")
-  )
-
-  cli::cli_alert_success("Event summary published: {issue$html_url}")
-  invisible(issue$html_url)
-}
-
 #' Load events configuration
 #'
 #' @return Named list from `inst/config/events.yml`.

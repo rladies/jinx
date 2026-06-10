@@ -8,7 +8,8 @@ contributor_update(
   owner,
   repo,
   file_path = ".github/contributors.md",
-  format = "grid"
+  format = "grid",
+  branch = "main"
 )
 }
 \arguments{
@@ -20,11 +21,13 @@ contributor_update(
 Defaults to \code{".github/contributors.md"}.}
 
 \item{format}{Format for the contributor list.}
+
+\item{branch}{Branch to commit to. Defaults to \code{"main"}.}
 }
 \value{
-PR URL if changes were made, \code{NULL} otherwise (invisibly).
+Commit URL if changes were made, \code{NULL} otherwise (invisibly).
 }
 \description{
-Fetches contributors and creates/updates a PR with the contributor
-list in a specified file.
+Fetches contributors and commits the rendered list directly to the
+default branch. No PR is opened.
 }

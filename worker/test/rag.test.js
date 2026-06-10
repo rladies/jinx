@@ -3,6 +3,7 @@ import {
   is_event_question,
   merge_matches,
   rag_build_messages,
+  rag_history_normalize,
   rag_question_answer,
   rag_repair_links,
   rag_source_urls,
@@ -23,7 +24,7 @@ describe("rerank_matches", () => {
         match({ id: "gh", score: 0.8, source_type: "github-org" }),
         match({ id: "guide", score: 0.8, source_type: "guide" }),
       ],
-      NOW
+      NOW,
     );
     expect(out[0].id).toBe("guide");
     expect(out[1].id).toBe("gh");
@@ -32,7 +33,7 @@ describe("rerank_matches", () => {
   it("treats missing date as evergreen (factor 1.0)", () => {
     const out = rerank_matches(
       [match({ id: "x", score: 0.7, source_type: "guide", date: 0 })],
-      NOW
+      NOW,
     );
     expect(out[0].adjusted_score).toBeCloseTo(0.7 * 1.25, 5);
   });
@@ -61,7 +62,7 @@ describe("rerank_matches", () => {
         match({ id: "guide-weak", score: 0.45, source_type: "guide" }),
         match({ id: "gh-strong", score: 0.85, source_type: "github-org" }),
       ],
-      NOW
+      NOW,
     );
     expect(out[0].id).toBe("gh-strong");
   });
@@ -69,7 +70,7 @@ describe("rerank_matches", () => {
   it("falls back to default weight for unknown source_type", () => {
     const out = rerank_matches(
       [match({ id: "x", score: 0.6, source_type: "mystery" })],
-      NOW
+      NOW,
     );
     expect(out[0].adjusted_score).toBeCloseTo(0.6, 5);
   });
@@ -113,7 +114,7 @@ describe("rerank_matches", () => {
           date: NOW + 7 * 24 * 60 * 60,
         }),
       ],
-      NOW
+      NOW,
     );
     expect(out[0].id).toBe("upcoming");
     expect(out[1].id).toBe("past");
@@ -130,7 +131,7 @@ describe("rerank_matches", () => {
           date: NOW + 7 * 24 * 60 * 60,
         }),
       ],
-      NOW
+      NOW,
     );
     expect(out[0].id).toBe("event");
     expect(out[1].id).toBe("creation");
@@ -146,7 +147,7 @@ describe("rerank_matches", () => {
           date: NOW + 30 * 24 * 60 * 60,
         }),
       ],
-      NOW
+      NOW,
     );
     expect(out.adjusted_score).toBeCloseTo(0.7 * 1.05, 5);
   });
@@ -154,7 +155,7 @@ describe("rerank_matches", () => {
   it("applies the youtube source weight (0.9)", () => {
     const [out] = rerank_matches(
       [match({ id: "y", score: 0.8, source_type: "youtube" })],
-      NOW
+      NOW,
     );
     expect(out.adjusted_score).toBeCloseTo(0.8 * 0.9, 5);
   });
@@ -175,7 +176,7 @@ describe("rerank_matches", () => {
           url: "https://rladies.org/coc/",
         }),
       ],
-      NOW
+      NOW,
     );
     expect(out[0].id).toBe("canonical");
     expect(out[1].id).toBe("meta");
@@ -191,7 +192,7 @@ describe("rerank_matches", () => {
           url: "https://guide.rladies.org/global-team/jinx/",
         }),
       ],
-      NOW
+      NOW,
     );
     expect(penalised.adjusted_score).toBeCloseTo(0.8 * 1.25 * 0.7, 5);
   });
@@ -206,7 +207,7 @@ describe("rerank_matches", () => {
           url: "https://guide.rladies.org/organizers/intro/get-started/",
         }),
       ],
-      NOW
+      NOW,
     );
     expect(unaffected.adjusted_score).toBeCloseTo(0.8 * 1.25, 5);
   });
@@ -221,7 +222,7 @@ describe("rerank_matches", () => {
           lastmod: NOW - 6 * 30 * 24 * 60 * 60,
         }),
       ],
-      NOW
+      NOW,
     );
     expect(fresh.adjusted_score).toBeCloseTo(0.8 * 1.05, 5);
   });
@@ -236,7 +237,7 @@ describe("rerank_matches", () => {
           lastmod: NOW - 3 * ONE_YEAR,
         }),
       ],
-      NOW
+      NOW,
     );
     expect(stale.adjusted_score).toBeCloseTo(0.8 * 1.05 * 0.85, 5);
   });
@@ -257,7 +258,7 @@ describe("rerank_matches", () => {
           lastmod: NOW - 30 * 24 * 60 * 60,
         }),
       ],
-      NOW
+      NOW,
     );
     expect(out[0].id).toBe("maintained");
     expect(out[1].id).toBe("untouched");
@@ -266,7 +267,7 @@ describe("rerank_matches", () => {
   it("treats missing lastmod as evergreen (factor 1.0)", () => {
     const [x] = rerank_matches(
       [match({ id: "x", score: 0.7, source_type: "guide", lastmod: 0 })],
-      NOW
+      NOW,
     );
     expect(x.adjusted_score).toBeCloseTo(0.7 * 1.25, 5);
   });
@@ -300,6 +301,72 @@ describe("rag_build_messages", () => {
     const [system] = rag_build_messages("anything", [sample_match]);
     expect(system.content).toMatch(/<https:\/\/example\.com\|readable label>/);
   });
+
+  it("threads prior turns between the system prompt and the new user message", () => {
+    const history = [
+      { role: "user", content: "What is RLadies+?" },
+      { role: "assistant", content: "RLadies+ is a global community." },
+    ];
+    const messages = rag_build_messages(
+      "and the chapters?",
+      [sample_match],
+      history,
+    );
+    expect(messages).toHaveLength(4);
+    expect(messages[0].role).toBe("system");
+    expect(messages[1]).toEqual({ role: "user", content: "What is RLadies+?" });
+    expect(messages[2]).toEqual({
+      role: "assistant",
+      content: "RLadies+ is a global community.",
+    });
+    expect(messages[3].role).toBe("user");
+    expect(messages[3].content).toContain("and the chapters?");
+  });
+});
+
+describe("rag_history_normalize", () => {
+  it("returns the query untouched when there is no history", () => {
+    const out = rag_history_normalize("what is RLadies+?", []);
+    expect(out.retrieval_text).toBe("what is RLadies+?");
+    expect(out.prior_messages).toEqual([]);
+  });
+
+  it("folds the two most recent user turns into the retrieval text", () => {
+    const history = [
+      { role: "user", content: "tell me about chapters" },
+      { role: "assistant", content: "chapters are local groups" },
+      { role: "user", content: "how do I start one" },
+      { role: "assistant", content: "fill the form" },
+    ];
+    const out = rag_history_normalize("and the timeline?", history);
+    expect(out.retrieval_text).toBe(
+      "tell me about chapters how do I start one and the timeline?",
+    );
+  });
+
+  it("caps prior_messages at the most recent turns", () => {
+    const history = Array.from({ length: 20 }, (_, i) => ({
+      role: i % 2 === 0 ? "user" : "assistant",
+      content: `turn ${i}`,
+    }));
+    const out = rag_history_normalize("now?", history);
+    expect(out.prior_messages.length).toBeLessThanOrEqual(8);
+    expect(out.prior_messages[out.prior_messages.length - 1].content).toBe(
+      "turn 19",
+    );
+  });
+
+  it("skips oversize messages but keeps packing older ones", () => {
+    const history = [
+      { role: "user", content: "a".repeat(100) },
+      { role: "assistant", content: "b".repeat(1600) }, // > HISTORY_TURN_CHAR_LIMIT
+      { role: "user", content: "c".repeat(100) },
+    ];
+    const out = rag_history_normalize("q", history);
+    const contents = out.prior_messages.map((m) => m.content);
+    expect(contents).toContain("a".repeat(100));
+    expect(contents).toContain("c".repeat(100));
+  });
 });
 
 describe("rag_repair_links", () => {
@@ -308,25 +375,24 @@ describe("rag_repair_links", () => {
   it("repairs <ttps:// to <https:// before validating", () => {
     const out = rag_repair_links(
       "See the <ttps://guide.rladies.org/coc/|Code of Conduct>.",
-      allowed
+      allowed,
     );
     expect(out).toBe(
-      "See the <https://guide.rladies.org/coc/|Code of Conduct>."
+      "See the <https://guide.rladies.org/coc/|Code of Conduct>.",
     );
   });
 
   it("repairs <ttp:// to <http:// for non-https sources", () => {
-    const out = rag_repair_links(
-      "See <ttp://example.org|example>.",
-      ["http://example.org"]
-    );
+    const out = rag_repair_links("See <ttp://example.org|example>.", [
+      "http://example.org",
+    ]);
     expect(out).toBe("See <http://example.org|example>.");
   });
 
   it("strips invented URLs but keeps the label", () => {
     const out = rag_repair_links(
       "Check <https://invented.example/page|the made-up guide> for details.",
-      allowed
+      allowed,
     );
     expect(out).toBe("Check the made-up guide for details.");
   });
@@ -334,7 +400,7 @@ describe("rag_repair_links", () => {
   it("keeps links whose URL is in the allowlist", () => {
     const out = rag_repair_links(
       "Read the <https://rladies.org/|main site>.",
-      allowed
+      allowed,
     );
     expect(out).toBe("Read the <https://rladies.org/|main site>.");
   });
@@ -342,10 +408,10 @@ describe("rag_repair_links", () => {
   it("handles a mix of repair, allowed, and invented in one answer", () => {
     const out = rag_repair_links(
       "Try the <ttps://guide.rladies.org/coc/|CoC>, the <https://rladies.org/|site>, and the <https://nope.example|imaginary doc>.",
-      allowed
+      allowed,
     );
     expect(out).toBe(
-      "Try the <https://guide.rladies.org/coc/|CoC>, the <https://rladies.org/|site>, and the imaginary doc."
+      "Try the <https://guide.rladies.org/coc/|CoC>, the <https://rladies.org/|site>, and the imaginary doc.",
     );
   });
 
@@ -356,7 +422,7 @@ describe("rag_repair_links", () => {
   it("treats a missing allowlist as no allowed URLs (strips every link)", () => {
     const out = rag_repair_links(
       "See <https://rladies.org/|the site>.",
-      undefined
+      undefined,
     );
     expect(out).toBe("See the site.");
   });
@@ -408,7 +474,10 @@ describe("rag_question_answer dual retrieval", () => {
         return mode === "json" ? JSON.parse(raw) : raw;
       },
       async put(key, value) {
-        store.set(key, typeof value === "string" ? value : JSON.stringify(value));
+        store.set(
+          key,
+          typeof value === "string" ? value : JSON.stringify(value),
+        );
       },
       _dump() {
         return Object.fromEntries(store);
@@ -457,7 +526,12 @@ describe("rag_question_answer dual retrieval", () => {
         {
           id: "g1",
           score: 0.8,
-          metadata: { url: "https://x", title: "T", text: "t", source_type: "guide" },
+          metadata: {
+            url: "https://x",
+            title: "T",
+            text: "t",
+            source_type: "guide",
+          },
         },
       ],
       eventMatches: [],
@@ -472,7 +546,12 @@ describe("rag_question_answer dual retrieval", () => {
         {
           id: "g1",
           score: 0.8,
-          metadata: { url: "https://x", title: "T", text: "t", source_type: "guide" },
+          metadata: {
+            url: "https://x",
+            title: "T",
+            text: "t",
+            source_type: "guide",
+          },
         },
       ],
       eventMatches: [
@@ -491,7 +570,9 @@ describe("rag_question_answer dual retrieval", () => {
     });
     await rag_question_answer(env, "any upcoming events?");
     expect(queryCalls).toHaveLength(2);
-    expect(aiCalls.filter((c) => c.model === "@cf/baai/bge-base-en-v1.5")).toHaveLength(2);
+    expect(
+      aiCalls.filter((c) => c.model === "@cf/baai/bge-base-en-v1.5"),
+    ).toHaveLength(2);
   });
 
   it("surfaces upcoming events from the event pool when the primary query misses them", async () => {
@@ -501,7 +582,12 @@ describe("rag_question_answer dual retrieval", () => {
         {
           id: "g1",
           score: 0.7,
-          metadata: { url: "https://guide", title: "Guide", text: "guide text", source_type: "guide" },
+          metadata: {
+            url: "https://guide",
+            title: "Guide",
+            text: "guide text",
+            source_type: "guide",
+          },
         },
       ],
       eventMatches: [
@@ -524,7 +610,9 @@ describe("rag_question_answer dual retrieval", () => {
       return { response: "OK" };
     });
     await rag_question_answer(env, "any upcoming events?");
-    const userMsg = llmInputs[0].messages.find((m) => m.role === "user").content;
+    const userMsg = llmInputs[0].messages.find(
+      (m) => m.role === "user",
+    ).content;
     expect(userMsg).toContain("RLadies+ London — June workshop");
   });
 
@@ -535,7 +623,12 @@ describe("rag_question_answer dual retrieval", () => {
         {
           id: "g1",
           score: 0.8,
-          metadata: { url: "https://g", title: "G", text: "g", source_type: "guide" },
+          metadata: {
+            url: "https://g",
+            title: "G",
+            text: "g",
+            source_type: "guide",
+          },
         },
       ],
       eventMatches: [
@@ -555,14 +648,14 @@ describe("rag_question_answer dual retrieval", () => {
     });
     await rag_question_answer(env, "any upcoming events?");
     const embedCallsAfterFirst = aiCalls.filter(
-      (c) => c.model === "@cf/baai/bge-base-en-v1.5"
+      (c) => c.model === "@cf/baai/bge-base-en-v1.5",
     ).length;
     expect(embedCallsAfterFirst).toBe(2);
     expect(kv._dump()["rag:event_embedding:v1"]).toBeTruthy();
 
     await rag_question_answer(env, "next meetup?");
     const embedCallsAfterSecond = aiCalls.filter(
-      (c) => c.model === "@cf/baai/bge-base-en-v1.5"
+      (c) => c.model === "@cf/baai/bge-base-en-v1.5",
     ).length;
     expect(embedCallsAfterSecond).toBe(3);
   });
@@ -574,7 +667,12 @@ describe("rag_question_answer dual retrieval", () => {
         {
           id: "g1",
           score: 0.8,
-          metadata: { url: "https://g", title: "G", text: "g", source_type: "guide" },
+          metadata: {
+            url: "https://g",
+            title: "G",
+            text: "g",
+            source_type: "guide",
+          },
         },
       ],
       eventMatches: [
@@ -594,7 +692,7 @@ describe("rag_question_answer dual retrieval", () => {
     });
     await rag_question_answer(env, "any upcoming events?");
     const embedCalls = aiCalls.filter(
-      (c) => c.model === "@cf/baai/bge-base-en-v1.5"
+      (c) => c.model === "@cf/baai/bge-base-en-v1.5",
     ).length;
     expect(embedCalls).toBe(2);
   });
@@ -605,14 +703,24 @@ describe("rag_question_answer dual retrieval", () => {
         {
           id: "g1",
           score: 0.8,
-          metadata: { url: "https://g", title: "G", text: "g", source_type: "guide" },
+          metadata: {
+            url: "https://g",
+            title: "G",
+            text: "g",
+            source_type: "guide",
+          },
         },
       ],
       eventMatches: [
         {
           id: "y1",
           score: 0.9,
-          metadata: { url: "https://y", title: "Y", text: "y", source_type: "youtube" },
+          metadata: {
+            url: "https://y",
+            title: "Y",
+            text: "y",
+            source_type: "youtube",
+          },
         },
       ],
     });
@@ -624,7 +732,9 @@ describe("rag_question_answer dual retrieval", () => {
     });
     await rag_question_answer(env, "any upcoming events?");
     expect(queryCalls).toHaveLength(2);
-    const userMsg = llmInputs[0].messages.find((m) => m.role === "user").content;
+    const userMsg = llmInputs[0].messages.find(
+      (m) => m.role === "user",
+    ).content;
     expect(userMsg).not.toContain("y1");
     expect(userMsg).not.toContain("Title: Y");
   });

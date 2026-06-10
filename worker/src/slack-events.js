@@ -7,6 +7,7 @@ import {
   slack_assistant_set_title,
   slack_channel_id_lookup,
   slack_conversations_open,
+  slack_conversations_replies,
   slack_file_upload_text,
   slack_message_post,
   slack_reaction_add,
@@ -69,10 +70,22 @@ const ASSISTANT_CONFIG_FALLBACK = {
   title: "RLadies+ Q&A with Jinx",
   prompts_title: "Try asking…",
   prompts: [
-    { title: "What is RLadies+?", message: "What is RLadies+ and what does it stand for?" },
-    { title: "Start a chapter", message: "How do I start an RLadies+ chapter?" },
-    { title: "Code of conduct", message: "Where can I find the RLadies+ code of conduct?" },
-    { title: "Upcoming events", message: "What RLadies+ events are coming up?" },
+    {
+      title: "What is RLadies+?",
+      message: "What is RLadies+ and what does it stand for?",
+    },
+    {
+      title: "Start a chapter",
+      message: "How do I start an RLadies+ chapter?",
+    },
+    {
+      title: "Code of conduct",
+      message: "Where can I find the RLadies+ code of conduct?",
+    },
+    {
+      title: "Upcoming events",
+      message: "What RLadies+ events are coming up?",
+    },
   ],
 };
 
@@ -119,13 +132,17 @@ export async function slack_event_handle(env, ctx, body) {
   }
 
   if (event.type === "assistant_thread_started") {
-    if (!slack_team_is_allowed(env, teamId)) return new Response("", { status: 200 });
-    ctx.waitUntil(slack_event_handle_assistant_start(env, teamId, event.assistant_thread));
+    if (!slack_team_is_allowed(env, teamId))
+      return new Response("", { status: 200 });
+    ctx.waitUntil(
+      slack_event_handle_assistant_start(env, teamId, event.assistant_thread),
+    );
     return new Response("", { status: 200 });
   }
 
   if (event.type === "reaction_added") {
-    if (!slack_team_is_allowed(env, teamId)) return new Response("", { status: 200 });
+    if (!slack_team_is_allowed(env, teamId))
+      return new Response("", { status: 200 });
     ctx.waitUntil(slack_event_handle_reaction(env, teamId, event));
     return new Response("", { status: 200 });
   }
@@ -146,8 +163,8 @@ export async function slack_event_handle(env, ctx, body) {
         event.ts,
         event.thread_ts || null,
         event.text,
-        event.user
-      )
+        event.user,
+      ),
     );
     return new Response("", { status: 200 });
   }
@@ -176,34 +193,56 @@ export async function slack_event_handle(env, ctx, body) {
           "🐈‍⬛ I only roam in the RLadies+ organisers and community " +
           "workspaces — sorry, house rules! If you think you should have " +
           "access, ping the RLadies+ global team in https://github.com/rladies/jinx.",
-      }).catch((e) => console.error("Refusal post failed:", e))
+      }).catch((e) => console.error("Refusal post failed:", e)),
     );
     return new Response("", { status: 200 });
   }
 
   ctx.waitUntil(
-    slack_event_handle_mention(env, teamId, channel, messageTs, threadTs, query, userId)
+    slack_event_handle_mention(env, teamId, {
+      channel,
+      messageTs,
+      threadTs,
+      query,
+      userId,
+    }),
   );
 
   return new Response("", { status: 200 });
 }
 
-async function slack_event_handle_mention(env, teamId, channel, messageTs, threadTs, query, userId) {
-  await slack_reaction_add(env, teamId, { channel, timestamp: messageTs, name: "eyes" })
-    .catch((e) => console.error("reaction add (eyes) failed:", e));
+async function slack_event_handle_mention(env, teamId, msg) {
+  const { channel, messageTs, threadTs } = msg;
+  await slack_reaction_add(env, teamId, {
+    channel,
+    timestamp: messageTs,
+    name: "eyes",
+  }).catch((e) => console.error("reaction add (eyes) failed:", e));
 
   try {
-    await slack_event_answer_post(env, teamId, channel, threadTs, query, userId);
-    await slack_reaction_remove(env, teamId, { channel, timestamp: messageTs, name: "eyes" })
-      .catch((e) => console.error("reaction remove (eyes) failed:", e));
-    await slack_reaction_add(env, teamId, { channel, timestamp: messageTs, name: "white_check_mark" })
-      .catch((e) => console.error("reaction add (check) failed:", e));
+    await slack_event_answer_post(env, teamId, msg);
+    await slack_reaction_remove(env, teamId, {
+      channel,
+      timestamp: messageTs,
+      name: "eyes",
+    }).catch((e) => console.error("reaction remove (eyes) failed:", e));
+    await slack_reaction_add(env, teamId, {
+      channel,
+      timestamp: messageTs,
+      name: "white_check_mark",
+    }).catch((e) => console.error("reaction add (check) failed:", e));
   } catch (err) {
     console.error("RAG answer failed:", err);
-    await slack_reaction_remove(env, teamId, { channel, timestamp: messageTs, name: "eyes" })
-      .catch(() => {});
-    await slack_reaction_add(env, teamId, { channel, timestamp: messageTs, name: "x" })
-      .catch(() => {});
+    await slack_reaction_remove(env, teamId, {
+      channel,
+      timestamp: messageTs,
+      name: "eyes",
+    }).catch(() => {});
+    await slack_reaction_add(env, teamId, {
+      channel,
+      timestamp: messageTs,
+      name: "x",
+    }).catch(() => {});
     await slack_message_post(env, teamId, {
       channel,
       thread_ts: threadTs,
@@ -212,7 +251,8 @@ async function slack_event_handle_mention(env, teamId, channel, messageTs, threa
   }
 }
 
-async function slack_event_answer_post(env, teamId, channel, threadTs, query, userId) {
+async function slack_event_answer_post(env, teamId, msg) {
+  const { channel, threadTs, messageTs, query, userId } = msg;
   if (!query) {
     await slack_message_post(env, teamId, {
       channel,
@@ -222,16 +262,58 @@ async function slack_event_answer_post(env, teamId, channel, threadTs, query, us
     return;
   }
 
-  const { answer } = await rag_question_answer(env, query);
+  const history = await slack_thread_history(
+    env,
+    teamId,
+    channel,
+    threadTs,
+    messageTs,
+  );
+  const { answer } = await rag_question_answer(env, query, history);
   await slack_event_post_answer(env, teamId, { channel, threadTs, answer });
+}
+
+async function slack_thread_history(env, teamId, channel, threadTs, currentTs) {
+  if (!threadTs) return [];
+  const [botUserId, res] = await Promise.all([
+    slack_bot_user_id(env, teamId),
+    slack_conversations_replies(env, teamId, {
+      channel,
+      ts: threadTs,
+      limit: 20,
+    }).catch((e) => {
+      console.warn("thread history fetch failed:", e.message);
+      return null;
+    }),
+  ]);
+  if (!res) return [];
+  const out = [];
+  for (const m of res.messages || []) {
+    if (!m || !m.text || m.subtype) continue;
+    if (currentTs && m.ts === currentTs) continue;
+    const content = slack_event_strip_mention(m.text || "");
+    if (!content) continue;
+    out.push({
+      role: botUserId && m.user === botUserId ? "assistant" : "user",
+      content,
+    });
+  }
+  return out;
+}
+
+async function slack_bot_user_id(env, teamId) {
+  if (!env.SLACK_TOKENS) return null;
+  const team = await env.SLACK_TOKENS.get(`team:${teamId}`, "json").catch(
+    () => null,
+  );
+  return team?.bot_user_id || null;
 }
 
 async function slack_event_handle_reaction(env, teamId, event) {
   if (event.item?.type !== "message") return;
   if (!env.SLACK_TOKENS) return;
 
-  const team = await env.SLACK_TOKENS.get(`team:${teamId}`, "json").catch(() => null);
-  const botUserId = team?.bot_user_id;
+  const botUserId = await slack_bot_user_id(env, teamId);
   if (!botUserId || event.item_user !== botUserId) return;
 
   const day = new Date().toISOString().slice(0, 10);
@@ -243,7 +325,7 @@ async function slack_event_handle_reaction(env, teamId, event) {
   await env.SLACK_TOKENS.put(
     key,
     JSON.stringify({ count, last_at: new Date().toISOString() }),
-    { expirationTtl: 180 * 24 * 60 * 60 }
+    { expirationTtl: 180 * 24 * 60 * 60 },
   ).catch((e) => console.error("reaction_log write failed:", e));
 }
 
@@ -256,7 +338,13 @@ async function slack_event_handle_team_join(env, teamId, user) {
   if (!channelId) return;
 
   const workspace = workspace_for_team(env, teamId);
-  const text = await welcome_message_render(env, teamId, workspace, user.id, link);
+  const text = await welcome_message_render(
+    env,
+    teamId,
+    workspace,
+    user.id,
+    link,
+  );
 
   await slack_message_post(env, teamId, {
     channel: channelId,
@@ -300,7 +388,8 @@ async function welcome_message_render(env, teamId, workspace, userId, link) {
     .replace(/\{\{starter_channels\}\}/g, starterLines);
 
   if (link) {
-    rendered += "\n\n_:sparkles: I matched you up with your RLadies+ chapter sign-up — welcome aboard!_";
+    rendered +=
+      "\n\n_:sparkles: I matched you up with your RLadies+ chapter sign-up — welcome aboard!_";
   }
   return rendered;
 }
@@ -316,7 +405,15 @@ function welcome_message_fallback(userId, link) {
   );
 }
 
-async function slack_event_handle_dm(env, teamId, channel, messageTs, threadTs, text, userId) {
+async function slack_event_handle_dm(
+  env,
+  teamId,
+  channel,
+  messageTs,
+  threadTs,
+  text,
+  userId,
+) {
   if (!userId) return;
 
   const isAssistantThread = Boolean(threadTs);
@@ -330,8 +427,11 @@ async function slack_event_handle_dm(env, teamId, channel, messageTs, threadTs, 
       status: "is padding through the RLadies+ guide…",
     }).catch((e) => console.warn("assistant setStatus failed:", e.message));
   } else {
-    await slack_reaction_add(env, teamId, { channel, timestamp: messageTs, name: "eyes" })
-      .catch((e) => console.error("DM reaction add failed:", e));
+    await slack_reaction_add(env, teamId, {
+      channel,
+      timestamp: messageTs,
+      name: "eyes",
+    }).catch((e) => console.error("DM reaction add failed:", e));
   }
 
   try {
@@ -342,7 +442,14 @@ async function slack_event_handle_dm(env, teamId, channel, messageTs, threadTs, 
         text: "Hi! 🔮 Ask me a question about RLadies+ — I'll go padding through the guide and the website to find an answer.",
       });
     } else {
-      const { answer } = await rag_question_answer(env, query);
+      const history = await slack_thread_history(
+        env,
+        teamId,
+        channel,
+        threadTs,
+        messageTs,
+      );
+      const { answer } = await rag_question_answer(env, query, history);
       await slack_event_post_answer(env, teamId, {
         channel,
         threadTs: threadTs || undefined,
@@ -357,10 +464,16 @@ async function slack_event_handle_dm(env, teamId, channel, messageTs, threadTs, 
         status: "",
       }).catch(() => {});
     } else {
-      await slack_reaction_remove(env, teamId, { channel, timestamp: messageTs, name: "eyes" })
-        .catch(() => {});
-      await slack_reaction_add(env, teamId, { channel, timestamp: messageTs, name: "white_check_mark" })
-        .catch(() => {});
+      await slack_reaction_remove(env, teamId, {
+        channel,
+        timestamp: messageTs,
+        name: "eyes",
+      }).catch(() => {});
+      await slack_reaction_add(env, teamId, {
+        channel,
+        timestamp: messageTs,
+        name: "white_check_mark",
+      }).catch(() => {});
     }
   } catch (err) {
     console.error("DM handling failed:", err);
@@ -371,10 +484,16 @@ async function slack_event_handle_dm(env, teamId, channel, messageTs, threadTs, 
         status: "",
       }).catch(() => {});
     } else {
-      await slack_reaction_remove(env, teamId, { channel, timestamp: messageTs, name: "eyes" })
-        .catch(() => {});
-      await slack_reaction_add(env, teamId, { channel, timestamp: messageTs, name: "x" })
-        .catch(() => {});
+      await slack_reaction_remove(env, teamId, {
+        channel,
+        timestamp: messageTs,
+        name: "eyes",
+      }).catch(() => {});
+      await slack_reaction_add(env, teamId, {
+        channel,
+        timestamp: messageTs,
+        name: "x",
+      }).catch(() => {});
     }
     await slack_message_post(env, teamId, {
       ...postBase,
@@ -401,7 +520,9 @@ async function slack_event_handle_assistant_start(env, teamId, thread) {
     threadTs,
     title: cfg.prompts_title,
     prompts: cfg.prompts,
-  }).catch((e) => console.warn("assistant setSuggestedPrompts failed:", e.message));
+  }).catch((e) =>
+    console.warn("assistant setSuggestedPrompts failed:", e.message),
+  );
 }
 
 async function slack_pending_link_consume(env, email) {
@@ -410,7 +531,7 @@ async function slack_pending_link_consume(env, email) {
   const link = await env.SLACK_TOKENS.get(key, "json").catch(() => null);
   if (link) {
     await env.SLACK_TOKENS.delete(key).catch((e) =>
-      console.error("pending_link delete failed:", e)
+      console.error("pending_link delete failed:", e),
     );
   }
   return link;
@@ -435,7 +556,11 @@ function slack_event_format_answer_markdown(answer) {
   return ["# Jinx — RLadies+ answer", "", answer].join("\n") + "\n";
 }
 
-async function slack_event_post_answer(env, teamId, { channel, threadTs, answer }) {
+async function slack_event_post_answer(
+  env,
+  teamId,
+  { channel, threadTs, answer },
+) {
   if (answer.length <= LONG_ANSWER_THRESHOLD) {
     const body = { channel, text: answer };
     if (threadTs) body.thread_ts = threadTs;
@@ -452,7 +577,8 @@ async function slack_event_post_answer(env, teamId, { channel, threadTs, answer 
       filename,
       title: "Jinx answer",
       content,
-      initialComment: "🔮 That answer ran long — I've batted it into a file so it's easier to read.",
+      initialComment:
+        "🔮 That answer ran long — I've batted it into a file so it's easier to read.",
     });
   } catch (e) {
     console.warn("file upload fallback:", e.message);

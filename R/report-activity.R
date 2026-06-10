@@ -157,31 +157,3 @@ summarize_stats <- function(repo_stats) {
     ))
   )
 }
-
-#' Publish a report as a GitHub issue
-#'
-#' @param report Report data from [report_generate()].
-#' @param target_repo Repository to publish to. Defaults to `"global-team"`.
-#' @param org Organization. Defaults to `"rladies"`.
-#' @return Issue URL (invisibly).
-#' @export
-report_publish <- function(
-  report,
-  target_repo = "global-team",
-  org = "rladies"
-) {
-  body <- report_format_markdown(report)
-  title <- glue::glue("{report$type} activity report - {report$period$to}")
-
-  issue <- gh::gh(
-    "POST /repos/{owner}/{repo}/issues",
-    owner = org,
-    repo = target_repo,
-    title = title,
-    body = body,
-    labels = list("report", report$type)
-  )
-
-  cli::cli_alert_success("Published report: {issue$html_url}")
-  invisible(issue$html_url)
-}

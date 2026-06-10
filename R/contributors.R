@@ -95,21 +95,23 @@ contributor_format <- function(
 
 #' Generate and update a contributors list for a repo
 #'
-#' Fetches contributors and creates/updates a PR with the contributor
-#' list in a specified file.
+#' Fetches contributors and commits the rendered list directly to the
+#' default branch. No PR is opened.
 #'
 #' @param owner Repository owner.
 #' @param repo Repository name.
 #' @param file_path Path in the repo to update with the contributor list.
 #'   Defaults to `".github/contributors.md"`.
 #' @param format Format for the contributor list.
-#' @return PR URL if changes were made, `NULL` otherwise (invisibly).
+#' @param branch Branch to commit to. Defaults to `"main"`.
+#' @return Commit URL if changes were made, `NULL` otherwise (invisibly).
 #' @export
 contributor_update <- function(
   owner,
   repo,
   file_path = ".github/contributors.md",
-  format = "grid"
+  format = "grid",
+  branch = "main"
 ) {
   contributors <- contributor_list(owner, repo)
   if (nrow(contributors) == 0) {
@@ -131,7 +133,8 @@ contributor_update <- function(
       "GET /repos/{owner}/{repo}/contents/{path}",
       owner = owner,
       repo = repo,
-      path = file_path
+      path = file_path,
+      ref = branch
     ),
     error = function(e) NULL
   )
@@ -143,33 +146,6 @@ contributor_update <- function(
       return(invisible(NULL))
     }
   }
-
-  branch <- "jinx/update-contributors"
-  main_ref <- gh::gh(
-    "GET /repos/{owner}/{repo}/git/ref/heads/main",
-    owner = owner,
-    repo = repo
-  )
-
-  tryCatch(
-    gh::gh(
-      "POST /repos/{owner}/{repo}/git/refs",
-      owner = owner,
-      repo = repo,
-      ref = glue::glue("refs/heads/{branch}"),
-      sha = main_ref$object$sha
-    ),
-    error = function(e) {
-      gh::gh(
-        "PATCH /repos/{owner}/{repo}/git/refs/heads/{branch}",
-        owner = owner,
-        repo = repo,
-        branch = branch,
-        sha = main_ref$object$sha,
-        force = TRUE
-      )
-    }
-  )
 
   content_b64 <- jsonlite::base64_enc(charToRaw(content))
   params <- list(
@@ -183,26 +159,13 @@ contributor_update <- function(
   if (!is.null(existing)) {
     params$sha <- existing$sha
   }
-  do.call(gh::gh, c("PUT /repos/{owner}/{repo}/contents/{path}", params))
-
-  pr <- gh::gh(
-    "POST /repos/{owner}/{repo}/pulls",
-    owner = owner,
-    repo = repo,
-    title = "Update contributors list",
-    head = branch,
-    base = "main",
-    body = paste0(
-      "Automated update of the contributors list.\n\n",
-      "- **Total contributors**: ",
-      nrow(contributors),
-      "\n\n",
-      "_Created by jinx_"
-    )
+  result <- do.call(
+    gh::gh,
+    c("PUT /repos/{owner}/{repo}/contents/{path}", params)
   )
 
-  cli::cli_alert_success("Contributors PR created: {pr$html_url}")
-  invisible(pr$html_url)
+  cli::cli_alert_success("Contributors commit pushed: {result$commit$html_url}")
+  invisible(result$commit$html_url)
 }
 
 #' Collect contributors across multiple repos

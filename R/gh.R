@@ -203,6 +203,105 @@ gh_post_checklist <- function(owner, repo, pr_number) {
   invisible(comment$html_url)
 }
 
+#' Create or reset a branch to match a base ref
+#'
+#' Reads the base branch tip and either creates `branch` there or
+#' force-updates it. Used by helpers that need to (re-)open a clean
+#' working branch before pushing files.
+#'
+#' @param org Repository owner.
+#' @param repo Repository name.
+#' @param branch Branch to create or update.
+#' @param base Base branch whose tip is used as the new SHA.
+#'   Defaults to `"main"`.
+#' @param force Whether to force-update if the branch already exists.
+#'   Defaults to `TRUE`.
+#' @return The SHA the branch now points to (invisibly).
+#' @export
+gh_branch_upsert <- function(org, repo, branch, base = "main", force = TRUE) {
+  base_ref <- gh::gh(
+    "GET /repos/{owner}/{repo}/git/ref/heads/{branch}",
+    owner = org,
+    repo = repo,
+    branch = base
+  )
+  sha <- base_ref$object$sha
+
+  tryCatch(
+    gh::gh(
+      "POST /repos/{owner}/{repo}/git/refs",
+      owner = org,
+      repo = repo,
+      ref = glue::glue("refs/heads/{branch}"),
+      sha = sha
+    ),
+    error = function(e) {
+      if (!force) {
+        cli::cli_alert_info("Branch {branch} may already exist")
+        return(invisible(sha))
+      }
+      gh::gh(
+        "PATCH /repos/{owner}/{repo}/git/refs/heads/{branch}",
+        owner = org,
+        repo = repo,
+        branch = branch,
+        sha = sha,
+        force = TRUE
+      )
+    }
+  )
+
+  invisible(sha)
+}
+
+#' Open a PR, or return the existing open PR for a branch
+#'
+#' If a PR is already open from `branch` into `base`, returns its URL;
+#' otherwise opens a new PR with the given title and body.
+#'
+#' @param org Repository owner.
+#' @param repo Repository name.
+#' @param branch Head branch.
+#' @param base Base branch. Defaults to `"main"`.
+#' @param title PR title.
+#' @param body PR body.
+#' @return PR URL.
+#' @export
+gh_open_or_update_pr <- function(
+  org,
+  repo,
+  branch,
+  base = "main",
+  title,
+  body
+) {
+  existing <- tryCatch(
+    gh::gh(
+      "GET /repos/{owner}/{repo}/pulls",
+      owner = org,
+      repo = repo,
+      head = glue::glue("{org}:{branch}"),
+      state = "open"
+    ),
+    error = function(e) list()
+  )
+
+  if (length(existing) > 0) {
+    return(existing[[1]]$html_url)
+  }
+
+  pr <- gh::gh(
+    "POST /repos/{owner}/{repo}/pulls",
+    owner = org,
+    repo = repo,
+    title = title,
+    head = branch,
+    base = base,
+    body = body
+  )
+  pr$html_url
+}
+
 is_first_time_contributor <- function(owner, repo, author, is_pr = TRUE) {
   if (is_pr) {
     prs <- tryCatch(

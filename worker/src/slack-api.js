@@ -14,7 +14,11 @@ export async function slack_api_call(token, method, body) {
   return result;
 }
 
-export async function slack_message_post(env, teamId, { channel, thread_ts, text, blocks }) {
+export async function slack_message_post(
+  env,
+  teamId,
+  { channel, thread_ts, text, blocks },
+) {
   const token = await slack_token_get(env, teamId);
   const body = { channel, text };
   if (thread_ts) body.thread_ts = thread_ts;
@@ -26,19 +30,40 @@ export async function slack_team_info_fetch(token) {
   return slack_api_call(token, "team.info", {});
 }
 
-export async function slack_reaction_add(env, teamId, { channel, timestamp, name }) {
+export async function slack_reaction_add(
+  env,
+  teamId,
+  { channel, timestamp, name },
+) {
   const token = await slack_token_get(env, teamId);
   return slack_api_call(token, "reactions.add", { channel, timestamp, name });
 }
 
-export async function slack_reaction_remove(env, teamId, { channel, timestamp, name }) {
+export async function slack_reaction_remove(
+  env,
+  teamId,
+  { channel, timestamp, name },
+) {
   const token = await slack_token_get(env, teamId);
-  return slack_api_call(token, "reactions.remove", { channel, timestamp, name });
+  return slack_api_call(token, "reactions.remove", {
+    channel,
+    timestamp,
+    name,
+  });
 }
 
 export async function slack_conversations_open(env, teamId, { users }) {
   const token = await slack_token_get(env, teamId);
   return slack_api_call(token, "conversations.open", { users });
+}
+
+export async function slack_conversations_replies(
+  env,
+  teamId,
+  { channel, ts, limit = 20 },
+) {
+  const token = await slack_token_get(env, teamId);
+  return slack_api_call(token, "conversations.replies", { channel, ts, limit });
 }
 
 export async function slack_conversations_join(env, teamId, channelId) {
@@ -51,7 +76,11 @@ export async function slack_conversations_info(env, teamId, channelId) {
   return slack_api_call(token, "conversations.info", { channel: channelId });
 }
 
-export async function slack_conversations_list(env, teamId, { types = "public_channel", limit = 1000 } = {}) {
+export async function slack_conversations_list(
+  env,
+  teamId,
+  { types = "public_channel", limit = 1000 } = {},
+) {
   const token = await slack_token_get(env, teamId);
   const channels = [];
   let cursor;
@@ -94,7 +123,11 @@ export async function slack_bookmarks_list(env, teamId, channelId) {
   return slack_api_call(token, "bookmarks.list", { channel_id: channelId });
 }
 
-export async function slack_bookmarks_add(env, teamId, { channelId, title, link, emoji }) {
+export async function slack_bookmarks_add(
+  env,
+  teamId,
+  { channelId, title, link, emoji },
+) {
   const token = await slack_token_get(env, teamId);
   const body = { channel_id: channelId, title, type: "link", link };
   if (emoji) body.emoji = emoji;
@@ -108,7 +141,11 @@ export async function slack_reminders_add(env, teamId, { text, time, user }) {
   return slack_api_call(token, "reminders.add", body);
 }
 
-export async function slack_assistant_set_status(env, teamId, { channelId, threadTs, status }) {
+export async function slack_assistant_set_status(
+  env,
+  teamId,
+  { channelId, threadTs, status },
+) {
   const token = await slack_token_get(env, teamId);
   return slack_api_call(token, "assistant.threads.setStatus", {
     channel_id: channelId,
@@ -117,7 +154,11 @@ export async function slack_assistant_set_status(env, teamId, { channelId, threa
   });
 }
 
-export async function slack_assistant_set_title(env, teamId, { channelId, threadTs, title }) {
+export async function slack_assistant_set_title(
+  env,
+  teamId,
+  { channelId, threadTs, title },
+) {
   const token = await slack_token_get(env, teamId);
   return slack_api_call(token, "assistant.threads.setTitle", {
     channel_id: channelId,
@@ -126,18 +167,25 @@ export async function slack_assistant_set_title(env, teamId, { channelId, thread
   });
 }
 
-export async function slack_file_upload_text(env, teamId, { channel, threadTs, filename, title, content, initialComment }) {
+export async function slack_file_upload_text(
+  env,
+  teamId,
+  { channel, threadTs, filename, title, content, initialComment },
+) {
   const token = await slack_token_get(env, teamId);
   const bytes = new TextEncoder().encode(content);
 
-  const upload = await fetch("https://slack.com/api/files.getUploadURLExternal", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/x-www-form-urlencoded",
+  const upload = await fetch(
+    "https://slack.com/api/files.getUploadURLExternal",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ filename, length: String(bytes.byteLength) }),
     },
-    body: new URLSearchParams({ filename, length: String(bytes.byteLength) }),
-  }).then((r) => r.json());
+  ).then((r) => r.json());
   if (!upload.ok) {
     throw new Error(`Slack files.getUploadURLExternal failed: ${upload.error}`);
   }
@@ -163,7 +211,7 @@ export async function slack_file_upload_text(env, teamId, { channel, threadTs, f
 export async function slack_assistant_set_suggested_prompts(
   env,
   teamId,
-  { channelId, threadTs, prompts, title }
+  { channelId, threadTs, prompts, title },
 ) {
   const token = await slack_token_get(env, teamId);
   const body = {
@@ -185,7 +233,7 @@ export async function slack_token_get(env, teamId) {
   const data = await env.SLACK_TOKENS.get(`team:${teamId}`, "json");
   if (!data?.bot_token) {
     throw new Error(
-      `No bot token for team ${teamId}. Install via /slack/install.`
+      `No bot token for team ${teamId}. Install via /slack/install.`,
     );
   }
   return data.bot_token;
@@ -193,17 +241,24 @@ export async function slack_token_get(env, teamId) {
 
 export function slack_team_is_allowed(env, teamId) {
   if (!teamId) return false;
-  const allowed = [env.SLACK_ORGANIZER_TEAM_ID, env.SLACK_COMMUNITY_TEAM_ID]
-    .filter(Boolean);
+  const allowed = [
+    env.SLACK_ORGANIZER_TEAM_ID,
+    env.SLACK_COMMUNITY_TEAM_ID,
+  ].filter(Boolean);
   if (allowed.length === 0) {
     throw new Error(
-      "Neither SLACK_ORGANIZER_TEAM_ID nor SLACK_COMMUNITY_TEAM_ID set; refusing all installs"
+      "Neither SLACK_ORGANIZER_TEAM_ID nor SLACK_COMMUNITY_TEAM_ID set; refusing all installs",
     );
   }
   return allowed.includes(teamId);
 }
 
-export async function slack_signature_verify(signingSecret, timestamp, body, expected) {
+export async function slack_signature_verify(
+  signingSecret,
+  timestamp,
+  body,
+  expected,
+) {
   if (!timestamp || !expected || !signingSecret) return false;
 
   const now = Math.floor(Date.now() / 1000);
@@ -217,10 +272,14 @@ export async function slack_signature_verify(signingSecret, timestamp, body, exp
     encoder.encode(signingSecret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"]
+    ["sign"],
   );
 
-  const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(sigBasestring));
+  const sig = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(sigBasestring),
+  );
   const hex = [...new Uint8Array(sig)]
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");

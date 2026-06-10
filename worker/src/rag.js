@@ -60,12 +60,16 @@ Question: How do I start an RLadies+ chapter?
 Answer: Chapters start by filling out the new-chapter form, then waiting for a Global Team review. You can find the full walkthrough in the <https://guide.rladies.org/organize/new-chapter/|new chapter guide>, and the application itself lives on the <https://rladies.org/about-us/start-rladies/|main RLadies+ site>.
 `;
 
-export async function rag_question_answer(env, query) {
+export async function rag_question_answer(env, query, history = []) {
   if (is_coding_question(query)) {
     return { answer: coding_decline_message() };
   }
 
-  const embedding = await rag_query_embed(env, query);
+  const { retrieval_text, prior_messages } = rag_history_normalize(
+    query,
+    history,
+  );
+  const embedding = await rag_query_embed(env, retrieval_text);
   const matches = await rag_chunks_retrieve(env, embedding, query);
 
   if (matches.length === 0) {
@@ -73,13 +77,47 @@ export async function rag_question_answer(env, query) {
   }
 
   const result = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
-    messages: rag_build_messages(query, matches),
+    messages: rag_build_messages(query, matches, prior_messages),
     max_tokens: 400,
   });
 
   const raw = (result.response || "").trim();
   const answer = rag_repair_links(raw, rag_source_urls(matches));
   return { answer };
+}
+
+const HISTORY_TURN_LIMIT = 8;
+const HISTORY_CHAR_BUDGET = 4000;
+const HISTORY_TURN_CHAR_LIMIT = 1500;
+const RETRIEVAL_CONTEXT_USER_TURNS = 2;
+
+export function rag_history_normalize(query, history) {
+  if (!Array.isArray(history) || history.length === 0) {
+    return { retrieval_text: query, prior_messages: [] };
+  }
+
+  const retrieval_extras = history
+    .filter((m) => m.role === "user")
+    .slice(-RETRIEVAL_CONTEXT_USER_TURNS)
+    .map((m) => m.content)
+    .join(" ");
+  const retrieval_text = retrieval_extras
+    ? `${retrieval_extras} ${query}`
+    : query;
+
+  const trimmed = history.slice(-HISTORY_TURN_LIMIT);
+  let budget = HISTORY_CHAR_BUDGET;
+  const prior_messages = [];
+  for (let i = trimmed.length - 1; i >= 0; i--) {
+    const m = trimmed[i];
+    const content = (m.content || "").slice(0, HISTORY_TURN_CHAR_LIMIT);
+    if (!content) continue;
+    if (content.length > budget) continue;
+    budget -= content.length;
+    prior_messages.unshift({ role: m.role, content });
+  }
+
+  return { retrieval_text, prior_messages };
 }
 
 const BROKEN_SCHEME_RE = /<(ttps?:\/\/)/g;
@@ -91,11 +129,11 @@ export function rag_repair_links(text, allowed_urls) {
   return text
     .replace(BROKEN_SCHEME_RE, "<h$1")
     .replace(SLACK_LINK_RE, (full, url, label) =>
-      allowed.has(url) ? full : label.trim()
+      allowed.has(url) ? full : label.trim(),
     );
 }
 
-export function rag_build_messages(query, matches) {
+export function rag_build_messages(query, matches, prior_messages = []) {
   const context = matches
     .map((m, i) => {
       const heading = m.metadata.heading ? ` › ${m.metadata.heading}` : "";
@@ -105,7 +143,11 @@ export function rag_build_messages(query, matches) {
 
   return [
     { role: "system", content: SYSTEM_PROMPT },
-    { role: "user", content: `Question: ${query}\n\nSource material:\n${context}` },
+    ...prior_messages,
+    {
+      role: "user",
+      content: `Question: ${query}\n\nSource material:\n${context}`,
+    },
   ];
 }
 
@@ -116,7 +158,9 @@ export function rag_source_urls(matches) {
 }
 
 async function rag_query_embed(env, text) {
-  const result = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: [text] });
+  const result = await env.AI.run("@cf/baai/bge-base-en-v1.5", {
+    text: [text],
+  });
   return result.data[0];
 }
 
@@ -143,7 +187,7 @@ async function rag_event_pool_retrieve(env) {
       returnMetadata: "all",
     });
     return (results.matches || []).filter(
-      (m) => m.metadata?.source_type === "events" && m.score >= MIN_SCORE
+      (m) => m.metadata?.source_type === "events" && m.score >= MIN_SCORE,
     );
   } catch (e) {
     console.warn("event-pool retrieval failed:", e.message);
@@ -155,7 +199,7 @@ async function rag_event_embedding_get(env) {
   if (env.SLACK_TOKENS) {
     const cached = await env.SLACK_TOKENS.get(
       EVENT_EMBEDDING_KV_KEY,
-      "json"
+      "json",
     ).catch(() => null);
     if (Array.isArray(cached) && cached.length > 0) return cached;
   }
@@ -163,9 +207,9 @@ async function rag_event_embedding_get(env) {
   if (env.SLACK_TOKENS && Array.isArray(embedding)) {
     await env.SLACK_TOKENS.put(
       EVENT_EMBEDDING_KV_KEY,
-      JSON.stringify(embedding)
+      JSON.stringify(embedding),
     ).catch((e) =>
-      console.warn("event-embedding cache write failed:", e.message)
+      console.warn("event-embedding cache write failed:", e.message),
     );
   }
   return embedding;
@@ -199,7 +243,7 @@ export function rerank_matches(matches, now_seconds) {
       const upcoming = upcoming_event_boost(
         m.metadata?.source_type,
         m.metadata?.date,
-        now_seconds
+        now_seconds,
       );
       return {
         ...m,

@@ -89,3 +89,98 @@ describe("airtable_extract_photo", {
     expect_null(airtable_extract_photo(photo))
   })
 })
+
+describe("write_directory_entries", {
+  it("returns changed entries with content, path, and sha", {
+    entries <- list(
+      list(
+        slug = "jane-doe",
+        data = list(name = "Jane Doe"),
+        airtable_id = "r1"
+      )
+    )
+    local_mocked_bindings(
+      gh = function(endpoint, ...) {
+        list(
+          content = jsonlite::base64_enc(charToRaw("old json")),
+          sha = "abc123"
+        )
+      },
+      .package = "gh"
+    )
+    result <- write_directory_entries(entries, "rladies", "directory")
+    expect_length(result, 1)
+    expect_identical(result[[1]]$filename, "jane-doe.json")
+    expect_identical(result[[1]]$path, "contact/jane-doe.json")
+    expect_identical(result[[1]]$sha, "abc123")
+    expect_true(grepl("Jane Doe", result[[1]]$content, fixed = TRUE))
+  })
+
+  it("skips entries whose content already matches", {
+    matching <- jsonlite::toJSON(
+      list(name = "Jane Doe"),
+      pretty = TRUE,
+      auto_unbox = TRUE
+    )
+    entries <- list(
+      list(
+        slug = "jane-doe",
+        data = list(name = "Jane Doe"),
+        airtable_id = "r1"
+      )
+    )
+    local_mocked_bindings(
+      gh = function(endpoint, ...) {
+        list(
+          content = jsonlite::base64_enc(charToRaw(as.character(matching))),
+          sha = "abc123"
+        )
+      },
+      .package = "gh"
+    )
+    result <- write_directory_entries(entries, "rladies", "directory")
+    expect_length(result, 0)
+  })
+})
+
+describe("directory_create_pr", {
+  it("returns NULL when no changes", {
+    expect_null(directory_create_pr(list(), "rladies", "directory"))
+  })
+
+  it("creates branch, commits files, and opens a PR", {
+    calls <- list()
+    local_mocked_bindings(
+      gh = function(endpoint, ...) {
+        calls[[length(calls) + 1]] <<- endpoint
+        if (grepl("git/ref/heads", endpoint)) {
+          return(list(object = list(sha = "basesha")))
+        }
+        if (grepl("/contents/", endpoint) && grepl("^GET", endpoint)) {
+          stop("not found")
+        }
+        if (grepl("^GET /repos.*/pulls", endpoint)) {
+          return(list())
+        }
+        if (grepl("^POST /repos.*/pulls", endpoint)) {
+          return(list(html_url = "https://github.com/x/y/pull/42"))
+        }
+        list()
+      },
+      .package = "gh"
+    )
+    changed <- list(
+      list(
+        filename = "a.json",
+        path = "contact/a.json",
+        content = "{}",
+        sha = NULL
+      )
+    )
+    url <- directory_create_pr(changed, "rladies", "directory")
+    expect_identical(url, "https://github.com/x/y/pull/42")
+    expect_true(any(grepl("POST /repos.*/git/refs", calls)))
+    expect_true(any(grepl("PUT /repos.*/contents/", calls)))
+    expect_true(any(grepl("POST /repos.*/pulls", calls)))
+  })
+})

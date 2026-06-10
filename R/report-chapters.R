@@ -1,18 +1,13 @@
 #' Generate a chapter health report
 #'
-#' Analyzes chapter activity data and publishes a summary report.
+#' Analyzes chapter activity data and returns a formatted markdown
+#' summary.
 #'
 #' @param months Inactivity threshold in months. Defaults to 6.
 #' @param org GitHub organization. Defaults to `"rladies"`.
-#' @param target_repo Repository to publish report to.
-#'   Defaults to `"global-team"`.
-#' @return Issue URL (invisibly).
+#' @return Markdown report body (invisibly), or `NULL` if no data.
 #' @export
-chapter_report_health <- function(
-  months = 6,
-  org = "rladies",
-  target_repo = "global-team"
-) {
+chapter_report_health <- function(months = 6, org = "rladies") {
   health <- chapter_check_health(months = months, org = org)
 
   if (nrow(health) == 0) {
@@ -21,18 +16,8 @@ chapter_report_health <- function(
   }
 
   body <- chapter_format_report(health, months)
-
-  issue <- gh::gh(
-    "POST /repos/{owner}/{repo}/issues",
-    owner = org,
-    repo = target_repo,
-    title = glue::glue("Chapter health report - {Sys.Date()}"),
-    body = body,
-    labels = list("report", "chapters")
-  )
-
-  cli::cli_alert_success("Chapter health report published: {issue$html_url}")
-  invisible(issue$html_url)
+  cli::cli_alert_success("Chapter health report generated")
+  invisible(body)
 }
 
 chapter_format_report <- function(health, months) {

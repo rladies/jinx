@@ -358,7 +358,7 @@ cmd_execute <- function(command) {
       target <- command$repo %||% "jinx"
       url <- contributor_update("rladies", target)
       if (!is.null(url)) {
-        glue::glue("Contributors PR created: {url}")
+        glue::glue("Contributors list updated: {url}")
       } else {
         "Contributors list is already up to date."
       }
@@ -382,9 +382,7 @@ cmd_execute <- function(command) {
     },
     "events-sync" = {
       events <- event_sync_chapters(dry_run = FALSE)
-      summary <- event_create_summary(events, "weekly")
-      url <- event_publish_summary(summary)
-      glue::glue("Event summary published: {url}")
+      event_create_summary(events, "weekly")
     },
     analytics = {
       data <- analytics_generate_dashboard()
