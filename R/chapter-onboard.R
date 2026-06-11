@@ -196,9 +196,10 @@ review_assign_onboarding <- function(org, repo, issue_number) {
           body = glue::glue("cc @{org}/{notify_team}")
         ),
         error = function(e) {
-          cli::cli_alert_warning(
-            "Failed to notify @{org}/{notify_team} on issue #{issue_number}: {e$message}"
-          )
+          cli::cli_alert_warning(paste0(
+            "Failed to notify @{org}/{notify_team} on ",
+            "issue #{issue_number}: {e$message}"
+          ))
         }
       )
     }
