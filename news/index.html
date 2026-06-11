@@ -66,6 +66,37 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="post-review-hardening-development-version">Post-review hardening<a class="anchor" aria-label="anchor" href="#post-review-hardening-development-version"></a></h3>
+<ul><li>
+<strong>First-time contributor check actually works.</strong> <code>is_first_time_contributor()</code> was passing <code>creator=</code> to <code>GET /repos/{owner}/{repo}/pulls</code>, which the API silently ignores — every author looked like a first-timer until a repo had more than one PR total, and like a returning contributor after that. Now uses <code>GET /search/issues</code> with <code>is:pr/is:issue + author:</code> to count authored items correctly.</li>
+<li>
+<strong>Slack mention stripping handles all forms.</strong> <code>slack_event_strip_mention()</code> now removes <code>&lt;@U…|display&gt;</code> user mentions, <code>&lt;!subteam^S…|name&gt;</code> group mentions, and <code>&lt;!channel|here|everyone&gt;</code> broadcasts in addition to the bare <code>&lt;@U…&gt;</code> form. Previously the bot’s own past mentions could leak into thread history as user turns.</li>
+<li>
+<strong>Slack thread history fails closed without <code>bot_user_id</code>.</strong> If the team KV record has no cached <code>bot_user_id</code> (older installs), <code>slack_thread_history()</code> now drops the whole history rather than relabelling every prior bot reply as <code>role: "user"</code>.</li>
+<li>
+<strong>Slack API retries 429 + 5xx once.</strong> <code>slack_api_call()</code> honours <code>Retry-After</code> (capped at 5s) before raising, so a single rate-limited post no longer aborts the answer path with the failure quip.</li>
+<li>
+<strong>Reaction events deduped by <code>event_id</code>.</strong> <code>slack_event_handle_reaction()</code> now skips duplicate Slack retries of the same <code>reaction_added</code> event so the daily counters stop double-incrementing.</li>
+<li>
+<strong>Workflow-input injection lane closed.</strong> <code>ops-chapter-onboarding</code>, <code>ops-global-team-invite</code>, <code>ops-global-team-finalize</code>, <code>ops-global-team-offboard</code>, <code>ops-update-contributors</code>, and <code>ops-airtable-sync</code> now move every <code>${{ inputs.* }}</code> into an <code>env:</code> block and read it from <code><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv()</a></code> inside Rscript. The invite workflow also builds its JSON artifact with <code>jq</code> instead of <code>echo</code> so a <code>'</code> in a name no longer crashes the run.</li>
+<li>
+<strong>Workflow hardening.</strong> All <code>actions/checkout</code> steps now set <code>persist-credentials: false</code>, all ops/CI/infra/reusable workflows get <code>timeout-minutes: 15</code>, and every self-racing ops workflow gets a <code>concurrency:</code> group key (the directory sync, contributors update, per-username invite/offboard, etc.).</li>
+<li>
+<strong><code>gh_branch_upsert(force = FALSE)</code> returns the real head.</strong> Previously it returned the <em>base</em> SHA when the branch already existed, which was wrong for any caller that wanted to act on the branch tip. Now reads the existing branch’s head SHA instead.</li>
+<li>
+<strong>Airtable sync retries.</strong> <code>airtable_list_records()</code> now wraps each paginated request in <code>req_retry(max_tries = 3)</code>, so a 429 mid-sync no longer aborts the whole pull.</li>
+<li>
+<strong>Directory slug collisions.</strong> Two records named “Maria” used to collide on <code>maria.json</code>. <code>airtable_to_directory_entry()</code> now appends a 6-char hash of the Airtable record id to the slug.</li>
+<li>
+<strong>Contributors update stops daily commit churn.</strong> The equality check used to compare the rendered file verbatim, including <code>_Last updated: {Sys.Date()}_</code>, so it always diffed and committed daily even when no contributors had changed. The check now strips that line before comparing.</li>
+<li>
+<strong><code>is_team_member</code> fails open on transient errors.</strong> A real 404 still returns <code>FALSE</code>, but a network blip or 5xx returns <code>TRUE</code> (with a warning) so we don’t spam the global team with first-timer welcomes during a GitHub hiccup.</li>
+<li>
+<strong><code>review_assign_onboarding</code> surfaces errors.</strong> Comment-post failures now emit a <code>cli_alert_warning</code> instead of being swallowed silently, so a failed <code>cc <a href="https://github.com/rladies" class="external-link">@rladies</a>/...</code> tag is visible in the run log.</li>
+<li>
+<strong>Event-embedding KV write gets a 30-day TTL</strong> so a stale vector doesn’t outlive the model behind it.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="slack-bot-remember-the-thread-development-version">Slack bot: remember the thread<a class="anchor" aria-label="anchor" href="#slack-bot-remember-the-thread-development-version"></a></h3>
 <ul><li>The Slack Q&amp;A bot now reads prior turns in the same thread via <code>conversations.replies</code> before calling the LLM, so follow-up questions no longer require restating the whole conversation. Up to the last 8 turns (capped at ~4k chars) are passed in as <code>user</code>/<code>assistant</code> history. Applies to both assistant DM threads and channel <code>app_mention</code> threads. The user’s two most recent prompts are also folded into the retrieval embedding so the right sources surface when the new question is a one-word follow-up.</li>
 </ul></div>
