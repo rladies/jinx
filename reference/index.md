@@ -116,8 +116,6 @@ Activity and health reporting
   : Format a report as markdown
 - [`report_generate()`](https://rladies.github.io/jinx/reference/report_generate.md)
   : Generate an organization activity report
-- [`report_publish()`](https://rladies.github.io/jinx/reference/report_publish.md)
-  : Publish a report as a GitHub issue
 - [`chapter_report_health()`](https://rladies.github.io/jinx/reference/chapter_report_health.md)
   : Generate a chapter health report
 
@@ -174,8 +172,6 @@ GitHub Actions workflow status
 
 - [`gha_generate_dashboard()`](https://rladies.github.io/jinx/reference/gha_generate_dashboard.md)
   : Generate GitHub Actions dashboard data
-- [`gha_publish_dashboard()`](https://rladies.github.io/jinx/reference/gha_publish_dashboard.md)
-  : Publish GHA dashboard as a GitHub issue
 
 ## Contributors
 
@@ -194,8 +190,12 @@ Contributor tracking and recognition
 
 Reusable PR/issue automation across repos
 
+- [`gh_branch_upsert()`](https://rladies.github.io/jinx/reference/gh_branch_upsert.md)
+  : Create or reset a branch to match a base ref
 - [`gh_greet_contributor()`](https://rladies.github.io/jinx/reference/gh_greet_contributor.md)
   : Greet a new PR author
+- [`gh_open_or_update_pr()`](https://rladies.github.io/jinx/reference/gh_open_or_update_pr.md)
+  : Open a PR, or return the existing open PR for a branch
 - [`gh_post_checklist()`](https://rladies.github.io/jinx/reference/gh_post_checklist.md)
   : Post a content review checklist on a PR
 - [`gh_thank_contributor()`](https://rladies.github.io/jinx/reference/gh_thank_contributor.md)
@@ -211,8 +211,6 @@ Chapter event management
   : Create a formatted event summary
 - [`event_list_chapter()`](https://rladies.github.io/jinx/reference/event_list_chapter.md)
   : List events for a chapter
-- [`event_publish_summary()`](https://rladies.github.io/jinx/reference/event_publish_summary.md)
-  : Publish event summary as a GitHub issue
 - [`event_sync_chapters()`](https://rladies.github.io/jinx/reference/event_sync_chapters.md)
   : Sync events across all chapters
 
@@ -230,8 +228,6 @@ Org-wide activity analytics
   : Format analytics as markdown
 - [`analytics_generate_dashboard()`](https://rladies.github.io/jinx/reference/analytics_generate_dashboard.md)
   : Generate analytics dashboard
-- [`analytics_publish_dashboard()`](https://rladies.github.io/jinx/reference/analytics_publish_dashboard.md)
-  : Publish analytics dashboard as a GitHub issue
 
 ## Website analytics
 

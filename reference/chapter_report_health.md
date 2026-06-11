@@ -1,11 +1,11 @@
 # Generate a chapter health report
 
-Analyzes chapter activity data and publishes a summary report.
+Analyzes chapter activity data and returns a formatted markdown summary.
 
 ## Usage
 
 ``` r
-chapter_report_health(months = 6, org = "rladies", target_repo = "global-team")
+chapter_report_health(months = 6, org = "rladies")
 ```
 
 ## Arguments
@@ -18,10 +18,6 @@ chapter_report_health(months = 6, org = "rladies", target_repo = "global-team")
 
   GitHub organization. Defaults to `"rladies"`.
 
-- target_repo:
-
-  Repository to publish report to. Defaults to `"global-team"`.
-
 ## Value
 
-Issue URL (invisibly).
+Markdown report body (invisibly), or `NULL` if no data.

@@ -18,7 +18,6 @@
 <url><loc>https://rladies.github.io/jinx/reference/analytics_compute_trends.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/analytics_format_markdown.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/analytics_generate_dashboard.html</loc></url>
-<url><loc>https://rladies.github.io/jinx/reference/analytics_publish_dashboard.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/announce_create_message.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/announce_post.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/announce_post_bluesky.html</loc></url>
@@ -63,7 +62,6 @@
 <url><loc>https://rladies.github.io/jinx/reference/embed_chunks.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/event_create_summary.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/event_list_chapter.html</loc></url>
-<url><loc>https://rladies.github.io/jinx/reference/event_publish_summary.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/event_sync_chapters.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/event_to_chunk.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/extract_hugo_page.html</loc></url>
@@ -85,15 +83,16 @@
 <url><loc>https://rladies.github.io/jinx/reference/gather_pkgdown_llms.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gather_rag_source.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gather_youtube_channel.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/gh_branch_upsert.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gh_fetch_readme.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gh_greet_contributor.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gh_has_path.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gh_list_org_r_repos.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/gh_open_or_update_pr.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gh_post_checklist.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gh_thank_contributor.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gh_welcome_contributor.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gha_generate_dashboard.html</loc></url>
-<url><loc>https://rladies.github.io/jinx/reference/gha_publish_dashboard.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/github_request.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gt_check_invitations.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gt_create_offboarding.html</loc></url>
@@ -144,7 +143,6 @@
 <url><loc>https://rladies.github.io/jinx/reference/repo_to_chunks.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/report_format_markdown.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/report_generate.html</loc></url>
-<url><loc>https://rladies.github.io/jinx/reference/report_publish.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/review_check_pr_naming.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/review_run.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/short_url.html</loc></url>

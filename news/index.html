@@ -66,6 +66,30 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="slack-bot-remember-the-thread-development-version">Slack bot: remember the thread<a class="anchor" aria-label="anchor" href="#slack-bot-remember-the-thread-development-version"></a></h3>
+<ul><li>The Slack Q&amp;A bot now reads prior turns in the same thread via <code>conversations.replies</code> before calling the LLM, so follow-up questions no longer require restating the whole conversation. Up to the last 8 turns (capped at ~4k chars) are passed in as <code>user</code>/<code>assistant</code> history. Applies to both assistant DM threads and channel <code>app_mention</code> threads. The user’s two most recent prompts are also folded into the retrieval embedding so the right sources surface when the new question is a one-word follow-up.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="airtable-directory-sync-actually-open-a-pr-development-version">Airtable directory sync: actually open a PR<a class="anchor" aria-label="anchor" href="#airtable-directory-sync-actually-open-a-pr-development-version"></a></h3>
+<ul><li>
+<code>directory_create_pr()</code> was a stub that returned the directory’s pulls-page URL without creating a branch, writing files, or opening a PR. The function now creates a dated <code>jinx/airtable-sync-YYYYMMDD</code> branch, commits each changed <code>contact/{slug}.json</code> file via the contents API, and opens a PR back into <code>main</code> (returning the URL of an existing open PR if the branch was already in flight).</li>
+<li>
+<code>write_directory_entries()</code> now returns a list of <code>{filename, path, content, sha}</code> records for changed entries instead of only their filenames, so the PR step can actually write them.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="reports-stop-publishing-to-global-team-development-version">Reports: stop publishing to global-team<a class="anchor" aria-label="anchor" href="#reports-stop-publishing-to-global-team-development-version"></a></h3>
+<ul><li>The weekly activity, monthly chapter-health, analytics dashboard, and GitHub Actions dashboard ops workflows no longer open issues in <code>rladies/global-team</code>. The publish helpers (<code>report_publish()</code>, <code>analytics_publish_dashboard()</code>, <code>gha_publish_dashboard()</code>, <code>event_publish_summary()</code>) and the matching scheduled workflows have been removed.</li>
+<li>
+<code><a href="../reference/chapter_report_health.html">chapter_report_health()</a></code> now returns the formatted markdown body instead of opening an issue.</li>
+<li>
+<code>ops-event-sync.yml</code> keeps the meetup sync but no longer publishes a summary issue.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="contributors-push-directly-to-main-development-version">Contributors: push directly to main<a class="anchor" aria-label="anchor" href="#contributors-push-directly-to-main-development-version"></a></h3>
+<ul><li>
+<code><a href="../reference/contributor_update.html">contributor_update()</a></code> now commits the rendered contributors file straight to the default branch (<code>main</code> by default) and returns the commit URL. The previous behaviour of opening a <code>jinx/update-contributors</code> branch and PR has been removed. The <code>ops-update-contributors</code> workflow now declares <code>contents: write</code>.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="rag-tolerate-malformed-json-fields-development-version">RAG: tolerate malformed JSON fields<a class="anchor" aria-label="anchor" href="#rag-tolerate-malformed-json-fields-development-version"></a></h3>
 <ul><li>The <code>awesome-rladies-creations</code> packages feed has 41 entries where <code>pkdown_url</code> and/or <code>repo_url</code> parse as empty JSON objects (<code><a href="https://rdrr.io/r/base/Paren.html" class="external-link">{}</a></code>) rather than strings or <code>null</code>. The scheduled indexer crashed mid-run on 2026-05-24 with <code>missing value where TRUE/FALSE needed</code> when one of these reached <code><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar()</a></code>. The custom <code>%or%</code> operator and the downstream <code><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar()</a></code> checks now go through a new <code><a href="../reference/is_blank.html">is_blank()</a></code> helper that treats NULL, zero-length vectors and lists, NA, and the empty string uniformly as “missing”. Regression tests pin the empty-list and NA cases.</li>
 <li>

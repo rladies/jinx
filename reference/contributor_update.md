@@ -1,7 +1,7 @@
 # Generate and update a contributors list for a repo
 
-Fetches contributors and creates/updates a PR with the contributor list
-in a specified file.
+Fetches contributors and commits the rendered list directly to the
+default branch. No PR is opened.
 
 ## Usage
 
@@ -10,7 +10,8 @@ contributor_update(
   owner,
   repo,
   file_path = ".github/contributors.md",
-  format = "grid"
+  format = "grid",
+  branch = "main"
 )
 ```
 
@@ -33,6 +34,10 @@ contributor_update(
 
   Format for the contributor list.
 
+- branch:
+
+  Branch to commit to. Defaults to `"main"`.
+
 ## Value
 
-PR URL if changes were made, `NULL` otherwise (invisibly).
+Commit URL if changes were made, `NULL` otherwise (invisibly).
