@@ -213,39 +213,6 @@ describe("website_format_slack", {
   })
 })
 
-describe("analytics_format_slack", {
-  it("formats a Slack summary for org analytics", {
-    dashboard_data <- list(
-      trends = data.frame(
-        month = c("2024-01", "2024-02"),
-        total_commits = c(15L, 23L),
-        change = c(NA_real_, 53.3),
-        sparkline = c("\u2581", "\u2588"),
-        stringsAsFactors = FALSE
-      ),
-      growth = data.frame(
-        month = c("2024-01", "2024-02"),
-        new_contributors = c(5L, 3L),
-        total_contributors = c(5L, 8L),
-        active_repos = c(0L, 0L),
-        stringsAsFactors = FALSE
-      ),
-      markdown = "full report"
-    )
-
-    result <- analytics_format_slack(
-      dashboard_data,
-      "https://github.com/issue/3"
-    )
-    expect_true(grepl("Analytics Dashboard", result, fixed = TRUE))
-    expect_true(grepl("38", result, fixed = TRUE))
-    expect_true(grepl("23", result, fixed = TRUE))
-    expect_true(grepl("8", result, fixed = TRUE))
-    expect_true(grepl("3 new", result, fixed = TRUE))
-    expect_true(grepl("View full report", result, fixed = TRUE))
-  })
-})
-
 describe("slack_analytics_channel", {
   it("returns NULL when env var is not set", {
     withr::with_envvar(c(SLACK_ANALYTICS_CHANNEL = ""), {

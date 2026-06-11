@@ -124,6 +124,31 @@ extract_hugo_page <- function(html, url, src) {
   if (is.null(doc)) {
     return(NULL)
   }
+
+  meta <- hugo_extract_meta(doc, src)
+  article <- hugo_extract_article(doc)
+  if (is.null(article)) {
+    return(NULL)
+  }
+
+  markdown <- html_node_to_markdown(article)
+  if (nzchar(meta$description)) {
+    markdown <- paste0(meta$description, "\n\n", markdown)
+  }
+  if (nzchar(meta$title) && !startsWith(markdown, paste0("# ", meta$title))) {
+    markdown <- paste0("# ", meta$title, "\n\n", markdown)
+  }
+  list(
+    url = url,
+    title = meta$title,
+    description = meta$description,
+    date = meta$date,
+    lastmod = meta$lastmod,
+    markdown = trimws(markdown)
+  )
+}
+
+hugo_extract_meta <- function(doc, src) {
   title <- rvest::html_text2(rvest::html_element(doc, "title"))
   title <- if (is.na(title) || is.null(title)) "" else title
   title <- strip_suffix(trimws(title), src$title_suffix %or% "")
@@ -137,6 +162,7 @@ extract_hugo_page <- function(html, url, src) {
   } else {
     trimws(description)
   }
+
   published <- rag_parse_date(
     rvest::html_attr(
       rvest::html_element(doc, "meta[property='article:published_time']"),
@@ -149,9 +175,15 @@ extract_hugo_page <- function(html, url, src) {
       "content"
     )
   )
-  date <- if (published > 0L) published else modified
-  lastmod <- if (modified > 0L) modified else published
+  list(
+    title = title,
+    description = description,
+    date = if (published > 0L) published else modified,
+    lastmod = if (modified > 0L) modified else published
+  )
+}
 
+hugo_extract_article <- function(doc) {
   article <- rvest::html_element(doc, "main")
   if (is.na(article)) {
     article <- rvest::html_element(doc, "article")
@@ -159,27 +191,11 @@ extract_hugo_page <- function(html, url, src) {
   if (is.na(article)) {
     return(NULL)
   }
-
   xml2::xml_remove(rvest::html_elements(
     article,
     "script, style, noscript, nav, footer, aside, form, button"
   ))
-
-  markdown <- html_node_to_markdown(article)
-  if (nzchar(description)) {
-    markdown <- paste0(description, "\n\n", markdown)
-  }
-  if (nzchar(title) && !startsWith(markdown, paste0("# ", title))) {
-    markdown <- paste0("# ", title, "\n\n", markdown)
-  }
-  list(
-    url = url,
-    title = title,
-    description = description,
-    date = date,
-    lastmod = lastmod,
-    markdown = trimws(markdown)
-  )
+  article
 }
 
 #' Convert an HTML node to GitHub-flavoured markdown via pandoc

@@ -151,25 +151,7 @@ chapter_create_pr <- function(
   content_b64 <- jsonlite::base64_enc(charToRaw(as.character(json_content)))
 
   branch <- glue::glue("chapter/{slug}")
-
-  main_ref <- gh::gh(
-    "GET /repos/{owner}/{repo}/git/ref/heads/main",
-    owner = org,
-    repo = website_repo
-  )
-
-  tryCatch(
-    gh::gh(
-      "POST /repos/{owner}/{repo}/git/refs",
-      owner = org,
-      repo = website_repo,
-      ref = glue::glue("refs/heads/{branch}"),
-      sha = main_ref$object$sha
-    ),
-    error = function(e) {
-      cli::cli_alert_info("Branch {branch} may already exist")
-    }
-  )
+  gh_branch_upsert(org, website_repo, branch, force = FALSE)
 
   gh::gh(
     "PUT /repos/{owner}/{repo}/contents/data/chapters/{filename}",
@@ -181,13 +163,11 @@ chapter_create_pr <- function(
     branch = branch
   )
 
-  pr <- gh::gh(
-    "POST /repos/{owner}/{repo}/pulls",
-    owner = org,
-    repo = website_repo,
+  url <- gh_open_or_update_pr(
+    org,
+    website_repo,
+    branch,
     title = glue::glue("Add chapter: {city}, {country}"),
-    head = branch,
-    base = "main",
     body = glue::glue(
       "Adding new chapter entry for **{city}, {country}**.\n\n",
       "- Status: {status}\n",
@@ -197,8 +177,8 @@ chapter_create_pr <- function(
     )
   )
 
-  cli::cli_alert_success("Chapter PR created: {pr$html_url}")
-  invisible(pr$html_url)
+  cli::cli_alert_success("Chapter PR created: {url}")
+  invisible(url)
 }
 
 review_assign_onboarding <- function(org, repo, issue_number) {

@@ -33,7 +33,7 @@ jobs:
         with:
           extra-packages: local::.
 
-      - name: Sync and publish events
+      - name: Sync events
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           MEETUP_API_KEY: ${{ secrets.MEETUP_API_KEY }}
@@ -41,8 +41,4 @@ jobs:
           MEETUPR_CLIENT_ID: ${{ secrets.MEETUPR_CLIENT_ID }}
           MEETUPR_JWT_ISSUER: ${{ secrets.MEETUPR_JWT_ISSUER }}
         run: |
-          Rscript -e '
-            events <- jinx::event_sync_chapters(dry_run = FALSE)
-            summary <- jinx::event_create_summary(events, "weekly")
-            jinx::event_publish_summary(summary)
-          '
+          Rscript -e 'jinx::event_sync_chapters(dry_run = FALSE)'

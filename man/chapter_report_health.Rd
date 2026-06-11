@@ -4,19 +4,17 @@
 \alias{chapter_report_health}
 \title{Generate a chapter health report}
 \usage{
-chapter_report_health(months = 6, org = "rladies", target_repo = "global-team")
+chapter_report_health(months = 6, org = "rladies")
 }
 \arguments{
 \item{months}{Inactivity threshold in months. Defaults to 6.}
 
 \item{org}{GitHub organization. Defaults to \code{"rladies"}.}
-
-\item{target_repo}{Repository to publish report to.
-Defaults to \code{"global-team"}.}
 }
 \value{
-Issue URL (invisibly).
+Markdown report body (invisibly), or \code{NULL} if no data.
 }
 \description{
-Analyzes chapter activity data and publishes a summary report.
+Analyzes chapter activity data and returns a formatted markdown
+summary.
 }

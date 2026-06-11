@@ -79,35 +79,6 @@ gha_generate_dashboard <- function(
   invisible(dashboard_data)
 }
 
-#' Publish GHA dashboard as a GitHub issue
-#'
-#' Creates a summary issue with workflow status badges.
-#'
-#' @param dashboard_data Data from [gha_generate_dashboard()].
-#' @param org GitHub organization.
-#' @param target_repo Repository to publish to.
-#' @return Issue URL (invisibly).
-#' @export
-gha_publish_dashboard <- function(
-  dashboard_data,
-  org = "rladies",
-  target_repo = "global-team"
-) {
-  body <- gha_format_dashboard(dashboard_data)
-
-  issue <- gh::gh(
-    "POST /repos/{owner}/{repo}/issues",
-    owner = org,
-    repo = target_repo,
-    title = glue::glue("GitHub Actions Status Report - {Sys.Date()}"),
-    body = body,
-    labels = list("report", "gha-dashboard")
-  )
-
-  cli::cli_alert_success("Dashboard published: {issue$html_url}")
-  invisible(issue$html_url)
-}
-
 gha_format_dashboard <- function(dashboard_data) {
   if (length(dashboard_data) == 0) {
     return("No workflow data found.")

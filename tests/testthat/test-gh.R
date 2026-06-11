@@ -117,3 +117,109 @@ describe("gh_welcome_message_with_extra", {
     )
   })
 })
+
+describe("gh_branch_upsert", {
+  it("creates the branch via POST when it doesn't exist", {
+    calls <- list()
+    local_mocked_bindings(
+      gh = function(endpoint, ...) {
+        calls[[length(calls) + 1]] <<- endpoint
+        if (grepl("^GET .*/git/ref/heads", endpoint)) {
+          return(list(object = list(sha = "basesha")))
+        }
+        if (grepl("^POST .*/git/refs$", endpoint)) {
+          return(list(object = list(sha = "basesha")))
+        }
+        list()
+      },
+      .package = "gh"
+    )
+    sha <- gh_branch_upsert("rladies", "directory", "jinx/x")
+    expect_identical(sha, "basesha")
+    expect_true(any(grepl("^POST .*/git/refs$", calls)))
+    expect_false(any(grepl("^PATCH", calls)))
+  })
+
+  it("force-updates an existing branch when force is TRUE", {
+    calls <- list()
+    local_mocked_bindings(
+      gh = function(endpoint, ...) {
+        calls[[length(calls) + 1]] <<- endpoint
+        if (grepl("^GET .*/git/ref/heads", endpoint)) {
+          return(list(object = list(sha = "basesha")))
+        }
+        if (grepl("^POST .*/git/refs$", endpoint)) {
+          stop("branch exists")
+        }
+        list()
+      },
+      .package = "gh"
+    )
+    gh_branch_upsert("rladies", "directory", "jinx/x", force = TRUE)
+    expect_true(any(grepl("^PATCH .*/git/refs/heads", calls)))
+  })
+
+  it("leaves an existing branch alone when force is FALSE", {
+    calls <- list()
+    local_mocked_bindings(
+      gh = function(endpoint, ...) {
+        calls[[length(calls) + 1]] <<- endpoint
+        if (grepl("^GET .*/git/ref/heads", endpoint)) {
+          return(list(object = list(sha = "basesha")))
+        }
+        if (grepl("^POST .*/git/refs$", endpoint)) {
+          stop("branch exists")
+        }
+        list()
+      },
+      .package = "gh"
+    )
+    gh_branch_upsert("rladies", "directory", "chapter/x", force = FALSE)
+    expect_false(any(grepl("^PATCH", calls)))
+  })
+})
+
+describe("gh_open_or_update_pr", {
+  it("returns the existing open PR's URL if one is already open", {
+    local_mocked_bindings(
+      gh = function(endpoint, ...) {
+        if (grepl("^GET .*/pulls", endpoint)) {
+          return(list(list(html_url = "https://github.com/x/y/pull/9")))
+        }
+        stop("should not POST")
+      },
+      .package = "gh"
+    )
+    url <- gh_open_or_update_pr(
+      "rladies",
+      "directory",
+      "jinx/x",
+      title = "t",
+      body = "b"
+    )
+    expect_identical(url, "https://github.com/x/y/pull/9")
+  })
+
+  it("opens a new PR when none is open", {
+    local_mocked_bindings(
+      gh = function(endpoint, ...) {
+        if (grepl("^GET .*/pulls", endpoint)) {
+          return(list())
+        }
+        if (grepl("^POST .*/pulls", endpoint)) {
+          return(list(html_url = "https://github.com/x/y/pull/10"))
+        }
+        list()
+      },
+      .package = "gh"
+    )
+    url <- gh_open_or_update_pr(
+      "rladies",
+      "directory",
+      "jinx/x",
+      title = "t",
+      body = "b"
+    )
+    expect_identical(url, "https://github.com/x/y/pull/10")
+  })
+})

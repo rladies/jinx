@@ -1,5 +1,49 @@
 # jinx (development version)
 
+## Slack bot: remember the thread
+
+- The Slack Q&A bot now reads prior turns in the same thread via
+  `conversations.replies` before calling the LLM, so follow-up
+  questions no longer require restating the whole conversation. Up to
+  the last 8 turns (capped at ~4k chars) are passed in as
+  `user`/`assistant` history. Applies to both assistant DM threads and
+  channel `app_mention` threads. The user's two most recent prompts
+  are also folded into the retrieval embedding so the right sources
+  surface when the new question is a one-word follow-up.
+
+## Airtable directory sync: actually open a PR
+
+- `directory_create_pr()` was a stub that returned the directory's
+  pulls-page URL without creating a branch, writing files, or opening
+  a PR. The function now creates a dated `jinx/airtable-sync-YYYYMMDD`
+  branch, commits each changed `contact/{slug}.json` file via the
+  contents API, and opens a PR back into `main` (returning the URL of
+  an existing open PR if the branch was already in flight).
+- `write_directory_entries()` now returns a list of `{filename, path,
+content, sha}` records for changed entries instead of only their
+  filenames, so the PR step can actually write them.
+
+## Reports: stop publishing to global-team
+
+- The weekly activity, monthly chapter-health, analytics dashboard, and
+  GitHub Actions dashboard ops workflows no longer open issues in
+  `rladies/global-team`. The publish helpers
+  (`report_publish()`, `analytics_publish_dashboard()`,
+  `gha_publish_dashboard()`, `event_publish_summary()`) and the
+  matching scheduled workflows have been removed.
+- `chapter_report_health()` now returns the formatted markdown body
+  instead of opening an issue.
+- `ops-event-sync.yml` keeps the meetup sync but no longer publishes a
+  summary issue.
+
+## Contributors: push directly to main
+
+- `contributor_update()` now commits the rendered contributors file
+  straight to the default branch (`main` by default) and returns the
+  commit URL. The previous behaviour of opening a `jinx/update-contributors`
+  branch and PR has been removed. The `ops-update-contributors` workflow
+  now declares `contents: write`.
+
 ## RAG: tolerate malformed JSON fields
 
 - The `awesome-rladies-creations` packages feed has 41 entries where

@@ -38,13 +38,13 @@ describe("cmd_execute integration: producer to formatter", {
     expect_false(grepl("NA", result, fixed = TRUE))
   })
 
-  it("contributors-update reports the PR URL", {
+  it("contributors-update reports the commit URL", {
     local_mocked_bindings(
-      contributor_update = function(...) "https://github.com/x/y/pull/1"
+      contributor_update = function(...) "https://github.com/x/y/commit/abc123"
     )
     result <- cmd_execute(list(action = "contributors-update", repo = "jinx"))
     expect_type(result, "character")
-    expect_true(grepl("pull/1", result, fixed = TRUE))
+    expect_true(grepl("commit/abc123", result, fixed = TRUE))
   })
 
   it("contributors-update reports up-to-date when no PR is created", {
@@ -160,7 +160,7 @@ describe("cmd_execute integration: producer to formatter", {
     expect_true(grepl("rladies-oslo", result, fixed = TRUE))
   })
 
-  it("events-sync runs sync, summary, and publish", {
+  it("events-sync runs sync then returns a summary", {
     local_mocked_bindings(
       event_sync_chapters = function(...) {
         data.frame(
@@ -172,12 +172,11 @@ describe("cmd_execute integration: producer to formatter", {
           chapter = "rladies-oslo",
           stringsAsFactors = FALSE
         )
-      },
-      event_publish_summary = function(...) "https://github.com/x/y/issues/1"
+      }
     )
     result <- cmd_execute(list(action = "events-sync"))
     expect_type(result, "character")
-    expect_true(grepl("issues/1", result, fixed = TRUE))
+    expect_true(grepl("Intro to R", result, fixed = TRUE))
   })
 
   it("analytics returns markdown from analytics_generate_dashboard", {
