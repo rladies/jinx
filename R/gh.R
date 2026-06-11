@@ -227,18 +227,30 @@ gh_branch_upsert <- function(org, repo, branch, base = "main", force = TRUE) {
   )
   sha <- base_ref$object$sha
 
-  tryCatch(
-    gh::gh(
-      "POST /repos/{owner}/{repo}/git/refs",
-      owner = org,
-      repo = repo,
-      ref = glue::glue("refs/heads/{branch}"),
-      sha = sha
-    ),
+  result <- tryCatch(
+    {
+      gh::gh(
+        "POST /repos/{owner}/{repo}/git/refs",
+        owner = org,
+        repo = repo,
+        ref = glue::glue("refs/heads/{branch}"),
+        sha = sha
+      )
+      list(created = TRUE, sha = sha)
+    },
     error = function(e) {
       if (!force) {
         cli::cli_alert_info("Branch {branch} may already exist")
-        return(invisible(sha))
+        head <- tryCatch(
+          gh::gh(
+            "GET /repos/{owner}/{repo}/git/ref/heads/{branch}",
+            owner = org,
+            repo = repo,
+            branch = branch
+          ),
+          error = function(e2) NULL
+        )
+        return(list(created = FALSE, sha = head$object$sha))
       }
       gh::gh(
         "PATCH /repos/{owner}/{repo}/git/refs/heads/{branch}",
@@ -248,10 +260,11 @@ gh_branch_upsert <- function(org, repo, branch, base = "main", force = TRUE) {
         sha = sha,
         force = TRUE
       )
+      list(created = TRUE, sha = sha)
     }
   )
 
-  invisible(sha)
+  invisible(result$sha)
 }
 
 #' Open a PR, or return the existing open PR for a branch
@@ -303,48 +316,43 @@ gh_open_or_update_pr <- function(
 }
 
 is_first_time_contributor <- function(owner, repo, author, is_pr = TRUE) {
-  if (is_pr) {
-    prs <- tryCatch(
-      gh::gh(
-        "GET /repos/{owner}/{repo}/pulls",
-        owner = owner,
-        repo = repo,
-        state = "all",
-        .limit = 10,
-        creator = author
-      ),
-      error = function(e) list()
-    )
-    length(prs) <= 1
-  } else {
-    issues <- tryCatch(
-      gh::gh(
-        "GET /repos/{owner}/{repo}/issues",
-        owner = owner,
-        repo = repo,
-        state = "all",
-        .limit = 10,
-        creator = author
-      ),
-      error = function(e) list()
-    )
-    real_issues <- Filter(function(i) is.null(i$pull_request), issues)
-    length(real_issues) <= 1
+  kind <- if (is_pr) "pr" else "issue"
+  query <- glue::glue("repo:{owner}/{repo} is:{kind} author:{author}")
+  result <- tryCatch(
+    gh::gh(
+      "GET /search/issues",
+      q = query,
+      per_page = 2
+    ),
+    error = function(e) NULL
+  )
+  if (is.null(result) || is.null(result$total_count)) {
+    return(FALSE)
   }
+  result$total_count <= 1
 }
 
-is_team_member <- function(author, org) {
-  tryCatch(
-    {
-      gh::gh(
-        "GET /orgs/{org}/teams/global/memberships/{username}",
-        org = org,
-        username = author
-      )
-      TRUE
-    },
-    error = function(e) FALSE
+is_team_member <- function(author, org, team = "global") {
+  result <- tryCatch(
+    gh::gh(
+      "GET /orgs/{org}/teams/{team}/memberships/{username}",
+      org = org,
+      team = team,
+      username = author
+    ),
+    http_error_404 = function(e) "not_member",
+    error = function(e) "unknown"
   )
+  if (identical(result, "not_member")) {
+    return(FALSE)
+  }
+  if (identical(result, "unknown")) {
+    cli::cli_alert_warning(
+      "Team membership check failed for @{author}; treating as member"
+    )
+    return(TRUE)
+  }
+  TRUE
 }
 
 is_bot <- function(login) {

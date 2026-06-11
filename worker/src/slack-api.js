@@ -1,17 +1,30 @@
 export async function slack_api_call(token, method, body) {
-  const res = await fetch(`https://slack.com/api/${method}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json; charset=utf-8",
-    },
-    body: JSON.stringify(body || {}),
-  });
-  const result = await res.json();
-  if (!result.ok) {
-    throw new Error(`Slack ${method} failed: ${result.error}`);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const res = await fetch(`https://slack.com/api/${method}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify(body || {}),
+    });
+
+    if (res.status === 429 || res.status >= 500) {
+      if (attempt === 0) {
+        const retryAfter = Number(res.headers.get("Retry-After")) || 1;
+        await new Promise((r) => setTimeout(r, Math.min(retryAfter, 5) * 1000));
+        continue;
+      }
+      throw new Error(`Slack ${method} failed: HTTP ${res.status}`);
+    }
+
+    const result = await res.json();
+    if (!result.ok) {
+      throw new Error(`Slack ${method} failed: ${result.error}`);
+    }
+    return result;
   }
-  return result;
+  throw new Error(`Slack ${method} failed: retries exhausted`);
 }
 
 export async function slack_message_post(

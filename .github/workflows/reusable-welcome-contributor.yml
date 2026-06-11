@@ -35,6 +35,7 @@ permissions:
 jobs:
   welcome:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: >-
       ((github.event_name == 'pull_request' || github.event_name == 'pull_request_target') && github.event.action == 'opened') ||
       (github.event_name == 'issues' && github.event.action == 'opened')

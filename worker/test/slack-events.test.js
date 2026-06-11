@@ -1,5 +1,8 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { slack_event_handle } from "../src/slack-events.js";
+import {
+  slack_event_handle,
+  slack_event_strip_mention,
+} from "../src/slack-events.js";
 import { makeEnv, makeCtx, makeKv, jsonResponse } from "./_helpers.js";
 
 afterEach(() => {
@@ -210,5 +213,29 @@ describe("slack_event_handle", () => {
       "json"
     );
     expect(entry).toBeNull();
+  });
+});
+
+describe("slack_event_strip_mention", () => {
+  it("strips bare user mentions", () => {
+    expect(slack_event_strip_mention("hey <@U12345> ping")).toBe("hey  ping".trim());
+  });
+
+  it("strips user mentions that include a display name", () => {
+    expect(slack_event_strip_mention("yo <@U12345|jinx> what's up")).toBe(
+      "yo  what's up".trim(),
+    );
+  });
+
+  it("strips subteam mentions", () => {
+    expect(slack_event_strip_mention("cc <!subteam^S0123|coc-team>")).toBe("cc");
+  });
+
+  it("strips channel-wide mentions", () => {
+    expect(slack_event_strip_mention("<!channel> heads up")).toBe(
+      "heads up",
+    );
+    expect(slack_event_strip_mention("<!here> ping")).toBe("ping");
+    expect(slack_event_strip_mention("<!everyone> woo")).toBe("woo");
   });
 });

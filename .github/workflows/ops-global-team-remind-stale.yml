@@ -5,14 +5,21 @@ on:
     - cron: "10 9 * * 1"
   workflow_dispatch: {}
 
+concurrency:
+  group: ops-global-team-remind-stale
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
 jobs:
   remind:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: actions/create-github-app-token@v3
         id: app-token

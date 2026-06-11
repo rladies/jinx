@@ -42,6 +42,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: actions/create-github-app-token@v3
         id: app-token
@@ -61,18 +63,26 @@ jobs:
       - name: Invite global team member
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          USERNAME: ${{ inputs.username }}
+          TEAM: ${{ inputs.team }}
+          NAME: ${{ inputs.name }}
         run: |
           Rscript -e '
             jinx::gt_invite(
-              username = "${{ inputs.username }}",
-              team = "${{ inputs.team }}",
-              name = "${{ inputs.name }}"
+              username = Sys.getenv("USERNAME"),
+              team     = Sys.getenv("TEAM"),
+              name     = Sys.getenv("NAME")
             )
           '
 
       - name: Save global team onboarding details
+        env:
+          USERNAME: ${{ inputs.username }}
+          TEAM: ${{ inputs.team }}
+          NAME: ${{ inputs.name }}
         run: |
-          echo '{"username": "${{ inputs.username }}", "name": "${{ inputs.name }}", "team": "${{ inputs.team }}"}' > global-team-details.json
+          jq -n --arg u "$USERNAME" --arg t "$TEAM" --arg n "$NAME" \
+            '{username: $u, name: $n, team: $t}' > global-team-details.json
 
       - uses: actions/upload-artifact@v7
         with:

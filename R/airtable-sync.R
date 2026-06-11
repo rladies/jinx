@@ -126,6 +126,7 @@ airtable_list_records <- function(base_id, table, api_key) {
     ) |>
       httr2::req_headers(Authorization = paste("Bearer", api_key)) |>
       httr2::req_url_query(!!!query) |>
+      httr2::req_retry(max_tries = 3, backoff = function(i) i) |>
       httr2::req_perform() |>
       httr2::resp_body_json()
 
@@ -144,8 +145,14 @@ airtable_to_directory_entry <- function(record) {
     return(NULL)
   }
 
-  slug <- tolower(gsub("[^a-z0-9]+", "-", tolower(name), perl = TRUE))
-  slug <- sub("^-|-$", "", slug)
+  name_slug <- tolower(gsub("[^a-z0-9]+", "-", tolower(name), perl = TRUE))
+  name_slug <- sub("^-|-$", "", name_slug)
+  id_suffix <- substr(
+    openssl::sha1(record$id %||% name),
+    1,
+    6
+  )
+  slug <- paste0(name_slug, "-", id_suffix)
 
   entry <- list(name = name)
 
