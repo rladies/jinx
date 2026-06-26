@@ -158,25 +158,9 @@ meeting_poll_create <- function(
   base_url = samkoma_base_url()
 ) {
   kind <- match.arg(kind)
-  if (!is.character(title) || length(title) != 1 || !nzchar(trimws(title))) {
-    cli::cli_abort("{.arg title} must be a non-empty string.")
-  }
-  if (nchar(title) > 200) {
-    cli::cli_abort("{.arg title} must be at most 200 characters.")
-  }
-  if (length(days) < 1 || length(days) > 60) {
-    cli::cli_abort("{.arg days} must have between 1 and 60 items.")
-  }
-  if (!samkoma_is_time(from) || !samkoma_is_time(to)) {
-    cli::cli_abort("{.arg from} and {.arg to} must be in HH:MM format.")
-  }
   slot <- suppressWarnings(as.integer(slot))
-  if (is.na(slot) || slot <= 0L) {
-    cli::cli_abort("{.arg slot} must be a positive number of minutes.")
-  }
-  if (!nzchar(tz)) {
-    cli::cli_abort("{.arg tz} must be a non-empty timezone name.")
-  }
+  samkoma_validate_poll_title(title)
+  samkoma_validate_poll_window(days, from, to, slot, tz)
 
   body <- list(
     title = title,
@@ -199,6 +183,34 @@ meeting_poll_create <- function(
 
   out <- httr2::resp_body_json(samkoma_perform(req))
   list(id = out$id, url = out$url, edit_token = out$editToken)
+}
+
+#' @keywords internal
+#' @noRd
+samkoma_validate_poll_title <- function(title) {
+  if (!is.character(title) || length(title) != 1 || !nzchar(trimws(title))) {
+    cli::cli_abort("{.arg title} must be a non-empty string.")
+  }
+  if (nchar(title) > 200) {
+    cli::cli_abort("{.arg title} must be at most 200 characters.")
+  }
+}
+
+#' @keywords internal
+#' @noRd
+samkoma_validate_poll_window <- function(days, from, to, slot, tz) {
+  if (length(days) < 1 || length(days) > 60) {
+    cli::cli_abort("{.arg days} must have between 1 and 60 items.")
+  }
+  if (!samkoma_is_time(from) || !samkoma_is_time(to)) {
+    cli::cli_abort("{.arg from} and {.arg to} must be in HH:MM format.")
+  }
+  if (is.na(slot) || slot <= 0L) {
+    cli::cli_abort("{.arg slot} must be a positive number of minutes.")
+  }
+  if (!nzchar(tz)) {
+    cli::cli_abort("{.arg tz} must be a non-empty timezone name.")
+  }
 }
 
 #' Fetch a poll and its aggregated responses

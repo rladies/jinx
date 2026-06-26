@@ -254,16 +254,24 @@ parse_poll_create_command <- function(tokens, usage) {
   }
 
   kv <- tokens[is_kv]
-  keys <- sub("=.*$", "", kv)
-  vals <- sub("^[^=]+=", "", kv)
-  opts <- stats::setNames(as.list(vals), keys)
+  opts <- stats::setNames(
+    as.list(sub("^[^=]+=", "", kv)),
+    sub("=.*$", "", kv)
+  )
+  poll_create_command_from_opts(title, opts, usage)
+}
 
+parse_poll_opts_days <- function(opts) {
+  days <- strsplit(opts$days %||% "", ",", fixed = TRUE)[[1]]
+  days[nzchar(days)]
+}
+
+poll_create_command_from_opts <- function(title, opts, usage) {
   required <- c("days", "from", "to", "slot")
   if (!all(required %in% names(opts)) || !nzchar(title)) {
     return(list(action = "error", message = usage))
   }
-  days <- strsplit(opts$days, ",", fixed = TRUE)[[1]]
-  days <- days[nzchar(days)]
+  days <- parse_poll_opts_days(opts)
   if (length(days) == 0) {
     return(list(
       action = "error",
