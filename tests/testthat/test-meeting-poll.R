@@ -167,13 +167,12 @@ describe("meeting_poll_lock", {
     meeting_poll_lock("abc123", NULL, edit_token = "tok")
     expect_true("slot" %in% names(captured$body$data))
     expect_null(captured$body$data$slot)
-    body <- rawToChar(
-      req_dry_run(
-        req_body_json(request("https://x"), captured$body$data),
-        quiet = TRUE
-      )$body
+    json <- jsonlite::toJSON(
+      captured$body$data,
+      auto_unbox = TRUE,
+      null = "null"
     )
-    expect_match(body, "\"slot\":null", fixed = TRUE)
+    expect_match(json, "\"slot\":null", fixed = TRUE)
   })
 
   it("rejects an id that could manipulate the URL", {
