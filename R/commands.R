@@ -44,6 +44,7 @@ cmd_parse <- function(body) {
     analytics = list(action = "analytics"),
     "website-analytics" = parse_website_analytics_command(parts),
     cfp = parse_cfp_command(parts),
+    poll = parse_poll_command(parts),
     translate = parse_translate_command(parts),
     help = list(action = "help"),
     list(action = "unknown", raw = paste(parts, collapse = " "))
@@ -207,6 +208,92 @@ parse_cfp_command <- function(parts) {
       action = "error",
       message = "Usage: `/jinx cfp list|add|recommend`"
     )
+  )
+}
+
+parse_poll_command <- function(parts) {
+  usage <- paste(
+    "Usage: `/jinx poll create <title> days=<d1,d2> from=HH:MM",
+    "to=HH:MM slot=<min> [tz=<zone>]` or `/jinx poll best <id>`"
+  )
+  if (length(parts) < 2) {
+    return(list(action = "error", message = usage))
+  }
+  sub_action <- tolower(parts[2])
+  switch(
+    sub_action,
+    best = if (length(parts) < 3) {
+      list(action = "error", message = "Usage: `/jinx poll best <id>`")
+    } else if (!grepl("^[A-Za-z0-9_-]+$", parts[3])) {
+      list(action = "error", message = "Invalid poll id.")
+    } else {
+      list(action = "poll-best", id = parts[3])
+    },
+    create = parse_poll_create_command(parts[-(1:2)], usage),
+    list(action = "error", message = usage)
+  )
+}
+
+parse_poll_create_command <- function(tokens, usage) {
+  is_kv <- grepl("^[a-zA-Z_]+=", tokens)
+  first_kv <- which(is_kv)
+  if (length(first_kv) == 0 || first_kv[1] == 1) {
+    return(list(action = "error", message = usage))
+  }
+  title <- paste(tokens[seq_len(first_kv[1] - 1)], collapse = " ")
+
+  tail_tokens <- tokens[first_kv[1]:length(tokens)]
+  stray <- tail_tokens[!grepl("^[a-zA-Z_]+=", tail_tokens)]
+  if (length(stray) > 0) {
+    return(list(
+      action = "error",
+      message = glue::glue(
+        "Unrecognized poll option(s): {paste(stray, collapse = ', ')}. {usage}"
+      )
+    ))
+  }
+
+  kv <- tokens[is_kv]
+  keys <- sub("=.*$", "", kv)
+  vals <- sub("^[^=]+=", "", kv)
+  opts <- stats::setNames(as.list(vals), keys)
+
+  required <- c("days", "from", "to", "slot")
+  if (!all(required %in% names(opts)) || !nzchar(title)) {
+    return(list(action = "error", message = usage))
+  }
+  days <- strsplit(opts$days, ",", fixed = TRUE)[[1]]
+  days <- days[nzchar(days)]
+  if (length(days) == 0) {
+    return(list(
+      action = "error",
+      message = "`days` must list at least one day."
+    ))
+  }
+  slot <- suppressWarnings(as.integer(opts$slot))
+  if (is.na(slot) || slot <= 0L) {
+    return(list(
+      action = "error",
+      message = "`slot` must be a positive number of minutes."
+    ))
+  }
+  kind <- tolower(opts$kind %||% "dates")
+  if (!kind %in% c("dates", "weekdays")) {
+    return(list(
+      action = "error",
+      message = "`kind` must be `dates` or `weekdays`."
+    ))
+  }
+  list(
+    action = "poll-create",
+    title = title,
+    days = days,
+    from = opts$from,
+    to = opts$to,
+    slot = slot,
+    tz = opts$tz %||% "UTC",
+    kind = kind,
+    public = !identical(tolower(opts$public %||% "true"), "false")
   )
 }
 
@@ -414,6 +501,25 @@ cmd_execute <- function(command) {
         "Speaker recommendation for @{command$speaker}",
         " added to **{command$conference}**."
       )
+    },
+    "poll-create" = {
+      created <- meeting_poll_create(
+        title = command$title,
+        days = command$days,
+        from = command$from,
+        to = command$to,
+        slot = command$slot,
+        tz = command$tz,
+        kind = command$kind,
+        public = command$public
+      )
+      meeting_poll_format_created(created, command$title)
+    },
+    "poll-best" = {
+      poll <- tryCatch(meeting_poll_get(command$id), error = function(e) NULL)
+      title <- if (is.list(poll)) poll$title else NULL
+      best <- meeting_poll_best(command$id)
+      meeting_poll_format_best(best, title = title)
     },
     "translate-status" = {
       coverage <- i18n_check_coverage()

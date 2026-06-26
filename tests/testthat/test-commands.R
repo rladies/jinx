@@ -154,6 +154,104 @@ describe("cmd_parse", {
     expect_equal(cmd$action, "contributors-update")
     expect_equal(cmd$repo, "jinx")
   })
+
+  it("parses a poll create command with a multi-word title", {
+    cmd <- cmd_parse(paste(
+      "/jinx poll create Summer planning days=2026-07-01,2026-07-02",
+      "from=09:00 to=17:00 slot=30 tz=Europe/Oslo"
+    ))
+    expect_equal(cmd$action, "poll-create")
+    expect_equal(cmd$title, "Summer planning")
+    expect_equal(cmd$days, c("2026-07-01", "2026-07-02"))
+    expect_equal(cmd$from, "09:00")
+    expect_equal(cmd$to, "17:00")
+    expect_equal(cmd$slot, 30L)
+    expect_equal(cmd$tz, "Europe/Oslo")
+    expect_true(cmd$public)
+  })
+
+  it("defaults poll tz to UTC, kind to dates, and public to TRUE", {
+    cmd <- cmd_parse(
+      "/jinx poll create Sync days=2026-07-01 from=09:00 to=17:00 slot=30"
+    )
+    expect_equal(cmd$tz, "UTC")
+    expect_equal(cmd$kind, "dates")
+    expect_true(cmd$public)
+  })
+
+  it("parses a weekdays poll", {
+    cmd <- cmd_parse(paste(
+      "/jinx poll create Standup days=mon,wed,fri from=09:00",
+      "to=10:00 slot=15 kind=weekdays"
+    ))
+    expect_equal(cmd$action, "poll-create")
+    expect_equal(cmd$kind, "weekdays")
+    expect_equal(cmd$days, c("mon", "wed", "fri"))
+  })
+
+  it("rejects an unknown poll kind", {
+    cmd <- cmd_parse(paste(
+      "/jinx poll create Sync days=2026-07-01 from=09:00",
+      "to=17:00 slot=30 kind=fortnightly"
+    ))
+    expect_equal(cmd$action, "error")
+    expect_match(cmd$message, "kind")
+  })
+
+  it("honours public=false in a poll create command", {
+    cmd <- cmd_parse(paste(
+      "/jinx poll create Sync days=2026-07-01 from=09:00",
+      "to=17:00 slot=30 public=false"
+    ))
+    expect_false(cmd$public)
+  })
+
+  it("rejects stray tokens between poll options", {
+    cmd <- cmd_parse(paste(
+      "/jinx poll create Sync days=2026-07-01 oops from=09:00",
+      "to=17:00 slot=30"
+    ))
+    expect_equal(cmd$action, "error")
+    expect_match(cmd$message, "oops")
+  })
+
+  it("rejects an empty days value", {
+    cmd <- cmd_parse(
+      "/jinx poll create Sync days= from=09:00 to=17:00 slot=30"
+    )
+    expect_equal(cmd$action, "error")
+    expect_match(cmd$message, "days")
+  })
+
+  it("errors on a poll create command missing required fields", {
+    cmd <- cmd_parse("/jinx poll create Sync from=09:00 to=17:00")
+    expect_equal(cmd$action, "error")
+    expect_match(cmd$message, "Usage")
+  })
+
+  it("errors on a poll create command with no title", {
+    cmd <- cmd_parse(
+      "/jinx poll create days=2026-07-01 from=09:00 to=17:00 slot=30"
+    )
+    expect_equal(cmd$action, "error")
+  })
+
+  it("parses a poll best command", {
+    cmd <- cmd_parse("/jinx poll best abc123")
+    expect_equal(cmd$action, "poll-best")
+    expect_equal(cmd$id, "abc123")
+  })
+
+  it("rejects a poll best id that could manipulate the URL", {
+    cmd <- cmd_parse("/jinx poll best ../../admin")
+    expect_equal(cmd$action, "error")
+    expect_match(cmd$message, "Invalid poll id")
+  })
+
+  it("errors on an unknown poll subcommand", {
+    cmd <- cmd_parse("/jinx poll frobnicate")
+    expect_equal(cmd$action, "error")
+  })
 })
 
 describe("normalize_command", {
