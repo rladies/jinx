@@ -126,6 +126,11 @@ reference:
     contents:
       - starts_with("event_")
 
+  - title: Meeting scheduling
+    desc: Group meeting-time polls via the samkoma API
+    contents:
+      - starts_with("meeting_poll_")
+
   - title: Analytics
     desc: Org-wide activity analytics
     contents:

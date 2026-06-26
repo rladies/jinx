@@ -1,5 +1,18 @@
 # jinx (development version)
 
+## Meeting scheduling
+
+- **New meeting-poll module backed by the samkoma API.**
+  `meeting_poll_create()` opens a "find a time" poll (public by default,
+  returning a host `edit_token`), `meeting_poll_get()` /
+  `meeting_poll_best()` read responses and ranked slots,
+  `meeting_poll_lock()` locks the chosen slot, and `meeting_poll_ics()`
+  exports it as an `.ics` file. Exposed in chat via `/jinx poll create …`
+  and `/jinx poll best <id>`. Base URL is overridable through
+  `SAMKOMA_BASE_URL`. Externally-sourced poll titles and participant
+  names are markdown-neutralised before being rendered into bot-authored
+  GitHub/Slack messages, so they cannot inject links or formatting.
+
 ## Post-review hardening
 
 - **First-time contributor check actually works.** `is_first_time_contributor()`
