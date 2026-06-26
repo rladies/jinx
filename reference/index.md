@@ -214,6 +214,25 @@ Chapter event management
 - [`event_sync_chapters()`](https://rladies.github.io/jinx/reference/event_sync_chapters.md)
   : Sync events across all chapters
 
+## Meeting scheduling
+
+Group meeting-time polls via the samkoma API
+
+- [`meeting_poll_best()`](https://rladies.github.io/jinx/reference/meeting_poll_best.md)
+  : Get the ranked best slots for a poll
+- [`meeting_poll_create()`](https://rladies.github.io/jinx/reference/meeting_poll_create.md)
+  : Create a meeting-scheduling poll on samkoma
+- [`meeting_poll_format_best()`](https://rladies.github.io/jinx/reference/meeting_poll_format_best.md)
+  : Format ranked best slots as markdown
+- [`meeting_poll_format_created()`](https://rladies.github.io/jinx/reference/meeting_poll_format_created.md)
+  : Format a created poll as a markdown announcement
+- [`meeting_poll_get()`](https://rladies.github.io/jinx/reference/meeting_poll_get.md)
+  : Fetch a poll and its aggregated responses
+- [`meeting_poll_ics()`](https://rladies.github.io/jinx/reference/meeting_poll_ics.md)
+  : Export the locked slot of a poll as an iCalendar (.ics) string
+- [`meeting_poll_lock()`](https://rladies.github.io/jinx/reference/meeting_poll_lock.md)
+  : Lock in (or clear) the chosen slot for a poll
+
 ## Analytics
 
 Org-wide activity analytics

@@ -66,6 +66,11 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="meeting-scheduling-development-version">Meeting scheduling<a class="anchor" aria-label="anchor" href="#meeting-scheduling-development-version"></a></h3>
+<ul><li>
+<strong>New meeting-poll module backed by the samkoma API.</strong> <code><a href="../reference/meeting_poll_create.html">meeting_poll_create()</a></code> opens a “find a time” poll (public by default, returning a host <code>edit_token</code>), <code><a href="../reference/meeting_poll_get.html">meeting_poll_get()</a></code> / <code><a href="../reference/meeting_poll_best.html">meeting_poll_best()</a></code> read responses and ranked slots, <code><a href="../reference/meeting_poll_lock.html">meeting_poll_lock()</a></code> locks the chosen slot, and <code><a href="../reference/meeting_poll_ics.html">meeting_poll_ics()</a></code> exports it as an <code>.ics</code> file. Exposed in chat via <code>/jinx poll create …</code> and <code>/jinx poll best &lt;id&gt;</code>. Base URL is overridable through <code>SAMKOMA_BASE_URL</code>. Externally-sourced poll titles and participant names are markdown-neutralised before being rendered into bot-authored GitHub/Slack messages, so they cannot inject links or formatting.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="post-review-hardening-development-version">Post-review hardening<a class="anchor" aria-label="anchor" href="#post-review-hardening-development-version"></a></h3>
 <ul><li>
 <strong>First-time contributor check actually works.</strong> <code>is_first_time_contributor()</code> was passing <code>creator=</code> to <code>GET /repos/{owner}/{repo}/pulls</code>, which the API silently ignores — every author looked like a first-timer until a repo had more than one PR total, and like a returning contributor after that. Now uses <code>GET /search/issues</code> with <code>is:pr/is:issue + author:</code> to count authored items correctly.</li>

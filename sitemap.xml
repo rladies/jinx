@@ -11,6 +11,7 @@
 <url><loc>https://rladies.github.io/jinx/articles/slack-app.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/articles/workflows.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/authors.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/contributors.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/index.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/news/index.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/analytics_collect_chapter_activity.html</loc></url>
@@ -123,6 +124,13 @@
 <url><loc>https://rladies.github.io/jinx/reference/load_review_rules.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/load_teams_config.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/local_file_chunks.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/meeting_poll_best.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/meeting_poll_create.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/meeting_poll_format_best.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/meeting_poll_format_created.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/meeting_poll_get.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/meeting_poll_ics.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/meeting_poll_lock.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/normalise_awesome_url.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/normalise_hugo_url.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/pack_pieces.html</loc></url>
