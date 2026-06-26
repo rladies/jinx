@@ -224,7 +224,7 @@ parse_poll_command <- function(parts) {
     sub_action,
     best = if (length(parts) < 3) {
       list(action = "error", message = "Usage: `/jinx poll best <id>`")
-    } else if (!grepl("^[A-Za-z0-9_-]+$", parts[3])) {
+    } else if (!grepl(samkoma_id_pattern(), parts[3])) {
       list(action = "error", message = "Invalid poll id.")
     } else {
       list(action = "poll-best", id = parts[3])

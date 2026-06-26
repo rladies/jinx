@@ -106,6 +106,11 @@ samkoma_error_detail <- function(resp) {
   substr(body, 1, 200)
 }
 
+#' Regex a poll id must match to be safe to interpolate into a URL path
+#' @keywords internal
+#' @noRd
+samkoma_id_pattern <- function() "^[A-Za-z0-9_-]+$"
+
 #' Validate a poll id before interpolating it into a URL path
 #'
 #' Poll ids come from untrusted input (issue comments), so they must
@@ -116,10 +121,34 @@ samkoma_error_detail <- function(resp) {
 #' @keywords internal
 #' @noRd
 samkoma_check_id <- function(id) {
-  if (!is.character(id) || length(id) != 1 || !grepl("^[A-Za-z0-9_-]+$", id)) {
+  if (
+    !is.character(id) ||
+      length(id) != 1 ||
+      !grepl(samkoma_id_pattern(), id)
+  ) {
     cli::cli_abort("{.arg id} must be an alphanumeric poll id.")
   }
   invisible(id)
+}
+
+#' Build a request for a poll endpoint, validating the id first
+#'
+#' @param id Poll id (validated against [samkoma_id_pattern()]).
+#' @param ... Extra path segments appended after `v1/polls/{id}`.
+#' @param edit_token Optional host edit token.
+#' @param base_url API base URL.
+#' @return An [httr2::request] object.
+#' @keywords internal
+#' @noRd
+samkoma_poll_request <- function(
+  id,
+  ...,
+  edit_token = NULL,
+  base_url = samkoma_base_url()
+) {
+  samkoma_check_id(id)
+  samkoma_request(edit_token = edit_token, base_url = base_url) |>
+    httr2::req_url_path_append("v1", "polls", id, ...)
 }
 
 #' Create a meeting-scheduling poll on samkoma
@@ -226,9 +255,7 @@ meeting_poll_get <- function(
   edit_token = NULL,
   base_url = samkoma_base_url()
 ) {
-  samkoma_check_id(id)
-  req <- samkoma_request(edit_token = edit_token, base_url = base_url) |>
-    httr2::req_url_path_append("v1", "polls", id)
+  req <- samkoma_poll_request(id, edit_token = edit_token, base_url = base_url)
   httr2::resp_body_json(samkoma_perform(req))
 }
 
@@ -244,9 +271,12 @@ meeting_poll_best <- function(
   edit_token = NULL,
   base_url = samkoma_base_url()
 ) {
-  samkoma_check_id(id)
-  req <- samkoma_request(edit_token = edit_token, base_url = base_url) |>
-    httr2::req_url_path_append("v1", "polls", id, "best")
+  req <- samkoma_poll_request(
+    id,
+    "best",
+    edit_token = edit_token,
+    base_url = base_url
+  )
   out <- httr2::resp_body_json(samkoma_perform(req))
 
   results <- out$results %||% list()
@@ -277,9 +307,12 @@ meeting_poll_lock <- function(
   if (missing(edit_token) || is.null(edit_token) || !nzchar(edit_token)) {
     cli::cli_abort("Locking a slot requires the poll's {.arg edit_token}.")
   }
-  samkoma_check_id(id)
-  req <- samkoma_request(edit_token = edit_token, base_url = base_url) |>
-    httr2::req_url_path_append("v1", "polls", id, "lock") |>
+  req <- samkoma_poll_request(
+    id,
+    "lock",
+    edit_token = edit_token,
+    base_url = base_url
+  ) |>
     httr2::req_body_json(list(slot = slot))
   invisible(httr2::resp_body_json(samkoma_perform(req)))
 }
@@ -290,9 +323,7 @@ meeting_poll_lock <- function(
 #' @return The .ics file contents as a character string.
 #' @export
 meeting_poll_ics <- function(id, base_url = samkoma_base_url()) {
-  samkoma_check_id(id)
-  req <- samkoma_request(base_url = base_url) |>
-    httr2::req_url_path_append("v1", "polls", id, "ics")
+  req <- samkoma_poll_request(id, "ics", base_url = base_url)
   httr2::resp_body_string(samkoma_perform(req))
 }
 
@@ -365,21 +396,19 @@ meeting_poll_format_best <- function(best, title = NULL, top = 3) {
   total <- attr(best, "total") %||% 0L
   n <- min(top, nrow(best))
   rows <- best[seq_len(n), , drop = FALSE]
+  rows$slot <- samkoma_escape_md(rows$slot)
+  rows$names <- samkoma_escape_md(rows$names)
   lines <- vapply(
     seq_len(nrow(rows)),
     function(i) {
       r <- rows[i, ]
-      who <- if (nzchar(r$names)) {
-        glue::glue(" ({samkoma_escape_md(r$names)})")
-      } else {
-        ""
-      }
+      who <- if (nzchar(r$names)) glue::glue(" ({r$names})") else ""
       avail <- if (total > 0) {
         glue::glue("{r$count}/{total} available")
       } else {
         glue::glue("{r$count} available")
       }
-      glue::glue("{i}. **{samkoma_escape_md(r$slot)}** - {avail}{who}")
+      glue::glue("{i}. **{r$slot}** - {avail}{who}")
     },
     character(1)
   )
