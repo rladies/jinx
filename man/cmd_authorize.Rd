@@ -8,6 +8,7 @@ cmd_authorize(
   command,
   actor = NULL,
   source = c("github", "slack"),
+  workspace = NULL,
   api_key = Sys.getenv("AIRTABLE_API_KEY")
 )
 }
@@ -18,6 +19,9 @@ cmd_authorize(
 \code{"github"}, or a Slack username when \code{source} is \code{"slack"}.}
 
 \item{source}{Origin of the command, \code{"github"} or \code{"slack"}.}
+
+\item{workspace}{Originating Slack workspace for \code{source = "slack"}:
+\code{"organiser"} or \code{"community"}. Ignored for GitHub commands.}
 
 \item{api_key}{Airtable API key used for the directory lookup.}
 }
@@ -31,4 +35,11 @@ run by members of the global team, identified via the Airtable member
 directory. Read-only commands are always allowed. The check fails
 closed: an unknown actor is denied, and a directory lookup error is
 also denied (with a distinct "try again" message).
+}
+\details{
+Slack identity is only trusted in the organisers workspace. The
+community workspace is openly joinable and the Slack \code{user_name} is
+mutable and workspace-scoped, so a colliding handle there must not
+authorize privileged actions; privileged Slack commands are only
+honored when \code{workspace} is \code{"organiser"}.
 }

@@ -67,14 +67,27 @@ jobs:
           COMMAND_SOURCE: ${{ github.event_name == 'repository_dispatch' && 'slack' || 'github' }}
           COMMAND_TEXT: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.command || github.event.comment.body }}
           COMMAND_ACTOR: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.user_name || github.event.comment.user.login }}
+          COMMAND_TEAM_ID: ${{ github.event.client_payload.team_id }}
+          SLACK_ORGANIZER_TEAM_ID: ${{ vars.SLACK_ORGANIZER_TEAM_ID }}
         run: |
           Rscript -e '
             source <- Sys.getenv("COMMAND_SOURCE")
             text <- Sys.getenv("COMMAND_TEXT")
             actor <- Sys.getenv("COMMAND_ACTOR")
+            team_id <- Sys.getenv("COMMAND_TEAM_ID")
+            organiser_id <- Sys.getenv("SLACK_ORGANIZER_TEAM_ID")
+            workspace <- if (source != "slack") {
+              "github"
+            } else if (nzchar(organiser_id) && identical(team_id, organiser_id)) {
+              "organiser"
+            } else {
+              "community"
+            }
             if (source == "slack") text <- paste("/jinx", text)
             cmd <- jinx::cmd_parse(text)
-            authz <- jinx::cmd_authorize(cmd, actor = actor, source = source)
+            authz <- jinx::cmd_authorize(
+              cmd, actor = actor, source = source, workspace = workspace
+            )
             if (!isTRUE(authz$ok)) {
               result <- authz$message
             } else {

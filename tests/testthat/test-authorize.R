@@ -130,11 +130,67 @@ describe("cmd_authorize", {
     res <- cmd_authorize(
       list(action = "invite"),
       actor = "stranger",
-      source = "slack"
+      source = "slack",
+      workspace = "organiser"
     )
     expect_false(res$ok)
     expect_match(res$message, "global team")
     expect_match(res$message, "Slack username")
+  })
+
+  it("allows a privileged Slack command from the organiser workspace", {
+    local_mocked_bindings(
+      gt_actor_is_authorized = function(source, actor, ...) TRUE
+    )
+    res <- cmd_authorize(
+      list(action = "invite"),
+      actor = "amowinckel",
+      source = "slack",
+      workspace = "organiser"
+    )
+    expect_true(res$ok)
+  })
+
+  it("denies privileged Slack commands from the community workspace", {
+    called <- FALSE
+    local_mocked_bindings(
+      gt_actor_is_authorized = function(...) {
+        called <<- TRUE
+        TRUE
+      }
+    )
+    res <- cmd_authorize(
+      list(action = "invite"),
+      actor = "amowinckel",
+      source = "slack",
+      workspace = "community"
+    )
+    expect_false(res$ok)
+    expect_match(res$message, "organisers Slack workspace")
+    expect_false(called)
+  })
+
+  it("denies privileged Slack commands when the workspace is unknown", {
+    res <- cmd_authorize(
+      list(action = "invite"),
+      actor = "amowinckel",
+      source = "slack",
+      workspace = NULL
+    )
+    expect_false(res$ok)
+    expect_match(res$message, "organisers Slack workspace")
+  })
+
+  it("ignores workspace for GitHub commands", {
+    local_mocked_bindings(
+      gt_actor_is_authorized = function(source, actor, ...) TRUE
+    )
+    res <- cmd_authorize(
+      list(action = "invite"),
+      actor = "ada",
+      source = "github"
+    )
+    expect_true(res$ok)
   })
 
   it("fails closed with a retry message when the check errors", {

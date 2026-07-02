@@ -125,10 +125,18 @@ gt_actor_is_authorized <- function(
 #' closed: an unknown actor is denied, and a directory lookup error is
 #' also denied (with a distinct "try again" message).
 #'
+#' Slack identity is only trusted in the organisers workspace. The
+#' community workspace is openly joinable and the Slack `user_name` is
+#' mutable and workspace-scoped, so a colliding handle there must not
+#' authorize privileged actions; privileged Slack commands are only
+#' honored when `workspace` is `"organiser"`.
+#'
 #' @param command Parsed command list from [cmd_parse()], or `NULL`.
 #' @param actor The requesting actor: a GitHub login when `source` is
 #'   `"github"`, or a Slack username when `source` is `"slack"`.
 #' @param source Origin of the command, `"github"` or `"slack"`.
+#' @param workspace Originating Slack workspace for `source = "slack"`:
+#'   `"organiser"` or `"community"`. Ignored for GitHub commands.
 #' @param api_key Airtable API key used for the directory lookup.
 #' @return A list with `ok` (logical) and `message` (a refusal string
 #'   when `ok` is `FALSE`, otherwise `NULL`).
@@ -137,12 +145,17 @@ cmd_authorize <- function(
   command,
   actor = NULL,
   source = c("github", "slack"),
+  workspace = NULL,
   api_key = Sys.getenv("AIRTABLE_API_KEY")
 ) {
   source <- match.arg(source)
 
   if (is.null(command) || !command_is_privileged(command$action)) {
     return(list(ok = TRUE, message = NULL))
+  }
+
+  if (source == "slack" && !identical(workspace, "organiser")) {
+    return(list(ok = FALSE, message = authz_workspace_message()))
   }
 
   authorized <- tryCatch(
@@ -175,6 +188,15 @@ authz_denied_message <- function(source) {
     "\U0001f6ab This command is limited to the RLadies+ global team. ",
     "If you are a global team member, check that your {handle} is ",
     "recorded in the global team directory."
+  )
+}
+
+#' @keywords internal
+#' @noRd
+authz_workspace_message <- function() {
+  paste0(
+    "\U0001f6ab Privileged commands can only be run from the RLadies+ ",
+    "organisers Slack workspace."
   )
 }
 

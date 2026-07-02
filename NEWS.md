@@ -14,6 +14,12 @@
   an allowlisted Slack workspace could trigger privileged GitHub
   actions. New commands are privileged by default until explicitly
   declared safe.
+- **Privileged Slack commands are restricted to the organisers
+  workspace.** The Slack `user_name` is mutable and workspace-scoped, and
+  the community workspace is openly joinable, so a colliding handle there
+  must not authorize privileged actions. `cmd_authorize()` only honors
+  privileged Slack commands originating from the organisers workspace;
+  read-only commands are unaffected.
 
 ## Bug fixes
 
