@@ -8,58 +8,70 @@
 #' @keywords internal
 directory_write_entries <- function(entries, org, repo, ref = "main") {
   changes <- list()
-
   for (entry in entries) {
-    slug <- entry$slug
-    json_path <- sprintf("data/json/%s.json", slug)
-    existing_obj <- gh_get_content(org, repo, json_path, ref)
-    existing <- if (!is.null(existing_obj)) {
-      jsonlite::fromJSON(
-        rawToChar(jsonlite::base64_dec(existing_obj$content)),
-        simplifyVector = FALSE
-      )
-    }
+    changes <- c(changes, directory_entry_changes(entry, org, repo, ref))
+  }
+  changes
+}
 
-    data <- entry$data
-    if (!is.null(entry$photo)) {
-      photo <- directory_photo_change(entry, org, repo, ref)
-      data$photo <- photo$meta
-      if (!is.null(photo$change)) {
-        changes <- c(changes, list(photo$change))
-      }
-    }
+#' Compute the pending file changes for a single submission.
+#' @keywords internal
+directory_entry_changes <- function(entry, org, repo, ref) {
+  slug <- entry$slug
+  json_path <- sprintf("data/json/%s.json", slug)
+  existing_obj <- gh_get_content(org, repo, json_path, ref)
+  existing <- directory_decode_json(existing_obj)
+  changes <- list()
 
-    final <- if (!is.null(existing)) {
-      directory_merge(existing, data, entry$clear_fields)
-    } else {
-      data
-    }
-
-    if (
-      is.null(existing) ||
-        directory_fingerprint(final) != directory_fingerprint(existing)
-    ) {
-      changes <- c(
-        changes,
-        list(list(
-          path = json_path,
-          text = directory_to_json(final),
-          sha = existing_obj$sha,
-          kind = "entry",
-          slug = slug
-        ))
-      )
-    }
-
-    if (!is.null(entry$email)) {
-      contact <- directory_contact_change(slug, entry$email, org, repo, ref)
-      if (!is.null(contact)) {
-        changes <- c(changes, list(contact))
-      }
+  data <- entry$data
+  if (!is.null(entry$photo)) {
+    photo <- directory_photo_change(entry, org, repo, ref)
+    data$photo <- photo$meta
+    if (!is.null(photo$change)) {
+      changes <- c(changes, list(photo$change))
     }
   }
 
+  final <- if (!is.null(existing)) {
+    directory_merge(existing, data, entry$clear_fields)
+  } else {
+    data
+  }
+  if (
+    is.null(existing) ||
+      directory_fingerprint(final) != directory_fingerprint(existing)
+  ) {
+    changes <- c(
+      changes,
+      list(list(
+        path = json_path,
+        text = directory_to_json(final),
+        sha = existing_obj$sha,
+        kind = "entry",
+        slug = slug
+      ))
+    )
+  }
+
+  if (!is.null(entry$email)) {
+    contact <- directory_contact_change(slug, entry$email, org, repo, ref)
+    if (!is.null(contact)) {
+      changes <- c(changes, list(contact))
+    }
+  }
   changes
+}
+
+#' Decode a GitHub contents object into a parsed JSON list, or `NULL`.
+#' @keywords internal
+directory_decode_json <- function(obj) {
+  if (is.null(obj)) {
+    return(NULL)
+  }
+  jsonlite::fromJSON(
+    rawToChar(jsonlite::base64_dec(obj$content)),
+    simplifyVector = FALSE
+  )
 }
 
 #' Fields the form may wipe via `clear_fields`. `name` is intentionally absent.
@@ -98,15 +110,24 @@ directory_overlay <- function(target, source) {
     if (is.null(val)) {
       next
     }
-    if (key %in% nested_keys && is.list(target[[key]]) && is.list(val)) {
-      for (sub in names(val)) {
-        if (is.null(val[[sub]])) {
-          next
-        }
-        target[[key]][[sub]] <- val[[sub]]
-      }
+    if (key %in% nested_keys) {
+      target[[key]] <- directory_merge_nested(target[[key]], val)
     } else {
       target[[key]] <- val
+    }
+  }
+  target
+}
+
+#' Overlay a nested object's sub-keys, or replace wholesale if not both lists.
+#' @keywords internal
+directory_merge_nested <- function(target, val) {
+  if (!is.list(target) || !is.list(val)) {
+    return(val)
+  }
+  for (sub in names(val)) {
+    if (!is.null(val[[sub]])) {
+      target[[sub]] <- val[[sub]]
     }
   }
   target
