@@ -20,6 +20,13 @@
   must not authorize privileged actions. `cmd_authorize()` only honors
   privileged Slack commands originating from the organisers workspace;
   read-only commands are unaffected.
+- **Command privilege is now keyword-labelled at each handler.** Commands
+  are declared in a single registry, each tagged `jinx_safe` or
+  `jinx_gated` next to its handler; dispatch and the safe/gated
+  classification both derive from it, and a test asserts every command
+  carries a keyword and every parseable action is registered. Replaces
+  the separate hand-maintained safe-command list, so a new command is
+  labelled where it is defined.
 
 ## Bug fixes
 

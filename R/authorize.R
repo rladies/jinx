@@ -1,45 +1,3 @@
-#' Commands that anyone may run without global-team authorization
-#'
-#' Read-only or reply-only actions. Every action *not* listed here is
-#' treated as privileged and requires the actor to be a member of the
-#' global team directory, so a newly added command defaults to
-#' privileged until it is explicitly declared safe.
-#'
-#' @return Character vector of safe action names.
-#' @keywords internal
-#' @noRd
-safe_commands <- function() {
-  c(
-    "help",
-    "report",
-    "report-chapters",
-    "analytics",
-    "website-analytics",
-    "gha-dashboard",
-    "contributors-list",
-    "contributors-org",
-    "events",
-    "cfp-list",
-    "chapter-health",
-    "blog-check-links",
-    "translate-status",
-    "translate-validate",
-    "poll-best",
-    "error",
-    "unknown"
-  )
-}
-
-#' Whether a command action requires global-team authorization
-#'
-#' @param action The `action` field of a parsed command.
-#' @return `TRUE` when the action is privileged (default-deny).
-#' @keywords internal
-#' @noRd
-command_is_privileged <- function(action) {
-  !isTRUE(action %in% safe_commands())
-}
-
 #' Airtable location of the global team member directory
 #'
 #' The directory is the source of truth for who may run privileged
@@ -119,8 +77,9 @@ gt_actor_is_authorized <- function(
 
 #' Authorize a parsed command before execution
 #'
-#' Privileged commands (anything not in `safe_commands()`) may only be
-#' run by members of the global team, identified via the Airtable member
+#' Privileged commands (those with a `jinx_gated` keyword in the command
+#' registry, i.e. anything not labelled `jinx_safe`) may only be run by
+#' members of the global team, identified via the Airtable member
 #' directory. Read-only commands are always allowed. The check fails
 #' closed: an unknown actor is denied, and a directory lookup error is
 #' also denied (with a distinct "try again" message).

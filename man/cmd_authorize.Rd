@@ -30,8 +30,9 @@ A list with \code{ok} (logical) and \code{message} (a refusal string
 when \code{ok} is \code{FALSE}, otherwise \code{NULL}).
 }
 \description{
-Privileged commands (anything not in \code{safe_commands()}) may only be
-run by members of the global team, identified via the Airtable member
+Privileged commands (those with a \code{jinx_gated} keyword in the command
+registry, i.e. anything not labelled \code{jinx_safe}) may only be run by
+members of the global team, identified via the Airtable member
 directory. Read-only commands are always allowed. The check fails
 closed: an unknown actor is denied, and a directory lookup error is
 also denied (with a distinct "try again" message).

@@ -1,23 +1,3 @@
-describe("command_is_privileged", {
-  it("treats read-only commands as safe", {
-    expect_false(command_is_privileged("help"))
-    expect_false(command_is_privileged("report"))
-    expect_false(command_is_privileged("analytics"))
-    expect_false(command_is_privileged("poll-best"))
-  })
-
-  it("treats mutating commands as privileged", {
-    expect_true(command_is_privileged("invite"))
-    expect_true(command_is_privileged("offboard"))
-    expect_true(command_is_privileged("poll-create"))
-    expect_true(command_is_privileged("slack-invite"))
-  })
-
-  it("defaults unknown or newly added actions to privileged", {
-    expect_true(command_is_privileged("some-future-command"))
-  })
-})
-
 describe("normalize_handle", {
   it("lower-cases, trims, and strips a leading @", {
     expect_identical(normalize_handle("  @DrMowinckels "), "drmowinckels")
