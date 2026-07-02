@@ -10,7 +10,7 @@ directory_write_entries(entries, org, repo, ref = "main")
 For each submission, fetches the existing entry (if any), merges the
 submission onto it (clearing requested fields first), and records a file
 change only when the resulting content differs. Contact emails and profile
-photos are handled alongside the entry JSON. Returns a list of pending file
-changes for \code{\link[=directory_create_pr]{directory_create_pr()}} to commit.
+photos are handled alongside the entry JSON. Returns a flat list of pending
+file changes for \code{\link[=directory_create_pr]{directory_create_pr()}} to commit.
 }
 \keyword{internal}

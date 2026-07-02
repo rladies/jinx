@@ -2,11 +2,12 @@
 % Please edit documentation in R/directory-airtable-io.R
 \name{directory_photo_change}
 \alias{directory_photo_change}
-\title{Resolve a photo download into a file change plus the entry \code{photo} metadata.}
+\title{Resolve a photo download into a file change plus the entry \code{photo} block.}
 \usage{
 directory_photo_change(entry, org, repo, ref)
 }
 \description{
-Resolve a photo download into a file change plus the entry \code{photo} metadata.
+On download failure the entry \code{photo} is kept only if the image already
+exists in the repo, so a failed fetch never leaves a dangling \code{photo.url}.
 }
 \keyword{internal}

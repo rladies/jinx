@@ -2,11 +2,11 @@
 % Please edit documentation in R/directory-airtable-io.R
 \name{directory_create_pr}
 \alias{directory_create_pr}
-\title{Commit recorded changes to a sync branch and open (or reuse) a PR.}
+\title{Commit recorded changes to the sync branch and open (or reuse) a PR.}
 \usage{
 directory_create_pr(changes, deletes, org, repo, base = "main")
 }
 \description{
-Commit recorded changes to a sync branch and open (or reuse) a PR.
+Commit recorded changes to the sync branch and open (or reuse) a PR.
 }
 \keyword{internal}

@@ -2,11 +2,12 @@
 % Please edit documentation in R/directory-airtable.R
 \name{directory_location}
 \alias{directory_location}
-\title{Build the \code{location} object, resolving the linked country.}
+\title{Build the \code{location} object, resolving the linked country label.}
 \usage{
 directory_location(fields, country_lookup)
 }
 \description{
-Build the \code{location} object, resolving the linked country.
+\code{directory_prefixed} would otherwise leave the raw \code{location_country} link
+id under \code{country}, so it is dropped and replaced with the resolved label.
 }
 \keyword{internal}

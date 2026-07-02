@@ -303,3 +303,120 @@ describe("directory_create_pr", {
     expect_true(any(grepl("POST /repos.*/pulls", calls)))
   })
 })
+
+describe("directory_pr_body", {
+  it("summarises entry, photo, and contact counts", {
+    changes <- list(
+      list(kind = "entry", slug = "a"),
+      list(kind = "image", slug = "a"),
+      list(kind = "contact", slug = "a"),
+      list(kind = "entry", slug = "b")
+    )
+    body <- directory_pr_body(changes, list())
+    expect_match(body, "Entries changed**: 2", fixed = TRUE)
+    expect_match(body, "Photos updated**: 1", fixed = TRUE)
+    expect_match(body, "Contacts updated**: 1", fixed = TRUE)
+  })
+
+  it("reports delete requests with correct pluralisation", {
+    one <- directory_pr_body(list(), list(list(slug = "gone")))
+    expect_match(one, "1 delete request ", fixed = TRUE)
+    expect_match(one, "gone", fixed = TRUE)
+
+    many <- directory_pr_body(
+      list(),
+      list(list(slug = "a"), list(slug = "b"))
+    )
+    expect_match(many, "2 delete requests ", fixed = TRUE)
+    expect_match(many, "a, b", fixed = TRUE)
+  })
+})
+
+describe("directory_merge nested objects", {
+  it("preserves sibling sub-keys when a submission updates one", {
+    existing <- list(
+      name = "Jane",
+      activities = list(
+        r_groups = list(`R-Ladies Oslo` = ""),
+        shiny_apps = list(myapp = "https://example.com")
+      )
+    )
+    data <- list(activities = list(r_groups = list(`R-Ladies Bergen` = "")))
+    result <- directory_merge(existing, data)
+    expect_identical(result$activities$r_groups, list(`R-Ladies Bergen` = ""))
+    expect_identical(result$activities$shiny_apps$myapp, "https://example.com")
+  })
+})
+
+describe("directory_photo_ext", {
+  it("reduces MIME types to a safe alphanumeric extension", {
+    expect_identical(directory_photo_ext("image/jpeg"), "jpeg")
+    expect_identical(directory_photo_ext("image/png"), "png")
+    expect_identical(directory_photo_ext("image/svg+xml"), "svgxml")
+    expect_identical(directory_photo_ext("image/../../evil"), "evil")
+    expect_identical(directory_photo_ext(NULL), "png")
+    expect_identical(directory_photo_ext(""), "png")
+  })
+})
+
+describe("normalisers handle blank input", {
+  it("return NA for NULL, NA, and empty strings", {
+    expect_true(is.na(normalize_twitter(NULL)))
+    expect_true(is.na(normalize_twitter(NA_character_)))
+    expect_true(is.na(normalize_linkedin("")))
+    expect_true(is.na(normalize_mastodon("not-a-url")))
+  })
+})
+
+describe("directory_photo_change", {
+  entry <- list(
+    slug = "jane",
+    photo = list(url = "https://cdn.example/x.jpg", ext = "jpg", credit = NULL)
+  )
+
+  it("drops the photo when the fetch fails and no image exists", {
+    local_mocked_bindings(
+      gh = function(endpoint, ...) stop("404"),
+      .package = "gh"
+    )
+    local_mocked_bindings(
+      req_perform = function(...) stop("network down"),
+      .package = "httr2"
+    )
+    res <- directory_photo_change(entry, "rladies", "directory", "main")
+    expect_null(res$meta)
+    expect_null(res$change)
+  })
+
+  it("keeps the photo reference when the fetch fails but an image exists", {
+    local_mocked_bindings(
+      gh = function(endpoint, ...) {
+        list(content = jsonlite::base64_enc(as.raw(1:3)), sha = "s")
+      },
+      .package = "gh"
+    )
+    local_mocked_bindings(
+      req_perform = function(...) stop("network down"),
+      .package = "httr2"
+    )
+    res <- directory_photo_change(entry, "rladies", "directory", "main")
+    expect_identical(res$meta$url, "directory/jane.jpg")
+    expect_null(res$change)
+  })
+
+  it("records an image change when fetched bytes differ", {
+    local_mocked_bindings(
+      gh = function(endpoint, ...) stop("404"),
+      .package = "gh"
+    )
+    local_mocked_bindings(
+      req_perform = function(req) req,
+      resp_body_raw = function(resp) as.raw(c(9L, 8L, 7L)),
+      .package = "httr2"
+    )
+    res <- directory_photo_change(entry, "rladies", "directory", "main")
+    expect_identical(res$change$kind, "image")
+    expect_identical(res$change$raw, as.raw(c(9L, 8L, 7L)))
+    expect_identical(res$meta$url, "directory/jane.jpg")
+  })
+})

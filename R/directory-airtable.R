@@ -113,10 +113,10 @@ directory_lookup <- function(records, label_field) {
 #' Transform a single Airtable submission into a directory entry.
 #'
 #' Returns `NULL` for ineligible records (default rows, non-minority-gender,
-#' or missing a usable slug). Otherwise returns a list with the target `slug`,
-#' the submitted entry `data` (only fields the submitter provided), the
-#' `email` for the contact file, `photo` download metadata, the requested
-#' `clear_fields`, and a `delete` flag.
+#' or missing a usable slug). Delete requests return early with just `slug`
+#' and `delete = TRUE`. Otherwise returns a list with the target `slug`, the
+#' submitted entry `data` (only fields the submitter provided), the `email`
+#' for the contact file, `photo` download metadata, and `clear_fields`.
 #' @keywords internal
 directory_transform_record <- function(record, lookups) {
   fields <- record$fields
@@ -132,18 +132,17 @@ directory_transform_record <- function(record, lookups) {
     return(NULL)
   }
 
-  request_type <- at_scalar(fields, "request_type")
-  is_delete <- identical(request_type, "Delete directory entry")
-
-  data <- directory_entry_data(record, fields, lookups, slug)
+  if (identical(at_scalar(fields, "request_type"), "Delete directory entry")) {
+    return(list(slug = slug, delete = TRUE))
+  }
 
   list(
     slug = slug,
-    data = data,
+    data = directory_entry_data(record, fields, lookups, slug),
     email = na_to_null(at_scalar(fields, "email")),
     photo = directory_photo_meta(fields),
     clear_fields = at_vector(fields, "clear_fields"),
-    delete = is_delete
+    delete = FALSE
   )
 }
 
@@ -258,31 +257,38 @@ directory_dedupe_slugs <- function(entries) {
   entries
 }
 
+#' Field -> normaliser map for the `some_*` social handles.
+#' @keywords internal
+directory_social_normalizers <- function() {
+  list(
+    twitter = normalize_twitter,
+    linkedin = normalize_linkedin,
+    mastodon = normalize_mastodon
+  )
+}
+
 #' Build the `social_media` object from `some_*` fields, normalised.
 #' @keywords internal
 directory_social <- function(fields) {
   raw <- directory_prefixed(fields, "some_")
-  if ("twitter" %in% names(raw)) {
-    raw$twitter <- normalize_twitter(raw$twitter)
-  }
-  if ("linkedin" %in% names(raw)) {
-    raw$linkedin <- normalize_linkedin(raw$linkedin)
-  }
-  if ("mastodon" %in% names(raw)) {
-    raw$mastodon <- normalize_mastodon(raw$mastodon)
+  normalizers <- directory_social_normalizers()
+  for (key in intersect(names(normalizers), names(raw))) {
+    raw[[key]] <- normalizers[[key]](raw[[key]])
   }
   compact(raw)
 }
 
-#' Build the `location` object, resolving the linked country.
+#' Build the `location` object, resolving the linked country label.
+#'
+#' `directory_prefixed` would otherwise leave the raw `location_country` link
+#' id under `country`, so it is dropped and replaced with the resolved label.
 #' @keywords internal
 directory_location <- function(fields, country_lookup) {
   loc <- directory_prefixed(fields, "location_")
+  loc$country <- NULL
   country <- resolve_links(fields[["location_country"]], country_lookup)
   if (length(country)) {
     loc$country <- country[[1]]
-  } else {
-    loc$country <- NULL
   }
   compact(loc)
 }
@@ -329,15 +335,22 @@ directory_photo_meta <- function(fields) {
   if (is.null(photo$url)) {
     return(NULL)
   }
-  ext <- sub(".*/", "", photo$type %||% "")
-  if (!nzchar(ext)) {
-    ext <- "png"
-  }
   list(
     url = photo$url,
-    ext = ext,
+    ext = directory_photo_ext(photo$type),
     credit = na_to_null(at_scalar(fields, "photo_credit"))
   )
+}
+
+#' Derive a safe file extension from an attachment MIME type.
+#'
+#' Reduces to the alphanumeric MIME subtype (e.g. `image/jpeg` -> `jpeg`),
+#' falling back to `png`. Guarantees the extension cannot carry path
+#' separators or other unexpected characters into the written file path.
+#' @keywords internal
+directory_photo_ext <- function(type) {
+  ext <- gsub("[^a-z0-9]", "", sub(".*/", "", tolower(type %||% "")))
+  if (nzchar(ext)) ext else "png"
 }
 
 #' Append a period to single-character words in a name.
@@ -359,7 +372,7 @@ punct_name <- function(x) {
 #' Normalise a Twitter/X handle to a bare lowercase username.
 #' @keywords internal
 normalize_twitter <- function(x) {
-  if (is.null(x) || is.na(x) || !nzchar(x)) {
+  if (is_blank(x)) {
     return(NA_character_)
   }
   x <- sub("^@", "", x)
@@ -372,7 +385,7 @@ normalize_twitter <- function(x) {
 #' Normalise a LinkedIn handle to a bare lowercase username.
 #' @keywords internal
 normalize_linkedin <- function(x) {
-  if (is.null(x) || is.na(x) || !nzchar(x)) {
+  if (is_blank(x)) {
     return(NA_character_)
   }
   x <- sub("^https?://(www\\.)?linkedin\\.com/in/", "", x)
@@ -383,7 +396,7 @@ normalize_linkedin <- function(x) {
 #' Normalise a Mastodon profile URL to `@user@instance` handle form.
 #' @keywords internal
 normalize_mastodon <- function(x) {
-  if (is.null(x) || is.na(x) || !grepl("^http", x) || !grepl("@", x)) {
+  if (is_blank(x) || !grepl("^http", x) || !grepl("@", x)) {
     return(NA_character_)
   }
   sub("https?://([^/]+)/@([^/]+)", "@\\2@\\1", x)
@@ -423,6 +436,12 @@ at_vector <- function(fields, key) {
   }
   val <- as.character(unlist(val, use.names = FALSE))
   val[!is.na(val) & nzchar(val)]
+}
+
+#' `TRUE` for NULL, `NA`, or empty-string scalars.
+#' @keywords internal
+is_blank <- function(x) {
+  is.null(x) || (length(x) == 1 && is.na(x)) || !nzchar(x)
 }
 
 na_to_null <- function(x) if (length(x) == 1 && is.na(x)) NULL else x

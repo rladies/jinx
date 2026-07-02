@@ -8,9 +8,9 @@ directory_transform_record(record, lookups)
 }
 \description{
 Returns \code{NULL} for ineligible records (default rows, non-minority-gender,
-or missing a usable slug). Otherwise returns a list with the target \code{slug},
-the submitted entry \code{data} (only fields the submitter provided), the
-\code{email} for the contact file, \code{photo} download metadata, the requested
-\code{clear_fields}, and a \code{delete} flag.
+or missing a usable slug). Delete requests return early with just \code{slug}
+and \code{delete = TRUE}. Otherwise returns a list with the target \code{slug}, the
+submitted entry \code{data} (only fields the submitter provided), the \code{email}
+for the contact file, \code{photo} download metadata, and \code{clear_fields}.
 }
 \keyword{internal}
