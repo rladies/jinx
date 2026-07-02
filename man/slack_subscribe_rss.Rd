@@ -2,7 +2,7 @@
 % Please edit documentation in R/slack-manage.R
 \name{slack_subscribe_rss}
 \alias{slack_subscribe_rss}
-\title{Subscribe an RSS feed to a Slack channel}
+\title{Post a request to subscribe an RSS feed to a Slack channel}
 \usage{
 slack_subscribe_rss(
   rss_url,
@@ -21,6 +21,7 @@ slack_subscribe_rss(
 API response (invisibly).
 }
 \description{
-Posts a \verb{/feed subscribe} command to the specified Slack channel
-using the Slack API.
+Slack only runs slash commands typed by a real user, so a bot cannot
+subscribe a feed directly. This posts an actionable request asking a
+human in the channel to run \verb{/feed subscribe <url>}.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/blog-add.R
 \name{blog_create_entry}
 \alias{blog_create_entry}
-\title{Auto-generate a blog entry JSON from a URL}
+\title{Auto-generate a blog entry JSON file from a URL}
 \usage{
 blog_create_entry(url, language = "en", author_name, output_dir = ".")
 }
@@ -19,6 +19,6 @@ blog_create_entry(url, language = "en", author_name, output_dir = ".")
 File path of the created JSON (invisibly).
 }
 \description{
-Fetches OpenGraph metadata from the URL and creates a JSON entry
-compatible with awesome-rladies-blogs format.
+Fetches OpenGraph metadata from the URL and writes a JSON entry
+compatible with awesome-rladies-creations format.
 }

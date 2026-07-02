@@ -238,10 +238,6 @@ describe("normalize_command", {
       "blog-check-links"
     )
     expect_identical(
-      normalize_command(c("validate", "directory")),
-      "validate-directory"
-    )
-    expect_identical(
       normalize_command(c("setup", "chapter", "oslo", "norway")),
       c("chapter-setup", "oslo", "norway")
     )

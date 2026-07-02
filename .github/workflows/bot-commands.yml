@@ -66,13 +66,20 @@ jobs:
           SLACK_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
           COMMAND_SOURCE: ${{ github.event_name == 'repository_dispatch' && 'slack' || 'github' }}
           COMMAND_TEXT: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.command || github.event.comment.body }}
+          COMMAND_ACTOR: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.user_name || github.event.comment.user.login }}
         run: |
           Rscript -e '
             source <- Sys.getenv("COMMAND_SOURCE")
             text <- Sys.getenv("COMMAND_TEXT")
+            actor <- Sys.getenv("COMMAND_ACTOR")
             if (source == "slack") text <- paste("/jinx", text)
             cmd <- jinx::cmd_parse(text)
-            result <- jinx::cmd_execute(cmd)
+            authz <- jinx::cmd_authorize(cmd, actor = actor, source = source)
+            if (!isTRUE(authz$ok)) {
+              result <- authz$message
+            } else {
+              result <- jinx::cmd_execute(cmd)
+            }
             if (is.null(result)) result <- "\u2705 Done!"
             writeLines(result, "jinx_response.txt")
           '

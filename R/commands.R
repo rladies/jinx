@@ -31,7 +31,6 @@ cmd_parse <- function(body) {
     announce = parse_announce_command(parts),
     report = parse_report_command(parts),
     remind = list(action = "remind"),
-    "validate-directory" = list(action = "validate-directory"),
     "chapter-health" = list(action = "chapter-health"),
     "chapter-setup" = parse_chapter_setup_command(parts),
     "chapter-update" = parse_chapter_update_command(parts),
@@ -414,12 +413,60 @@ cmd_execute <- function(command) {
     announce = {
       glue::glue("Announcing post: {command$url}")
     },
-    "validate-directory" = "Running directory validation...",
-    "chapter-health" = "Checking chapter health...",
-    "blog-add" = {
-      glue::glue("Creating blog entry for: {command$url}")
+    "chapter-health" = {
+      health <- chapter_check_health()
+      if (nrow(health) == 0) {
+        "No chapter data available."
+      } else {
+        inactive <- health[health$status == "inactive", ]
+        if (nrow(inactive) == 0) {
+          glue::glue("All {nrow(health)} chapters are active. \U0001f389")
+        } else {
+          lines <- glue::glue_data(
+            utils::head(inactive, 15),
+            "- **{chapter}**: {months_inactive} months inactive",
+            " (last event {last_event})"
+          )
+          paste0(
+            "## Chapter health: ",
+            nrow(inactive),
+            " inactive chapter(s)\n\n",
+            paste(lines, collapse = "\n")
+          )
+        }
+      }
     },
-    "blog-check-links" = "Checking blog links...",
+    "blog-add" = {
+      result <- blog_add_pr(command$url)
+      if (identical(result$status, "exists")) {
+        glue::glue("Blog **{result$filename}** is already listed.")
+      } else {
+        glue::glue("Blog entry PR created: {result$url}")
+      }
+    },
+    "blog-check-links" = {
+      report <- blog_check_links_repo()
+      broken <- report[
+        (!is.na(report$url_status) & report$url_status >= 400) |
+          (!is.na(report$rss_status) & report$rss_status >= 400),
+      ]
+      if (nrow(broken) == 0) {
+        glue::glue(
+          "All {nrow(report)} community blog links are healthy. \U0001f389"
+        )
+      } else {
+        lines <- glue::glue_data(
+          broken,
+          "- **{file}**: url `{url_status}`, rss `{rss_status}`"
+        )
+        paste0(
+          "## Broken blog links (",
+          nrow(broken),
+          ")\n\n",
+          paste(lines, collapse = "\n")
+        )
+      }
+    },
     "chapter-setup" = {
       url <- chapter_create_setup(
         command$city,
@@ -590,7 +637,6 @@ normalize_command <- function(parts) {
     list(c("generate", "dashboard"), "gha-dashboard"),
     list(c("check", "blog", "links"), "blog-check-links"),
     list(c("check", "chapter", "health"), "chapter-health"),
-    list(c("validate", "directory"), "validate-directory"),
     list(c("setup", "chapter"), "chapter-setup"),
     list(c("update", "chapter"), "chapter-update"),
     list(c("add", "blog"), "blog-add"),

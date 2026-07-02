@@ -185,10 +185,11 @@ airtable_mark_invited <- function(
   TRUE
 }
 
-#' Subscribe an RSS feed to a Slack channel
+#' Post a request to subscribe an RSS feed to a Slack channel
 #'
-#' Posts a `/feed subscribe` command to the specified Slack channel
-#' using the Slack API.
+#' Slack only runs slash commands typed by a real user, so a bot cannot
+#' subscribe a feed directly. This posts an actionable request asking a
+#' human in the channel to run `/feed subscribe <url>`.
 #'
 #' @param rss_url RSS feed URL to subscribe.
 #' @param channel Slack channel name (without #). Defaults to "rladiesblogs".
@@ -200,23 +201,17 @@ slack_subscribe_rss <- function(
   channel = "rladiesblogs",
   token = Sys.getenv("SLACK_TOKEN")
 ) {
-  if (!nzchar(token)) {
-    cli::cli_abort("SLACK_TOKEN environment variable is not set")
-  }
+  text <- glue::glue(
+    ":inbox_tray: *RSS feed to subscribe* in #{channel}.\n",
+    "The Slack RSS app only responds to a real user, so please run:\n",
+    "`/feed subscribe {rss_url}`",
+    .trim = FALSE
+  )
 
-  resp <- httr2::request("https://slack.com/api/chat.postMessage") |>
-    httr2::req_headers(Authorization = paste("Bearer", token)) |>
-    httr2::req_body_json(list(
-      channel = channel,
-      text = paste("/feed subscribe", rss_url)
-    )) |>
-    httr2::req_perform() |>
-    httr2::resp_body_json()
+  resp <- slack_post_message(text, channel, token)
 
   if (isTRUE(resp$ok)) {
-    cli::cli_alert_success("Subscribed {rss_url} to #{channel}")
-  } else {
-    cli::cli_alert_danger("Failed to subscribe: {resp$error}")
+    cli::cli_alert_success("Posted RSS subscribe request for {rss_url}")
   }
 
   invisible(resp)

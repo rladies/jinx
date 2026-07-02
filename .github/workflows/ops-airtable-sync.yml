@@ -11,7 +11,6 @@ on:
         type: choice
         options:
           - directory
-          - global-team
 
 concurrency:
   group: ops-airtable-sync-${{ inputs.target || 'all' }}
@@ -57,8 +56,5 @@ jobs:
             target <- Sys.getenv("TARGET")
             if (target == "" || target == "directory") {
               jinx::directory_sync_airtable()
-            }
-            if (target == "" || target == "global-team") {
-              jinx::gt_sync_airtable()
             }
           '

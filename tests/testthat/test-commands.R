@@ -269,10 +269,6 @@ describe("normalize_command", {
       "blog-check-links"
     )
     expect_equal(
-      normalize_command(c("validate", "directory")),
-      "validate-directory"
-    )
-    expect_equal(
       normalize_command(c("remind", "stale")),
       "remind"
     )
