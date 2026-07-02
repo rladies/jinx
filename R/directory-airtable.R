@@ -263,6 +263,8 @@ directory_social_normalizers <- function() {
   list(
     twitter = normalize_twitter,
     linkedin = normalize_linkedin,
+    github = normalize_github,
+    bluesky = normalize_bluesky,
     mastodon = normalize_mastodon
   )
 }
@@ -369,28 +371,45 @@ punct_name <- function(x) {
   )
 }
 
-#' Normalise a Twitter/X handle to a bare lowercase username.
+#' Strip a leading `@` and the given URL prefixes, then lowercase.
 #' @keywords internal
-normalize_twitter <- function(x) {
+normalize_handle <- function(x, prefixes) {
   if (is_blank(x)) {
     return(NA_character_)
   }
   x <- sub("^@", "", x)
-  x <- sub("^https?://(www\\.)?twitter\\.com/", "", x)
-  x <- sub("^https?://(www\\.)?x\\.com/", "", x)
+  for (prefix in prefixes) {
+    x <- sub(prefix, "", x)
+  }
   x <- tolower(trimws(x))
   if (nzchar(x)) x else NA_character_
+}
+
+#' Normalise a Twitter/X handle to a bare lowercase username.
+#' @keywords internal
+normalize_twitter <- function(x) {
+  normalize_handle(
+    x,
+    c("^https?://(www\\.)?twitter\\.com/", "^https?://(www\\.)?x\\.com/")
+  )
 }
 
 #' Normalise a LinkedIn handle to a bare lowercase username.
 #' @keywords internal
 normalize_linkedin <- function(x) {
-  if (is_blank(x)) {
-    return(NA_character_)
-  }
-  x <- sub("^https?://(www\\.)?linkedin\\.com/in/", "", x)
-  x <- tolower(trimws(x))
-  if (nzchar(x)) x else NA_character_
+  normalize_handle(x, "^https?://(www\\.)?linkedin\\.com/in/")
+}
+
+#' Normalise a GitHub handle to a bare lowercase username.
+#' @keywords internal
+normalize_github <- function(x) {
+  normalize_handle(x, "^https?://(www\\.)?github\\.com/")
+}
+
+#' Normalise a Bluesky handle to a bare lowercase handle.
+#' @keywords internal
+normalize_bluesky <- function(x) {
+  normalize_handle(x, "^https?://(www\\.)?bsky\\.app/profile/")
 }
 
 #' Normalise a Mastodon profile URL to `@user@instance` handle form.

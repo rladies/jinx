@@ -47,6 +47,16 @@ describe("social handle normalisers", {
     )
     expect_identical(normalize_mastodon("not-a-url"), NA_character_)
   })
+
+  it("normalises github and bluesky handles", {
+    expect_identical(normalize_github("https://github.com/JaneDoe"), "janedoe")
+    expect_identical(normalize_github("@JaneDoe"), "janedoe")
+    expect_identical(
+      normalize_bluesky("https://bsky.app/profile/jane.bsky.social"),
+      "jane.bsky.social"
+    )
+    expect_identical(normalize_bluesky("@Jane.bsky.social"), "jane.bsky.social")
+  })
 })
 
 describe("directory_slug", {
