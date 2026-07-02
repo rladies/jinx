@@ -413,29 +413,7 @@ cmd_execute <- function(command) {
     announce = {
       glue::glue("Announcing post: {command$url}")
     },
-    "chapter-health" = {
-      health <- chapter_check_health()
-      if (nrow(health) == 0) {
-        "No chapter data available."
-      } else {
-        inactive <- health[health$status == "inactive", ]
-        if (nrow(inactive) == 0) {
-          glue::glue("All {nrow(health)} chapters are active. \U0001f389")
-        } else {
-          lines <- glue::glue_data(
-            utils::head(inactive, 15),
-            "- **{chapter}**: {months_inactive} months inactive",
-            " (last event {last_event})"
-          )
-          paste0(
-            "## Chapter health: ",
-            nrow(inactive),
-            " inactive chapter(s)\n\n",
-            paste(lines, collapse = "\n")
-          )
-        }
-      }
-    },
+    "chapter-health" = chapter_health_summary(chapter_check_health()),
     "blog-add" = {
       result <- blog_add_pr(command$url)
       if (identical(result$status, "exists")) {
@@ -444,29 +422,7 @@ cmd_execute <- function(command) {
         glue::glue("Blog entry PR created: {result$url}")
       }
     },
-    "blog-check-links" = {
-      report <- blog_check_links_repo()
-      broken <- report[
-        (!is.na(report$url_status) & report$url_status >= 400) |
-          (!is.na(report$rss_status) & report$rss_status >= 400),
-      ]
-      if (nrow(broken) == 0) {
-        glue::glue(
-          "All {nrow(report)} community blog links are healthy. \U0001f389"
-        )
-      } else {
-        lines <- glue::glue_data(
-          broken,
-          "- **{file}**: url `{url_status}`, rss `{rss_status}`"
-        )
-        paste0(
-          "## Broken blog links (",
-          nrow(broken),
-          ")\n\n",
-          paste(lines, collapse = "\n")
-        )
-      }
-    },
+    "blog-check-links" = blog_links_report(blog_check_links_repo()),
     "chapter-setup" = {
       url <- chapter_create_setup(
         command$city,

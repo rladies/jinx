@@ -57,3 +57,30 @@ chapter_check_health <- function(
   )
   latest
 }
+
+#' Summarise chapter health as chat markdown
+#'
+#' @param health A data frame from [chapter_check_health()].
+#' @return Character string of markdown.
+#' @keywords internal
+#' @noRd
+chapter_health_summary <- function(health) {
+  if (nrow(health) == 0) {
+    return("No chapter data available.")
+  }
+  inactive <- health[health$status == "inactive", ]
+  if (nrow(inactive) == 0) {
+    return(glue::glue("All {nrow(health)} chapters are active. \U0001f389"))
+  }
+  lines <- glue::glue_data(
+    utils::head(inactive, 15),
+    "- **{chapter}**: {months_inactive} months inactive",
+    " (last event {last_event})"
+  )
+  paste0(
+    "## Chapter health: ",
+    nrow(inactive),
+    " inactive chapter(s)\n\n",
+    paste(lines, collapse = "\n")
+  )
+}

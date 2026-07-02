@@ -139,6 +139,44 @@ describe("blog_add_pr", {
   })
 })
 
+describe("blog_links_report", {
+  it("handles an empty or NULL report without erroring", {
+    expect_match(blog_links_report(NULL), "No community blog entries")
+    empty <- data.frame(
+      file = character(0),
+      url = character(0),
+      rss_feed = character(0),
+      url_status = integer(0),
+      rss_status = integer(0)
+    )
+    expect_match(blog_links_report(empty), "No community blog entries")
+  })
+
+  it("celebrates when every link is healthy", {
+    report <- data.frame(
+      file = "a.json",
+      url = "https://ok.com",
+      rss_feed = NA_character_,
+      url_status = 200L,
+      rss_status = NA_integer_
+    )
+    expect_match(blog_links_report(report), "healthy")
+  })
+
+  it("lists broken url and rss entries", {
+    report <- data.frame(
+      file = c("a.json", "b.json"),
+      url = c("https://ok.com", "https://dead.com"),
+      rss_feed = c(NA_character_, NA_character_),
+      url_status = c(200L, 404L),
+      rss_status = c(NA_integer_, NA_integer_)
+    )
+    out <- blog_links_report(report)
+    expect_match(out, "Broken blog links")
+    expect_true(grepl("b.json", out, fixed = TRUE))
+  })
+})
+
 describe("blog_check_links_repo", {
   it("flags entries with broken url or rss status", {
     local_mocked_bindings(
