@@ -101,24 +101,26 @@ directory_review_entry <- function(entry, filename, verify_handles = TRUE) {
 #' @keywords internal
 directory_filename_issues <- function(filename) {
   check <- directory_validate_filename(filename)
-  if (check$valid) character(0) else paste("filename:", check$issues)
+  if (check$valid) {
+    return(character(0))
+  }
+  paste("filename:", check$issues)
 }
 
 #' Flag a numeric-suffixed slug as a possible duplicate to merge.
 #' @keywords internal
 directory_collision_issue <- function(filename) {
   name <- sub("\\.json$", "", filename)
-  if (grepl("-[0-9]+$", name)) {
-    sprintf(
-      paste(
-        "\"%s\" has a numeric suffix - confirm this is a distinct person,",
-        "not a duplicate to merge"
-      ),
-      name
-    )
-  } else {
-    character(0)
+  if (!grepl("-[0-9]+$", name)) {
+    return(character(0))
   }
+  sprintf(
+    paste(
+      "\"%s\" has a numeric suffix - confirm this is a distinct person,",
+      "not a duplicate to merge"
+    ),
+    name
+  )
 }
 
 #' Flag contact methods that lack a matching `social_media` entry.
@@ -126,26 +128,25 @@ directory_collision_issue <- function(filename) {
 directory_contact_social_issues <- function(entry) {
   methods <- unlist(entry$contact_method, use.names = FALSE)
   methods <- methods[!is.na(methods) & nzchar(methods)]
-  social <- entry$social_media %||% list()
-  issues <- character(0)
-  for (method in methods) {
-    key <- tolower(method)
-    if (key %in% c("email", "e-mail")) {
-      next
-    }
-    value <- social[[key]]
-    if (is.null(value) || !nzchar(as.character(value))) {
-      issues <- c(
-        issues,
-        sprintf(
-          "contact method \"%s\" but social_media.%s is empty",
-          method,
-          key
-        )
-      )
-    }
+  methods <- methods[!tolower(methods) %in% c("email", "e-mail")]
+  if (length(methods) == 0) {
+    return(character(0))
   }
-  issues
+  social <- entry$social_media %||% list()
+  keys <- tolower(methods)
+  present <- vapply(
+    keys,
+    function(key) {
+      value <- social[[key]]
+      !is.null(value) && nzchar(as.character(value))
+    },
+    logical(1)
+  )
+  sprintf(
+    "contact method \"%s\" but social_media.%s is empty",
+    methods[!present],
+    keys[!present]
+  )
 }
 
 #' Flag a stray email address in the entry's free-text fields.
@@ -160,11 +161,10 @@ directory_sensitive_issues <- function(entry) {
     ),
     collapse = " "
   )
-  if (grepl("[[:alnum:]._%+-]+@[[:alnum:].-]+\\.[[:alpha:]]{2,}", text)) {
-    "possible email address in free text (bio/work) - confirm it is not private"
-  } else {
-    character(0)
+  if (!grepl("[[:alnum:]._%+-]+@[[:alnum:].-]+\\.[[:alpha:]]{2,}", text)) {
+    return(character(0))
   }
+  "possible email address in free text (bio/work) - confirm it is not private"
 }
 
 #' Flag social handles that do not resolve over HTTP.
@@ -199,18 +199,13 @@ directory_review_format <- function(reviews) {
     )
   }
 
-  lines <- character(0)
-  for (r in reviews) {
+  blocks <- lapply(reviews, function(r) {
     if (length(r$issues) == 0) {
-      lines <- c(lines, sprintf("- **%s** - OK", r$file))
-    } else {
-      lines <- c(
-        lines,
-        sprintf("- **%s**", r$file),
-        vapply(r$issues, function(i) sprintf("  - %s", i), character(1))
-      )
+      return(sprintf("- **%s** - OK", r$file))
     }
-  }
+    c(sprintf("- **%s**", r$file), sprintf("  - %s", r$issues))
+  })
+  lines <- unlist(blocks, use.names = FALSE)
 
   footer <- paste(
     "_Automated checks only. Still confirm manually: minority-gender",

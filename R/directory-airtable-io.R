@@ -113,9 +113,7 @@ directory_nested_keys <- function() {
 #' Merge a submission onto an existing entry: clear listed fields, then overlay.
 #' @keywords internal
 directory_merge <- function(existing, data, clear_fields = character(0)) {
-  for (f in intersect(clear_fields, directory_clearable_fields())) {
-    existing[[f]] <- NULL
-  }
+  existing[intersect(clear_fields, directory_clearable_fields())] <- NULL
   directory_overlay(existing, data)
 }
 
@@ -128,10 +126,10 @@ directory_overlay <- function(target, source) {
     if (is.null(val)) {
       next
     }
-    if (key %in% nested_keys) {
-      target[[key]] <- directory_merge_nested(target[[key]], val)
+    target[[key]] <- if (key %in% nested_keys) {
+      directory_merge_nested(target[[key]], val)
     } else {
-      target[[key]] <- val
+      val
     }
   }
   target
@@ -143,11 +141,8 @@ directory_merge_nested <- function(target, val) {
   if (!is.list(target) || !is.list(val)) {
     return(val)
   }
-  for (sub in names(val)) {
-    if (!is.null(val[[sub]])) {
-      target[[sub]] <- val[[sub]]
-    }
-  }
+  present <- val[!vapply(val, is.null, logical(1))]
+  target[names(present)] <- present
   target
 }
 

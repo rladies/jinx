@@ -237,7 +237,10 @@ directory_slug <- function(fields) {
   clean <- gsub("-{2,}", "-", clean)
   clean <- tolower(clean)
   clean <- gsub("^-|-$", "", clean)
-  if (!nzchar(clean)) NA_character_ else clean
+  if (!nzchar(clean)) {
+    return(NA_character_)
+  }
+  clean
 }
 
 #' Ensure slugs are unique within a sync batch by suffixing collisions.
@@ -250,11 +253,15 @@ directory_dedupe_slugs <- function(entries) {
     vapply(entries, function(e) e$slug, character(1)),
     sep = "-"
   )
-  for (i in seq_along(entries)) {
-    entries[[i]]$slug <- slugs[[i]]
-    entries[[i]]$data$identifier <- slugs[[i]]
-  }
-  entries
+  Map(
+    function(entry, slug) {
+      entry$slug <- slug
+      entry$data$identifier <- slug
+      entry
+    },
+    entries,
+    slugs
+  )
 }
 
 #' Field -> normaliser map for the `some_*` social handles.
@@ -299,14 +306,12 @@ directory_location <- function(fields, country_lookup) {
 #' @keywords internal
 directory_prefixed <- function(fields, prefix) {
   keys <- grep(paste0("^", prefix), names(fields), value = TRUE)
-  out <- list()
-  for (key in keys) {
-    val <- at_scalar(fields, key)
-    if (!is.na(val) && nzchar(val)) {
-      out[[sub(paste0("^", prefix), "", key)]] <- val
-    }
-  }
-  out
+  vals <- vapply(keys, function(key) at_scalar(fields, key), character(1))
+  keep <- !is.na(vals) & nzchar(vals)
+  stats::setNames(
+    as.list(unname(vals[keep])),
+    sub(paste0("^", prefix), "", keys[keep])
+  )
 }
 
 #' Build the `r_groups` name -> url map from `rgroup_name_*`/`rgroup_url_*`.
@@ -352,7 +357,10 @@ directory_photo_meta <- function(fields) {
 #' @keywords internal
 directory_photo_ext <- function(type) {
   ext <- gsub("[^a-z0-9]", "", sub(".*/", "", tolower(type %||% "")))
-  if (nzchar(ext)) ext else "png"
+  if (!nzchar(ext)) {
+    return("png")
+  }
+  ext
 }
 
 #' Append a period to single-character words in a name.
@@ -382,7 +390,10 @@ normalize_handle <- function(x, prefixes) {
     x <- sub(prefix, "", x)
   }
   x <- tolower(trimws(x))
-  if (nzchar(x)) x else NA_character_
+  if (!nzchar(x)) {
+    return(NA_character_)
+  }
+  x
 }
 
 #' Normalise a Twitter/X handle to a bare lowercase username.
