@@ -1,5 +1,21 @@
 # jinx (development version)
 
+## Directory
+
+- **`directory_sync_airtable()` now produces real directory entries.** It reads
+  the live submissions base (`appzYxePUruG9Nwyg`, table `submissions`) with its
+  linked `languages`, `countries`, and `interests` tables, and writes the full
+  entry schema (`data/json/<slug>.json`), profile photos (`data/img/`), and
+  contact emails (`contact/<slug>.json`). Returning submitters are matched to
+  their existing entry by slug (`directory_id`, falling back to `identifier`)
+  and merged as a partial update — `clear_fields` are wiped first, then
+  submitted fields overlay the rest. Only genuinely changed files are committed
+  (order- and formatting-insensitive comparison), and delete requests are
+  reported in the PR body rather than executed. Replaces the earlier stub that
+  targeted a placeholder base and wrote a name-plus-socials shape.
+- The bundled `directory-entry.json` schema now matches the full entry shape
+  (location, social media, interests, languages, activities, work, photo).
+
 ## Meeting scheduling
 
 - **New meeting-poll module backed by the samkoma API.**

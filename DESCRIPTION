@@ -27,6 +27,7 @@ Imports:
     rmarkdown,
     rtoot,
     rvest,
+    stringi,
     stringr,
     xml2,
     yaml
