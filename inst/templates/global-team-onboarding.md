@@ -10,7 +10,7 @@
 - [ ] @rladies/email team will create for you an rladies.org email account (if necessary)
 - [ ] @rladies/leadership will add you to the `#team-global` channel on RLadies+ Organizers Slack.
   - If you are not currently a chapter organizer, you will receive the invitation to join this Slack by email.
-- [ ] @rladies/leadership will organize an [onboarding meeting](https://calendly.com/event_types/user/me?create_new_meeting=poll).
+- [ ] @rladies/leadership will pick a slot from the onboarding meeting poll Jinx posts below and schedule the meeting.
 - [ ] @rladies/leadership will add you to the global team contact list in gmail.
 - [ ] @rladies/leadership will give you access to the relevant documentation.
 - [ ] Let the @rladies/leadership know the email address you want us to use to add you to our 1password account.
@@ -32,8 +32,8 @@ You should find a link to the issue in the footer of the email.
 - [ ] Confirm if you are in the Community Slack. We will invite you if not.
   - Please do tag @rladies/community-slack if you need an invite
 - Update both your slack profiles' "Title" section to include information about your membership on the Global team and which team you are on.
-    - [ ] [Community Slack](https://rladies-community.slack.com)
-    - [ ] [Organizers Slack](https://r-ladies.slack.com)
-    - Title example: "RLadies+ Global Team -- <TEAM>"
+  - [ ] [Community Slack](https://rladies-community.slack.com)
+  - [ ] [Organizers Slack](https://r-ladies.slack.com)
+  - Title example: "RLadies+ Global Team -- <TEAM>"
 - [ ] Once you have Airtable access (through 1password), add your information to the [Global Team Overview](https://airtable.com/appZjaV7eM0Y9FsHZ/pag5XLP72Yv14h2lj)
 - [ ] Read [About the Global Team](https://guide.rladies.org/about/globalteam/)

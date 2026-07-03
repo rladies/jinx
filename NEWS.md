@@ -12,6 +12,11 @@
   `SAMKOMA_BASE_URL`. Externally-sourced poll titles and participant
   names are markdown-neutralised before being rendered into bot-authored
   GitHub/Slack messages, so they cannot inject links or formatting.
+- **Global team onboarding opens an onboarding meeting poll.**
+  `gt_finalize_onboarding()` now calls `gt_schedule_onboarding_meeting()`,
+  which opens a samkoma poll spanning a two-week window of candidate dates
+  starting one week out and posts the poll link to the onboarding issue. A
+  samkoma outage warns and is skipped rather than aborting onboarding.
 
 ## Post-review hardening
 

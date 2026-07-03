@@ -53,6 +53,20 @@ gt_finalize_onboarding <- function(
   }
   review_notify_teams(org, "global-team", issue$number, notify_teams)
 
+  tryCatch(
+    gt_schedule_onboarding_meeting(
+      issue_number = issue$number,
+      name = name,
+      team_name = team_def$name,
+      org = org
+    ),
+    error = function(cnd) {
+      cli::cli_alert_warning(
+        "Could not open onboarding meeting poll: {conditionMessage(cnd)}"
+      )
+    }
+  )
+
   cli::cli_alert_success("Created onboarding issue: {issue$html_url}")
   invisible(issue$html_url)
 }
