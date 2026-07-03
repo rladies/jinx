@@ -66,6 +66,13 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="copilot-reviews-development-version">Copilot reviews<a class="anchor" aria-label="anchor" href="#copilot-reviews-development-version"></a></h3>
+<ul><li>
+<strong>Jinx can summon GitHub Copilot to run the grimoire review gates.</strong> <code><a href="../reference/copilot_sync_repo.html">copilot_sync_repo()</a></code> fetches the four <a href="https://github.com/rladies/grimoire" class="external-link">rladies/grimoire</a> review skills (brand, blog, social, translation) plus the foundation brand ruleset and lands them in a target repo as <code>.github/copilot-instructions.md</code> and path-scoped <code>.github/instructions/*.instructions.md</code> via a pull request — the bridge that makes Copilot’s code review grimoire-aware. Run it with <code>/jinx copilot-sync &lt;owner/repo&gt;</code>.</li>
+<li>
+<strong>On-demand and automatic reviews.</strong> <code>/jinx review brand|blog|social|translation &lt;pr&gt;</code> (accepting <code>#42</code>, <code>owner/repo#42</code>, or a PR URL, plus <code>brand-check</code>/<code>blog-review</code>/<code>social-review</code>/<code>translate-review</code> aliases) requests a Copilot review on a PR and posts a scoping comment via <code><a href="../reference/copilot_review_pr.html">copilot_review_pr()</a></code>. The new <code>reusable-copilot-review.yml</code> workflow does the same automatically when a content PR opens. Both commands are gated to the global team.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="security-development-version">Security<a class="anchor" aria-label="anchor" href="#security-development-version"></a></h3>
 <ul><li>
 <strong>Privileged commands now require global-team membership.</strong> <code><a href="../reference/cmd_authorize.html">cmd_authorize()</a></code> gates every command before execution: read-only actions (help, reports, analytics, dashboards, lookups) stay open, while any mutating command (invite, offboard, chapter/CFP/poll creation, syncs, …) requires the requester to appear in the global team member directory in Airtable. GitHub commands are matched on the commenter’s login; Slack slash commands are matched on the signed <code>user_name</code>. The check fails closed — unknown actors and directory lookup failures are both denied — closing a path where any member of an allowlisted Slack workspace could trigger privileged GitHub actions. New commands are privileged by default until explicitly declared safe.</li>

@@ -301,6 +301,8 @@ Template translations
 
 Config loading utilities
 
+- [`load_copilot_review_config()`](https://rladies.github.io/jinx/reference/load_copilot_review_config.md)
+  : Load the Copilot review bridge configuration
 - [`load_labels_config()`](https://rladies.github.io/jinx/reference/load_labels_config.md)
   : Load file-path to label mappings
 - [`load_rag_sources()`](https://rladies.github.io/jinx/reference/load_rag_sources.md)
@@ -309,6 +311,17 @@ Config loading utilities
   : Load PR review rules
 - [`load_teams_config()`](https://rladies.github.io/jinx/reference/load_teams_config.md)
   : Load teams configuration
+
+## Copilot review
+
+Summon GitHub Copilot to run grimoire review gates
+
+- [`copilot_request_review()`](https://rladies.github.io/jinx/reference/copilot_request_review.md)
+  : Request GitHub Copilot as a reviewer on a pull request
+- [`copilot_review_pr()`](https://rladies.github.io/jinx/reference/copilot_review_pr.md)
+  : Summon a GitHub Copilot review on a pull request
+- [`copilot_sync_repo()`](https://rladies.github.io/jinx/reference/copilot_sync_repo.md)
+  : Sync grimoire review skills into a repo as Copilot instructions
 
 ## RAG indexer
 

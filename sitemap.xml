@@ -58,6 +58,9 @@
 <url><loc>https://rladies.github.io/jinx/reference/contributor_list.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/contributor_list_org.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/contributor_update.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/copilot_request_review.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/copilot_review_pr.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/copilot_sync_repo.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/directory_crop_image.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/directory_optimize_image.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/directory_sync_airtable.html</loc></url>
@@ -122,6 +125,7 @@
 <url><loc>https://rladies.github.io/jinx/reference/li_post_write.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/li_req.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/li_urn_me.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/load_copilot_review_config.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/load_labels_config.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/load_rag_sources.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/load_review_rules.html</loc></url>

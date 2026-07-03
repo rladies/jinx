@@ -25,6 +25,7 @@ and start with `reusable-`:
 | `reusable-thank-contributor.yml` | Posts a thank-you on a merged PR (different message for first-time vs returning). |
 | `reusable-website-blog-checklist.yml` | Posts the blog-review checklist on a PR that touches blog content. |
 | `reusable-pr-review.yml` | Calls [`jinx::review_run()`](https://rladies.github.io/jinx/reference/review_run.md) to label and assign reviewers based on the rules bundled in jinx. |
+| `reusable-copilot-review.yml` | Requests a GitHub Copilot review, guided by the grimoire review gates jinx synced into the repo’s Copilot instructions. |
 
 ### Caller requirements
 
@@ -80,6 +81,51 @@ jobs:
       JINX_APP_ID: ${{ secrets.JINX_APP_ID }}
       JINX_PRIVATE_KEY: ${{ secrets.JINX_PRIVATE_KEY }}
 ```
+
+### Copilot reviews (grimoire gates)
+
+Jinx can hand content reviews to **GitHub Copilot**, guided by the
+[`rladies/grimoire`](https://github.com/rladies/grimoire) review gates
+(brand, blog, social, translation). It’s a two-step setup per repo:
+
+1.  **Sync the gates once** — run `/jinx copilot-sync <owner/repo>` (or
+    [`jinx::copilot_sync_repo()`](https://rladies.github.io/jinx/reference/copilot_sync_repo.md)).
+    This opens a PR adding `.github/copilot-instructions.md` and
+    path-scoped `.github/instructions/*.instructions.md` so Copilot’s
+    review speaks the RLadies+ brand and voice. Re-run to refresh when
+    grimoire changes.
+2.  **Wire the reusable** so Copilot is asked to review every content
+    PR.
+
+The Copilot reusable needs `pull-requests: write` (to request the
+reviewer) on top of the usual `contents: read` / `packages: read`:
+
+``` yaml
+name: Copilot review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review, synchronize]
+    paths:
+      - "content/**"
+
+permissions:
+  contents: read
+  packages: read
+  pull-requests: write
+
+jobs:
+  copilot-review:
+    uses: rladies/jinx/.github/workflows/reusable-copilot-review.yml@main
+    secrets:
+      JINX_APP_ID: ${{ secrets.JINX_APP_ID }}
+      JINX_PRIVATE_KEY: ${{ secrets.JINX_PRIVATE_KEY }}
+```
+
+On demand, organisers can also run
+`/jinx review brand|blog|social|translation <pr>`
+(e.g. `/jinx review blog rladies/rladies.github.io#42`) from Slack or a
+GitHub comment.
 
 ## Documentation
 

@@ -97,8 +97,8 @@ document.addEventListener("DOMContentLoaded", function() {
 <p>Jinx ships a handful of reusable GitHub Actions workflows that any RLadies+ repo can adopt with a few lines of YAML. They’re in <a href=".github/workflows/"><code>.github/workflows/</code></a> and start with <code>reusable-</code>:</p>
 <table class="table">
 <colgroup>
-<col width="24%">
-<col width="75%">
+<col width="23%">
+<col width="76%">
 </colgroup>
 <thead><tr>
 <th>Workflow</th>
@@ -120,6 +120,10 @@ document.addEventListener("DOMContentLoaded", function() {
 <tr>
 <td><code>reusable-pr-review.yml</code></td>
 <td>Calls <code><a href="reference/review_run.html">jinx::review_run()</a></code> to label and assign reviewers based on the rules bundled in jinx.</td>
+</tr>
+<tr>
+<td><code>reusable-copilot-review.yml</code></td>
+<td>Requests a GitHub Copilot review, guided by the grimoire review gates jinx synced into the repo’s Copilot instructions.</td>
 </tr>
 </tbody>
 </table>
@@ -159,6 +163,38 @@ document.addEventListener("DOMContentLoaded", function() {
 <span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a><span class="at">    </span><span class="fu">secrets</span><span class="kw">:</span></span>
 <span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a><span class="at">      </span><span class="fu">JINX_APP_ID</span><span class="kw">:</span><span class="at"> ${{ secrets.JINX_APP_ID }}</span></span>
 <span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a><span class="at">      </span><span class="fu">JINX_PRIVATE_KEY</span><span class="kw">:</span><span class="at"> ${{ secrets.JINX_PRIVATE_KEY }}</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="copilot-reviews-grimoire-gates">Copilot reviews (grimoire gates)<a class="anchor" aria-label="anchor" href="#copilot-reviews-grimoire-gates"></a>
+</h3>
+<p>Jinx can hand content reviews to <strong>GitHub Copilot</strong>, guided by the <a href="https://github.com/rladies/grimoire" class="external-link"><code>rladies/grimoire</code></a> review gates (brand, blog, social, translation). It’s a two-step setup per repo:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Sync the gates once</strong> — run <code>/jinx copilot-sync &lt;owner/repo&gt;</code> (or <code><a href="reference/copilot_sync_repo.html">jinx::copilot_sync_repo()</a></code>). This opens a PR adding <code>.github/copilot-instructions.md</code> and path-scoped <code>.github/instructions/*.instructions.md</code> so Copilot’s review speaks the RLadies+ brand and voice. Re-run to refresh when grimoire changes.</li>
+<li>
+<strong>Wire the reusable</strong> so Copilot is asked to review every content PR.</li>
+</ol>
+<p>The Copilot reusable needs <code>pull-requests: write</code> (to request the reviewer) on top of the usual <code>contents: read</code> / <code>packages: read</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> Copilot review</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="at">    </span><span class="fu">types</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">opened</span><span class="kw">,</span><span class="at"> ready_for_review</span><span class="kw">,</span><span class="at"> synchronize</span><span class="kw">]</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="at">    </span><span class="fu">paths</span><span class="kw">:</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"content/**"</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="fu">permissions</span><span class="kw">:</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="at">  </span><span class="fu">contents</span><span class="kw">:</span><span class="at"> read</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="at">  </span><span class="fu">packages</span><span class="kw">:</span><span class="at"> read</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="at">  </span><span class="fu">pull-requests</span><span class="kw">:</span><span class="at"> write</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="at">  </span><span class="fu">copilot-review</span><span class="kw">:</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="at">    </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> rladies/jinx/.github/workflows/reusable-copilot-review.yml@main</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="at">    </span><span class="fu">secrets</span><span class="kw">:</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="at">      </span><span class="fu">JINX_APP_ID</span><span class="kw">:</span><span class="at"> ${{ secrets.JINX_APP_ID }}</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="at">      </span><span class="fu">JINX_PRIVATE_KEY</span><span class="kw">:</span><span class="at"> ${{ secrets.JINX_PRIVATE_KEY }}</span></span></code></pre></div>
+<p>On demand, organisers can also run <code>/jinx review brand|blog|social|translation &lt;pr&gt;</code> (e.g. <code>/jinx review blog rladies/rladies.github.io#42</code>) from Slack or a GitHub comment.</p>
 </div>
 </div>
 <div class="section level2">
