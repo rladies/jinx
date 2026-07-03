@@ -125,6 +125,8 @@ Global team onboarding and offboarding
   : Invite a user to the RLadies+ global team
 - [`gt_remind_stale()`](https://rladies.github.io/jinx/reference/gt_remind_stale.md)
   : Send reminders on stale global team onboarding/offboarding issues
+- [`gt_schedule_onboarding_meeting()`](https://rladies.github.io/jinx/reference/gt_schedule_onboarding_meeting.md)
+  : Open the onboarding meeting poll and post it to the onboarding issue
 - [`gt_sync_airtable()`](https://rladies.github.io/jinx/reference/gt_sync_airtable.md)
   : Sync global team data from Airtable
 
