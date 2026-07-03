@@ -237,6 +237,27 @@ jinx_commands <- function() {
         )
       }
     }),
+    review = command_spec("jinx_gated", function(command) {
+      ref <- parse_pr_ref(command$pr)
+      if (is.null(ref)) {
+        return(glue::glue(
+          "Couldn't parse PR reference `{command$pr}`.",
+          " Use `#42`, `owner/repo#42`, or a PR URL."
+        ))
+      }
+      copilot_review_pr(ref$owner, ref$repo, ref$number, gate = command$gate)
+    }),
+    "copilot-sync" = command_spec("jinx_gated", function(command) {
+      result <- copilot_sync_repo(owner = command$owner, repo = command$repo)
+      if (identical(result$status, "unchanged")) {
+        glue::glue(
+          "Copilot review instructions for",
+          " **{command$owner}/{command$repo}** are already up to date."
+        )
+      } else {
+        glue::glue("Copilot review instructions PR: {result$url}")
+      }
+    }),
     error = command_spec("jinx_safe", function(command) command$message),
     unknown = command_spec("jinx_safe", function(command) {
       glue::glue(

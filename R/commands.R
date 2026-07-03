@@ -45,9 +45,59 @@ cmd_parse <- function(body) {
     cfp = parse_cfp_command(parts),
     poll = parse_poll_command(parts),
     translate = parse_translate_command(parts),
+    review = parse_review_command(parts),
+    "brand-check" = parse_review_alias(parts, "brand"),
+    "blog-review" = parse_review_alias(parts, "blog"),
+    "social-review" = parse_review_alias(parts, "social"),
+    "translate-review" = parse_review_alias(parts, "translation"),
+    "copilot-sync" = parse_copilot_sync_command(parts),
     help = list(action = "help"),
     list(action = "unknown", raw = paste(parts, collapse = " "))
   )
+}
+
+parse_review_command <- function(parts) {
+  gates <- copilot_gates()
+  usage <- glue::glue(
+    "Usage: `/jinx review {paste(gates, collapse = '|')} <pr>`"
+  )
+  if (length(parts) < 3) {
+    return(list(action = "error", message = usage))
+  }
+  gate <- tolower(parts[2])
+  if (!gate %in% gates) {
+    return(list(action = "error", message = usage))
+  }
+  list(action = "review", gate = gate, pr = parts[3])
+}
+
+parse_review_alias <- function(parts, gate) {
+  if (length(parts) < 2) {
+    return(list(
+      action = "error",
+      message = glue::glue("Usage: `/jinx {parts[1]} <pr>`")
+    ))
+  }
+  list(action = "review", gate = gate, pr = parts[2])
+}
+
+parse_copilot_sync_command <- function(parts) {
+  usage <- "Usage: `/jinx copilot-sync <owner/repo>`"
+  if (length(parts) < 2 || !nzchar(parts[2])) {
+    return(list(action = "error", message = usage))
+  }
+  if (grepl("/", parts[2], fixed = TRUE)) {
+    segments <- strsplit(parts[2], "/", fixed = TRUE)[[1]]
+    if (length(segments) != 2 || !all(nzchar(segments))) {
+      return(list(action = "error", message = usage))
+    }
+    return(list(
+      action = "copilot-sync",
+      owner = segments[1],
+      repo = segments[2]
+    ))
+  }
+  list(action = "copilot-sync", owner = "rladies", repo = parts[2])
 }
 
 parse_invite_command <- function(parts) {
