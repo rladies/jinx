@@ -113,6 +113,50 @@ jobs:
 
 The same pattern works for `reusable-welcome-contributor.yml`, `reusable-thank-contributor.yml`, and `reusable-post-checklist.yml`.
 
+## Copilot reviews (grimoire gates)
+
+Jinx can hand a content review to **GitHub Copilot**, guided by the four review "gates" in [rladies/grimoire](https://github.com/rladies/grimoire) — brand, blog, social, and translation.
+Grimoire is a set of Claude Agent Skills, and Copilot only reads its own instruction files, so Jinx bridges the two.
+Setup is two steps per repo.
+
+**1. Sync the gates into the repo.**
+Run `/jinx copilot-sync <owner/repo>` (or call `jinx::copilot_sync_repo()`).
+It opens a PR adding `.github/copilot-instructions.md` and path-scoped `.github/instructions/*.instructions.md` so Copilot's review speaks the RLadies+ brand and voice.
+Re-run it whenever grimoire changes to refresh the instructions.
+The gate-to-path mapping lives in `inst/config/copilot-review.yml` — tune the globs to the target repo's layout, then re-sync.
+
+**2. Wire the reusable so Copilot reviews every content PR.**
+It needs `pull-requests: write` (to request the reviewer) on top of the usual `contents: read` / `packages: read`:
+
+```yaml
+# .github/workflows/jinx-copilot-review.yml
+name: Copilot review
+on:
+  pull_request:
+    types: [opened, ready_for_review, synchronize]
+    paths:
+      - "content/**"
+permissions:
+  contents: read
+  packages: read
+  pull-requests: write
+jobs:
+  copilot-review:
+    uses: rladies/jinx/.github/workflows/reusable-copilot-review.yml@main
+    secrets: inherit
+```
+
+On demand, an organiser can also summon a review from Slack or a GitHub comment, naming the gate and the PR:
+
+```
+/jinx review blog rladies/rladies.github.io#42
+```
+
+Copilot posts its findings on the PR as a tiered Blockers / Warnings / Nits punch list.
+It is a *pre-human* review gate — it flags issues for a human to act on, and never approves, merges, or publishes.
+
+Two prerequisites are org-level, not per-repo: Copilot code review must be enabled on the RLadies+ org, and the jinx GitHub App needs Pull Requests (R/W) — which the registration above already grants.
+
 ## The bot image
 
 Workflows run inside `ghcr.io/rladies/jinx-bot:latest`, which has the package and all its dependencies pre-installed.
