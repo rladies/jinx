@@ -1,0 +1,67 @@
+# Reusable: requests a GitHub Copilot code review on the PR. Copilot then
+# applies the grimoire review gates that jinx synced into the repo's
+# .github/instructions/*.instructions.md files. Install those once with
+# `/jinx copilot-sync <owner/repo>` (jinx::copilot_sync_repo()).
+#
+# Caller requirements:
+#   - permissions: contents: read, packages: read, pull-requests: write
+#     (packages: read to pull ghcr.io/rladies/jinx-bot; pull-requests:
+#     write to request the reviewer)
+#   - secrets: JINX_APP_ID, JINX_PRIVATE_KEY (both rladies org secrets)
+#   - jinx[bot] GitHub App installed on the calling repo
+#   - GitHub Copilot code review enabled on the rladies org
+#
+# See README.md ("Reusable workflows") for the full caller example.
+name: Reusable · Copilot Review
+
+on:
+  workflow_call:
+    inputs:
+      gate:
+        description: "Optional grimoire gate label (brand|blog|social|translation)"
+        required: false
+        type: string
+    secrets:
+      JINX_APP_ID:
+        required: true
+      JINX_PRIVATE_KEY:
+        required: true
+
+permissions:
+  contents: read
+  packages: read
+  pull-requests: write
+
+jobs:
+  copilot-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event.pull_request.draft == false
+    container:
+      image: ghcr.io/rladies/jinx-bot:latest
+    steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+          owner: rladies
+
+      - name: Request Copilot review
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          REVIEW_GATE: ${{ inputs.gate }}
+        run: |
+          Rscript -e '
+            gate <- Sys.getenv("REVIEW_GATE")
+            gate <- if (nzchar(gate)) gate else NULL
+            jinx::copilot_review_pr(
+              owner = "${{ github.repository_owner }}",
+              repo = "${{ github.event.repository.name }}",
+              pr_number = ${{ github.event.pull_request.number }},
+              gate = gate,
+              comment = FALSE
+            )
+          '

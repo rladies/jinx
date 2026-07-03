@@ -1,5 +1,23 @@
 # jinx (development version)
 
+## Copilot reviews
+
+- **Jinx can summon GitHub Copilot to run the grimoire review gates.**
+  `copilot_sync_repo()` fetches the four
+  [rladies/grimoire](https://github.com/rladies/grimoire) review skills
+  (brand, blog, social, translation) plus the foundation brand ruleset and
+  lands them in a target repo as `.github/copilot-instructions.md` and
+  path-scoped `.github/instructions/*.instructions.md` via a pull request —
+  the bridge that makes Copilot's code review grimoire-aware. Run it with
+  `/jinx copilot-sync <owner/repo>`.
+- **On-demand and automatic reviews.** `/jinx review
+brand|blog|social|translation <pr>` (accepting `#42`, `owner/repo#42`, or
+  a PR URL, plus `brand-check`/`blog-review`/`social-review`/`translate-review`
+  aliases) requests a Copilot review on a PR and posts a scoping comment via
+  `copilot_review_pr()`. The new `reusable-copilot-review.yml` workflow does
+  the same automatically when a content PR opens. Both commands are gated to
+  the global team.
+
 ## Security
 
 - **Privileged commands now require global-team membership.**

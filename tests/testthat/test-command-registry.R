@@ -92,6 +92,8 @@ describe("command_is_privileged", {
     expect_true(command_is_privileged("invite"))
     expect_true(command_is_privileged("blog-add"))
     expect_true(command_is_privileged("poll-create"))
+    expect_true(command_is_privileged("review"))
+    expect_true(command_is_privileged("copilot-sync"))
   })
 
   it("defaults unregistered or malformed actions to privileged", {

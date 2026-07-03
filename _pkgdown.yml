@@ -160,6 +160,11 @@ reference:
     contents:
       - starts_with("load_")
 
+  - title: Copilot review
+    desc: Summon GitHub Copilot to run grimoire review gates
+    contents:
+      - starts_with("copilot_")
+
   - title: RAG indexer
     desc: Build the Cloudflare Vectorize index that powers the Slack bot
     contents:
