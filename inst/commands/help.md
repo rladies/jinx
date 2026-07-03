@@ -7,7 +7,6 @@
 | `/jinx invite @user to <team>`              | Invite a user to the org and a team                                                        |
 | `/jinx offboard @user from <team>`          | Start offboarding a user from a team                                                       |
 | `/jinx announce <post-url>`                 | Announce a blog post on social media                                                       |
-| `/jinx validate-directory`                  | Validate directory entries in a PR                                                         |
 | `/jinx chapter-health`                      | Check chapter activity health                                                              |
 | `/jinx blog-add <url>`                      | Auto-create a blog entry from URL                                                          |
 | `/jinx blog-check-links`                    | Check all blog URLs for broken links                                                       |

@@ -1,6 +1,12 @@
 organization: rladies
 global_team_id: 3388327
 
+member_directory:
+  base_id: appZjaV7eM0Y9FsHZ
+  table: Member
+  github_field: GitHub handle
+  slack_field: organiser_slack
+
 teams:
   abstract-review:
     name: Abstract Review

@@ -31,8 +31,11 @@ gt_finalize_onboarding <- function(
   )
   cli::cli_alert_success("Added {.val {username}} to {.val {team}} team")
 
-  for (repo_name in team_def$repos) {
-    cli::cli_alert_info("Granted access to {.val {org}/{repo_name}}")
+  if (length(team_def$repos) > 0) {
+    cli::cli_alert_info(
+      "{.val {username}} inherits access to {.val {team}} team repos: \\
+      {.val {team_def$repos}}"
+    )
   }
 
   body <- gt_build_onboarding_body(team, username, name)

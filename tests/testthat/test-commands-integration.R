@@ -115,6 +115,103 @@ describe("cmd_execute integration: producer to formatter", {
     expect_match(result, "No chapter data")
   })
 
+  it("chapter-health summarises inactive chapters", {
+    local_mocked_bindings(
+      chapter_check_health = function(...) {
+        data.frame(
+          chapter = c("rladies-oslo", "rladies-berlin"),
+          last_event = as.Date(c("2026-04-01", "2024-06-01")),
+          months_inactive = c(1L, 23L),
+          status = c("active", "inactive"),
+          stringsAsFactors = FALSE
+        )
+      }
+    )
+    result <- cmd_execute(list(action = "chapter-health"))
+    expect_match(result, "1 inactive chapter")
+    expect_true(grepl("rladies-berlin", result, fixed = TRUE))
+    expect_false(grepl("rladies-oslo", result, fixed = TRUE))
+  })
+
+  it("chapter-health celebrates when all chapters are active", {
+    local_mocked_bindings(
+      chapter_check_health = function(...) {
+        data.frame(
+          chapter = "rladies-oslo",
+          last_event = as.Date("2026-04-01"),
+          months_inactive = 1L,
+          status = "active",
+          stringsAsFactors = FALSE
+        )
+      }
+    )
+    result <- cmd_execute(list(action = "chapter-health"))
+    expect_match(result, "active")
+  })
+
+  it("chapter-health handles empty data", {
+    local_mocked_bindings(
+      chapter_check_health = function(...) data.frame()
+    )
+    result <- cmd_execute(list(action = "chapter-health"))
+    expect_match(result, "No chapter data")
+  })
+
+  it("blog-add reports the PR url on success", {
+    local_mocked_bindings(
+      blog_add_pr = function(url, ...) {
+        list(status = "created", filename = "x.json", url = "https://gh/pr/2")
+      }
+    )
+    result <- cmd_execute(list(action = "blog-add", url = "https://x.com"))
+    expect_match(result, "https://gh/pr/2")
+  })
+
+  it("blog-add reports when the entry already exists", {
+    local_mocked_bindings(
+      blog_add_pr = function(url, ...) {
+        list(status = "exists", filename = "x.com.json", url = NULL)
+      }
+    )
+    result <- cmd_execute(list(action = "blog-add", url = "https://x.com"))
+    expect_match(result, "already listed")
+  })
+
+  it("blog-check-links summarises broken links", {
+    local_mocked_bindings(
+      blog_check_links_repo = function(...) {
+        data.frame(
+          file = c("a.json", "b.json"),
+          url = c("https://ok.com", "https://broken.com"),
+          rss_feed = c(NA_character_, NA_character_),
+          url_status = c(200L, 404L),
+          rss_status = c(NA_integer_, NA_integer_),
+          stringsAsFactors = FALSE
+        )
+      }
+    )
+    result <- cmd_execute(list(action = "blog-check-links"))
+    expect_match(result, "Broken blog links")
+    expect_true(grepl("b.json", result, fixed = TRUE))
+  })
+
+  it("blog-check-links celebrates when all links are healthy", {
+    local_mocked_bindings(
+      blog_check_links_repo = function(...) {
+        data.frame(
+          file = "a.json",
+          url = "https://ok.com",
+          rss_feed = NA_character_,
+          url_status = 200L,
+          rss_status = NA_integer_,
+          stringsAsFactors = FALSE
+        )
+      }
+    )
+    result <- cmd_execute(list(action = "blog-check-links"))
+    expect_match(result, "healthy")
+  })
+
   it("gha-dashboard runs gha_generate_dashboard then gha_format_dashboard", {
     local_mocked_bindings(
       gha_generate_dashboard = function(...) {
