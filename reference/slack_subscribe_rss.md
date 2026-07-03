@@ -1,7 +1,8 @@
-# Subscribe an RSS feed to a Slack channel
+# Post a request to subscribe an RSS feed to a Slack channel
 
-Posts a `/feed subscribe` command to the specified Slack channel using
-the Slack API.
+Slack only runs slash commands typed by a real user, so a bot cannot
+subscribe a feed directly. This posts an actionable request asking a
+human in the channel to run `/feed subscribe <url>`.
 
 ## Usage
 

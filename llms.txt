@@ -104,6 +104,8 @@ audience:
 
 Issue comment command interface
 
+- [`cmd_authorize()`](https://rladies.github.io/jinx/reference/cmd_authorize.md)
+  : Authorize a parsed command before execution
 - [`cmd_execute()`](https://rladies.github.io/jinx/reference/cmd_execute.md)
   : Execute a parsed jinx command
 - [`cmd_parse()`](https://rladies.github.io/jinx/reference/cmd_parse.md)
@@ -127,8 +129,6 @@ Global team onboarding and offboarding
   : Send reminders on stale global team onboarding/offboarding issues
 - [`gt_schedule_onboarding_meeting()`](https://rladies.github.io/jinx/reference/gt_schedule_onboarding_meeting.md)
   : Open the onboarding meeting poll and post it to the onboarding issue
-- [`gt_sync_airtable()`](https://rladies.github.io/jinx/reference/gt_sync_airtable.md)
-  : Sync global team data from Airtable
 
 ## Announcements
 
@@ -188,10 +188,14 @@ Directory entry management and validation
 
 Blog content management
 
+- [`blog_add_pr()`](https://rladies.github.io/jinx/reference/blog_add_pr.md)
+  : Add a community blog entry via a pull request
 - [`blog_check_links()`](https://rladies.github.io/jinx/reference/blog_check_links.md)
   : Check blog URLs and RSS feeds for broken links
+- [`blog_check_links_repo()`](https://rladies.github.io/jinx/reference/blog_check_links_repo.md)
+  : Check community blog links from the awesome-rladies-creations repo
 - [`blog_create_entry()`](https://rladies.github.io/jinx/reference/blog_create_entry.md)
-  : Auto-generate a blog entry JSON from a URL
+  : Auto-generate a blog entry JSON file from a URL
 - [`validate_blog_entry()`](https://rladies.github.io/jinx/reference/validate_blog_entry.md)
   : Validate blog entry JSON files against schema
 
@@ -236,8 +240,6 @@ Airtable bidirectional sync
 
 - [`directory_sync_airtable()`](https://rladies.github.io/jinx/reference/directory_sync_airtable.md)
   : Sync directory entries from Airtable
-- [`gt_sync_airtable()`](https://rladies.github.io/jinx/reference/gt_sync_airtable.md)
-  : Sync global team data from Airtable
 
 ## Website automation
 
@@ -266,7 +268,7 @@ Slack messaging and automation
 - [`slack_post_message()`](https://rladies.github.io/jinx/reference/slack_post_message.md)
   : Post a message to a Slack channel
 - [`slack_subscribe_rss()`](https://rladies.github.io/jinx/reference/slack_subscribe_rss.md)
-  : Subscribe an RSS feed to a Slack channel
+  : Post a request to subscribe an RSS feed to a Slack channel
 
 ## GHA dashboard
 

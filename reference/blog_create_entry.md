@@ -1,7 +1,7 @@
-# Auto-generate a blog entry JSON from a URL
+# Auto-generate a blog entry JSON file from a URL
 
-Fetches OpenGraph metadata from the URL and creates a JSON entry
-compatible with awesome-rladies-blogs format.
+Fetches OpenGraph metadata from the URL and writes a JSON entry
+compatible with awesome-rladies-creations format.
 
 ## Usage
 

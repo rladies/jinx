@@ -26,7 +26,9 @@
 <url><loc>https://rladies.github.io/jinx/reference/announce_post_reply.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/announce_send_newsletter.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/assign_chunk_idx.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/blog_add_pr.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/blog_check_links.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/blog_check_links_repo.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/blog_create_entry.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cfp_check_deadlines.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cfp_create_issue.html</loc></url>
@@ -46,6 +48,7 @@
 <url><loc>https://rladies.github.io/jinx/reference/cloudflare_embed.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cloudflare_request.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cloudflare_vectorize_upsert.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/cmd_authorize.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cmd_execute.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cmd_parse.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/collect_sitemap_urls.html</loc></url>
@@ -102,7 +105,6 @@
 <url><loc>https://rladies.github.io/jinx/reference/gt_invite.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gt_remind_stale.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gt_schedule_onboarding_meeting.html</loc></url>
-<url><loc>https://rladies.github.io/jinx/reference/gt_sync_airtable.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/hard_split.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/html_node_to_markdown.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/i18n_check_coverage.html</loc></url>

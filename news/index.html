@@ -66,6 +66,34 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="security-development-version">Security<a class="anchor" aria-label="anchor" href="#security-development-version"></a></h3>
+<ul><li>
+<strong>Privileged commands now require global-team membership.</strong> <code><a href="../reference/cmd_authorize.html">cmd_authorize()</a></code> gates every command before execution: read-only actions (help, reports, analytics, dashboards, lookups) stay open, while any mutating command (invite, offboard, chapter/CFP/poll creation, syncs, …) requires the requester to appear in the global team member directory in Airtable. GitHub commands are matched on the commenter’s login; Slack slash commands are matched on the signed <code>user_name</code>. The check fails closed — unknown actors and directory lookup failures are both denied — closing a path where any member of an allowlisted Slack workspace could trigger privileged GitHub actions. New commands are privileged by default until explicitly declared safe.</li>
+<li>
+<strong>Privileged Slack commands are restricted to the organisers workspace.</strong> The Slack <code>user_name</code> is mutable and workspace-scoped, and the community workspace is openly joinable, so a colliding handle there must not authorize privileged actions. <code><a href="../reference/cmd_authorize.html">cmd_authorize()</a></code> only honors privileged Slack commands originating from the organisers workspace; read-only commands are unaffected.</li>
+<li>
+<strong>Command privilege is now keyword-labelled at each handler.</strong> Commands are declared in a single registry, each tagged <code>jinx_safe</code> or <code>jinx_gated</code> next to its handler; dispatch and the safe/gated classification both derive from it, and a test asserts every command carries a keyword and every parseable action is registered. Replaces the separate hand-maintained safe-command list, so a new command is labelled where it is defined.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<ul><li>
+<strong><code>/jinx chapter-health</code> now reports real data.</strong> The command was a placeholder that echoed “Checking chapter health…”; it now runs the health check and summarises inactive chapters.</li>
+<li>
+<strong><code>/jinx blog-add &lt;url&gt;</code> now opens a PR.</strong> New <code><a href="../reference/blog_add_pr.html">blog_add_pr()</a></code> fetches the page metadata and opens a PR adding the entry to awesome-rladies-creations (skipping domains already listed); the command previously only echoed the URL.</li>
+<li>
+<strong><code>/jinx blog-check-links</code> now checks real links.</strong> New <code><a href="../reference/blog_check_links_repo.html">blog_check_links_repo()</a></code> reads the community blog entries from awesome-rladies-creations and reports broken URLs/feeds; the command previously only echoed “Checking blog links…”.</li>
+<li>
+<strong><code><a href="../reference/blog_create_entry.html">blog_create_entry()</a></code> now derives the filename correctly.</strong> The domain was extracted by stripping from the first <code>/</code>, which is inside <code>https://</code>, so every entry collapsed to <code>https.json</code>. Protocol is now stripped before the path.</li>
+<li>
+<strong>Removed <code>/jinx validate-directory</code>.</strong> Directory entries are already validated on every push and PR by the directory repo’s own <code>validate_jsons.yml</code>; the jinx command duplicated it and did nothing.</li>
+<li>
+<strong><code><a href="../reference/slack_subscribe_rss.html">slack_subscribe_rss()</a></code> posts an actionable request.</strong> It previously sent <code>/feed subscribe &lt;url&gt;</code> as a bot message, which Slack never executes, so nothing was ever subscribed. It now posts a request for a human in the channel to run the command.</li>
+<li>
+<strong><code><a href="../reference/gt_finalize_onboarding.html">gt_finalize_onboarding()</a></code> no longer logs “Granted access” for repo access it never granted.</strong> Repo access is conveyed by team membership; the log now states that accurately.</li>
+<li>
+<strong>Removed <code>gt_sync_airtable()</code>.</strong> It fetched global-team data and discarded it, duplicating the complete sync that already runs weekly in the website repo (<code>scripts/get_global_team.R</code>). Global-team sync is owned there; the <code>global-team</code> target is dropped from the Airtable-sync workflow.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="meeting-scheduling-development-version">Meeting scheduling<a class="anchor" aria-label="anchor" href="#meeting-scheduling-development-version"></a></h3>
 <ul><li>
 <strong>New meeting-poll module backed by the samkoma API.</strong> <code><a href="../reference/meeting_poll_create.html">meeting_poll_create()</a></code> opens a “find a time” poll (public by default, returning a host <code>edit_token</code>), <code><a href="../reference/meeting_poll_get.html">meeting_poll_get()</a></code> / <code><a href="../reference/meeting_poll_best.html">meeting_poll_best()</a></code> read responses and ranked slots, <code><a href="../reference/meeting_poll_lock.html">meeting_poll_lock()</a></code> locks the chosen slot, and <code><a href="../reference/meeting_poll_ics.html">meeting_poll_ics()</a></code> exports it as an <code>.ics</code> file. Exposed in chat via <code>/jinx poll create …</code> and <code>/jinx poll best &lt;id&gt;</code>. Base URL is overridable through <code>SAMKOMA_BASE_URL</code>. Externally-sourced poll titles and participant names are markdown-neutralised before being rendered into bot-authored GitHub/Slack messages, so they cannot inject links or formatting.</li>

@@ -2,6 +2,73 @@
 
 ## jinx (development version)
 
+### Security
+
+- **Privileged commands now require global-team membership.**
+  [`cmd_authorize()`](https://rladies.github.io/jinx/reference/cmd_authorize.md)
+  gates every command before execution: read-only actions (help,
+  reports, analytics, dashboards, lookups) stay open, while any mutating
+  command (invite, offboard, chapter/CFP/poll creation, syncs, …)
+  requires the requester to appear in the global team member directory
+  in Airtable. GitHub commands are matched on the commenter’s login;
+  Slack slash commands are matched on the signed `user_name`. The check
+  fails closed — unknown actors and directory lookup failures are both
+  denied — closing a path where any member of an allowlisted Slack
+  workspace could trigger privileged GitHub actions. New commands are
+  privileged by default until explicitly declared safe.
+- **Privileged Slack commands are restricted to the organisers
+  workspace.** The Slack `user_name` is mutable and workspace-scoped,
+  and the community workspace is openly joinable, so a colliding handle
+  there must not authorize privileged actions.
+  [`cmd_authorize()`](https://rladies.github.io/jinx/reference/cmd_authorize.md)
+  only honors privileged Slack commands originating from the organisers
+  workspace; read-only commands are unaffected.
+- **Command privilege is now keyword-labelled at each handler.**
+  Commands are declared in a single registry, each tagged `jinx_safe` or
+  `jinx_gated` next to its handler; dispatch and the safe/gated
+  classification both derive from it, and a test asserts every command
+  carries a keyword and every parseable action is registered. Replaces
+  the separate hand-maintained safe-command list, so a new command is
+  labelled where it is defined.
+
+### Bug fixes
+
+- **`/jinx chapter-health` now reports real data.** The command was a
+  placeholder that echoed “Checking chapter health…”; it now runs the
+  health check and summarises inactive chapters.
+- **`/jinx blog-add <url>` now opens a PR.** New
+  [`blog_add_pr()`](https://rladies.github.io/jinx/reference/blog_add_pr.md)
+  fetches the page metadata and opens a PR adding the entry to
+  awesome-rladies-creations (skipping domains already listed); the
+  command previously only echoed the URL.
+- **`/jinx blog-check-links` now checks real links.** New
+  [`blog_check_links_repo()`](https://rladies.github.io/jinx/reference/blog_check_links_repo.md)
+  reads the community blog entries from awesome-rladies-creations and
+  reports broken URLs/feeds; the command previously only echoed
+  “Checking blog links…”.
+- **[`blog_create_entry()`](https://rladies.github.io/jinx/reference/blog_create_entry.md)
+  now derives the filename correctly.** The domain was extracted by
+  stripping from the first `/`, which is inside `https://`, so every
+  entry collapsed to `https.json`. Protocol is now stripped before the
+  path.
+- **Removed `/jinx validate-directory`.** Directory entries are already
+  validated on every push and PR by the directory repo’s own
+  `validate_jsons.yml`; the jinx command duplicated it and did nothing.
+- **[`slack_subscribe_rss()`](https://rladies.github.io/jinx/reference/slack_subscribe_rss.md)
+  posts an actionable request.** It previously sent
+  `/feed subscribe <url>` as a bot message, which Slack never executes,
+  so nothing was ever subscribed. It now posts a request for a human in
+  the channel to run the command.
+- **[`gt_finalize_onboarding()`](https://rladies.github.io/jinx/reference/gt_finalize_onboarding.md)
+  no longer logs “Granted access” for repo access it never granted.**
+  Repo access is conveyed by team membership; the log now states that
+  accurately.
+- **Removed `gt_sync_airtable()`.** It fetched global-team data and
+  discarded it, duplicating the complete sync that already runs weekly
+  in the website repo (`scripts/get_global_team.R`). Global-team sync is
+  owned there; the `global-team` target is dropped from the
+  Airtable-sync workflow.
+
 ### Meeting scheduling
 
 - **New meeting-poll module backed by the samkoma API.**
