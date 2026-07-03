@@ -34,17 +34,13 @@ command_default_repo <- function() {
 #' repository.
 #'
 #' @param ref The reference string.
-#' @param default_owner Owner to use for bare-number references.
-#' @param default_repo Repo to use for bare-number references.
+#' @param default_owner,default_repo Fallback owner/repo for bare-number
+#'   references; default to the current command's repository.
 #' @return A list with `owner`, `repo`, and `number`, or `NULL` if the
 #'   reference cannot be parsed.
 #' @keywords internal
 #' @noRd
-parse_pr_ref <- function(
-  ref,
-  default_owner = command_default_repo()$owner,
-  default_repo = command_default_repo()$repo
-) {
+parse_pr_ref <- function(ref, default_owner = NULL, default_repo = NULL) {
   ref <- trimws(ref %||% "")
 
   url <- regmatches(
@@ -65,6 +61,11 @@ parse_pr_ref <- function(
 
   num <- regmatches(ref, regexec("^#?([0-9]+)$", ref))[[1]]
   if (length(num) == 2) {
+    if (is.null(default_owner) || is.null(default_repo)) {
+      fallback <- command_default_repo()
+      default_owner <- default_owner %||% fallback$owner
+      default_repo <- default_repo %||% fallback$repo
+    }
     return(list(
       owner = default_owner,
       repo = default_repo,
@@ -90,7 +91,7 @@ copilot_gate_label <- function(gate, config = load_copilot_review_config()) {
   if (is.null(skill)) {
     return(gate)
   }
-  glue::glue("{gate} ({skill})")
+  paste0(gate, " (", skill, ")")
 }
 
 #' Comment posted on the PR when Copilot is summoned
@@ -193,8 +194,9 @@ copilot_review_pr <- function(
   } else {
     glue::glue(
       "\U0001f63f I asked Copilot to review {target} but the request ",
-      "didn't go through. It may already be reviewing, or Copilot code ",
-      "review may not be enabled on that repo."
+      "didn't go through \u2014 see the run logs for the exact error. ",
+      "Copilot may already be reviewing, or code review may not be ",
+      "enabled on that repo."
     )
   }
 }

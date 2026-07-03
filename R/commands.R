@@ -57,12 +57,15 @@ cmd_parse <- function(body) {
 }
 
 parse_review_command <- function(parts) {
-  usage <- "Usage: `/jinx review brand|blog|social|translation <pr>`"
+  gates <- copilot_gates()
+  usage <- glue::glue(
+    "Usage: `/jinx review {paste(gates, collapse = '|')} <pr>`"
+  )
   if (length(parts) < 3) {
     return(list(action = "error", message = usage))
   }
   gate <- tolower(parts[2])
-  if (!gate %in% c("brand", "blog", "social", "translation")) {
+  if (!gate %in% gates) {
     return(list(action = "error", message = usage))
   }
   list(action = "review", gate = gate, pr = parts[3])

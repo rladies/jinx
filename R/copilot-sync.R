@@ -13,6 +13,20 @@ load_copilot_review_config <- function() {
   yaml::read_yaml(path)
 }
 
+#' Review gate keys, as declared in the config
+#'
+#' The single source of truth for which review gates exist. Command
+#' parsing and instruction rendering both derive from this, so gates are
+#' added or renamed in one place (the config).
+#'
+#' @param config Config from [load_copilot_review_config()].
+#' @return Character vector of gate keys.
+#' @keywords internal
+#' @noRd
+copilot_gates <- function(config = load_copilot_review_config()) {
+  names(config$grimoire$gates)
+}
+
 #' Resolve the gate-to-globs map for a target repository
 #'
 #' @param repo Target repository name.
@@ -145,31 +159,26 @@ copilot_generated_note <- function() {
 #'
 #' @param skills Skill bodies from `copilot_gather_skills()`.
 #' @param globs Gate-to-globs map from `copilot_review_globs()`.
+#' @param config Config from [load_copilot_review_config()].
 #' @return Named list mapping repo file paths to file contents.
 #' @keywords internal
 #' @noRd
-copilot_render_instructions <- function(skills, globs) {
+copilot_render_instructions <- function(
+  skills,
+  globs,
+  config = load_copilot_review_config()
+) {
   brand_body <- paste(
     skills$brand_context,
     skills$brand,
     sep = "\n\n---\n\n"
   )
-  gate_body <- list(
-    brand = brand_body,
-    blog = skills$blog,
-    social = skills$social,
-    translation = skills$translation
-  )
 
   files <- list(".github/copilot-instructions.md" = copilot_repo_contract())
-  for (gate in names(gate_body)) {
-    path <- as.character(glue::glue(
-      ".github/instructions/rladies-{gate}.instructions.md"
-    ))
-    files[[path]] <- copilot_instruction_file(
-      globs[[gate]] %||% "**",
-      gate_body[[gate]]
-    )
+  for (gate in copilot_gates(config)) {
+    body <- if (identical(gate, "brand")) brand_body else skills[[gate]]
+    path <- glue::glue(".github/instructions/rladies-{gate}.instructions.md")
+    files[[path]] <- copilot_instruction_file(globs[[gate]] %||% "**", body)
   }
   files
 }
@@ -238,7 +247,7 @@ copilot_sync_repo <- function(
 ) {
   skills <- copilot_gather_skills(config)
   globs <- copilot_review_globs(repo, config)
-  files <- copilot_render_instructions(skills, globs)
+  files <- copilot_render_instructions(skills, globs, config)
 
   gh_branch_upsert(owner, repo, branch, base = base)
   message <- "Sync RLadies+ Copilot review instructions from grimoire"
