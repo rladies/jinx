@@ -269,10 +269,6 @@ describe("normalize_command", {
       "blog-check-links"
     )
     expect_equal(
-      normalize_command(c("validate", "directory")),
-      "validate-directory"
-    )
-    expect_equal(
       normalize_command(c("remind", "stale")),
       "remind"
     )
@@ -321,5 +317,55 @@ describe("cmd_execute", {
   it("returns NULL for NULL command", {
     result <- cmd_execute(NULL)
     expect_null(result)
+  })
+})
+
+describe("cmd_parse review", {
+  it("parses a gated gate and PR reference", {
+    cmd <- cmd_parse("/jinx review blog rladies/website#42")
+    expect_identical(cmd$action, "review")
+    expect_identical(cmd$gate, "blog")
+    expect_identical(cmd$pr, "rladies/website#42")
+  })
+
+  it("rejects an unknown gate", {
+    cmd <- cmd_parse("/jinx review sparkle #1")
+    expect_identical(cmd$action, "error")
+    expect_true(grepl("Usage", cmd$message, fixed = TRUE))
+  })
+
+  it("errors when the PR reference is missing", {
+    cmd <- cmd_parse("/jinx review brand")
+    expect_identical(cmd$action, "error")
+  })
+
+  it("accepts per-gate aliases", {
+    cmd <- cmd_parse("/jinx brand-check #7")
+    expect_identical(cmd$action, "review")
+    expect_identical(cmd$gate, "brand")
+    expect_identical(cmd$pr, "#7")
+
+    cmd <- cmd_parse("/jinx translate-review rladies/website#3")
+    expect_identical(cmd$gate, "translation")
+  })
+})
+
+describe("cmd_parse copilot-sync", {
+  it("parses owner/repo", {
+    cmd <- cmd_parse("/jinx copilot-sync rladies/website")
+    expect_identical(cmd$action, "copilot-sync")
+    expect_identical(cmd$owner, "rladies")
+    expect_identical(cmd$repo, "website")
+  })
+
+  it("defaults the owner to rladies for a bare repo", {
+    cmd <- cmd_parse("/jinx copilot-sync website")
+    expect_identical(cmd$owner, "rladies")
+    expect_identical(cmd$repo, "website")
+  })
+
+  it("errors when the target is missing", {
+    cmd <- cmd_parse("/jinx copilot-sync")
+    expect_identical(cmd$action, "error")
   })
 })

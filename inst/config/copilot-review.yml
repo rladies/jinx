@@ -1,0 +1,38 @@
+# Wiring for jinx's grimoire -> GitHub Copilot review bridge.
+#
+# `grimoire` locates the source skills. Each review "gate" maps to one
+# grimoire action skill; `brand_context` is the foundation ruleset those
+# gates depend on and is bundled into the always-on brand instructions.
+#
+# `repos` maps a target repository to the file globs each gate watches.
+# Copilot loads a gate's instructions when a pull request touches matching
+# paths (see `applyTo` in the generated .github/instructions/*.md files).
+# A repo without its own entry falls back to `default`; tune the globs to
+# the target repo's layout.
+grimoire:
+  owner: rladies
+  repo: grimoire
+  ref: main
+  brand_context: rladies-brand
+  gates:
+    brand: run-brand-check
+    blog: run-blog-review
+    social: run-social-review
+    translation: run-translation-review
+
+repos:
+  default:
+    brand:
+      - "**"
+    blog:
+      - "content/blog/**"
+      - "**/*.md"
+      - "**/*.qmd"
+      - "**/*.Rmd"
+    social:
+      - "**/social/**"
+      - "**/campaigns/**"
+    translation:
+      - "content/**/index.*.md"
+      - "i18n/**"
+      - "**/translations/**"

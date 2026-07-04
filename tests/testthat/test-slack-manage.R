@@ -159,3 +159,25 @@ describe("slack_invite_request", {
     )
   })
 })
+
+describe("slack_subscribe_rss", {
+  it("posts a human-actionable /feed subscribe request", {
+    post_args <- NULL
+    local_mocked_bindings(
+      slack_post_message = function(text, channel, token) {
+        post_args <<- list(text = text, channel = channel)
+        list(ok = TRUE)
+      }
+    )
+
+    suppressMessages(
+      slack_subscribe_rss(
+        "https://example.com/feed.xml",
+        channel = "rladiesblogs"
+      )
+    )
+
+    expect_identical(post_args$channel, "rladiesblogs")
+    expect_match(post_args$text, "/feed subscribe https://example.com/feed.xml")
+  })
+})

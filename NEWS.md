@@ -13,8 +13,97 @@
   (order- and formatting-insensitive comparison), and delete requests are
   reported in the PR body rather than executed. Replaces the earlier stub that
   targeted a placeholder base and wrote a name-plus-socials shape.
+- **The directory sync runs from the private `rladies/directory` repo, not
+  jinx.** Directory submissions carry confidential data (contact emails), and
+  jinx is public, so the sync and its logs must stay in the private repo, which
+  installs jinx and calls `directory_sync_airtable()`. With the global-team
+  sync also gone, the public `ops-airtable-sync.yml` workflow is removed.
+- **`validate_directory_pr()` is now a real automated review**, posting one
+  consolidated comment on directory PRs covering filenames, likely-duplicate
+  slugs, contact-method vs. social-entry consistency, stray contact info in
+  free text, and whether social handles resolve — run from the private repo's
+  review workflow. Handle normalisation now also covers github and bluesky.
 - The bundled `directory-entry.json` schema now matches the full entry shape
   (location, social media, interests, languages, activities, work, photo).
+
+## Copilot reviews
+
+- **Jinx can summon GitHub Copilot to run the grimoire review gates.**
+  `copilot_sync_repo()` fetches the four
+  [rladies/grimoire](https://github.com/rladies/grimoire) review skills
+  (brand, blog, social, translation) plus the foundation brand ruleset and
+  lands them in a target repo as `.github/copilot-instructions.md` and
+  path-scoped `.github/instructions/*.instructions.md` via a pull request —
+  the bridge that makes Copilot's code review grimoire-aware. Run it with
+  `/jinx copilot-sync <owner/repo>`.
+- **On-demand and automatic reviews.** `/jinx review
+brand|blog|social|translation <pr>` (accepting `#42`, `owner/repo#42`, or
+  a PR URL, plus `brand-check`/`blog-review`/`social-review`/`translate-review`
+  aliases) requests a Copilot review on a PR and posts a scoping comment via
+  `copilot_review_pr()`. The new `reusable-copilot-review.yml` workflow does
+  the same automatically when a content PR opens. Both commands are gated to
+  the global team.
+
+## Security
+
+- **Privileged commands now require global-team membership.**
+  `cmd_authorize()` gates every command before execution: read-only
+  actions (help, reports, analytics, dashboards, lookups) stay open,
+  while any mutating command (invite, offboard, chapter/CFP/poll
+  creation, syncs, …) requires the requester to appear in the global
+  team member directory in Airtable. GitHub commands are matched on the
+  commenter's login; Slack slash commands are matched on the signed
+  `user_name`. The check fails closed — unknown actors and directory
+  lookup failures are both denied — closing a path where any member of
+  an allowlisted Slack workspace could trigger privileged GitHub
+  actions. New commands are privileged by default until explicitly
+  declared safe.
+- **Privileged Slack commands are restricted to the organisers
+  workspace.** The Slack `user_name` is mutable and workspace-scoped, and
+  the community workspace is openly joinable, so a colliding handle there
+  must not authorize privileged actions. `cmd_authorize()` only honors
+  privileged Slack commands originating from the organisers workspace;
+  read-only commands are unaffected.
+- **Command privilege is now keyword-labelled at each handler.** Commands
+  are declared in a single registry, each tagged `jinx_safe` or
+  `jinx_gated` next to its handler; dispatch and the safe/gated
+  classification both derive from it, and a test asserts every command
+  carries a keyword and every parseable action is registered. Replaces
+  the separate hand-maintained safe-command list, so a new command is
+  labelled where it is defined.
+
+## Bug fixes
+
+- **`/jinx chapter-health` now reports real data.** The command was a
+  placeholder that echoed "Checking chapter health..."; it now runs the
+  health check and summarises inactive chapters.
+- **`/jinx blog-add <url>` now opens a PR.** New `blog_add_pr()` fetches
+  the page metadata and opens a PR adding the entry to
+  awesome-rladies-creations (skipping domains already listed); the
+  command previously only echoed the URL.
+- **`/jinx blog-check-links` now checks real links.** New
+  `blog_check_links_repo()` reads the community blog entries from
+  awesome-rladies-creations and reports broken URLs/feeds; the command
+  previously only echoed "Checking blog links...".
+- **`blog_create_entry()` now derives the filename correctly.** The
+  domain was extracted by stripping from the first `/`, which is inside
+  `https://`, so every entry collapsed to `https.json`. Protocol is now
+  stripped before the path.
+- **Removed `/jinx validate-directory`.** Directory entries are already
+  validated on every push and PR by the directory repo's own
+  `validate_jsons.yml`; the jinx command duplicated it and did nothing.
+- **`slack_subscribe_rss()` posts an actionable request.** It previously
+  sent `/feed subscribe <url>` as a bot message, which Slack never
+  executes, so nothing was ever subscribed. It now posts a request for a
+  human in the channel to run the command.
+- **`gt_finalize_onboarding()` no longer logs "Granted access" for repo
+  access it never granted.** Repo access is conveyed by team membership;
+  the log now states that accurately.
+- **Removed `gt_sync_airtable()`.** It fetched global-team data and
+  discarded it, duplicating the complete sync that already runs weekly in
+  the website repo (`scripts/get_global_team.R`). Global-team sync is owned
+  there. With the directory sync also moved out of jinx (see Directory), the
+  `ops-airtable-sync.yml` workflow is removed entirely.
 
 ## Meeting scheduling
 
@@ -28,6 +117,11 @@
   `SAMKOMA_BASE_URL`. Externally-sourced poll titles and participant
   names are markdown-neutralised before being rendered into bot-authored
   GitHub/Slack messages, so they cannot inject links or formatting.
+- **Global team onboarding opens an onboarding meeting poll.**
+  `gt_finalize_onboarding()` now calls `gt_schedule_onboarding_meeting()`,
+  which opens a samkoma poll spanning a two-week window of candidate dates
+  starting one week out and posts the poll link to the onboarding issue. A
+  samkoma outage warns and is skipped rather than aborting onboarding.
 
 ## Post-review hardening
 
