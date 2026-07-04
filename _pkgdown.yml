@@ -137,7 +137,7 @@ reference:
       - starts_with("analytics_")
 
   - title: Website analytics
-    desc: Plausible website performance reports
+    desc: Cloudflare Web Analytics website performance reports
     contents:
       - website_collect_analytics
       - website_format_analytics
