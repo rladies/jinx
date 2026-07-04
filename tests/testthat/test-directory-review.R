@@ -71,21 +71,28 @@ describe("directory_review_entry", {
 })
 
 describe("directory_review_format", {
-  it("reports an all-clear", {
+  it("renders each entry as a task-list checkbox", {
     body <- directory_review_format(list(
       list(file = "a.json", issues = character(0))
     ))
-    expect_match(body, "All automated checks passed", fixed = TRUE)
-    expect_match(body, "- **a.json** - OK", fixed = TRUE)
+    expect_match(body, "Tick each entry as you review it", fixed = TRUE)
+    expect_match(body, "- [ ] **a.json**", fixed = TRUE)
+    expect_match(body, "Before merging, confirm manually", fixed = TRUE)
+    expect_match(
+      body,
+      "- [ ] Each person is a minority-gender person",
+      fixed = TRUE
+    )
   })
 
-  it("lists issues with a count and pluralisation", {
+  it("shows flags under a checkbox and counts them", {
     body <- directory_review_format(list(
       list(file = "a.json", issues = c("issue one", "issue two")),
       list(file = "b.json", issues = character(0))
     ))
-    expect_match(body, "2 items to review", fixed = TRUE)
+    expect_match(body, "2 automated flags below", fixed = TRUE)
+    expect_match(body, "- [ ] **a.json**", fixed = TRUE)
     expect_match(body, "  - issue one", fixed = TRUE)
-    expect_match(body, "- **b.json** - OK", fixed = TRUE)
+    expect_match(body, "- [ ] **b.json**", fixed = TRUE)
   })
 })
