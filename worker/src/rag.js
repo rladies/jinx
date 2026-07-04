@@ -1,6 +1,9 @@
 import { coding_decline_message, is_coding_question } from "./intent.js";
 import { no_match_quip } from "./quips.js";
 
+const EMBED_MODEL = "@cf/baai/bge-base-en-v1.5";
+const CHAT_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast";
+
 const RETRIEVE_K = 20;
 const EVENT_RETRIEVE_K = 15;
 const TOP_K = 5;
@@ -76,7 +79,7 @@ export async function rag_question_answer(env, query, history = []) {
     return { answer: no_match_quip() };
   }
 
-  const result = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+  const result = await env.AI.run(CHAT_MODEL, {
     messages: rag_build_messages(query, matches, prior_messages),
     max_tokens: 400,
   });
@@ -158,7 +161,7 @@ export function rag_source_urls(matches) {
 }
 
 async function rag_query_embed(env, text) {
-  const result = await env.AI.run("@cf/baai/bge-base-en-v1.5", {
+  const result = await env.AI.run(EMBED_MODEL, {
     text: [text],
   });
   return result.data[0];
