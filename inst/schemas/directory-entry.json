@@ -1,15 +1,77 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
-    "name": {"type": "string"},
-    "twitter": {"type": "string"},
-    "github": {"type": "string"},
-    "linkedin": {"type": "string"},
-    "mastodon": {"type": "string"},
-    "bluesky": {"type": "string"},
-    "website": {"type": "string"},
-    "orcid": {"type": "string"}
+    "name": { "type": "string" },
+    "identifier": { "type": "string" },
+    "honorific": { "type": "string" },
+    "bio": { "type": "string" },
+    "pronouns": { "type": "string" },
+    "featured": { "type": "boolean" },
+    "speaker": { "type": "boolean" },
+    "last_updated": { "type": "string" },
+    "categories": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "contact_method": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "interests": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "languages": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "city": { "type": "string" },
+        "state": { "type": "string" },
+        "country": { "type": "string" }
+      }
+    },
+    "social_media": {
+      "type": "object",
+      "properties": {
+        "linkedin": { "type": "string" },
+        "twitter": { "type": "string" },
+        "website": { "type": "string" },
+        "github": { "type": "string" },
+        "facebook": { "type": "string" },
+        "tiktok": { "type": "string" },
+        "bluesky": { "type": "string" },
+        "mastodon": { "type": "string" },
+        "orcid": { "type": "string" }
+      }
+    },
+    "activities": {
+      "type": "object",
+      "properties": {
+        "r_groups": { "type": "object" },
+        "shiny_apps": { "type": "object" }
+      }
+    },
+    "work": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "organisation": { "type": "string" },
+        "organization": { "type": "string" },
+        "org_url": { "type": "string" },
+        "logo_url": { "type": "string" }
+      }
+    },
+    "photo": {
+      "type": "object",
+      "properties": {
+        "url": { "type": "string" },
+        "credit": { "type": "string" }
+      }
+    }
   },
   "required": ["name"]
 }

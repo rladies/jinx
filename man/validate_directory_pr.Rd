@@ -2,9 +2,9 @@
 % Please edit documentation in R/directory-pr.R
 \name{validate_directory_pr}
 \alias{validate_directory_pr}
-\title{Post a directory validation report as a PR comment}
+\title{Post an automated directory review as a PR comment}
 \usage{
-validate_directory_pr(owner, repo, pr_number)
+validate_directory_pr(owner, repo, pr_number, verify_handles = TRUE)
 }
 \arguments{
 \item{owner}{Repository owner.}
@@ -12,11 +12,17 @@ validate_directory_pr(owner, repo, pr_number)
 \item{repo}{Repository name.}
 
 \item{pr_number}{PR number.}
+
+\item{verify_handles}{Whether to HTTP-check that social handles resolve.
+Defaults to \code{TRUE}; set \code{FALSE} to skip the network calls.}
 }
 \value{
-Invisibly returns the URL of the posted PR comment.
+Invisibly \code{NULL}.
 }
 \description{
-Runs all directory validations (schema, filenames, social handles)
-on changed files in a PR and posts a summary comment.
+Runs the checks that used to be manual review-checklist items on the
+entry files changed in a PR (filenames, likely-duplicate slugs, contact
+method vs. social entry, stray contact info in free text, and whether
+social handles resolve) and posts a single consolidated report. Schema
+validity is covered separately by the directory repo's JSON validation.
 }
