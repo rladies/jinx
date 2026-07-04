@@ -66,6 +66,16 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="directory-development-version">Directory<a class="anchor" aria-label="anchor" href="#directory-development-version"></a></h3>
+<ul><li>
+<strong><code><a href="../reference/directory_sync_airtable.html">directory_sync_airtable()</a></code> now produces real directory entries.</strong> It reads the live submissions base (<code>appzYxePUruG9Nwyg</code>, table <code>submissions</code>) with its linked <code>languages</code>, <code>countries</code>, and <code>interests</code> tables, and writes the full entry schema (<code>data/json/&lt;slug&gt;.json</code>), profile photos (<code>data/img/</code>), and contact emails (<code>contact/&lt;slug&gt;.json</code>). Returning submitters are matched to their existing entry by slug (<code>directory_id</code>, falling back to <code>identifier</code>) and merged as a partial update — <code>clear_fields</code> are wiped first, then submitted fields overlay the rest. Only genuinely changed files are committed (order- and formatting-insensitive comparison), and delete requests are reported in the PR body rather than executed. Replaces the earlier stub that targeted a placeholder base and wrote a name-plus-socials shape.</li>
+<li>
+<strong>The directory sync runs from the private <code>rladies/directory</code> repo, not jinx.</strong> Directory submissions carry confidential data (contact emails), and jinx is public, so the sync and its logs must stay in the private repo, which installs jinx and calls <code><a href="../reference/directory_sync_airtable.html">directory_sync_airtable()</a></code>. With the global-team sync also gone, the public <code>ops-airtable-sync.yml</code> workflow is removed.</li>
+<li>
+<strong><code><a href="../reference/validate_directory_pr.html">validate_directory_pr()</a></code> is now a real automated review</strong>, posting one consolidated comment on directory PRs covering filenames, likely-duplicate slugs, contact-method vs. social-entry consistency, stray contact info in free text, and whether social handles resolve — run from the private repo’s review workflow. Handle normalisation now also covers github and bluesky.</li>
+<li>The bundled <code>directory-entry.json</code> schema now matches the full entry shape (location, social media, interests, languages, activities, work, photo).</li>
+</ul></div>
+<div class="section level3">
 <h3 id="copilot-reviews-development-version">Copilot reviews<a class="anchor" aria-label="anchor" href="#copilot-reviews-development-version"></a></h3>
 <ul><li>
 <strong>Jinx can summon GitHub Copilot to run the grimoire review gates.</strong> <code><a href="../reference/copilot_sync_repo.html">copilot_sync_repo()</a></code> fetches the four <a href="https://github.com/rladies/grimoire" class="external-link">rladies/grimoire</a> review skills (brand, blog, social, translation) plus the foundation brand ruleset and lands them in a target repo as <code>.github/copilot-instructions.md</code> and path-scoped <code>.github/instructions/*.instructions.md</code> via a pull request — the bridge that makes Copilot’s code review grimoire-aware. Run it with <code>/jinx copilot-sync &lt;owner/repo&gt;</code>.</li>
@@ -98,7 +108,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <li>
 <strong><code><a href="../reference/gt_finalize_onboarding.html">gt_finalize_onboarding()</a></code> no longer logs “Granted access” for repo access it never granted.</strong> Repo access is conveyed by team membership; the log now states that accurately.</li>
 <li>
-<strong>Removed <code>gt_sync_airtable()</code>.</strong> It fetched global-team data and discarded it, duplicating the complete sync that already runs weekly in the website repo (<code>scripts/get_global_team.R</code>). Global-team sync is owned there; the <code>global-team</code> target is dropped from the Airtable-sync workflow.</li>
+<strong>Removed <code>gt_sync_airtable()</code>.</strong> It fetched global-team data and discarded it, duplicating the complete sync that already runs weekly in the website repo (<code>scripts/get_global_team.R</code>). Global-team sync is owned there. With the directory sync also moved out of jinx (see Directory), the <code>ops-airtable-sync.yml</code> workflow is removed entirely.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="meeting-scheduling-development-version">Meeting scheduling<a class="anchor" aria-label="anchor" href="#meeting-scheduling-development-version"></a></h3>
@@ -126,7 +136,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <li>
 <strong><code>gh_branch_upsert(force = FALSE)</code> returns the real head.</strong> Previously it returned the <em>base</em> SHA when the branch already existed, which was wrong for any caller that wanted to act on the branch tip. Now reads the existing branch’s head SHA instead.</li>
 <li>
-<strong>Airtable sync retries.</strong> <code>airtable_list_records()</code> now wraps each paginated request in <code>req_retry(max_tries = 3)</code>, so a 429 mid-sync no longer aborts the whole pull.</li>
+<strong>Airtable sync retries.</strong> <code><a href="../reference/airtable_list_records.html">airtable_list_records()</a></code> now wraps each paginated request in <code>req_retry(max_tries = 3)</code>, so a 429 mid-sync no longer aborts the whole pull.</li>
 <li>
 <strong>Directory slug collisions.</strong> Two records named “Maria” used to collide on <code>maria.json</code>. <code>airtable_to_directory_entry()</code> now appends a 6-char hash of the Airtable record id to the slug.</li>
 <li>
@@ -145,7 +155,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="section level3">
 <h3 id="airtable-directory-sync-actually-open-a-pr-development-version">Airtable directory sync: actually open a PR<a class="anchor" aria-label="anchor" href="#airtable-directory-sync-actually-open-a-pr-development-version"></a></h3>
 <ul><li>
-<code>directory_create_pr()</code> was a stub that returned the directory’s pulls-page URL without creating a branch, writing files, or opening a PR. The function now creates a dated <code>jinx/airtable-sync-YYYYMMDD</code> branch, commits each changed <code>contact/{slug}.json</code> file via the contents API, and opens a PR back into <code>main</code> (returning the URL of an existing open PR if the branch was already in flight).</li>
+<code><a href="../reference/directory_create_pr.html">directory_create_pr()</a></code> was a stub that returned the directory’s pulls-page URL without creating a branch, writing files, or opening a PR. The function now creates a dated <code>jinx/airtable-sync-YYYYMMDD</code> branch, commits each changed <code>contact/{slug}.json</code> file via the contents API, and opens a PR back into <code>main</code> (returning the URL of an existing open PR if the branch was already in flight).</li>
 <li>
 <code>write_directory_entries()</code> now returns a list of <code>{filename, path, content, sha}</code> records for changed entries instead of only their filenames, so the PR step can actually write them.</li>
 </ul></div>

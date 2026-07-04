@@ -2,6 +2,39 @@
 
 ## jinx (development version)
 
+### Directory
+
+- **[`directory_sync_airtable()`](https://rladies.github.io/jinx/reference/directory_sync_airtable.md)
+  now produces real directory entries.** It reads the live submissions
+  base (`appzYxePUruG9Nwyg`, table `submissions`) with its linked
+  `languages`, `countries`, and `interests` tables, and writes the full
+  entry schema (`data/json/<slug>.json`), profile photos (`data/img/`),
+  and contact emails (`contact/<slug>.json`). Returning submitters are
+  matched to their existing entry by slug (`directory_id`, falling back
+  to `identifier`) and merged as a partial update — `clear_fields` are
+  wiped first, then submitted fields overlay the rest. Only genuinely
+  changed files are committed (order- and formatting-insensitive
+  comparison), and delete requests are reported in the PR body rather
+  than executed. Replaces the earlier stub that targeted a placeholder
+  base and wrote a name-plus-socials shape.
+- **The directory sync runs from the private `rladies/directory` repo,
+  not jinx.** Directory submissions carry confidential data (contact
+  emails), and jinx is public, so the sync and its logs must stay in the
+  private repo, which installs jinx and calls
+  [`directory_sync_airtable()`](https://rladies.github.io/jinx/reference/directory_sync_airtable.md).
+  With the global-team sync also gone, the public
+  `ops-airtable-sync.yml` workflow is removed.
+- **[`validate_directory_pr()`](https://rladies.github.io/jinx/reference/validate_directory_pr.md)
+  is now a real automated review**, posting one consolidated comment on
+  directory PRs covering filenames, likely-duplicate slugs,
+  contact-method vs. social-entry consistency, stray contact info in
+  free text, and whether social handles resolve — run from the private
+  repo’s review workflow. Handle normalisation now also covers github
+  and bluesky.
+- The bundled `directory-entry.json` schema now matches the full entry
+  shape (location, social media, interests, languages, activities, work,
+  photo).
+
 ### Copilot reviews
 
 - **Jinx can summon GitHub Copilot to run the grimoire review gates.**
@@ -88,8 +121,8 @@
 - **Removed `gt_sync_airtable()`.** It fetched global-team data and
   discarded it, duplicating the complete sync that already runs weekly
   in the website repo (`scripts/get_global_team.R`). Global-team sync is
-  owned there; the `global-team` target is dropped from the
-  Airtable-sync workflow.
+  owned there. With the directory sync also moved out of jinx (see
+  Directory), the `ops-airtable-sync.yml` workflow is removed entirely.
 
 ### Meeting scheduling
 
@@ -162,9 +195,10 @@
   Previously it returned the *base* SHA when the branch already existed,
   which was wrong for any caller that wanted to act on the branch tip.
   Now reads the existing branch’s head SHA instead.
-- **Airtable sync retries.** `airtable_list_records()` now wraps each
-  paginated request in `req_retry(max_tries = 3)`, so a 429 mid-sync no
-  longer aborts the whole pull.
+- **Airtable sync retries.**
+  [`airtable_list_records()`](https://rladies.github.io/jinx/reference/airtable_list_records.md)
+  now wraps each paginated request in `req_retry(max_tries = 3)`, so a
+  429 mid-sync no longer aborts the whole pull.
 - **Directory slug collisions.** Two records named “Maria” used to
   collide on `maria.json`. `airtable_to_directory_entry()` now appends a
   6-char hash of the Airtable record id to the slug.
@@ -197,12 +231,13 @@
 
 ### Airtable directory sync: actually open a PR
 
-- `directory_create_pr()` was a stub that returned the directory’s
-  pulls-page URL without creating a branch, writing files, or opening a
-  PR. The function now creates a dated `jinx/airtable-sync-YYYYMMDD`
-  branch, commits each changed `contact/{slug}.json` file via the
-  contents API, and opens a PR back into `main` (returning the URL of an
-  existing open PR if the branch was already in flight).
+- [`directory_create_pr()`](https://rladies.github.io/jinx/reference/directory_create_pr.md)
+  was a stub that returned the directory’s pulls-page URL without
+  creating a branch, writing files, or opening a PR. The function now
+  creates a dated `jinx/airtable-sync-YYYYMMDD` branch, commits each
+  changed `contact/{slug}.json` file via the contents API, and opens a
+  PR back into `main` (returning the URL of an existing open PR if the
+  branch was already in flight).
 - `write_directory_entries()` now returns a list of
   `{filename, path, content, sha}` records for changed entries instead
   of only their filenames, so the PR step can actually write them.

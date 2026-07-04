@@ -226,7 +226,7 @@ Directory entry management and validation
 - [`directory_verify_handles()`](https://rladies.github.io/jinx/reference/directory_verify_handles.md)
   : Verify that social media handles exist
 - [`validate_directory_pr()`](https://rladies.github.io/jinx/reference/validate_directory_pr.md)
-  : Post a directory validation report as a PR comment
+  : Post an automated directory review as a PR comment
 - [`validate_directory_entries()`](https://rladies.github.io/jinx/reference/validate_directory_entries.md)
   : Validate directory entry JSON files against schema
 
