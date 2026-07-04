@@ -2,11 +2,12 @@
 % Please edit documentation in R/directory-pr.R
 \name{directory_review_format}
 \alias{directory_review_format}
-\title{Format the per-entry review results as a markdown PR comment.}
+\title{Format the per-entry review results as a markdown PR checklist comment.}
 \usage{
 directory_review_format(reviews)
 }
 \description{
-Format the per-entry review results as a markdown PR comment.
+Each entry is a task-list checkbox reviewers tick as they go, so progress
+is visible at a glance; automated flags are shown under their entry.
 }
 \keyword{internal}

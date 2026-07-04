@@ -185,31 +185,41 @@ directory_handle_issues <- function(entry) {
   )
 }
 
-#' Format the per-entry review results as a markdown PR comment.
+#' Format the per-entry review results as a markdown PR checklist comment.
+#'
+#' Each entry is a task-list checkbox reviewers tick as they go, so progress
+#' is visible at a glance; automated flags are shown under their entry.
 #' @keywords internal
 directory_review_format <- function(reviews) {
   total <- sum(vapply(reviews, function(r) length(r$issues), integer(1)))
-  header <- if (total == 0) {
-    "### Directory sync - automated review\n\n**All automated checks passed.**"
+  intro <- if (total == 0) {
+    "Automated checks passed."
   } else {
     sprintf(
-      "### Directory sync - automated review\n\n**%d item%s to review below.**",
+      "%d automated flag%s below (shown under the entry).",
       total,
       if (total == 1) "" else "s"
     )
   }
+  header <- paste0(
+    "### Directory sync - automated review\n\n",
+    intro,
+    " Tick each entry as you review it."
+  )
 
   blocks <- lapply(reviews, function(r) {
     if (length(r$issues) == 0) {
-      return(sprintf("- **%s** - OK", r$file))
+      return(sprintf("- [ ] **%s**", r$file))
     }
-    c(sprintf("- **%s**", r$file), sprintf("  - %s", r$issues))
+    c(sprintf("- [ ] **%s**", r$file), sprintf("  - %s", r$issues))
   })
   lines <- unlist(blocks, use.names = FALSE)
 
-  footer <- paste(
-    "_Automated checks only. Still confirm manually: minority-gender",
-    "eligibility, and that photos don't crop badly (see the preview build)._"
+  manual <- c(
+    "**Before merging, confirm manually:**",
+    "- [ ] Each person is a minority-gender person (name / image / context)",
+    "- [ ] Photos crop to the right area (check the preview build)"
   )
-  paste(c(header, "", lines, "", footer), collapse = "\n")
+
+  paste(c(header, "", lines, "", manual), collapse = "\n")
 }
