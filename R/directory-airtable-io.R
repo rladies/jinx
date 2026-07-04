@@ -285,7 +285,10 @@ gh_get_content <- function(org, repo, path, ref = "main") {
   )
 }
 
-#' Commit recorded changes to the sync branch and open (or reuse) a PR.
+#' Commit recorded changes as a single commit and open (or reuse) a PR.
+#'
+#' Uses the git data API (blobs -> tree -> commit -> ref) so the whole sync
+#' lands as one commit, rather than one commit per file.
 #' @keywords internal
 directory_create_pr <- function(changes, deletes, org, repo, base = "main") {
   if (length(changes) == 0 && length(deletes) == 0) {
@@ -293,27 +296,52 @@ directory_create_pr <- function(changes, deletes, org, repo, base = "main") {
   }
 
   branch <- "jinx/airtable-sync"
-  gh_branch_upsert(org, repo, branch, base = base)
+  base_sha <- gh::gh(
+    "GET /repos/{owner}/{repo}/git/ref/heads/{base}",
+    owner = org,
+    repo = repo,
+    base = base
+  )$object$sha
+  base_tree <- gh::gh(
+    "GET /repos/{owner}/{repo}/git/commits/{commit_sha}",
+    owner = org,
+    repo = repo,
+    commit_sha = base_sha
+  )$tree$sha
 
-  for (change in changes) {
-    content <- if (identical(change$kind, "image")) {
-      jsonlite::base64_enc(change$raw)
+  tree <- lapply(changes, function(change) {
+    raw <- if (identical(change$kind, "image")) {
+      change$raw
     } else {
-      jsonlite::base64_enc(charToRaw(change$text))
+      charToRaw(change$text)
     }
-    params <- list(
+    blob <- gh::gh(
+      "POST /repos/{owner}/{repo}/git/blobs",
       owner = org,
       repo = repo,
-      path = change$path,
-      message = glue::glue("Sync {change$path} from Airtable"),
-      content = content,
-      branch = branch
+      content = jsonlite::base64_enc(raw),
+      encoding = "base64"
     )
-    if (!is.null(change$sha)) {
-      params$sha <- change$sha
-    }
-    do.call(gh::gh, c("PUT /repos/{owner}/{repo}/contents/{path}", params))
-  }
+    list(path = change$path, mode = "100644", type = "blob", sha = blob$sha)
+  })
+
+  new_tree <- gh::gh(
+    "POST /repos/{owner}/{repo}/git/trees",
+    owner = org,
+    repo = repo,
+    base_tree = base_tree,
+    tree = tree
+  )$sha
+  commit_sha <- gh::gh(
+    "POST /repos/{owner}/{repo}/git/commits",
+    owner = org,
+    repo = repo,
+    message = directory_commit_message(changes),
+    tree = new_tree,
+    parents = list(base_sha)
+  )$sha
+
+  directory_set_branch(org, repo, branch, commit_sha)
 
   gh_open_or_update_pr(
     org,
@@ -322,6 +350,50 @@ directory_create_pr <- function(changes, deletes, org, repo, base = "main") {
     base = base,
     title = glue::glue("Airtable directory sync - {Sys.Date()}"),
     body = directory_pr_body(changes, deletes)
+  )
+}
+
+#' Point a branch at a commit, creating the ref or force-updating it.
+#' @keywords internal
+directory_set_branch <- function(org, repo, branch, sha) {
+  created <- tryCatch(
+    {
+      gh::gh(
+        "POST /repos/{owner}/{repo}/git/refs",
+        owner = org,
+        repo = repo,
+        ref = glue::glue("refs/heads/{branch}"),
+        sha = sha
+      )
+      TRUE
+    },
+    error = function(e) FALSE
+  )
+  if (!created) {
+    gh::gh(
+      "PATCH /repos/{owner}/{repo}/git/refs/heads/{branch}",
+      owner = org,
+      repo = repo,
+      branch = branch,
+      sha = sha,
+      force = TRUE
+    )
+  }
+  invisible(sha)
+}
+
+#' One-line commit message summarising the number of changed entries.
+#' @keywords internal
+directory_commit_message <- function(changes) {
+  n <- length(unique(vapply(
+    Filter(function(ch) identical(ch$kind, "entry"), changes),
+    function(ch) ch$slug,
+    character(1)
+  )))
+  sprintf(
+    "Sync %d directory %s from Airtable",
+    n,
+    if (n == 1) "entry" else "entries"
   )
 }
 

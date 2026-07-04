@@ -282,13 +282,25 @@ describe("directory_create_pr", {
     expect_null(directory_create_pr(list(), list(), "rladies", "directory"))
   })
 
-  it("creates a branch, commits files, and opens a PR", {
+  it("lands all changes as a single commit and opens a PR", {
     calls <- character(0)
     local_mocked_bindings(
       gh = function(endpoint, ...) {
         calls[[length(calls) + 1]] <<- endpoint
-        if (grepl("git/ref/heads", endpoint)) {
+        if (grepl("GET /repos.*/git/ref/heads", endpoint)) {
           return(list(object = list(sha = "basesha")))
+        }
+        if (grepl("GET /repos.*/git/commits/", endpoint)) {
+          return(list(tree = list(sha = "basetree")))
+        }
+        if (grepl("POST /repos.*/git/blobs", endpoint)) {
+          return(list(sha = "blobsha"))
+        }
+        if (grepl("POST /repos.*/git/trees", endpoint)) {
+          return(list(sha = "treesha"))
+        }
+        if (grepl("POST /repos.*/git/commits", endpoint)) {
+          return(list(sha = "commitsha"))
         }
         if (grepl("^GET /repos.*/pulls", endpoint)) {
           return(list())
@@ -300,17 +312,41 @@ describe("directory_create_pr", {
       },
       .package = "gh"
     )
-    changes <- list(list(
-      path = "data/json/a.json",
-      text = "{}\n",
-      sha = NULL,
-      kind = "entry",
-      slug = "a"
-    ))
+    changes <- list(
+      list(
+        path = "data/json/a.json",
+        text = "{}\n",
+        kind = "entry",
+        slug = "a"
+      ),
+      list(path = "data/json/b.json", text = "{}\n", kind = "entry", slug = "b")
+    )
     url <- directory_create_pr(changes, list(), "rladies", "directory")
     expect_identical(url, "https://github.com/x/y/pull/42")
-    expect_true(any(grepl("PUT /repos.*/contents/", calls)))
+    # one commit for the whole sync, not one per file
+    expect_length(grep("POST /repos.*/git/commits", calls), 1)
+    expect_length(grep("POST /repos.*/git/blobs", calls), 2)
+    expect_false(any(grepl("PUT /repos.*/contents/", calls)))
     expect_true(any(grepl("POST /repos.*/pulls", calls)))
+  })
+})
+
+describe("directory_commit_message", {
+  it("counts unique changed entries", {
+    changes <- list(
+      list(kind = "entry", slug = "a"),
+      list(kind = "image", slug = "a"),
+      list(kind = "entry", slug = "b")
+    )
+    expect_identical(
+      directory_commit_message(changes),
+      "Sync 2 directory entries from Airtable"
+    )
+    one <- list(list(kind = "entry", slug = "a"))
+    expect_identical(
+      directory_commit_message(one),
+      "Sync 1 directory entry from Airtable"
+    )
   })
 })
 
