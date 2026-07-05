@@ -534,6 +534,77 @@ describe("airtable_mark_processed", {
   })
 })
 
+describe("airtable_delete_records", {
+  it("issues one DELETE per unique, non-blank id", {
+    seen <- character(0)
+    local_mocked_bindings(
+      req_perform = function(req) {
+        seen[[length(seen) + 1]] <<- req$url
+        req
+      },
+      .package = "httr2"
+    )
+    got <- airtable_delete_records(
+      "base",
+      "submissions",
+      c("recA", "recA", NA, "", "recB"),
+      "k"
+    )
+    expect_identical(got, c("recA", "recB"))
+    expect_length(seen, 2)
+    expect_true(all(grepl("/submissions/rec[AB]$", seen)))
+  })
+
+  it("is a no-op for no ids", {
+    local_mocked_bindings(
+      req_perform = function(req) stop("should not be called"),
+      .package = "httr2"
+    )
+    expect_identical(
+      airtable_delete_records("base", "submissions", character(0), "k"),
+      character(0)
+    )
+  })
+})
+
+describe("directory_purge_submissions", {
+  subs <- list(
+    list(id = "rec1", fields = list(directory_id = "jane-doe")),
+    list(id = "rec2", fields = list(identifier = "Jane-Doe")),
+    list(id = "rec3", fields = list(directory_id = "someone-else")),
+    list(id = "rec4", fields = list(first_name = "no slug here"))
+  )
+
+  it("deletes every row resolving to a purged slug, and only those", {
+    deleted <- NULL
+    local_mocked_bindings(
+      airtable_list_records = function(...) subs,
+      airtable_delete_records = function(base_id, table, record_ids, api_key) {
+        deleted <<- record_ids
+        invisible(record_ids)
+      }
+    )
+    got <- directory_purge_submissions("jane-doe", api_key = "k")
+    expect_setequal(got, c("rec1", "rec2"))
+    expect_setequal(deleted, c("rec1", "rec2"))
+  })
+
+  it("is a no-op for empty slugs and aborts without an API key", {
+    local_mocked_bindings(
+      airtable_list_records = function(...) stop("should not list"),
+      airtable_delete_records = function(...) stop("should not delete")
+    )
+    expect_identical(
+      directory_purge_submissions(character(0), api_key = "k"),
+      character(0)
+    )
+    expect_error(
+      directory_purge_submissions("jane-doe", api_key = ""),
+      "AIRTABLE_API_KEY"
+    )
+  })
+})
+
 describe("directory_drop_synced", {
   it("keeps submissions without the synced flag", {
     subs <- list(

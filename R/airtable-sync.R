@@ -77,6 +77,26 @@ airtable_mark_batches <- function(record_ids, field) {
   })
 }
 
+#' Delete Airtable records by id, one request each.
+#'
+#' Used by the GDPR purge. A per-record `DELETE` keeps it simple and robust for
+#' the small counts a purge touches; the caller re-derives the id list from a
+#' fresh listing, so a re-run never re-deletes an already-gone record.
+#' @keywords internal
+airtable_delete_records <- function(base_id, table, record_ids, api_key) {
+  record_ids <- unique(record_ids[!is.na(record_ids) & nzchar(record_ids)])
+  for (id in record_ids) {
+    httr2::request(
+      glue::glue("https://api.airtable.com/v0/{base_id}/{table}/{id}")
+    ) |>
+      httr2::req_method("DELETE") |>
+      httr2::req_headers(Authorization = paste("Bearer", api_key)) |>
+      httr2::req_retry(max_tries = 3, backoff = function(i) i) |>
+      httr2::req_perform()
+  }
+  invisible(record_ids)
+}
+
 #' Extract the first photo URL from an Airtable attachment field.
 #' @keywords internal
 airtable_extract_photo <- function(photo_field) {

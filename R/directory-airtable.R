@@ -171,6 +171,55 @@ directory_entry_incorporated <- function(entry, org, repo, ref = "main") {
   length(directory_entry_changes(entry, org, repo, ref)) == 0L
 }
 
+#' Erase every Airtable submission for the given directory slugs.
+#'
+#' GDPR right-to-erasure: after the purge workflow removes a member's entry from
+#' the directory, every `submissions` row that resolves to one of `slugs` (by
+#' `directory_id`, falling back to `identifier`) is **deleted** from Airtable so
+#' no submitted PII remains — and so a later sync cannot re-create the entry
+#' from a leftover row. Unlike [directory_mark_synced()], which only flags the
+#' `synced` checkbox, this destroys the rows.
+#'
+#' @param slugs Character vector of directory slugs to erase.
+#' @param base_id Airtable base ID. Defaults to the directory base.
+#' @param api_key Airtable API key. Defaults to the `AIRTABLE_API_KEY` env var.
+#' @return Character vector of deleted record ids (invisibly).
+#' @export
+directory_purge_submissions <- function(
+  slugs,
+  base_id = directory_base_id(),
+  api_key = Sys.getenv("AIRTABLE_API_KEY")
+) {
+  if (!nzchar(api_key)) {
+    cli::cli_abort("AIRTABLE_API_KEY environment variable is not set")
+  }
+  slugs <- unique(slugs[!is.na(slugs) & nzchar(slugs)])
+  if (length(slugs) == 0) {
+    cli::cli_alert_info("No slugs to purge")
+    return(invisible(character(0)))
+  }
+
+  cli::cli_h2("Purging Airtable submissions for {length(slugs)} slug{?s}")
+  submissions <- airtable_list_records(base_id, "submissions", api_key)
+  matches <- Filter(
+    function(r) {
+      slug <- directory_slug(r$fields)
+      !is.na(slug) && slug %in% slugs
+    },
+    submissions
+  )
+  record_ids <- vapply(
+    matches,
+    function(r) r$id %||% NA_character_,
+    character(1)
+  )
+  record_ids <- unique(record_ids[!is.na(record_ids) & nzchar(record_ids)])
+
+  airtable_delete_records(base_id, "submissions", record_ids, api_key)
+  cli::cli_alert_success("Deleted {length(record_ids)} submission{?s}")
+  invisible(record_ids)
+}
+
 #' Has a slug's entry file been removed from `main`?
 #'
 #' True only on a genuine 404 — the purge workflow has actioned the delete

@@ -2,6 +2,15 @@
 
 ## Directory
 
+- **`directory_purge_submissions()` erases a member's Airtable submissions for
+  GDPR right-to-erasure.** Given the directory slugs a purge removed, it deletes
+  every `submissions` row resolving to those slugs (by `directory_id`, falling
+  back to `identifier`), so no submitted PII lingers in Airtable and a later
+  sync cannot re-create the entry from a leftover row. Unlike
+  `directory_mark_synced()` (routine cleanup, which only flags `synced`), this
+  destroys the rows. The reviewed purge workflow calls it after force-pushing
+  the scrubbed history.
+
 - **`directory_mark_synced()` replaces the artifact-based Airtable cleanup.**
   Called after a sync PR merges (and after a purge completes), it flags handled
   submissions with a `synced` checkbox so `directory_sync_airtable()` skips them
