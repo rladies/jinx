@@ -191,7 +191,7 @@ directory_profile_links <- function(entry) {
     return(character(0))
   }
   links <- sprintf("[%s](%s)", platforms[ok], urls[ok])
-  paste0("Profiles (click to check): ", paste(links, collapse = " · "))
+  paste0("Profiles (click to check): ", paste(links, collapse = " \u00b7 "))
 }
 
 #' Format the per-entry review results as a markdown PR checklist comment.
