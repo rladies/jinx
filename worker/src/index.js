@@ -6,6 +6,7 @@ import {
 } from "./airtable-invite.js";
 import { slack_command_handle } from "./slash-command.js";
 import { slack_signature_verify } from "./slack-api.js";
+import { question_log_purge } from "./question-log.js";
 
 const SLACK_ROUTES = {
   "/slack/command": slack_command_handle,
@@ -24,6 +25,10 @@ export default {
         headers: { "Content-Type": "text/plain" },
       });
     }
+  },
+
+  async scheduled(_event, env, ctx) {
+    ctx.waitUntil(question_log_purge(env));
   },
 };
 

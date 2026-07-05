@@ -9,6 +9,11 @@ const EVENT_RETRIEVE_K = 15;
 const TOP_K = 5;
 const MIN_SCORE = 0.4;
 
+// Below this reranked top score an answer still gets sent, but is logged as
+// low_confidence — thin retrieval that likely means a corpus gap. Heuristic and
+// tunable, not a hard cutoff; adjusted scores run roughly 0.3–0.9.
+const LOW_CONFIDENCE_SCORE = 0.5;
+
 const EVENT_RETRIEVAL_QUERY =
   "upcoming RLadies+ chapter event meetup workshop talk session when where";
 
@@ -73,7 +78,12 @@ Answer: Chapters start by filling out the new-chapter form, then waiting for a G
 
 export async function rag_question_answer(env, query, history = []) {
   if (is_coding_question(query)) {
-    return { answer: coding_decline_message() };
+    return {
+      answer: coding_decline_message(),
+      outcome: "coding_declined",
+      top_score: null,
+      sources: null,
+    };
   }
 
   const { retrieval_text, prior_messages } = rag_history_normalize(
@@ -84,7 +94,12 @@ export async function rag_question_answer(env, query, history = []) {
   const matches = await rag_chunks_retrieve(env, embedding, query);
 
   if (matches.length === 0) {
-    return { answer: no_match_quip() };
+    return {
+      answer: no_match_quip(),
+      outcome: "no_match",
+      top_score: null,
+      sources: null,
+    };
   }
 
   const result = await env.AI.run(CHAT_MODEL, {
@@ -94,7 +109,21 @@ export async function rag_question_answer(env, query, history = []) {
 
   const raw = (result.response || "").trim();
   const answer = rag_repair_links(raw, rag_source_urls(matches));
-  return { answer };
+  const top_score = matches[0]?.adjusted_score ?? null;
+  const outcome =
+    top_score !== null && top_score < LOW_CONFIDENCE_SCORE
+      ? "low_confidence"
+      : "answered";
+  return { answer, outcome, top_score, sources: rag_match_sources(matches) };
+}
+
+export function rag_match_sources(matches) {
+  const types = [];
+  for (const m of matches || []) {
+    const t = m?.metadata?.source_type;
+    if (t && !types.includes(t)) types.push(t);
+  }
+  return types.length ? types.join(",") : null;
 }
 
 const HISTORY_TURN_LIMIT = 8;

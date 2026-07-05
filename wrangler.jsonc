@@ -35,5 +35,25 @@
 			"binding": "AIRTABLE_BASES",
 			"id": "698b7f8a6f214bf9ad9ecfaa839638f4"
 		}
-	]
+	],
+	// Anonymous question-improvement log (see worker/src/question-log.js).
+	// PROVISION BEFORE MERGE: `wrangler d1 create jinx-question-log`, then
+	// `wrangler d1 migrations apply jinx-question-log --remote`, then paste the
+	// returned database_id below. The worker no-ops safely until this binding
+	// resolves, but a real `wrangler deploy` on main will fail while the id is a
+	// placeholder — do not merge until it is real.
+	"d1_databases": [
+		{
+			"binding": "QUESTION_LOG",
+			"database_name": "jinx-question-log",
+			"database_id": "00000000-0000-0000-0000-000000000000",
+			"migrations_dir": "worker/migrations"
+		}
+	],
+	// Daily purge of question-log rows past the 180-day retention window.
+	"triggers": {
+		"crons": [
+			"17 3 * * *"
+		]
+	}
 }
