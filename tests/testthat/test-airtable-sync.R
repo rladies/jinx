@@ -584,26 +584,52 @@ describe("directory_entry_incorporated", {
     expect_false(directory_entry_incorporated(entry, "rladies", "directory"))
   })
 
-  it("is TRUE when nothing entry-level would change", {
+  it("is TRUE only when nothing at all would change", {
     local_mocked_bindings(
       directory_entry_changes = function(...) list()
     )
     expect_true(directory_entry_incorporated(entry, "rladies", "directory"))
+  })
 
+  it("is FALSE when only the contact or photo would change", {
     local_mocked_bindings(
       directory_entry_changes = function(...) list(list(kind = "contact"))
     )
-    expect_true(directory_entry_incorporated(entry, "rladies", "directory"))
+    expect_false(directory_entry_incorporated(entry, "rladies", "directory"))
+
+    local_mocked_bindings(
+      directory_entry_changes = function(...) list(list(kind = "image"))
+    )
+    expect_false(directory_entry_incorporated(entry, "rladies", "directory"))
   })
 })
 
 describe("directory_entry_absent", {
-  it("is TRUE when the entry file is gone, FALSE when it exists", {
-    local_mocked_bindings(gh_get_content = function(...) NULL)
+  it("is TRUE on a 404, FALSE when the file exists", {
+    local_mocked_bindings(
+      gh = function(...) {
+        stop(structure(
+          class = c("http_error_404", "error", "condition"),
+          list(message = "Not Found")
+        ))
+      },
+      .package = "gh"
+    )
     expect_true(directory_entry_absent("gone", "rladies", "directory"))
 
-    local_mocked_bindings(gh_get_content = function(...) list(sha = "s"))
+    local_mocked_bindings(gh = function(...) list(sha = "s"), .package = "gh")
     expect_false(directory_entry_absent("here", "rladies", "directory"))
+  })
+
+  it("propagates non-404 errors instead of reading them as absent", {
+    local_mocked_bindings(
+      gh = function(...) stop("API rate limit exceeded"),
+      .package = "gh"
+    )
+    expect_error(
+      directory_entry_absent("x", "rladies", "directory"),
+      "rate limit"
+    )
   })
 })
 

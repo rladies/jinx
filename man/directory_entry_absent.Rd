@@ -7,7 +7,9 @@
 directory_entry_absent(slug, org, repo, ref = "main")
 }
 \description{
-True when \verb{data/json/<slug>.json} no longer exists — the purge workflow has
-actioned the delete request.
+True only on a genuine 404 — the purge workflow has actioned the delete
+request. Any other error (rate limit, network) propagates rather than being
+read as "absent", so a flaky API call can never mark a delete request done
+while the entry is still live.
 }
 \keyword{internal}

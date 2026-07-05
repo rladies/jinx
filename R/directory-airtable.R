@@ -159,24 +159,40 @@ directory_mark_synced <- function(
   invisible(record_ids)
 }
 
-#' Is a submission's entry already fully present on `main`?
+#' Is a submission already fully present on `main`?
 #'
-#' True when applying the submission would produce no entry-file change (the
-#' same predicate the sync uses to decide whether to commit).
+#' True when applying the submission would produce no change at all — entry,
+#' photo, and contact all already reflect it (the same predicate the sync uses
+#' to decide whether to commit). Checking only the entry file would flag a
+#' submission whose sole pending change is the email or photo as done before
+#' that change lands, dropping it.
 #' @keywords internal
 directory_entry_incorporated <- function(entry, org, repo, ref = "main") {
-  changes <- directory_entry_changes(entry, org, repo, ref)
-  !any(vapply(changes, function(ch) identical(ch$kind, "entry"), logical(1)))
+  length(directory_entry_changes(entry, org, repo, ref)) == 0L
 }
 
 #' Has a slug's entry file been removed from `main`?
 #'
-#' True when `data/json/<slug>.json` no longer exists — the purge workflow has
-#' actioned the delete request.
+#' True only on a genuine 404 — the purge workflow has actioned the delete
+#' request. Any other error (rate limit, network) propagates rather than being
+#' read as "absent", so a flaky API call can never mark a delete request done
+#' while the entry is still live.
 #' @keywords internal
 directory_entry_absent <- function(slug, org, repo, ref = "main") {
   path <- sprintf("data/json/%s.json", slug)
-  is.null(gh_get_content(org, repo, path, ref))
+  tryCatch(
+    {
+      gh::gh(
+        "GET /repos/{owner}/{repo}/contents/{path}",
+        owner = org,
+        repo = repo,
+        path = path,
+        ref = ref
+      )
+      FALSE
+    },
+    http_error_404 = function(e) TRUE
+  )
 }
 
 #' Build id -> label lookups for the directory linked tables.

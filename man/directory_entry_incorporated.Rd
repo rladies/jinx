@@ -2,12 +2,15 @@
 % Please edit documentation in R/directory-airtable.R
 \name{directory_entry_incorporated}
 \alias{directory_entry_incorporated}
-\title{Is a submission's entry already fully present on \code{main}?}
+\title{Is a submission already fully present on \code{main}?}
 \usage{
 directory_entry_incorporated(entry, org, repo, ref = "main")
 }
 \description{
-True when applying the submission would produce no entry-file change (the
-same predicate the sync uses to decide whether to commit).
+True when applying the submission would produce no change at all — entry,
+photo, and contact all already reflect it (the same predicate the sync uses
+to decide whether to commit). Checking only the entry file would flag a
+submission whose sole pending change is the email or photo as done before
+that change lands, dropping it.
 }
 \keyword{internal}

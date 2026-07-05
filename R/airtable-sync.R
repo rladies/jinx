@@ -40,7 +40,7 @@ airtable_mark_processed <- function(
   api_key,
   field = directory_synced_field()
 ) {
-  record_ids <- unique(record_ids[nzchar(record_ids)])
+  record_ids <- unique(record_ids[!is.na(record_ids) & nzchar(record_ids)])
   if (length(record_ids) == 0) {
     return(invisible(character(0)))
   }
