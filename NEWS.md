@@ -257,6 +257,16 @@ content, sha}` records for changed entries instead of only their
   source weight, and allows the digest's embedded per-event links to be
   cited. `gather_all_chunks()` now honours a chunk's own `source_type`,
   falling back to the source default.
+- Digest rendering is hardened against untrusted feed content: events
+  with a missing or unparseable date sort last (not first, where they
+  would be quoted as the next event), and Slack link metacharacters in
+  meetup titles are neutralised so they cannot corrupt the rendered
+  link.
+- **`parse_unix_date()` no longer crashes the indexer on a malformed
+  date string.** `as.POSIXct()` with the default format raises an error
+  (not a warning) on an unparseable string, which `suppressWarnings()`
+  does not catch; a single bad date in the feed would abort the whole
+  index build. Parse failures now degrade to `NULL`.
 
 # jinx 0.1.1
 
