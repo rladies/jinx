@@ -455,3 +455,60 @@ describe("gather_rag_source dispatch", {
     )
   })
 })
+
+describe("gather_events_json digest", {
+  it("appends an events-digest chunk when an event is upcoming", {
+    body <- paste0(
+      '[{"status":"active","title":"Next up","group_name":"R-Ladies A",',
+      '"datetime":"2026-07-01T18:00:00Z",',
+      '"datetime_utc":"2026-07-01T18:00:00Z","link":"https://m/a",',
+      '"description":"Come along to this lovely event with us all day"}]'
+    )
+    local_mocked_responses(list(response(body = charToRaw(body))))
+    chunks <- gather_events_json(list(
+      type = "events-json",
+      url = "https://example.com/events.json",
+      repo = "rladies/meetup_archive"
+    ))
+    types <- vapply(chunks, function(c) c$source_type %or% "", character(1))
+    expect_true("events-digest" %in% types)
+  })
+
+  it("emits no digest when every event is past or cancelled", {
+    body <- paste0(
+      '[{"status":"past","title":"Old meetup","group_name":"R-Ladies A",',
+      '"datetime":"2026-06-01T18:00:00Z",',
+      '"datetime_utc":"2026-06-01T18:00:00Z","link":"https://m/a",',
+      '"description":"A past event that happened a little while ago now"}]'
+    )
+    local_mocked_responses(list(response(body = charToRaw(body))))
+    chunks <- gather_events_json(
+      list(
+        type = "events-json",
+        url = "https://example.com/events.json",
+        repo = "rladies/meetup_archive"
+      ),
+      past_window_seconds = 10L * 365L * 24L * 60L * 60L
+    )
+    types <- vapply(chunks, function(c) c$source_type %or% "", character(1))
+    expect_false("events-digest" %in% types)
+  })
+})
+
+describe("gather_all_chunks", {
+  it("keeps a chunk's own source_type and falls back to the source's", {
+    local_mocked_bindings(
+      gather_rag_source = function(src) {
+        list(
+          list(text = "a"),
+          list(text = "b", source_type = "events-digest")
+        )
+      }
+    )
+    chunks <- gather_all_chunks(list(
+      list(type = "events-json", source_type = "events")
+    ))
+    types <- vapply(chunks, function(x) x$source_type, character(1))
+    expect_identical(types, c("events", "events-digest"))
+  })
+})

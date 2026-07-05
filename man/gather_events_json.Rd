@@ -24,6 +24,8 @@ List of chunk records.
 \description{
 Reads an array of meetup events, drops cancelled events and past
 events older than \code{past_window_seconds}, and emits one chunk per
-remaining event. Required \code{src} fields: \code{url}, \code{repo}.
+remaining event plus a single cross-chapter digest of every upcoming
+event (see \code{\link[=events_digest_chunk]{events_digest_chunk()}}). Required \code{src} fields: \code{url},
+\code{repo}.
 }
 \keyword{internal}

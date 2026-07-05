@@ -2,7 +2,9 @@
 #'
 #' Reads an array of meetup events, drops cancelled events and past
 #' events older than `past_window_seconds`, and emits one chunk per
-#' remaining event. Required `src` fields: `url`, `repo`.
+#' remaining event plus a single cross-chapter digest of every upcoming
+#' event (see [events_digest_chunk()]). Required `src` fields: `url`,
+#' `repo`.
 #'
 #' @param src Source spec list.
 #' @param past_window_seconds Drop `past` events older than this many
@@ -30,8 +32,107 @@ gather_events_json <- function(
     min_chars = min_chars
   )
   chunks <- Filter(Negate(is.null), chunks)
+
+  digest <- events_digest_chunk(events, src)
+  if (!is.null(digest)) {
+    chunks <- c(chunks, list(digest))
+  }
+
   cli::cli_alert_info("events-json: {length(chunks)} chunks")
   chunks
+}
+
+#' Build one cross-chapter digest chunk of all upcoming events
+#'
+#' Vector search over per-event chunks cannot answer "when is the next
+#' event, regardless of chapter" — upcoming-ness is a structured filter,
+#' not a semantic property, and only a handful of events are upcoming at
+#' any time. This emits a single `events-digest` chunk listing every
+#' upcoming event across all chapters, soonest first, so retrieval has a
+#' complete global view to answer from. Returns `NULL` when nothing is
+#' upcoming.
+#'
+#' @param ev_list Full list of raw event records.
+#' @param src Source spec list.
+#' @param max_events Cap the number of events rendered into the digest.
+#' @param landing_url Canonical URL for the full events listing.
+#' @return A chunk record, or `NULL`.
+#' @keywords internal
+events_digest_chunk <- function(
+  ev_list,
+  src,
+  max_events = src$digest_max_events %or% 30L,
+  landing_url = src$digest_url %or% "https://rladies.org/events/"
+) {
+  upcoming <- Filter(function(ev) identical(ev$status, "active"), ev_list)
+  if (length(upcoming) == 0L) {
+    return(NULL)
+  }
+
+  ts <- vapply(
+    upcoming,
+    function(ev) rag_parse_date(ev$datetime_utc %or% ev$datetime),
+    integer(1)
+  )
+  ord <- order(ts)
+  upcoming <- upcoming[ord]
+  ts <- ts[ord]
+
+  shown <- upcoming[seq_len(min(max_events, length(upcoming)))]
+  lines <- vapply(shown, format_event_digest_line, character(1))
+  header <- paste0(
+    "Upcoming RLadies+ events across all chapters, soonest first ",
+    "(",
+    length(upcoming),
+    " upcoming in total). Use this to answer ",
+    "questions about the next or upcoming events regardless of chapter; ",
+    "quote the soonest entry and its When date."
+  )
+  overflow <- if (length(upcoming) > max_events) {
+    paste0(
+      "\n\n...and ",
+      length(upcoming) - max_events,
+      " more upcoming events. See <",
+      landing_url,
+      "|all RLadies+ events> for the full list."
+    )
+  } else {
+    ""
+  }
+  text <- paste0(header, "\n\n", paste(lines, collapse = "\n"), overflow)
+
+  soonest <- ts[ts > 0L]
+  date <- if (length(soonest) > 0L) soonest[[1L]] else 0L
+
+  list(
+    text = text,
+    heading = "All chapters",
+    title = "Upcoming RLadies+ events",
+    repo = src$repo,
+    path = "digest/upcoming-events",
+    url = landing_url,
+    date = date,
+    lastmod = date,
+    chunk_idx = 0L,
+    source_type = "events-digest"
+  )
+}
+
+#' Render one upcoming event as a Slack-linked digest bullet
+#' @keywords internal
+format_event_digest_line <- function(ev) {
+  when <- ev$datetime %or% ev$datetime_utc %or% "date TBD"
+  chapter <- ev$group_name %or% "RLadies+ chapter"
+  title <- ev$title %or% "Untitled event"
+  label <- paste0(chapter, ": ", title)
+  linked <- if (!is_blank(ev$link)) {
+    paste0("<", ev$link, "|", label, ">")
+  } else {
+    label
+  }
+  venue <- format_event_venue(ev)
+  where <- if (nzchar(venue)) paste0(" (", venue, ")") else ""
+  paste0("- ", when, " - ", linked, where)
 }
 
 #' Convert a meetup event record into a chunk record

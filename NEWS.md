@@ -242,6 +242,22 @@ content, sha}` records for changed entries instead of only their
   any other non-character / non-numeric value; it returns `NULL`,
   matching its behaviour for `NULL` and `""`.
 
+## RAG: answer "when is the next event" across all chapters
+
+- **The events indexer now emits a cross-chapter digest chunk.**
+  Asking Jinx for the next upcoming event used to fail whenever the
+  soonest events happened to sit outside the handful of per-event
+  chunks that vector search retrieved — "upcoming-ness" is a
+  structured filter, not a semantic property, and only a few events
+  are upcoming at any time (5 of 5,221 in the feed). `gather_events_json()`
+  now also builds a single `events-digest` chunk (`events_digest_chunk()`)
+  listing every upcoming event globally, soonest first, with a per-event
+  link and venue. The worker pins this digest into context for
+  event-intent questions so it always reaches the model, boosts its
+  source weight, and allows the digest's embedded per-event links to be
+  cited. `gather_all_chunks()` now honours a chunk's own `source_type`,
+  falling back to the source default.
+
 # jinx 0.1.1
 
 ## RAG: indexer moved to R

@@ -54,6 +54,7 @@
   source_type: events
   repo: rladies/meetup_archive
   url: https://raw.githubusercontent.com/rladies/meetup_archive/refs/heads/main/data/events.json
+  digest_url: https://rladies.org/events/
 
 - type: awesome-creations
   source_type: awesome-creations

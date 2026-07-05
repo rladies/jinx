@@ -19,8 +19,15 @@ const EVENT_EMBEDDING_KV_KEY = "rag:event_embedding:v1";
 const EVENT_INTENT_RE =
   /\b(event|events|meetup|meetups|workshop|workshops|talk|talks|session|sessions|happening|coming up|upcoming|soon|scheduled|next event|next meetup|when is the next|what.?s on|what.?s happening)\b/i;
 
+// The cross-chapter upcoming-events digest built by the R indexer. It is a
+// single chunk listing every upcoming event globally, soonest first — the
+// only source that can answer "when is the next event, regardless of
+// chapter". Pinned into context for event questions (see below).
+const EVENTS_DIGEST_TYPE = "events-digest";
+
 const SOURCE_WEIGHTS = {
   guide: 1.25,
+  "events-digest": 1.5,
   site: 1.05,
   "jinx-docs": 1.05,
   events: 1.05,
@@ -51,6 +58,7 @@ Rules:
 - **Branding is non-negotiable**: always write the organisation name as *RLadies+* — one word, no hyphen, trailing plus. Never write "R-Ladies", "R-Ladies+", "RLadies" (without the plus), or "R Ladies". This applies even when the source material you are quoting uses an older variant; correct it silently. The only exceptions are literal URLs and handles (e.g. *r-ladies.slack.com*, the *@rladies* GitHub org) which must stay as-is.
 - If the sources don't contain enough to answer an in-scope question, say so honestly — own it cheerfully ("my whiskers came up empty on that one") — and suggest asking a maintainer or checking the guide directly.
 - Event entries include "When:" and "Status: upcoming" or "Status: past" lines. When the user asks about *upcoming*, *next*, or *coming up* events, only use chunks marked "Status: upcoming" and quote the "When:" date; ignore past events for that question. If no upcoming events are in the sources, say so honestly rather than substituting a past one.
+- For "when is the next event" or "any upcoming events" questions — especially when the user does not name a chapter — prefer the source titled *Upcoming RLadies+ events*, which lists every upcoming event across all chapters soonest first. Answer with the soonest one (and a couple more if useful), quoting each date, and link to that specific event.
 
 Linking (do this — it is not optional):
 - Always include 1–2 inline Slack-formatted links in your answer, drawn from the URLs marked "Source URL:" in the material below. Wrap a relevant phrase, never a bare URL.
@@ -154,10 +162,22 @@ export function rag_build_messages(query, matches, prior_messages = []) {
   ];
 }
 
+const URL_IN_TEXT_RE = /https?:\/\/[^\s|>]+/g;
+
 export function rag_source_urls(matches) {
-  return matches
-    .map((m) => m?.metadata?.url)
-    .filter((u) => typeof u === "string" && u.length > 0);
+  const urls = [];
+  for (const m of matches || []) {
+    const url = m?.metadata?.url;
+    if (typeof url === "string" && url.length > 0) urls.push(url);
+    // The digest embeds a per-event link on every line. Those URLs are
+    // ours (indexed from the feed), so allow the model to cite the
+    // specific event; otherwise rag_repair_links would strip them.
+    if (is_digest_match(m) && typeof m?.metadata?.text === "string") {
+      const found = m.metadata.text.match(URL_IN_TEXT_RE);
+      if (found) urls.push(...found);
+    }
+  }
+  return urls;
 }
 
 async function rag_query_embed(env, text) {
@@ -177,9 +197,26 @@ async function rag_chunks_retrieve(env, embedding, query) {
   if (is_event_question(query)) {
     const event_pool = await rag_event_pool_retrieve(env);
     raw = merge_matches(raw, event_pool);
+    return select_event_matches(raw, Date.now() / 1000);
   }
 
   return rerank_matches(raw, Date.now() / 1000).slice(0, TOP_K);
+}
+
+function is_digest_match(m) {
+  return m.metadata?.source_type === EVENTS_DIGEST_TYPE;
+}
+
+// Reranking alone can bury the cross-chapter digest below individual
+// events with marginally better cosine scores, and TOP_K truncation can
+// drop it entirely — exactly the chunk an "regardless of chapter" event
+// question needs most. Force any digest to the front so it always reaches
+// the model, then fill the remaining slots with the best of the rest.
+export function select_event_matches(matches, now_seconds) {
+  const ranked = rerank_matches(matches, now_seconds);
+  const digests = ranked.filter(is_digest_match);
+  const rest = ranked.filter((m) => !is_digest_match(m));
+  return [...digests, ...rest].slice(0, TOP_K);
 }
 
 async function rag_event_pool_retrieve(env) {
@@ -190,7 +227,9 @@ async function rag_event_pool_retrieve(env) {
       returnMetadata: "all",
     });
     return (results.matches || []).filter(
-      (m) => m.metadata?.source_type === "events" && m.score >= MIN_SCORE,
+      (m) =>
+        (m.metadata?.source_type === "events" || is_digest_match(m)) &&
+        m.score >= MIN_SCORE,
     );
   } catch (e) {
     console.warn("event-pool retrieval failed:", e.message);
@@ -291,7 +330,9 @@ function audience_penalty(url) {
 // similarity outranks the handful of genuinely upcoming events the user
 // almost certainly meant to ask about.
 function upcoming_event_boost(source_type, date_seconds, now_seconds) {
-  if (source_type !== "events") return 1.0;
+  if (source_type !== "events" && source_type !== EVENTS_DIGEST_TYPE) {
+    return 1.0;
+  }
   if (!date_seconds || date_seconds <= now_seconds) return 1.0;
   return UPCOMING_EVENT_BOOST;
 }
