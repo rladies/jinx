@@ -1,24 +1,19 @@
-#' Post an automated directory review as a PR comment
+#' Post an automated directory review as a PR checklist comment
 #'
 #' Runs the checks that used to be manual review-checklist items on the
 #' entry files changed in a PR (filenames, likely-duplicate slugs, contact
-#' method vs. social entry, stray contact info in free text, and whether
-#' social handles resolve) and posts a single consolidated report. Schema
+#' method vs. social entry, stray contact info in free text) and posts a
+#' single consolidated checklist. Each entry lists clickable profile links
+#' so reviewers can confirm the social accounts resolve, rather than an
+#' unreliable automated check (the platforms block bot requests). Schema
 #' validity is covered separately by the directory repo's JSON validation.
 #'
 #' @param owner Repository owner.
 #' @param repo Repository name.
 #' @param pr_number PR number.
-#' @param verify_handles Whether to HTTP-check that social handles resolve.
-#'   Defaults to `TRUE`; set `FALSE` to skip the network calls.
 #' @return Invisibly `NULL`.
 #' @export
-validate_directory_pr <- function(
-  owner,
-  repo,
-  pr_number,
-  verify_handles = TRUE
-) {
+validate_directory_pr <- function(owner, repo, pr_number) {
   pr <- gh::gh(
     "GET /repos/{owner}/{repo}/pulls/{pr_number}",
     owner = owner,
@@ -60,11 +55,7 @@ validate_directory_pr <- function(
       f$filename,
       head_ref
     ))
-    directory_review_entry(
-      entry,
-      basename(f$filename),
-      verify_handles = verify_handles
-    )
+    directory_review_entry(entry, basename(f$filename))
   })
 
   announce_post_reply(owner, repo, pr_number, directory_review_format(reviews))
@@ -74,7 +65,7 @@ validate_directory_pr <- function(
 
 #' Run all automated review checks on a single directory entry.
 #' @keywords internal
-directory_review_entry <- function(entry, filename, verify_handles = TRUE) {
+directory_review_entry <- function(entry, filename) {
   issues <- c(
     directory_filename_issues(filename),
     directory_collision_issue(filename)
@@ -82,7 +73,8 @@ directory_review_entry <- function(entry, filename, verify_handles = TRUE) {
   if (is.null(entry)) {
     return(list(
       file = filename,
-      issues = c(issues, "could not read entry content")
+      issues = c(issues, "could not read entry content"),
+      links = character(0)
     ))
   }
 
@@ -91,10 +83,11 @@ directory_review_entry <- function(entry, filename, verify_handles = TRUE) {
     directory_contact_social_issues(entry),
     directory_sensitive_issues(entry)
   )
-  if (verify_handles) {
-    issues <- c(issues, directory_handle_issues(entry))
-  }
-  list(file = filename, issues = issues)
+  list(
+    file = filename,
+    issues = issues,
+    links = directory_profile_links(entry)
+  )
 }
 
 #' Filename convention issues, prefixed for the report.
@@ -167,22 +160,38 @@ directory_sensitive_issues <- function(entry) {
   "possible email address in free text (bio/work) - confirm it is not private"
 }
 
-#' Flag social handles that do not resolve over HTTP.
+#' Build a "Profiles" line of clickable social links for the reviewer.
+#'
+#' The social platforms block automated existence checks, so instead of an
+#' unreliable HTTP probe the review offers ready-made links the reviewer can
+#' click to confirm each account resolves.
 #' @keywords internal
-directory_handle_issues <- function(entry) {
-  df <- tryCatch(directory_verify_handles(entry), error = function(e) NULL)
-  if (is.null(df) || nrow(df) == 0) {
+directory_profile_links <- function(entry) {
+  social <- entry$social_media
+  platforms <- names(social)
+  if (length(platforms) == 0) {
     return(character(0))
   }
-  bad <- df[!is.na(df$valid) & !df$valid, , drop = FALSE]
-  if (nrow(bad) == 0) {
-    return(character(0))
-  }
-  sprintf(
-    "%s handle \"%s\" may not resolve - verify the account exists",
-    bad$platform,
-    bad$handle
+  urls <- vapply(
+    platforms,
+    function(platform) {
+      handle <- social[[platform]]
+      builder <- social_url_builders[[platform]]
+      if (
+        is.null(builder) || is.null(handle) || !nzchar(as.character(handle))
+      ) {
+        return(NA_character_)
+      }
+      tryCatch(builder(as.character(handle)), error = function(e) NA_character_)
+    },
+    character(1)
   )
+  ok <- !is.na(urls) & nzchar(urls)
+  if (!any(ok)) {
+    return(character(0))
+  }
+  links <- sprintf("[%s](%s)", platforms[ok], urls[ok])
+  paste0("Profiles (click to check): ", paste(links, collapse = " \u00b7 "))
 }
 
 #' Format the per-entry review results as a markdown PR checklist comment.
@@ -204,14 +213,16 @@ directory_review_format <- function(reviews) {
   header <- paste0(
     "### Directory sync - automated review\n\n",
     intro,
-    " Tick each entry as you review it."
+    " Tick each entry as you review it, and click its profile",
+    " links to confirm they resolve."
   )
 
   blocks <- lapply(reviews, function(r) {
-    if (length(r$issues) == 0) {
-      return(sprintf("- [ ] **%s**", r$file))
-    }
-    c(sprintf("- [ ] **%s**", r$file), sprintf("  - %s", r$issues))
+    sub <- c(
+      if (length(r$links)) sprintf("  - %s", r$links),
+      if (length(r$issues)) sprintf("  - %s", r$issues)
+    )
+    c(sprintf("- [ ] **%s**", r$file), sub)
   })
   lines <- unlist(blocks, use.names = FALSE)
 

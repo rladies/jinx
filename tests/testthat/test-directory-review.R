@@ -51,22 +51,50 @@ describe("directory_review_entry", {
       social_media = list(twitter = "janedoe"),
       bio = "R enthusiast"
     )
-    result <- directory_review_entry(
-      entry,
-      "jane-doe.json",
-      verify_handles = FALSE
-    )
+    result <- directory_review_entry(entry, "jane-doe.json")
     expect_identical(result$file, "jane-doe.json")
     expect_length(result$issues, 0)
+    expect_match(result$links, "[twitter](https://x.com/janedoe)", fixed = TRUE)
   })
 
   it("reports unreadable content", {
-    result <- directory_review_entry(
-      NULL,
-      "jane-doe.json",
-      verify_handles = FALSE
-    )
+    result <- directory_review_entry(NULL, "jane-doe.json")
     expect_match(result$issues, "could not read entry content")
+    expect_length(result$links, 0)
+  })
+})
+
+describe("directory_profile_links", {
+  it("builds clickable links for each known platform", {
+    entry <- list(
+      social_media = list(
+        twitter = "janedoe",
+        github = "jane",
+        linkedin = "jane-doe",
+        mastodon = "@jane@fosstodon.org",
+        website = "example.com"
+      )
+    )
+    links <- directory_profile_links(entry)
+    expect_match(links, "Profiles (click to check):", fixed = TRUE)
+    expect_match(links, "[twitter](https://x.com/janedoe)", fixed = TRUE)
+    expect_match(links, "[github](https://github.com/jane)", fixed = TRUE)
+    expect_match(
+      links,
+      "[linkedin](https://www.linkedin.com/in/jane-doe)",
+      fixed = TRUE
+    )
+    expect_match(
+      links,
+      "[mastodon](https://fosstodon.org/@jane)",
+      fixed = TRUE
+    )
+    expect_match(links, "[website](https://example.com)", fixed = TRUE)
+  })
+
+  it("returns nothing when there is no social media", {
+    expect_length(directory_profile_links(list()), 0)
+    expect_length(directory_profile_links(list(social_media = list())), 0)
   })
 })
 

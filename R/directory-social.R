@@ -50,13 +50,21 @@ social_url_builders <- list(
     if (grepl("^https?://", h)) {
       return(h)
     }
-    parts <- strsplit(sub("^@", "", h, fixed = TRUE), "@")[[1]]
+    parts <- strsplit(sub("^@", "", h), "@", fixed = TRUE)[[1]]
     if (length(parts) == 2) {
       paste0("https://", parts[2], "/@", parts[1])
     } else {
       NA_character_
     }
-  }
+  },
+  bluesky = function(h) paste0("https://bsky.app/profile/", sub("^@", "", h)),
+  facebook = function(h) paste0("https://www.facebook.com/", sub("^@", "", h)),
+  instagram = function(h) {
+    paste0("https://www.instagram.com/", sub("^@", "", h))
+  },
+  tiktok = function(h) paste0("https://www.tiktok.com/@", sub("^@", "", h)),
+  orcid = function(h) paste0("https://orcid.org/", sub("^@", "", h)),
+  website = function(h) if (grepl("^https?://", h)) h else paste0("https://", h)
 )
 
 directory_empty_social_df <- function() {
