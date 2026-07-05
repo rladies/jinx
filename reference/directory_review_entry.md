@@ -5,5 +5,5 @@ Run all automated review checks on a single directory entry.
 ## Usage
 
 ``` r
-directory_review_entry(entry, filename, verify_handles = TRUE)
+directory_review_entry(entry, filename)
 ```

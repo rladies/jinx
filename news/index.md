@@ -4,6 +4,16 @@
 
 ### Directory
 
+- **The automated review lists clickable profile links instead of
+  probing them.**
+  [`validate_directory_pr()`](https://rladies.github.io/jinx/reference/validate_directory_pr.md)
+  used to HTTP-check whether each social handle resolved, but the
+  platforms block bot requests, so nearly every entry was flagged (“may
+  not resolve”) — noise that trained reviewers to ignore the report. It
+  now renders each entry’s socials as ready-made links the reviewer
+  clicks to confirm. Also fixes the Mastodon URL builder, which returned
+  `NA` for the normal `@user@instance` form.
+
 - **[`directory_sync_airtable()`](https://rladies.github.io/jinx/reference/directory_sync_airtable.md)
   now produces real directory entries.** It reads the live submissions
   base (`appzYxePUruG9Nwyg`, table `submissions`) with its linked
@@ -17,6 +27,7 @@
   comparison), and delete requests are reported in the PR body rather
   than executed. Replaces the earlier stub that targeted a placeholder
   base and wrote a name-plus-socials shape.
+
 - **The directory sync runs from the private `rladies/directory` repo,
   not jinx.** Directory submissions carry confidential data (contact
   emails), and jinx is public, so the sync and its logs must stay in the
@@ -24,6 +35,7 @@
   [`directory_sync_airtable()`](https://rladies.github.io/jinx/reference/directory_sync_airtable.md).
   With the global-team sync also gone, the public
   `ops-airtable-sync.yml` workflow is removed.
+
 - **[`validate_directory_pr()`](https://rladies.github.io/jinx/reference/validate_directory_pr.md)
   is now a real automated review**, posting one consolidated comment on
   directory PRs covering filenames, likely-duplicate slugs,
@@ -31,6 +43,7 @@
   free text, and whether social handles resolve — run from the private
   repo’s review workflow. Handle normalisation now also covers github
   and bluesky.
+
 - The bundled `directory-entry.json` schema now matches the full entry
   shape (location, social media, interests, languages, activities, work,
   photo).
