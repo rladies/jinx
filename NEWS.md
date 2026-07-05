@@ -2,6 +2,14 @@
 
 ## Directory
 
+- **The automated review lists clickable profile links instead of probing
+  them.** `validate_directory_pr()` used to HTTP-check whether each social
+  handle resolved, but the platforms block bot requests, so nearly every
+  entry was flagged ("may not resolve") — noise that trained reviewers to
+  ignore the report. It now renders each entry's socials as ready-made links
+  the reviewer clicks to confirm. Also fixes the Mastodon URL builder, which
+  returned `NA` for the normal `@user@instance` form.
+
 - **`directory_sync_airtable()` now produces real directory entries.** It reads
   the live submissions base (`appzYxePUruG9Nwyg`, table `submissions`) with its
   linked `languages`, `countries`, and `interests` tables, and writes the full
