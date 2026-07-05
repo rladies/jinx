@@ -111,6 +111,27 @@ describe("format_event_digest_line", {
     ))
     expect_match(line, "(Forskningsparken, Oslo)", fixed = TRUE)
   })
+
+  it("neutralises Slack link metacharacters in an untrusted title", {
+    line <- format_event_digest_line(list(
+      group_name = "R-Ladies C",
+      title = "A > B | C",
+      datetime = "2026-07-10T18:00:00Z",
+      link = "https://meetup.com/c/1"
+    ))
+    expect_match(
+      line,
+      "<https://meetup.com/c/1|R-Ladies C: A B C>",
+      fixed = TRUE
+    )
+  })
+})
+
+describe("slack_link_label", {
+  it("strips <, >, and | and collapses whitespace", {
+    expect_identical(slack_link_label("A > B | C"), "A B C")
+    expect_identical(slack_link_label("<script>"), "script")
+  })
 })
 
 describe("events_digest_chunk", {
@@ -155,6 +176,31 @@ describe("events_digest_chunk", {
       fixed = TRUE
     )
     expect_identical(chunk$date, rag_parse_date("2026-07-01T18:00:00Z"))
+  })
+
+  it("sorts events with a missing date last, not first", {
+    events <- list(
+      list(
+        status = "active",
+        title = "Date MISSING",
+        group_name = "R-Ladies B",
+        link = "https://meetup.com/b"
+      ),
+      list(
+        status = "active",
+        title = "Real July event",
+        group_name = "R-Ladies A",
+        datetime = "2026-07-10T18:00:00Z",
+        datetime_utc = "2026-07-10T18:00:00Z",
+        link = "https://meetup.com/a"
+      )
+    )
+    chunk <- events_digest_chunk(events, list(repo = "r"))
+    expect_lt(
+      regexpr("Real July event", chunk$text, fixed = TRUE),
+      regexpr("Date MISSING", chunk$text, fixed = TRUE)
+    )
+    expect_identical(chunk$date, rag_parse_date("2026-07-10T18:00:00Z"))
   })
 
   it("caps at max_events and notes the overflow with the landing url", {

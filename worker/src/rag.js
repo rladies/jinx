@@ -162,19 +162,21 @@ export function rag_build_messages(query, matches, prior_messages = []) {
   ];
 }
 
-const URL_IN_TEXT_RE = /https?:\/\/[^\s|>]+/g;
+const DIGEST_LINK_RE = /<(https?:\/\/[^\s|>]+)\|/g;
 
 export function rag_source_urls(matches) {
   const urls = [];
   for (const m of matches || []) {
     const url = m?.metadata?.url;
     if (typeof url === "string" && url.length > 0) urls.push(url);
-    // The digest embeds a per-event link on every line. Those URLs are
-    // ours (indexed from the feed), so allow the model to cite the
-    // specific event; otherwise rag_repair_links would strip them.
+    // The digest embeds a per-event link on every line. Harvest only the
+    // URLs in <url|label> link position — the ones we intentionally emit —
+    // so an attacker-influenced URL sitting in a title or venue (untrusted
+    // feed content) can't slip past rag_repair_links' allow-list.
     if (is_digest_match(m) && typeof m?.metadata?.text === "string") {
-      const found = m.metadata.text.match(URL_IN_TEXT_RE);
-      if (found) urls.push(...found);
+      for (const match of m.metadata.text.matchAll(DIGEST_LINK_RE)) {
+        urls.push(match[1]);
+      }
     }
   }
   return urls;
@@ -204,17 +206,19 @@ async function rag_chunks_retrieve(env, embedding, query) {
 }
 
 function is_digest_match(m) {
-  return m.metadata?.source_type === EVENTS_DIGEST_TYPE;
+  return m?.metadata?.source_type === EVENTS_DIGEST_TYPE;
 }
 
 // Reranking alone can bury the cross-chapter digest below individual
 // events with marginally better cosine scores, and TOP_K truncation can
 // drop it entirely — exactly the chunk an "regardless of chapter" event
-// question needs most. Force any digest to the front so it always reaches
+// question needs most. Force the digest to the front so it always reaches
 // the model, then fill the remaining slots with the best of the rest.
+// There is one global digest by construction; cap at one so it can never
+// starve the context of actual event/guide chunks.
 export function select_event_matches(matches, now_seconds) {
   const ranked = rerank_matches(matches, now_seconds);
-  const digests = ranked.filter(is_digest_match);
+  const digests = ranked.filter(is_digest_match).slice(0, 1);
   const rest = ranked.filter((m) => !is_digest_match(m));
   return [...digests, ...rest].slice(0, TOP_K);
 }

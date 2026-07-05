@@ -74,7 +74,10 @@ events_digest_chunk <- function(
     function(ev) rag_parse_date(ev$datetime_utc %or% ev$datetime),
     integer(1)
   )
-  ord <- order(ts)
+  # Events with a missing or unparseable date (ts == 0) must sort last, not
+  # first — otherwise a dateless event leads the "soonest first" list and the
+  # model quotes it as the next event.
+  ord <- order(ifelse(ts > 0L, ts, NA_integer_), na.last = TRUE)
   upcoming <- upcoming[ord]
   ts <- ts[ord]
 
@@ -124,7 +127,7 @@ format_event_digest_line <- function(ev) {
   when <- ev$datetime %or% ev$datetime_utc %or% "date TBD"
   chapter <- ev$group_name %or% "RLadies+ chapter"
   title <- ev$title %or% "Untitled event"
-  label <- paste0(chapter, ": ", title)
+  label <- slack_link_label(paste0(chapter, ": ", title))
   linked <- if (!is_blank(ev$link)) {
     paste0("<", ev$link, "|", label, ">")
   } else {
@@ -133,6 +136,17 @@ format_event_digest_line <- function(ev) {
   venue <- format_event_venue(ev)
   where <- if (nzchar(venue)) paste0(" (", venue, ")") else ""
   paste0("- ", when, " - ", linked, where)
+}
+
+#' Neutralise Slack link-syntax metacharacters in a link label
+#'
+#' Slack's `<url|label>` syntax offers no label escape: an unescaped `>`
+#' terminates the link early and `<`/`|` corrupt parsing. Meetup titles
+#' are untrusted UGC, so strip those characters before building the link.
+#'
+#' @keywords internal
+slack_link_label <- function(s) {
+  trimws(gsub("\\s+", " ", gsub("[<>|]", " ", s)))
 }
 
 #' Convert a meetup event record into a chunk record

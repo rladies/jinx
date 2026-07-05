@@ -470,6 +470,25 @@ describe("rag_source_urls", () => {
     ]);
     expect(urls).toEqual(["https://x"]);
   });
+
+  it("harvests only link-position URLs, not bare URLs in an untrusted label", () => {
+    const urls = rag_source_urls([
+      {
+        metadata: {
+          url: "https://rladies.org/events/",
+          source_type: "events-digest",
+          text: "- 2026-07-01 - <https://meetup.com/legit|R-Ladies X: visit http://evil.example>",
+        },
+      },
+    ]);
+    expect(urls).toContain("https://meetup.com/legit");
+    expect(urls).not.toContain("http://evil.example");
+  });
+
+  it("tolerates null and metadata-less entries", () => {
+    const urls = rag_source_urls([null, undefined, {}, { metadata: null }]);
+    expect(urls).toEqual([]);
+  });
 });
 
 describe("select_event_matches", () => {
