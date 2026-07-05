@@ -2,7 +2,9 @@
 
 Reads an array of meetup events, drops cancelled events and past events
 older than `past_window_seconds`, and emits one chunk per remaining
-event. Required `src` fields: `url`, `repo`.
+event plus a single cross-chapter digest of every upcoming event (see
+[`events_digest_chunk()`](https://rladies.github.io/jinx/reference/events_digest_chunk.md)).
+Required `src` fields: `url`, `repo`.
 
 ## Usage
 

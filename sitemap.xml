@@ -116,12 +116,14 @@
 <url><loc>https://rladies.github.io/jinx/reference/event_list_chapter.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/event_sync_chapters.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/event_to_chunk.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/events_digest_chunk.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/extract_hugo_page.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/format_authors.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/format_awesome_content.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/format_awesome_item.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/format_awesome_package.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/format_event.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/format_event_digest_line.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/format_event_venue.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/format_youtube_video.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/gather_all_chunks.html</loc></url>
@@ -216,6 +218,7 @@
 <url><loc>https://rladies.github.io/jinx/reference/short_url.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/slack_invite_batch.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/slack_invite_request.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/slack_link_label.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/slack_post_message.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/slack_subscribe_rss.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/slugify_awesome.html</loc></url>
