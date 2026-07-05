@@ -6,6 +6,13 @@
 #' @keywords internal
 directory_base_id <- function() "appzYxePUruG9Nwyg"
 
+#' Checkbox field on the `submissions` table flagging a processed submission.
+#'
+#' Set to `TRUE` by [directory_mark_synced()] once a submission's entry is live
+#' in the directory, so subsequent syncs skip it. Must exist on the table.
+#' @keywords internal
+directory_synced_field <- function() "synced"
+
 #' Sync directory entries from Airtable
 #'
 #' Fetches directory submissions from Airtable, transforms each eligible
@@ -40,7 +47,8 @@ directory_sync_airtable <- function(
 
   cli::cli_h2("Syncing directory from Airtable")
   submissions <- airtable_list_records(base_id, "submissions", api_key)
-  cli::cli_alert_info("Fetched {length(submissions)} submission{?s}")
+  submissions <- directory_drop_synced(submissions)
+  cli::cli_alert_info("Fetched {length(submissions)} unsynced submission{?s}")
 
   lookups <- directory_build_lookups(base_id, api_key)
 
@@ -74,6 +82,101 @@ directory_sync_airtable <- function(
     "PR ready with {length(changed)} change{?s}: {pr_url}"
   )
   invisible(pr_url)
+}
+
+#' Drop submissions already flagged as synced.
+#'
+#' A submission carries the [directory_synced_field()] checkbox once its entry
+#' is live in the directory; Airtable omits unchecked boxes, so absence means
+#' unsynced.
+#' @keywords internal
+directory_drop_synced <- function(submissions) {
+  Filter(
+    function(r) !isTRUE(r$fields[[directory_synced_field()]]),
+    submissions
+  )
+}
+
+#' Flag handled submissions as synced.
+#'
+#' Reconciles Airtable against the directory and flips the
+#' [directory_synced_field()] checkbox on every submission whose work is done,
+#' so future syncs skip it:
+#'
+#' * an **update** is done once applying it to `main` would change nothing —
+#'   its entry is already fully incorporated (the same predicate the sync uses
+#'   to decide whether to commit);
+#' * a **delete request** is done once its entry file is absent from `main` —
+#'   the reviewed purge workflow has removed it.
+#'
+#' Stateless and idempotent — safe to run on every sync-PR merge and after a
+#' purge completes.
+#'
+#' @inheritParams directory_sync_airtable
+#' @return Character vector of marked record ids (invisibly).
+#' @export
+directory_mark_synced <- function(
+  base_id = directory_base_id(),
+  api_key = Sys.getenv("AIRTABLE_API_KEY"),
+  org = "rladies",
+  directory_repo = "directory"
+) {
+  if (!nzchar(api_key)) {
+    cli::cli_abort("AIRTABLE_API_KEY environment variable is not set")
+  }
+
+  cli::cli_h2("Reconciling synced submissions")
+  submissions <- directory_drop_synced(
+    airtable_list_records(base_id, "submissions", api_key)
+  )
+  lookups <- directory_build_lookups(base_id, api_key)
+  transformed <- Filter(
+    Negate(is.null),
+    lapply(submissions, directory_transform_record, lookups = lookups)
+  )
+
+  handled <- Filter(
+    function(entry) {
+      if (isTRUE(entry$delete)) {
+        directory_entry_absent(entry$slug, org, directory_repo)
+      } else {
+        directory_entry_incorporated(entry, org, directory_repo)
+      }
+    },
+    transformed
+  )
+  record_ids <- vapply(
+    handled,
+    function(e) e$record_id %||% NA_character_,
+    character(1)
+  )
+  record_ids <- unique(record_ids[!is.na(record_ids) & nzchar(record_ids)])
+
+  airtable_mark_processed(base_id, "submissions", record_ids, api_key)
+  cli::cli_alert_success(
+    "Marked {length(record_ids)} submission{?s} as synced"
+  )
+  invisible(record_ids)
+}
+
+#' Is a submission's entry already fully present on `main`?
+#'
+#' True when applying the submission would produce no entry-file change (the
+#' same predicate the sync uses to decide whether to commit).
+#' @keywords internal
+directory_entry_incorporated <- function(entry, org, repo, ref = "main") {
+  changes <- directory_entry_changes(entry, org, repo, ref)
+  !any(vapply(changes, function(ch) identical(ch$kind, "entry"), logical(1)))
+}
+
+#' Has a slug's entry file been removed from `main`?
+#'
+#' True when `data/json/<slug>.json` no longer exists — the purge workflow has
+#' actioned the delete request.
+#' @keywords internal
+directory_entry_absent <- function(slug, org, repo, ref = "main") {
+  path <- sprintf("data/json/%s.json", slug)
+  is.null(gh_get_content(org, repo, path, ref))
 }
 
 #' Build id -> label lookups for the directory linked tables.
@@ -133,11 +236,12 @@ directory_transform_record <- function(record, lookups) {
   }
 
   if (identical(at_scalar(fields, "request_type"), "Delete directory entry")) {
-    return(list(slug = slug, delete = TRUE))
+    return(list(slug = slug, record_id = record$id, delete = TRUE))
   }
 
   list(
     slug = slug,
+    record_id = record$id,
     data = directory_entry_data(record, fields, lookups, slug),
     email = na_to_null(at_scalar(fields, "email")),
     photo = directory_photo_meta(fields),
