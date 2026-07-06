@@ -1,5 +1,19 @@
 # jinx (development version)
 
+## Jinx assistant
+
+- **Jinx now keeps an anonymous question-improvement log so the corpus can
+  evolve.** Every `@Jinx` mention or DM records the question text and a coarse
+  outcome (`answered`, `no_match`, `coding_declined`, or `low_confidence`) to a
+  Cloudflare D1 table — with no Slack user id, channel, or thread timestamp, so
+  a logged question cannot be traced to who asked. Answers are linked so a 👍/👎
+  reaction updates that question's score, turning "which answers were weak" into
+  a maintainer to-do list. `/jinx questions [days]` surfaces the top gaps and
+  most-downvoted answers; rows are purged after 180 days by a daily cron. Reading
+  the log (via `/jinx questions` and `/jinx feedback`) is restricted to the
+  global team, reusing the same Airtable member directory as `cmd_authorize()`.
+  Requires provisioning a `jinx-question-log` D1 database (see `wrangler.jsonc`).
+
 ## Directory
 
 - **The automated review lists clickable profile links instead of probing

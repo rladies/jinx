@@ -36,7 +36,8 @@
 | `/jinx setup-channel`                                | Pin RLadies+ resource bookmarks in the current channel                                     |
 | `/jinx pair @alice @bob [message]`                   | Open a group DM with mentioned users (up to 7)                                             |
 | `/jinx remind-me <when> \| <what>`                   | Set a personal Slack reminder for yourself                                                 |
-| `/jinx feedback [days]`                              | Show reaction signal on Jinx's recent answers                                              |
+| `/jinx feedback [days]`                              | _(Global Team)_ Reaction signal on Jinx's recent answers                                   |
+| `/jinx questions [days]`                             | _(Global Team)_ What folks asked, the gaps Jinx couldn't answer, and 👎'd replies          |
 | `/jinx help`                                         | Show this help message                                                                     |
 
 **Teams:** abstract-review, blog, campaigns, chapter-activity, chapter-onboarding, coc, communications, community-slack, conference-liaison, directory, meetup-pro, mentoring, rocur, translation, website

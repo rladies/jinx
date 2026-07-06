@@ -1,4 +1,5 @@
 import { rag_question_answer } from "./rag.js";
+import { question_capture, question_vote_apply } from "./question-log.js";
 import { fetch_failure_quip } from "./quips.js";
 import { pending_link_key } from "./airtable-invite.js";
 import {
@@ -271,8 +272,25 @@ async function slack_event_answer_post(env, teamId, msg) {
     threadTs,
     messageTs,
   );
-  const { answer } = await rag_question_answer(env, query, history);
-  await slack_event_post_answer(env, teamId, { channel, threadTs, answer });
+  const { answer, outcome, top_score, sources } = await rag_question_answer(
+    env,
+    query,
+    history,
+  );
+  const answerTs = await slack_event_post_answer(env, teamId, {
+    channel,
+    threadTs,
+    answer,
+  });
+  await question_capture(env, {
+    teamId,
+    channel,
+    answerTs,
+    question: query,
+    outcome,
+    top_score,
+    sources,
+  });
 }
 
 async function slack_thread_history(env, teamId, channel, threadTs, currentTs) {
@@ -342,6 +360,10 @@ async function slack_event_handle_reaction(env, teamId, event, eventId) {
     JSON.stringify({ count, last_at: new Date().toISOString() }),
     { expirationTtl: 180 * 24 * 60 * 60 },
   ).catch((e) => console.error("reaction_log write failed:", e));
+
+  await question_vote_apply(env, { teamId, item: event.item, reaction }).catch(
+    (e) => console.warn("question_vote failed:", e.message),
+  );
 }
 
 async function slack_event_handle_team_join(env, teamId, user) {
@@ -464,11 +486,21 @@ async function slack_event_handle_dm(
         threadTs,
         messageTs,
       );
-      const { answer } = await rag_question_answer(env, query, history);
-      await slack_event_post_answer(env, teamId, {
+      const { answer, outcome, top_score, sources } =
+        await rag_question_answer(env, query, history);
+      const answerTs = await slack_event_post_answer(env, teamId, {
         channel,
         threadTs: threadTs || undefined,
         answer,
+      });
+      await question_capture(env, {
+        teamId,
+        channel,
+        answerTs,
+        question: query,
+        outcome,
+        top_score,
+        sources,
       });
     }
 
@@ -583,8 +615,8 @@ async function slack_event_post_answer(
   if (answer.length <= LONG_ANSWER_THRESHOLD) {
     const body = { channel, text: answer };
     if (threadTs) body.thread_ts = threadTs;
-    await slack_message_post(env, teamId, body);
-    return;
+    const res = await slack_message_post(env, teamId, body);
+    return res?.ts || null;
   }
 
   const filename = `jinx-answer-${Date.now()}.md`;
@@ -599,10 +631,12 @@ async function slack_event_post_answer(
       initialComment:
         "🔮 That answer ran long — I've batted it into a file so it's easier to read.",
     });
+    return null;
   } catch (e) {
     console.warn("file upload fallback:", e.message);
     const body = { channel, text: answer };
     if (threadTs) body.thread_ts = threadTs;
-    await slack_message_post(env, teamId, body);
+    const res = await slack_message_post(env, teamId, body);
+    return res?.ts || null;
   }
 }

@@ -4,6 +4,7 @@ import {
   merge_matches,
   rag_build_messages,
   rag_history_normalize,
+  rag_match_sources,
   rag_question_answer,
   rag_repair_links,
   rag_source_urls,
@@ -905,5 +906,91 @@ describe("merge_matches", () => {
     ];
     const merged = merge_matches(primary, []);
     expect(merged.map((m) => m.id)).toEqual(["x", "y"]);
+  });
+});
+
+describe("rag_match_sources", () => {
+  it("lists distinct source types in order", () => {
+    const matches = [
+      { metadata: { source_type: "guide" } },
+      { metadata: { source_type: "site" } },
+      { metadata: { source_type: "guide" } },
+    ];
+    expect(rag_match_sources(matches)).toBe("guide,site");
+  });
+
+  it("returns null when nothing carries a source type", () => {
+    expect(rag_match_sources([{ metadata: {} }])).toBeNull();
+    expect(rag_match_sources([])).toBeNull();
+  });
+});
+
+describe("rag_question_answer outcome tagging", () => {
+  function makeEnv({ matches, llmResponse = "OK" } = {}) {
+    return {
+      AI: {
+        run: vi.fn(async (model) =>
+          model === "@cf/baai/bge-base-en-v1.5"
+            ? { data: [[0.1, 0.2, 0.3]] }
+            : { response: llmResponse },
+        ),
+      },
+      RAG_INDEX: { query: vi.fn(async () => ({ matches })) },
+    };
+  }
+
+  it("tags coding questions as coding_declined without retrieving", async () => {
+    const env = makeEnv({ matches: [] });
+    const res = await rag_question_answer(env, "write me a function to sort a list");
+    expect(res.outcome).toBe("coding_declined");
+    expect(res.top_score).toBeNull();
+    expect(env.RAG_INDEX.query).not.toHaveBeenCalled();
+  });
+
+  it("tags a no-retrieval question as no_match", async () => {
+    const env = makeEnv({ matches: [] });
+    const res = await rag_question_answer(env, "what colour is the moon?");
+    expect(res.outcome).toBe("no_match");
+  });
+
+  it("tags a strong match as answered with a top score and sources", async () => {
+    const env = makeEnv({
+      matches: [
+        {
+          id: "g1",
+          score: 0.9,
+          metadata: {
+            url: "https://x",
+            title: "T",
+            text: "t",
+            source_type: "guide",
+          },
+        },
+      ],
+    });
+    const res = await rag_question_answer(env, "how do I start a chapter?");
+    expect(res.outcome).toBe("answered");
+    expect(res.top_score).toBeGreaterThan(0.5);
+    expect(res.sources).toBe("guide");
+  });
+
+  it("tags a weak-but-present match as low_confidence", async () => {
+    const env = makeEnv({
+      matches: [
+        {
+          id: "w1",
+          score: 0.42,
+          metadata: {
+            url: "https://x",
+            title: "T",
+            text: "t",
+            source_type: "github-org",
+          },
+        },
+      ],
+    });
+    const res = await rag_question_answer(env, "what is the swag budget?");
+    expect(res.outcome).toBe("low_confidence");
+    expect(res.top_score).toBeLessThan(0.5);
   });
 });

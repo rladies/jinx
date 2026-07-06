@@ -3,7 +3,7 @@ import {
   slack_event_handle,
   slack_event_strip_mention,
 } from "../src/slack-events.js";
-import { makeEnv, makeCtx, makeKv, jsonResponse } from "./_helpers.js";
+import { makeEnv, makeCtx, makeKv, makeD1, jsonResponse } from "./_helpers.js";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -213,6 +213,98 @@ describe("slack_event_handle", () => {
       "json"
     );
     expect(entry).toBeNull();
+  });
+
+  it("captures an anonymous question row and links the answer on a mention", async () => {
+    const env = makeEnv({
+      SLACK_TOKENS: makeKv({
+        "team:T_ORG": JSON.stringify({ bot_token: "xoxb", bot_user_id: "B1" }),
+      }),
+      QUESTION_LOG: makeD1(),
+      AI: {
+        run: async (model) =>
+          model === "@cf/baai/bge-base-en-v1.5"
+            ? { data: [[0.1, 0.2, 0.3]] }
+            : { response: "Chapters start with a form. 🐈‍⬛" },
+      },
+      RAG_INDEX: {
+        query: async () => ({
+          matches: [
+            {
+              id: "g1",
+              score: 0.9,
+              metadata: {
+                url: "https://guide.rladies.org",
+                title: "Guide",
+                text: "t",
+                source_type: "guide",
+              },
+            },
+          ],
+        }),
+      },
+    });
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = typeof input === "string" ? input : input.url;
+      if (url.includes("conversations.replies"))
+        return jsonResponse({ ok: true, messages: [] });
+      if (url.includes("chat.postMessage"))
+        return jsonResponse({ ok: true, ts: "222.333" });
+      return jsonResponse({ ok: true });
+    });
+
+    const ctx = makeCtx();
+    await slack_event_handle(
+      env,
+      ctx,
+      makeEventBody({
+        type: "app_mention",
+        channel: "C1",
+        ts: "1.0",
+        thread_ts: "1.0",
+        text: "<@UBOT> how do I start a chapter?",
+        user: "U1",
+      })
+    );
+    await ctx.flush();
+
+    expect(env.QUESTION_LOG._rows).toHaveLength(1);
+    const row = env.QUESTION_LOG._rows[0];
+    expect(row.question).toBe("how do I start a chapter?");
+    expect(row.outcome).toBe("answered");
+    expect(await env.SLACK_TOKENS.get("answer_link:T_ORG:C1:222.333")).toBe(
+      String(row.id)
+    );
+  });
+
+  it("increments a question's 👍 when a linked answer is reacted to", async () => {
+    const env = makeEnv({
+      SLACK_TOKENS: makeKv({
+        "team:T_ORG": JSON.stringify({ bot_token: "xoxb", bot_user_id: "B1" }),
+        "answer_link:T_ORG:C1:222.333": "1",
+      }),
+      QUESTION_LOG: makeD1([
+        { id: 1, day: "2026-07-05", question: "q", outcome: "answered" },
+      ]),
+    });
+    vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
+      jsonResponse({ ok: true })
+    );
+
+    const ctx = makeCtx();
+    await slack_event_handle(
+      env,
+      ctx,
+      makeEventBody({
+        type: "reaction_added",
+        reaction: "thumbsup",
+        item: { type: "message", channel: "C1", ts: "222.333" },
+        item_user: "B1",
+      })
+    );
+    await ctx.flush();
+
+    expect(env.QUESTION_LOG._rows[0].up).toBe(1);
   });
 });
 
