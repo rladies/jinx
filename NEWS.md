@@ -14,6 +14,16 @@
   global team, reusing the same Airtable member directory as `cmd_authorize()`.
   Requires provisioning a `jinx-question-log` D1 database (see `wrangler.jsonc`).
 
+- **A weekly digest turns those gaps into an action list.** Every Monday a
+  scheduled job reads the question log, clusters the questions Jinx couldn't
+  answer well (`no_match` / `low_confidence`, excluding declined coding
+  questions), drafts a _proposed_ Guide answer for the top gaps, and posts the
+  lot — plus any 👎'd answers — to the global-team Slack channel
+  (`SLACK_DIGEST_CHANNEL`, default `#team-jinx`) for review. The corpus stays
+  human-authored: drafts are AI-suggested and unverified, only ever a Slack
+  message for a person to confirm before editing the Guide — nothing is written
+  to the RAG index automatically.
+
 ## Directory
 
 - **The automated review lists clickable profile links instead of probing

@@ -2,7 +2,7 @@ import { coding_decline_message, is_coding_question } from "./intent.js";
 import { no_match_quip } from "./quips.js";
 
 const EMBED_MODEL = "@cf/baai/bge-base-en-v1.5";
-const CHAT_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast";
+export const CHAT_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast";
 
 const RETRIEVE_K = 20;
 const EVENT_RETRIEVE_K = 15;

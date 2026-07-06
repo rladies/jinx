@@ -47,10 +47,13 @@
 			"migrations_dir": "worker/migrations"
 		}
 	],
-	// Daily purge of question-log rows past the 180-day retention window.
+	// Scheduled jobs (see the scheduled() handler in worker/src/index.js):
+	//   17 3 * * *  — daily purge of question-log rows past 180 days
+	//   0 9 * * 1   — weekly question-gap digest to the global-team channel
 	"triggers": {
 		"crons": [
-			"17 3 * * *"
+			"17 3 * * *",
+			"0 9 * * 1"
 		]
 	}
 }

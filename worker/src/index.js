@@ -7,6 +7,9 @@ import {
 import { slack_command_handle } from "./slash-command.js";
 import { slack_signature_verify } from "./slack-api.js";
 import { question_log_purge } from "./question-log.js";
+import { question_digest_post } from "./question-digest.js";
+
+const DIGEST_CRON = "0 9 * * 1";
 
 const SLACK_ROUTES = {
   "/slack/command": slack_command_handle,
@@ -27,8 +30,12 @@ export default {
     }
   },
 
-  async scheduled(_event, env, ctx) {
-    ctx.waitUntil(question_log_purge(env));
+  async scheduled(event, env, ctx) {
+    if (event.cron === DIGEST_CRON) {
+      ctx.waitUntil(question_digest_post(env, { days: 7 }));
+    } else {
+      ctx.waitUntil(question_log_purge(env));
+    }
   },
 };
 
