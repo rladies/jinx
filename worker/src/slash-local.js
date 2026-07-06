@@ -73,7 +73,11 @@ export async function slash_local_handle(env, teamId, command, params, responseU
   const userName = params.get("user_name") || "";
 
   if (command_requires_global_team(command)) {
-    const authz = await slack_global_team_authorize(env, { teamId, userName });
+    const authz = await slack_global_team_authorize(env, {
+      teamId,
+      userName,
+      userId,
+    });
     if (!authz.ok) {
       await slash_respond(responseUrl, authz.message);
       return;

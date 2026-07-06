@@ -43,6 +43,26 @@ export async function slack_team_info_fetch(token) {
   return slack_api_call(token, "team.info", {});
 }
 
+// The identity strings a Slack user might be recorded under in the member
+// directory. `organiser_slack` there is the Slack *display name* (the @mention
+// text), not the slash-command username — so return display/real names too,
+// not just the handle.
+export async function slack_user_identities(env, teamId, userId) {
+  if (!userId) return [];
+  const token = await slack_token_get(env, teamId);
+  const res = await slack_api_call(token, "users.info", { user: userId });
+  const u = res.user || {};
+  const p = u.profile || {};
+  return [
+    p.display_name,
+    p.display_name_normalized,
+    p.real_name,
+    p.real_name_normalized,
+    u.real_name,
+    u.name,
+  ].filter((s) => typeof s === "string" && s.length > 0);
+}
+
 export async function slack_reaction_add(
   env,
   teamId,
