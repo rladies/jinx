@@ -70,14 +70,9 @@ export async function slash_local_handle(env, teamId, command, params, responseU
   const channelId = params.get("channel_id") || "";
   const channelName = params.get("channel_name") || "";
   const userId = params.get("user_id") || "";
-  const userName = params.get("user_name") || "";
 
   if (command_requires_global_team(command)) {
-    const authz = await slack_global_team_authorize(env, {
-      teamId,
-      userName,
-      userId,
-    });
+    const authz = await slack_global_team_authorize(env, { teamId, userId });
     if (!authz.ok) {
       await slash_respond(responseUrl, authz.message);
       return;
