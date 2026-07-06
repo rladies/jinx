@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { slack_global_team_authorize } from "../src/authorize.js";
+import { makeKv } from "./_helpers.js";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -41,6 +42,71 @@ describe("slack_global_team_authorize", () => {
     expect(calledUrl).toContain("appZjaV7eM0Y9FsHZ");
     expect(calledUrl).toContain("tblfFWklqjtGdBLiT");
     expect(calledUrl).not.toMatch(/\/Member(\?|$)/);
+  });
+
+  it("matches on the Slack display name (from users.info), not just the username", async () => {
+    const env = {
+      ...ORG_ENV,
+      SLACK_TOKENS: makeKv({
+        "team:T_ORG": JSON.stringify({ bot_token: "xoxb" }),
+      }),
+    };
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
+      if (String(url).includes("users.info")) {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            user: {
+              name: "drmowinckels",
+              profile: { display_name: "mo", real_name: "Athanasia Mowinckel" },
+            },
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response(
+        JSON.stringify({ records: [{ fields: { organiser_slack: "@mo" } }] }),
+        { status: 200 },
+      );
+    });
+    // username "drmowinckels" is NOT in the directory; display name "mo" (@mo) is.
+    const res = await slack_global_team_authorize(env, {
+      teamId: "T_ORG",
+      userName: "drmowinckels",
+      userId: "U1",
+    });
+    expect(res.ok).toBe(true);
+  });
+
+  it("still denies when no identity matches the directory", async () => {
+    const env = {
+      ...ORG_ENV,
+      SLACK_TOKENS: makeKv({
+        "team:T_ORG": JSON.stringify({ bot_token: "xoxb" }),
+      }),
+    };
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
+      if (String(url).includes("users.info")) {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            user: { name: "mallory", profile: { display_name: "Mallory" } },
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response(
+        JSON.stringify({ records: [{ fields: { organiser_slack: "@mo" } }] }),
+        { status: 200 },
+      );
+    });
+    const res = await slack_global_team_authorize(env, {
+      teamId: "T_ORG",
+      userName: "mallory",
+      userId: "U9",
+    });
+    expect(res.ok).toBe(false);
+    expect(res.message).toMatch(/global team/i);
   });
 
   it("normalises @, case, and whitespace before matching", async () => {

@@ -1,3 +1,5 @@
+import { slack_user_identities } from "./slack-api.js";
+
 // Global-team authorization for the worker's local slash commands.
 //
 // Mirrors the R gate in R/authorize.R (cmd_authorize / gt_actor_is_authorized)
@@ -62,20 +64,41 @@ async function member_slack_handles(env) {
 // Returns { ok, message }. ok === true means the actor may run the command;
 // otherwise `message` is an ephemeral refusal. Never throws — a lookup failure
 // resolves to a fail-closed { ok: false } with the unverifiable message.
-export async function slack_global_team_authorize(env, { teamId, userName }) {
+//
+// The directory's organiser_slack column holds the Slack *display name* (the
+// @mention text, e.g. "@mo", "@Mouna Belaid"), not the slash-command username.
+// So we match against every identity string Slack knows for the user — the
+// username plus display/real names from users.info — and accept if any is in
+// the directory.
+export async function slack_global_team_authorize(
+  env,
+  { teamId, userName, userId },
+) {
   if (!env.SLACK_ORGANIZER_TEAM_ID || teamId !== env.SLACK_ORGANIZER_TEAM_ID) {
     return { ok: false, message: AUTHZ_WORKSPACE };
   }
   if (!env.AIRTABLE_API_KEY) {
     return { ok: false, message: AUTHZ_UNVERIFIABLE };
   }
-  const actor = normalize_handle(userName);
-  if (!actor) {
+
+  const candidates = new Set();
+  if (userName) candidates.add(normalize_handle(userName));
+  try {
+    for (const name of await slack_user_identities(env, teamId, userId)) {
+      candidates.add(normalize_handle(name));
+    }
+  } catch (e) {
+    console.warn("users.info lookup failed:", e.message);
+  }
+  candidates.delete("");
+  if (candidates.size === 0) {
     return { ok: false, message: AUTHZ_DENIED };
   }
+
   try {
     const handles = await member_slack_handles(env);
-    return handles.has(actor)
+    const matched = [...candidates].some((c) => handles.has(c));
+    return matched
       ? { ok: true, message: null }
       : { ok: false, message: AUTHZ_DENIED };
   } catch (e) {
