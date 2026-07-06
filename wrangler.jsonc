@@ -37,16 +37,13 @@
 		}
 	],
 	// Anonymous question-improvement log (see worker/src/question-log.js).
-	// PROVISION BEFORE MERGE: `wrangler d1 create jinx-question-log`, then
-	// `wrangler d1 migrations apply jinx-question-log --remote`, then paste the
-	// returned database_id below. The worker no-ops safely until this binding
-	// resolves, but a real `wrangler deploy` on main will fail while the id is a
-	// placeholder — do not merge until it is real.
+	// Provisioned on the RLadies+ account; schema in worker/migrations. To
+	// re-apply migrations: `wrangler d1 migrations apply jinx-question-log --remote`.
 	"d1_databases": [
 		{
 			"binding": "QUESTION_LOG",
 			"database_name": "jinx-question-log",
-			"database_id": "00000000-0000-0000-0000-000000000000",
+			"database_id": "4500d886-2593-44f9-9a01-d38cfa26e8dc",
 			"migrations_dir": "worker/migrations"
 		}
 	],
