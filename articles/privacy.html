@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     
     
-<p><em>Last updated: 2026-05-13</em></p>
+<p><em>Last updated: 2026-07-05</em></p>
 <p>Jinx is a Slack app and GitHub bot maintained by volunteers for the
 <strong>RLadies+</strong> organization. It exists to help RLadies+ run
 its community operations — answering questions about the RLadies+ Guide,
@@ -175,15 +175,32 @@ are publicly visible.</p>
 <code>@Jinx</code> questions<a class="anchor" aria-label="anchor" href="#jinx-questions"></a>
 </h3>
 <ol style="list-style-type: decimal">
-<li>The Cloudflare Worker receives the mention.</li>
+<li>The Cloudflare Worker receives the mention (or your direct message
+to Jinx).</li>
 <li>Your question text is sent to <a href="https://developers.cloudflare.com/workers-ai/" class="external-link">Cloudflare Workers
 AI</a> for embedding and to a large language model to generate an answer
 grounded in the RLadies+ Guide and website.</li>
 <li>The answer (with source links) is posted back to the Slack
 thread.</li>
+<li>The <strong>text of your question</strong> and a coarse note of how
+well Jinx answered it (answered, came up empty, coding question
+declined, or thin retrieval) are recorded in an anonymous
+question-improvement log, so maintainers can see where the Guide is thin
+and fill the gaps.</li>
 </ol>
-<p>The Worker does not store the question or the answer outside of
-Cloudflare’s standard observability logs.</p>
+<p>The question-improvement log is <strong>anonymous by
+construction</strong>: no Slack user ID, username, channel, or thread
+timestamp is stored alongside the question, so a logged question cannot
+be traced back to who asked it. Because a free-text question can still
+contain identifying details someone chooses to type, identifiers are
+deliberately never recorded with it, the stored question text is
+truncated, and rows are automatically deleted after 180 days. The log is
+readable only by the Global Team (via a restricted
+<code>/jinx questions</code> command), not by every workspace
+member.</p>
+<p>If you react to one of Jinx’s answers with 👍 or 👎, that reaction is
+counted against the logged question as an anonymous quality signal — the
+identity of the reacting person is never read or stored.</p>
 </div>
 </div>
 <div class="section level2">
@@ -242,16 +259,23 @@ deleted) the moment the member joins the workspace</td>
 <td>180 days — counts only, no message text or user identifiers</td>
 </tr>
 <tr class="even">
+<td>Question-improvement log</td>
+<td>Cloudflare D1 (<code>jinx-question-log</code>)</td>
+<td>Question text + outcome + anonymous 👍/👎 counts, no identifiers;
+rows auto-deleted after 180 days</td>
+</tr>
+<tr class="odd">
 <td>Workspace install metadata</td>
 <td>Cloudflare KV (<code>SLACK_TOKENS</code>)</td>
 <td>Until the app is uninstalled from the workspace</td>
 </tr>
 </tbody>
 </table>
-<p>Jinx maintains a small Cloudflare KV store described in the table
-above. It does <strong>not</strong> store the content of your messages,
-the questions you ask, or the answers it gives, beyond the standard
-observability logs above.</p>
+<p>Jinx maintains a small Cloudflare KV store and D1 database described
+in the table above. Apart from the anonymous question-improvement log —
+question text and outcome, with no identifiers — it does
+<strong>not</strong> store the content of your messages or the answers
+it gives, beyond the standard observability logs above.</p>
 </div>
 <div class="section level2">
 <h2 id="who-jinx-shares-data-with">Who Jinx shares data with<a class="anchor" aria-label="anchor" href="#who-jinx-shares-data-with"></a>
