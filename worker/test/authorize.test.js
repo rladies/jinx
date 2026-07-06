@@ -25,6 +25,24 @@ describe("slack_global_team_authorize", () => {
     expect(res.ok).toBe(true);
   });
 
+  it("queries the member directory by base + table id, not the display name", async () => {
+    let calledUrl;
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
+      calledUrl = String(url);
+      return new Response(
+        JSON.stringify({ records: [{ fields: { organiser_slack: "alice" } }] }),
+        { status: 200 },
+      );
+    });
+    await slack_global_team_authorize(ORG_ENV, {
+      teamId: "T_ORG",
+      userName: "alice",
+    });
+    expect(calledUrl).toContain("appZjaV7eM0Y9FsHZ");
+    expect(calledUrl).toContain("tblfFWklqjtGdBLiT");
+    expect(calledUrl).not.toMatch(/\/Member(\?|$)/);
+  });
+
   it("normalises @, case, and whitespace before matching", async () => {
     mockAirtable([{ records: [{ fields: { organiser_slack: "  @Alice " } }] }]);
     const res = await slack_global_team_authorize(ORG_ENV, {

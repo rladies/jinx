@@ -9,11 +9,13 @@
 //   * The check fails closed: an unknown actor is denied, and a directory that
 //     cannot be read is also denied (with a distinct "try again" message).
 //
-// The directory schema matches inst/config/teams.yml `member_directory` (the R
-// defaults). If that config changes, update both.
+// The directory schema mirrors inst/config/teams.yml `member_directory`. The
+// table is referenced by its stable **table id** (not the display name, which
+// does not resolve via the Airtable API and returned MODEL_NOT_FOUND). If the
+// directory moves, update both this and teams.yml.
 const MEMBER_DIRECTORY = {
   base_id: "appZjaV7eM0Y9FsHZ",
-  table: "Member",
+  table: "tblfFWklqjtGdBLiT",
   slack_field: "organiser_slack",
 };
 

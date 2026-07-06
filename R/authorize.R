@@ -13,7 +13,7 @@ member_directory_config <- function(config = NULL) {
   cfg <- config$member_directory %||% list()
   list(
     base_id = cfg$base_id %||% "appZjaV7eM0Y9FsHZ",
-    table = cfg$table %||% "Member",
+    table = cfg$table %||% "tblfFWklqjtGdBLiT",
     github_field = cfg$github_field %||% "GitHub handle",
     slack_field = cfg$slack_field %||% "organiser_slack"
   )
