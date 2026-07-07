@@ -7,7 +7,9 @@ member_directory:
   # the Airtable API (returns MODEL_NOT_FOUND), which broke authorization.
   table: tblfFWklqjtGdBLiT
   github_field: GitHub handle
-  slack_field: organiser_slack
+  # Match Slack commands on the stable member id, not the informal @mention in
+  # organiser_slack (users.info can't resolve profiles under Enterprise Grid).
+  slack_id_field: organiser_slack_id
 
 teams:
   abstract-review:
