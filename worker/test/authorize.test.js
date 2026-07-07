@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { slack_global_team_authorize } from "../src/authorize.js";
-import { makeKv } from "./_helpers.js";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -17,125 +16,66 @@ function mockAirtable(pages) {
 const ORG_ENV = { SLACK_ORGANIZER_TEAM_ID: "T_ORG", AIRTABLE_API_KEY: "k" };
 
 describe("slack_global_team_authorize", () => {
-  it("allows a directory member in the organiser workspace", async () => {
-    mockAirtable([{ records: [{ fields: { organiser_slack: "alice" } }] }]);
+  it("allows a member whose Slack user id is in the directory", async () => {
+    mockAirtable([{ records: [{ fields: { organiser_slack_id: "U123" } }] }]);
     const res = await slack_global_team_authorize(ORG_ENV, {
       teamId: "T_ORG",
-      userName: "alice",
+      userId: "U123",
     });
     expect(res.ok).toBe(true);
   });
 
-  it("queries the member directory by base + table id, not the display name", async () => {
+  it("normalises case and whitespace on the id before matching", async () => {
+    mockAirtable([{ records: [{ fields: { organiser_slack_id: "  u123 " } }] }]);
+    const res = await slack_global_team_authorize(ORG_ENV, {
+      teamId: "T_ORG",
+      userId: "U123",
+    });
+    expect(res.ok).toBe(true);
+  });
+
+  it("denies a user id not in the directory", async () => {
+    mockAirtable([{ records: [{ fields: { organiser_slack_id: "U123" } }] }]);
+    const res = await slack_global_team_authorize(ORG_ENV, {
+      teamId: "T_ORG",
+      userId: "U999",
+    });
+    expect(res.ok).toBe(false);
+    expect(res.message).toMatch(/global team/i);
+  });
+
+  it("queries the member directory by base + table id", async () => {
     let calledUrl;
     vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
       calledUrl = String(url);
       return new Response(
-        JSON.stringify({ records: [{ fields: { organiser_slack: "alice" } }] }),
+        JSON.stringify({ records: [{ fields: { organiser_slack_id: "U1" } }] }),
         { status: 200 },
       );
     });
-    await slack_global_team_authorize(ORG_ENV, {
-      teamId: "T_ORG",
-      userName: "alice",
-    });
+    await slack_global_team_authorize(ORG_ENV, { teamId: "T_ORG", userId: "U1" });
     expect(calledUrl).toContain("appZjaV7eM0Y9FsHZ");
     expect(calledUrl).toContain("tblfFWklqjtGdBLiT");
-    expect(calledUrl).not.toMatch(/\/Member(\?|$)/);
-  });
-
-  it("matches on the Slack display name (from users.info), not just the username", async () => {
-    const env = {
-      ...ORG_ENV,
-      SLACK_TOKENS: makeKv({
-        "team:T_ORG": JSON.stringify({ bot_token: "xoxb" }),
-      }),
-    };
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
-      if (String(url).includes("users.info")) {
-        return new Response(
-          JSON.stringify({
-            ok: true,
-            user: {
-              name: "drmowinckels",
-              profile: { display_name: "mo", real_name: "Athanasia Mowinckel" },
-            },
-          }),
-          { status: 200 },
-        );
-      }
-      return new Response(
-        JSON.stringify({ records: [{ fields: { organiser_slack: "@mo" } }] }),
-        { status: 200 },
-      );
-    });
-    // username "drmowinckels" is NOT in the directory; display name "mo" (@mo) is.
-    const res = await slack_global_team_authorize(env, {
-      teamId: "T_ORG",
-      userName: "drmowinckels",
-      userId: "U1",
-    });
-    expect(res.ok).toBe(true);
-  });
-
-  it("still denies when no identity matches the directory", async () => {
-    const env = {
-      ...ORG_ENV,
-      SLACK_TOKENS: makeKv({
-        "team:T_ORG": JSON.stringify({ bot_token: "xoxb" }),
-      }),
-    };
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
-      if (String(url).includes("users.info")) {
-        return new Response(
-          JSON.stringify({
-            ok: true,
-            user: { name: "mallory", profile: { display_name: "Mallory" } },
-          }),
-          { status: 200 },
-        );
-      }
-      return new Response(
-        JSON.stringify({ records: [{ fields: { organiser_slack: "@mo" } }] }),
-        { status: 200 },
-      );
-    });
-    const res = await slack_global_team_authorize(env, {
-      teamId: "T_ORG",
-      userName: "mallory",
-      userId: "U9",
-    });
-    expect(res.ok).toBe(false);
-    expect(res.message).toMatch(/global team/i);
-  });
-
-  it("normalises @, case, and whitespace before matching", async () => {
-    mockAirtable([{ records: [{ fields: { organiser_slack: "  @Alice " } }] }]);
-    const res = await slack_global_team_authorize(ORG_ENV, {
-      teamId: "T_ORG",
-      userName: "ALICE",
-    });
-    expect(res.ok).toBe(true);
-  });
-
-  it("denies an actor not in the directory", async () => {
-    mockAirtable([{ records: [{ fields: { organiser_slack: "alice" } }] }]);
-    const res = await slack_global_team_authorize(ORG_ENV, {
-      teamId: "T_ORG",
-      userName: "mallory",
-    });
-    expect(res.ok).toBe(false);
-    expect(res.message).toMatch(/global team/i);
   });
 
   it("refuses commands from a non-organiser workspace without lookup", async () => {
     const fetchSpy = mockAirtable([]);
     const res = await slack_global_team_authorize(ORG_ENV, {
       teamId: "T_COMMUNITY",
-      userName: "alice",
+      userId: "U123",
     });
     expect(res.ok).toBe(false);
     expect(res.message).toMatch(/organisers workspace/i);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("denies a missing user id without a lookup", async () => {
+    const fetchSpy = mockAirtable([]);
+    const res = await slack_global_team_authorize(ORG_ENV, {
+      teamId: "T_ORG",
+      userId: "",
+    });
+    expect(res.ok).toBe(false);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
@@ -145,7 +85,7 @@ describe("slack_global_team_authorize", () => {
     );
     const res = await slack_global_team_authorize(ORG_ENV, {
       teamId: "T_ORG",
-      userName: "alice",
+      userId: "U123",
     });
     expect(res.ok).toBe(false);
     expect(res.message).toMatch(/try again/i);
@@ -154,7 +94,7 @@ describe("slack_global_team_authorize", () => {
   it("fails closed when no Airtable key is configured", async () => {
     const res = await slack_global_team_authorize(
       { SLACK_ORGANIZER_TEAM_ID: "T_ORG" },
-      { teamId: "T_ORG", userName: "alice" },
+      { teamId: "T_ORG", userId: "U123" },
     );
     expect(res.ok).toBe(false);
     expect(res.message).toMatch(/try again/i);
@@ -162,12 +102,12 @@ describe("slack_global_team_authorize", () => {
 
   it("follows Airtable pagination across pages", async () => {
     mockAirtable([
-      { records: [{ fields: { organiser_slack: "alice" } }], offset: "p2" },
-      { records: [{ fields: { organiser_slack: "bob" } }] },
+      { records: [{ fields: { organiser_slack_id: "U1" } }], offset: "p2" },
+      { records: [{ fields: { organiser_slack_id: "U2" } }] },
     ]);
     const res = await slack_global_team_authorize(ORG_ENV, {
       teamId: "T_ORG",
-      userName: "bob",
+      userId: "U2",
     });
     expect(res.ok).toBe(true);
   });

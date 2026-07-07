@@ -1,30 +1,28 @@
-import { slack_user_identities } from "./slack-api.js";
-
 // Global-team authorization for the worker's local slash commands.
 //
-// Mirrors the R gate in R/authorize.R (cmd_authorize / gt_actor_is_authorized)
-// so local commands share ONE source of truth with the dispatched commands: the
-// Airtable "Member" directory. Same rules as the R side:
+// Shares ONE source of truth with the dispatched commands: the Airtable member
+// directory ("Global team overview"). Rules:
 //   * Slack identity is only trusted in the organiser workspace — community
 //     usernames are mutable and the workspace is openly joinable, so a colliding
-//     handle there must never authorize a privileged action.
+//     identity there must never authorize a privileged action.
 //   * The check fails closed: an unknown actor is denied, and a directory that
 //     cannot be read is also denied (with a distinct "try again" message).
 //
-// The directory schema mirrors inst/config/teams.yml `member_directory`. The
-// table is referenced by its stable **table id** (not the display name, which
-// does not resolve via the Airtable API and returned MODEL_NOT_FOUND). If the
-// directory moves, update both this and teams.yml.
+// Matching is on the Slack **user id** (the slash command's `user_id`) against
+// the directory's `slack_user_id` column. User ids are stable, unique, and
+// always present in the payload — unlike the display-name/@mention text in
+// `organiser_slack`, which is informal and (under Enterprise Grid) not even
+// resolvable via users.info. The table is referenced by its stable table id.
 const MEMBER_DIRECTORY = {
   base_id: "appZjaV7eM0Y9FsHZ",
   table: "tblfFWklqjtGdBLiT",
-  slack_field: "organiser_slack",
+  id_field: "organiser_slack_id",
 };
 
 const AUTHZ_DENIED =
   "🚫 Peeking at what folks ask me is limited to the RLadies+ global team. " +
-  "If you're a global team member, check that your Slack username is recorded " +
-  "in the global team directory.";
+  "If you're a global team member, ask a maintainer to add your Slack member " +
+  "ID to the `organiser_slack_id` column of the global team directory.";
 const AUTHZ_WORKSPACE =
   "🚫 This one's for the RLadies+ global team, and I only trust that from the " +
   "organisers workspace — sorry, house rules!";
@@ -32,15 +30,14 @@ const AUTHZ_UNVERIFIABLE =
   "😿 I couldn't check your global-team membership just now. Please try again " +
   "in a moment.";
 
-function normalize_handle(x) {
+function normalize_id(x) {
   return String(x ?? "")
     .trim()
-    .replace(/^@/, "")
-    .toLowerCase();
+    .toUpperCase();
 }
 
-async function member_slack_handles(env) {
-  const handles = new Set();
+async function member_slack_ids(env) {
+  const ids = new Set();
   let offset;
   do {
     const url = new URL(
@@ -53,52 +50,31 @@ async function member_slack_handles(env) {
     if (!res.ok) throw new Error(`Airtable list failed: HTTP ${res.status}`);
     const data = await res.json();
     for (const record of data.records || []) {
-      const handle = normalize_handle(record.fields?.[MEMBER_DIRECTORY.slack_field]);
-      if (handle) handles.add(handle);
+      const id = normalize_id(record.fields?.[MEMBER_DIRECTORY.id_field]);
+      if (id) ids.add(id);
     }
     offset = data.offset;
   } while (offset);
-  return handles;
+  return ids;
 }
 
 // Returns { ok, message }. ok === true means the actor may run the command;
 // otherwise `message` is an ephemeral refusal. Never throws — a lookup failure
 // resolves to a fail-closed { ok: false } with the unverifiable message.
-//
-// The directory's organiser_slack column holds the Slack *display name* (the
-// @mention text, e.g. "@mo", "@Mouna Belaid"), not the slash-command username.
-// So we match against every identity string Slack knows for the user — the
-// username plus display/real names from users.info — and accept if any is in
-// the directory.
-export async function slack_global_team_authorize(
-  env,
-  { teamId, userName, userId },
-) {
+export async function slack_global_team_authorize(env, { teamId, userId }) {
   if (!env.SLACK_ORGANIZER_TEAM_ID || teamId !== env.SLACK_ORGANIZER_TEAM_ID) {
     return { ok: false, message: AUTHZ_WORKSPACE };
   }
   if (!env.AIRTABLE_API_KEY) {
     return { ok: false, message: AUTHZ_UNVERIFIABLE };
   }
-
-  const candidates = new Set();
-  if (userName) candidates.add(normalize_handle(userName));
-  try {
-    for (const name of await slack_user_identities(env, teamId, userId)) {
-      candidates.add(normalize_handle(name));
-    }
-  } catch (e) {
-    console.warn("users.info lookup failed:", e.message);
-  }
-  candidates.delete("");
-  if (candidates.size === 0) {
+  const actor = normalize_id(userId);
+  if (!actor) {
     return { ok: false, message: AUTHZ_DENIED };
   }
-
   try {
-    const handles = await member_slack_handles(env);
-    const matched = [...candidates].some((c) => handles.has(c));
-    return matched
+    const ids = await member_slack_ids(env);
+    return ids.has(actor)
       ? { ok: true, message: null }
       : { ok: false, message: AUTHZ_DENIED };
   } catch (e) {
