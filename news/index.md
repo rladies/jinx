@@ -31,6 +31,18 @@
   confirm before editing the Guide — nothing is written to the RAG index
   automatically.
 
+- **Global-team authorization matches on the Slack member id, not the
+  handle.**
+  [`cmd_authorize()`](https://rladies.github.io/jinx/reference/cmd_authorize.md)
+  (and the worker’s command gate) now compare the requesting Slack
+  `user_id` against an `organiser_slack_id` column in the member
+  directory, rather than the informal `@mention` in `organiser_slack`.
+  Handle matching was unreliable (nicknames, real names with spaces) and
+  impossible under Enterprise Grid, where `users.info` cannot resolve
+  profiles. `bot-commands.yml` now passes `user_id` as the actor for
+  Slack-sourced commands. Populate `organiser_slack_id` for each
+  global-team member.
+
 ### Directory
 
 - **The automated review lists clickable profile links instead of

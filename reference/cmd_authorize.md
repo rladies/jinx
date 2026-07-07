@@ -30,7 +30,7 @@ cmd_authorize(
 - actor:
 
   The requesting actor: a GitHub login when `source` is `"github"`, or a
-  Slack username when `source` is `"slack"`.
+  Slack user id when `source` is `"slack"`.
 
 - source:
 
@@ -53,7 +53,7 @@ A list with `ok` (logical) and `message` (a refusal string when `ok` is
 ## Details
 
 Slack identity is only trusted in the organisers workspace. The
-community workspace is openly joinable and the Slack `user_name` is
-mutable and workspace-scoped, so a colliding handle there must not
-authorize privileged actions; privileged Slack commands are only honored
-when `workspace` is `"organiser"`.
+community workspace is openly joinable and its user ids come from a
+different Slack team, so an id from there must not authorize privileged
+actions; privileged Slack commands are only honored when `workspace` is
+`"organiser"`.
