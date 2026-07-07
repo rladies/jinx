@@ -5,7 +5,7 @@
 #' `teams.yml` so the code does not hard-code the Airtable schema.
 #'
 #' @param config Teams config as returned by [load_teams_config()].
-#' @return A list with `base_id`, `table`, `github_field`, `slack_field`.
+#' @return A list with `base_id`, `table`, `github_field`, `slack_id_field`.
 #' @keywords internal
 #' @noRd
 member_directory_config <- function(config = NULL) {
@@ -15,7 +15,7 @@ member_directory_config <- function(config = NULL) {
     base_id = cfg$base_id %||% "appZjaV7eM0Y9FsHZ",
     table = cfg$table %||% "tblfFWklqjtGdBLiT",
     github_field = cfg$github_field %||% "GitHub handle",
-    slack_field = cfg$slack_field %||% "organiser_slack"
+    slack_id_field = cfg$slack_id_field %||% "organiser_slack_id"
   )
 }
 
@@ -33,16 +33,34 @@ normalize_handle <- function(x) {
   tolower(sub("^@", "", trimws(x)))
 }
 
+#' Normalise a Slack user id for comparison
+#'
+#' Slack member ids (e.g. `U012ABC`) are case-sensitive and canonically
+#' upper-case; trim and upper-case so a directory value pasted with stray
+#' whitespace or lower case still compares cleanly.
+#'
+#' @param x Character vector of Slack user ids.
+#' @return Trimmed, upper-cased ids.
+#' @keywords internal
+#' @noRd
+normalize_id <- function(x) {
+  toupper(trimws(x))
+}
+
 #' Whether an actor appears in the global team member directory
 #'
-#' Looks the actor up in the Airtable member directory, matching the
-#' GitHub username column for GitHub-sourced commands and the Slack
-#' username column for Slack-sourced commands. Aborts (rather than
-#' returning `FALSE`) when the directory cannot be read, so the caller
-#' can distinguish "not a member" from "could not verify".
+#' Looks the actor up in the Airtable member directory. GitHub commands
+#' match the GitHub-handle column (case-insensitive login). Slack commands
+#' match the Slack **user id** column (`organiser_slack_id`) against the
+#' payload's `user_id` — stable and unique, unlike the informal @mention
+#' text in `organiser_slack`, and resolvable under Enterprise Grid where
+#' `users.info` is not. Aborts (rather than returning `FALSE`) when the
+#' directory cannot be read, so the caller can distinguish "not a member"
+#' from "could not verify".
 #'
 #' @param source Either `"github"` or `"slack"`.
-#' @param actor The actor handle (GitHub login or Slack username).
+#' @param actor The actor identity: a GitHub login when `source` is
+#'   `"github"`, or a Slack user id when `source` is `"slack"`.
 #' @param api_key Airtable API key.
 #' @param dir Member directory config from `member_directory_config()`.
 #' @return `TRUE` when the actor is in the directory, otherwise `FALSE`.
@@ -61,18 +79,22 @@ gt_actor_is_authorized <- function(
     cli::cli_abort("AIRTABLE_API_KEY is not set; cannot verify authorization.")
   }
 
-  field <- switch(source, github = dir$github_field, slack = dir$slack_field)
-  if (is.null(field)) {
+  spec <- switch(
+    source,
+    github = list(field = dir$github_field, norm = normalize_handle),
+    slack = list(field = dir$slack_id_field, norm = normalize_id)
+  )
+  if (is.null(spec)) {
     cli::cli_abort("Unknown command source {.val {source}}.")
   }
 
   records <- airtable_list_records(dir$base_id, dir$table, api_key)
   known <- vapply(
     records,
-    function(r) normalize_handle(r$fields[[field]] %||% ""),
+    function(r) spec$norm(r$fields[[spec$field]] %||% ""),
     character(1)
   )
-  normalize_handle(actor) %in% known[nzchar(known)]
+  spec$norm(actor) %in% known[nzchar(known)]
 }
 
 #' Authorize a parsed command before execution
@@ -85,14 +107,14 @@ gt_actor_is_authorized <- function(
 #' also denied (with a distinct "try again" message).
 #'
 #' Slack identity is only trusted in the organisers workspace. The
-#' community workspace is openly joinable and the Slack `user_name` is
-#' mutable and workspace-scoped, so a colliding handle there must not
-#' authorize privileged actions; privileged Slack commands are only
-#' honored when `workspace` is `"organiser"`.
+#' community workspace is openly joinable and its user ids come from a
+#' different Slack team, so an id from there must not authorize privileged
+#' actions; privileged Slack commands are only honored when `workspace` is
+#' `"organiser"`.
 #'
 #' @param command Parsed command list from [cmd_parse()], or `NULL`.
 #' @param actor The requesting actor: a GitHub login when `source` is
-#'   `"github"`, or a Slack username when `source` is `"slack"`.
+#'   `"github"`, or a Slack user id when `source` is `"slack"`.
 #' @param source Origin of the command, `"github"` or `"slack"`.
 #' @param workspace Originating Slack workspace for `source = "slack"`:
 #'   `"organiser"` or `"community"`. Ignored for GitHub commands.
@@ -142,7 +164,7 @@ cmd_authorize <- function(
 #' @keywords internal
 #' @noRd
 authz_denied_message <- function(source) {
-  handle <- if (source == "slack") "Slack username" else "GitHub username"
+  handle <- if (source == "slack") "Slack member ID" else "GitHub username"
   glue::glue(
     "\U0001f6ab This command is limited to the RLadies+ global team. ",
     "If you are a global team member, check that your {handle} is ",

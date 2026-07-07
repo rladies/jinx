@@ -16,7 +16,7 @@ cmd_authorize(
 \item{command}{Parsed command list from \code{\link[=cmd_parse]{cmd_parse()}}, or \code{NULL}.}
 
 \item{actor}{The requesting actor: a GitHub login when \code{source} is
-\code{"github"}, or a Slack username when \code{source} is \code{"slack"}.}
+\code{"github"}, or a Slack user id when \code{source} is \code{"slack"}.}
 
 \item{source}{Origin of the command, \code{"github"} or \code{"slack"}.}
 
@@ -39,8 +39,8 @@ also denied (with a distinct "try again" message).
 }
 \details{
 Slack identity is only trusted in the organisers workspace. The
-community workspace is openly joinable and the Slack \code{user_name} is
-mutable and workspace-scoped, so a colliding handle there must not
-authorize privileged actions; privileged Slack commands are only
-honored when \code{workspace} is \code{"organiser"}.
+community workspace is openly joinable and its user ids come from a
+different Slack team, so an id from there must not authorize privileged
+actions; privileged Slack commands are only honored when \code{workspace} is
+\code{"organiser"}.
 }
