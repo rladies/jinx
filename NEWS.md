@@ -1,5 +1,18 @@
 # jinx (development version)
 
+## RAG: Cloudflare calls now go through cloudflarer
+
+- The RAG indexer's Cloudflare calls are now built on
+  [cloudflarer](https://drmowinckels.r-universe.dev/cloudflarer) instead of a
+  hand-rolled `httr2` request builder. `cloudflare_account_id()` now delegates
+  to `cloudflarer::cf_list_accounts()`; `cloudflare_embed()` and
+  `cloudflare_vectorize_upsert()` stay custom (cloudflarer doesn't wrap Workers
+  AI inference or Vectorize v2) but now build on `cloudflarer::cf_request()`
+  and unwrap responses with `cloudflarer::cf_resp()`, which raises a classed
+  `cloudflarer_error` on API failure instead of a bare HTTP-status error.
+  `cloudflare_vectorize_upsert()`'s return value changed from the full
+  `{success, errors, result}` envelope to just the unwrapped `result` payload.
+
 ## Jinx assistant
 
 - **Jinx now keeps an anonymous question-improvement log so the corpus can

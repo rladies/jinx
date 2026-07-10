@@ -26,4 +26,7 @@ List of numeric vectors, one per input text.
 \description{
 Calls the Cloudflare REST endpoint
 \code{accounts/{id}/ai/run/{model}} and returns the embedding vectors.
+Custom because \href{https://drmowinckels.r-universe.dev/cloudflarer}{cloudflarer}
+does not wrap Workers AI inference; built on its \code{\link[cloudflarer:cf_request]{cloudflarer::cf_request()}}
+and \code{\link[cloudflarer:cf_resp]{cloudflarer::cf_resp()}} for consistent auth and error handling.
 }
