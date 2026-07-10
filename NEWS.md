@@ -1,5 +1,19 @@
 # jinx (development version)
 
+## Question log: read the D1 gap report from R
+
+- **`/jinx questions [days]` now works from GitHub too, not just Slack.**
+  `question_log_query()` reads the same `jinx-question-log` D1 database
+  `worker/src/question-log.js` writes to, via
+  [cloudflarer](https://drmowinckels.r-universe.dev/cloudflarer)'s
+  `cf_d1_query()`. `question_gaps_rank()` and `question_downvoted_rank()` are R
+  ports of the worker's ranking logic, folding near-duplicate unanswered
+  questions together and surfacing net-downvoted answers, worst first.
+  `question_log_format()` renders the outcome breakdown, top content gaps, and
+  most-downvoted answers as markdown. Like its Slack counterpart, the command
+  is restricted to the global team — the corpus is anonymous, but still
+  internal usage insight.
+
 ## RAG: Cloudflare calls now go through cloudflarer
 
 - The RAG indexer's Cloudflare calls are now built on
