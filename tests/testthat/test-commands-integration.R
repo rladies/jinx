@@ -237,6 +237,39 @@ describe("cmd_execute integration: producer to formatter", {
     expect_true(grepl("CI", result, fixed = TRUE))
   })
 
+  it("workers-status runs cf_ops_workers_invocations then formats the table", {
+    local_mocked_bindings(
+      cf_ops_workers_invocations = function(...) {
+        data.frame(
+          date = "2026-07-01",
+          script = "jinx",
+          requests = 100L,
+          errors = 0L,
+          subrequests = 10L,
+          cpu_p50_us = 12.5,
+          cpu_p99_us = 80.0,
+          stringsAsFactors = FALSE
+        )
+      }
+    )
+    result <- cmd_execute(list(action = "workers-status"))
+    expect_type(result, "character")
+    expect_true(grepl("2026-07-01", result, fixed = TRUE))
+  })
+
+  it("cache-purge purges and echoes back what was purged", {
+    local_mocked_bindings(
+      cf_ops_purge_cache = function(...) list(id = "purge1")
+    )
+    result <- cmd_execute(list(
+      action = "cache-purge",
+      prefixes = c("rladies.org/blog", "rladies.org/events")
+    ))
+    expect_type(result, "character")
+    expect_true(grepl("rladies.org/blog", result, fixed = TRUE))
+    expect_true(grepl("rladies.org/events", result, fixed = TRUE))
+  })
+
   it("events runs event_list_chapter then event_create_summary", {
     local_mocked_bindings(
       event_list_chapter = function(chapter, ...) {

@@ -111,6 +111,11 @@ reference:
     contents:
       - starts_with("gha_")
 
+  - title: Worker/cache ops
+    desc: Cloudflare Workers status and cache-purge tooling
+    contents:
+      - starts_with("cf_ops_")
+
   - title: Contributors
     desc: Contributor tracking and recognition
     contents:
