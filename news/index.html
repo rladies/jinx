@@ -66,6 +66,10 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="rag-cloudflare-calls-now-go-through-cloudflarer-development-version">RAG: Cloudflare calls now go through cloudflarer<a class="anchor" aria-label="anchor" href="#rag-cloudflare-calls-now-go-through-cloudflarer-development-version"></a></h3>
+<ul><li>The RAG indexer’s Cloudflare calls are now built on <a href="https://drmowinckels.r-universe.dev/cloudflarer" class="external-link">cloudflarer</a> instead of a hand-rolled <code>httr2</code> request builder. <code><a href="../reference/cloudflare_account_id.html">cloudflare_account_id()</a></code> now delegates to <code><a href="https://rdrr.io/pkg/cloudflarer/man/cf_list_accounts.html" class="external-link">cloudflarer::cf_list_accounts()</a></code>; <code><a href="../reference/cloudflare_embed.html">cloudflare_embed()</a></code> and <code><a href="../reference/cloudflare_vectorize_upsert.html">cloudflare_vectorize_upsert()</a></code> stay custom (cloudflarer doesn’t wrap Workers AI inference or Vectorize v2) but now build on <code><a href="https://rdrr.io/pkg/cloudflarer/man/cf_request.html" class="external-link">cloudflarer::cf_request()</a></code> and unwrap responses with <code><a href="https://rdrr.io/pkg/cloudflarer/man/cf_resp.html" class="external-link">cloudflarer::cf_resp()</a></code>, which raises a classed <code>cloudflarer_error</code> on API failure instead of a bare HTTP-status error. <code><a href="../reference/cloudflare_vectorize_upsert.html">cloudflare_vectorize_upsert()</a></code>’s return value changed from the full <code>{success, errors, result}</code> envelope to just the unwrapped <code>result</code> payload.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="jinx-assistant-development-version">Jinx assistant<a class="anchor" aria-label="anchor" href="#jinx-assistant-development-version"></a></h3>
 <ul><li><p><strong>Jinx now keeps an anonymous question-improvement log so the corpus can evolve.</strong> Every <code>@Jinx</code> mention or DM records the question text and a coarse outcome (<code>answered</code>, <code>no_match</code>, <code>coding_declined</code>, or <code>low_confidence</code>) to a Cloudflare D1 table — with no Slack user id, channel, or thread timestamp, so a logged question cannot be traced to who asked. Answers are linked so a 👍/👎 reaction updates that question’s score, turning “which answers were weak” into a maintainer to-do list. <code>/jinx questions [days]</code> surfaces the top gaps and most-downvoted answers; rows are purged after 180 days by a daily cron. Reading the log (via <code>/jinx questions</code> and <code>/jinx feedback</code>) is restricted to the global team, reusing the same Airtable member directory as <code><a href="../reference/cmd_authorize.html">cmd_authorize()</a></code>. Requires provisioning a <code>jinx-question-log</code> D1 database (see <code>wrangler.jsonc</code>).</p></li>
 <li><p><strong>A weekly digest turns those gaps into an action list.</strong> Every Monday a scheduled job reads the question log, clusters the questions Jinx couldn’t answer well (<code>no_match</code> / <code>low_confidence</code>, excluding declined coding questions), drafts a <em>proposed</em> Guide answer for the top gaps, and posts the lot — plus any 👎’d answers — to the global-team Slack channel (<code>SLACK_DIGEST_CHANNEL</code>, default <code>#team-jinx</code>) for review. The corpus stays human-authored: drafts are AI-suggested and unverified, only ever a Slack message for a person to confirm before editing the Guide — nothing is written to the RAG index automatically.</p></li>
@@ -203,7 +207,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <li>Hugo page fetches are parallelised via <code><a href="https://httr2.r-lib.org/reference/req_perform_parallel.html" class="external-link">httr2::req_perform_parallel</a></code> (<code>max_active = 8</code>) to match the throughput of the JS pool the indexer replaced.</li>
 <li>
 <code><a href="../reference/gather_rag_source.html">gather_rag_source()</a></code> now hard-errors on an unknown source type so a YAML typo in <code>inst/config/rag-sources.yml</code> aborts the run rather than silently skipping a source on the weekly cron.</li>
-<li>Cloudflare API calls (embed, upsert, account-id discovery) inherit a <code>req_retry(max_tries = 3)</code> policy via the base <code><a href="../reference/cloudflare_request.html">cloudflare_request()</a></code> helper, so a transient 5xx no longer kills the whole indexer.</li>
+<li>Cloudflare API calls (embed, upsert, account-id discovery) inherit a <code>req_retry(max_tries = 3)</code> policy via the base <code>cloudflare_request()</code> helper, so a transient 5xx no longer kills the whole indexer.</li>
 <li>Fixed NA propagation in <code><a href="../reference/extract_hugo_page.html">extract_hugo_page()</a></code> that could embed the literal string <code>"NA"</code> into chunk text when a Hugo page was missing a <code>&lt;title&gt;</code> or <code>&lt;meta name="description"&gt;</code> tag.</li>
 </ul></div>
 <div class="section level3">
@@ -261,7 +265,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

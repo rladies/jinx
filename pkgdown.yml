@@ -1,5 +1,5 @@
 pandoc: 3.8.3
-pkgdown: 2.2.0
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   articles/architecture: architecture.html
@@ -8,7 +8,7 @@ articles:
   articles/rag-indexer: rag-indexer.html
   slack-app: slack-app.html
   workflows: workflows.html
-last_built: 2026-07-07T12:40Z
+last_built: 2026-07-11T20:02Z
 urls:
   reference: https://rladies.github.io/jinx/reference
   article: https://rladies.github.io/jinx/articles

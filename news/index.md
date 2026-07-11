@@ -2,6 +2,28 @@
 
 ## jinx (development version)
 
+### RAG: Cloudflare calls now go through cloudflarer
+
+- The RAG indexer’s Cloudflare calls are now built on
+  [cloudflarer](https://drmowinckels.r-universe.dev/cloudflarer) instead
+  of a hand-rolled `httr2` request builder.
+  [`cloudflare_account_id()`](https://rladies.github.io/jinx/reference/cloudflare_account_id.md)
+  now delegates to
+  [`cloudflarer::cf_list_accounts()`](https://rdrr.io/pkg/cloudflarer/man/cf_list_accounts.html);
+  [`cloudflare_embed()`](https://rladies.github.io/jinx/reference/cloudflare_embed.md)
+  and
+  [`cloudflare_vectorize_upsert()`](https://rladies.github.io/jinx/reference/cloudflare_vectorize_upsert.md)
+  stay custom (cloudflarer doesn’t wrap Workers AI inference or
+  Vectorize v2) but now build on
+  [`cloudflarer::cf_request()`](https://rdrr.io/pkg/cloudflarer/man/cf_request.html)
+  and unwrap responses with
+  [`cloudflarer::cf_resp()`](https://rdrr.io/pkg/cloudflarer/man/cf_resp.html),
+  which raises a classed `cloudflarer_error` on API failure instead of a
+  bare HTTP-status error.
+  [`cloudflare_vectorize_upsert()`](https://rladies.github.io/jinx/reference/cloudflare_vectorize_upsert.md)’s
+  return value changed from the full `{success, errors, result}`
+  envelope to just the unwrapped `result` payload.
+
 ### Jinx assistant
 
 - **Jinx now keeps an anonymous question-improvement log so the corpus
@@ -404,8 +426,7 @@
   `inst/config/rag-sources.yml` aborts the run rather than silently
   skipping a source on the weekly cron.
 - Cloudflare API calls (embed, upsert, account-id discovery) inherit a
-  `req_retry(max_tries = 3)` policy via the base
-  [`cloudflare_request()`](https://rladies.github.io/jinx/reference/cloudflare_request.md)
+  `req_retry(max_tries = 3)` policy via the base `cloudflare_request()`
   helper, so a transient 5xx no longer kills the whole indexer.
 - Fixed NA propagation in
   [`extract_hugo_page()`](https://rladies.github.io/jinx/reference/extract_hugo_page.md)

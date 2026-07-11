@@ -1,6 +1,12 @@
 # Upsert vectors into a Cloudflare Vectorize index
 
-Upsert vectors into a Cloudflare Vectorize index
+Custom because
+[cloudflarer](https://drmowinckels.r-universe.dev/cloudflarer) does not
+wrap Vectorize v2; built on its
+[`cloudflarer::cf_request()`](https://rdrr.io/pkg/cloudflarer/man/cf_request.html)
+and
+[`cloudflarer::cf_resp()`](https://rdrr.io/pkg/cloudflarer/man/cf_resp.html)
+for consistent auth and error handling.
 
 ## Usage
 
@@ -28,4 +34,4 @@ cloudflare_vectorize_upsert(vectors, account_id, api_token, index_name)
 
 ## Value
 
-Parsed JSON response body.
+The unwrapped `result` payload from the Cloudflare response.
