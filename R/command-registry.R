@@ -160,6 +160,13 @@ jinx_commands <- function() {
       downvoted <- question_downvoted_rank(rows)
       question_log_format(rows, gaps, downvoted, days = command$days)
     }),
+    "cf-analytics" = command_spec("jinx_safe", function(command) {
+      data <- rum_generate_report(
+        since = Sys.Date() - command$days,
+        until = Sys.Date()
+      )
+      data$markdown
+    }),
     "cfp-list" = command_spec("jinx_safe", function(command) {
       cfps <- cfp_list_open()
       if (nrow(cfps) == 0) {

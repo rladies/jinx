@@ -1,5 +1,16 @@
 # jinx (development version)
 
+## Website analytics: Cloudflare Web Analytics (RUM) alongside Plausible
+
+- **`/jinx cf-analytics [days]` reports on Cloudflare's Web Analytics (RUM)
+  beacon data**, a new sibling to the existing Plausible-backed
+  `/jinx website-analytics`. `rum_collect_analytics()`/`rum_format_analytics()`/
+  `rum_generate_report()` in `R/website-rum.R` query pageviews and top
+  pages/referrers/countries via `cloudflarer::cf_rum_page_views()` and
+  `cf_rum_top()`. `jinx_safe` — aggregate traffic data, same sensitivity class
+  as the Plausible command. No issue-publishing helper; like `gha-dashboard`,
+  the report is returned directly as the command reply.
+
 ## Question log: read the D1 gap report from R
 
 - **`/jinx questions [days]` now works from GitHub too, not just Slack.**

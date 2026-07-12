@@ -327,6 +327,20 @@ describe("cmd_execute integration: producer to formatter", {
     expect_match(result, "Question Log")
   })
 
+  it("cf-analytics returns the markdown from the RUM report", {
+    local_mocked_bindings(
+      rum_generate_report = function(since, until, ...) {
+        list(
+          analytics = list(since = since, until = until),
+          markdown = "## Cloudflare Web Analytics\nbody"
+        )
+      }
+    )
+    result <- cmd_execute(list(action = "cf-analytics", days = 14))
+    expect_type(result, "character")
+    expect_match(result, "Cloudflare Web Analytics")
+  })
+
   it("cfp-list formats the open CFP data frame", {
     local_mocked_bindings(
       cfp_list_open = function(...) {
