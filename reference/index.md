@@ -265,6 +265,17 @@ Plausible website performance reports
 - [`website_publish_report()`](https://rladies.github.io/jinx/reference/website_publish_report.md)
   : Publish website analytics as a GitHub issue
 
+## Cloudflare Web Analytics (RUM)
+
+Real-user monitoring beacon reports
+
+- [`rum_collect_analytics()`](https://rladies.github.io/jinx/reference/rum_collect_analytics.md)
+  : Collect Cloudflare RUM (Web Analytics) traffic data
+- [`rum_format_analytics()`](https://rladies.github.io/jinx/reference/rum_format_analytics.md)
+  : Format Cloudflare RUM analytics as markdown
+- [`rum_generate_report()`](https://rladies.github.io/jinx/reference/rum_generate_report.md)
+  : Generate a Cloudflare RUM analytics report
+
 ## Question log
 
 Anonymous question-improvement log gap reporting
