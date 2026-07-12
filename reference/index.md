@@ -265,6 +265,19 @@ Plausible website performance reports
 - [`website_publish_report()`](https://rladies.github.io/jinx/reference/website_publish_report.md)
   : Publish website analytics as a GitHub issue
 
+## Question log
+
+Anonymous question-improvement log gap reporting
+
+- [`question_log_query()`](https://rladies.github.io/jinx/reference/question_log_query.md)
+  : Query the anonymous question log
+- [`question_gaps_rank()`](https://rladies.github.io/jinx/reference/question_gaps_rank.md)
+  : Rank content-gap questions by normalized-duplicate count
+- [`question_downvoted_rank()`](https://rladies.github.io/jinx/reference/question_downvoted_rank.md)
+  : Rank questions where downvotes exceed upvotes
+- [`question_log_format()`](https://rladies.github.io/jinx/reference/question_log_format.md)
+  : Format a question-log report as markdown
+
 ## Conference coordination
 
 CFP tracking and speaker recommendations

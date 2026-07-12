@@ -197,6 +197,10 @@
 <url><loc>https://rladies.github.io/jinx/reference/pkgdown_llms_chunks.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/prepare_inactivity_emails.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/punct_name.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/question_downvoted_rank.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/question_gaps_rank.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/question_log_format.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/question_log_query.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/rag_chunk_id.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/rag_fetch_json.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/rag_fetch_text.html</loc></url>
