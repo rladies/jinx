@@ -144,6 +144,13 @@ reference:
       - website_generate_report
       - website_publish_report
 
+  - title: Cloudflare Web Analytics (RUM)
+    desc: Real-user monitoring beacon reports
+    contents:
+      - rum_collect_analytics
+      - rum_format_analytics
+      - rum_generate_report
+
   - title: Question log
     desc: Anonymous question-improvement log gap reporting
     contents:
