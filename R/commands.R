@@ -371,11 +371,18 @@ parse_website_analytics_command <- function(parts) {
 }
 
 parse_questions_command <- function(parts) {
-  days <- if (length(parts) >= 2) suppressWarnings(as.integer(parts[2])) else 7L
+  days <- if (length(parts) >= 2) {
+    suppressWarnings(as.integer(parts[2]))
+  } else {
+    7L
+  }
   if (is.na(days) || days <= 0) {
     return(list(
       action = "error",
-      message = "Usage: `/jinx questions [days]` where days is a positive integer"
+      message = paste(
+        "Usage: `/jinx questions [days]`",
+        "where days is a positive integer"
+      )
     ))
   }
   list(action = "questions", days = days)
