@@ -152,6 +152,14 @@ jinx_commands <- function() {
       data <- website_generate_report(period = command$period)
       data$markdown
     }),
+    questions = command_spec("jinx_gated", function(command) {
+      rows <- question_log_query(
+        since_day = as.character(Sys.Date() - command$days)
+      )
+      gaps <- question_gaps_rank(rows)
+      downvoted <- question_downvoted_rank(rows)
+      question_log_format(rows, gaps, downvoted, days = command$days)
+    }),
     "cfp-list" = command_spec("jinx_safe", function(command) {
       cfps <- cfp_list_open()
       if (nrow(cfps) == 0) {

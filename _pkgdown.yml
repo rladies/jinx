@@ -144,6 +144,14 @@ reference:
       - website_generate_report
       - website_publish_report
 
+  - title: Question log
+    desc: Anonymous question-improvement log gap reporting
+    contents:
+      - question_log_query
+      - question_gaps_rank
+      - question_downvoted_rank
+      - question_log_format
+
   - title: Conference coordination
     desc: CFP tracking and speaker recommendations
     contents:

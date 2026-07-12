@@ -310,6 +310,23 @@ describe("cmd_execute integration: producer to formatter", {
     expect_match(result, "Website Analytics")
   })
 
+  it("questions formats the gap/downvote report from the D1 log", {
+    local_mocked_bindings(
+      question_log_query = function(...) {
+        data.frame(
+          question = "how do I start a chapter?",
+          outcome = "no_match",
+          up = 0L,
+          down = 0L,
+          stringsAsFactors = FALSE
+        )
+      }
+    )
+    result <- cmd_execute(list(action = "questions", days = 14))
+    expect_type(result, "character")
+    expect_match(result, "Question Log")
+  })
+
   it("cfp-list formats the open CFP data frame", {
     local_mocked_bindings(
       cfp_list_open = function(...) {

@@ -42,6 +42,7 @@ cmd_parse <- function(body) {
     events = parse_events_command(parts),
     analytics = list(action = "analytics"),
     "website-analytics" = parse_website_analytics_command(parts),
+    questions = parse_questions_command(parts),
     cfp = parse_cfp_command(parts),
     poll = parse_poll_command(parts),
     translate = parse_translate_command(parts),
@@ -369,6 +370,24 @@ parse_website_analytics_command <- function(parts) {
   list(action = "website-analytics", period = period)
 }
 
+parse_questions_command <- function(parts) {
+  days <- if (length(parts) >= 2) {
+    suppressWarnings(as.integer(parts[2]))
+  } else {
+    7L
+  }
+  if (is.na(days) || days <= 0) {
+    return(list(
+      action = "error",
+      message = paste(
+        "Usage: `/jinx questions [days]`",
+        "where days is a positive integer"
+      )
+    ))
+  }
+  list(action = "questions", days = days)
+}
+
 parse_translate_command <- function(parts) {
   if (length(parts) < 2) {
     return(list(
@@ -433,6 +452,7 @@ normalize_command <- function(parts) {
   phrases <- list(
     list(c("generate", "website", "analytics"), "website-analytics"),
     list(c("website", "analytics"), "website-analytics"),
+    list(c("question", "log"), "questions"),
     list(c("generate", "analytics"), "analytics"),
     list(c("generate", "report"), "report"),
     list(c("generate", "dashboard"), "gha-dashboard"),
