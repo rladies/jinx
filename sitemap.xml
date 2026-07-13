@@ -34,6 +34,12 @@
 <url><loc>https://rladies.github.io/jinx/reference/blog_check_links.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/blog_check_links_repo.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/blog_create_entry.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/cf_ops_format_workers_report.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/cf_ops_get_kv_value.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/cf_ops_list_kv_keys.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/cf_ops_list_workers_scripts.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/cf_ops_purge_cache.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/cf_ops_workers_invocations.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cfp_check_deadlines.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cfp_create_issue.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cfp_list_open.html</loc></url>

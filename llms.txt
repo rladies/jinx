@@ -323,6 +323,23 @@ GitHub Actions workflow status
 - [`gha_generate_dashboard()`](https://rladies.github.io/jinx/reference/gha_generate_dashboard.md)
   : Generate GitHub Actions dashboard data
 
+## Worker/cache ops
+
+Cloudflare Workers status and cache-purge tooling
+
+- [`cf_ops_format_workers_report()`](https://rladies.github.io/jinx/reference/cf_ops_format_workers_report.md)
+  : Format Workers invocation metrics as a markdown table
+- [`cf_ops_get_kv_value()`](https://rladies.github.io/jinx/reference/cf_ops_get_kv_value.md)
+  : Read a single value from a Cloudflare KV namespace
+- [`cf_ops_list_kv_keys()`](https://rladies.github.io/jinx/reference/cf_ops_list_kv_keys.md)
+  : List keys in a Cloudflare KV namespace
+- [`cf_ops_list_workers_scripts()`](https://rladies.github.io/jinx/reference/cf_ops_list_workers_scripts.md)
+  : List Workers scripts deployed on the account
+- [`cf_ops_purge_cache()`](https://rladies.github.io/jinx/reference/cf_ops_purge_cache.md)
+  : Purge specific URLs or prefixes from the Cloudflare cache
+- [`cf_ops_workers_invocations()`](https://rladies.github.io/jinx/reference/cf_ops_workers_invocations.md)
+  : Query Workers invocation/error/CPU metrics
+
 ## Contributors
 
 Contributor tracking and recognition
