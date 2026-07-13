@@ -8,15 +8,15 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/rladies/jinx/blob/v0.2.0/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/rladies/jinx/blob/main/DESCRIPTION)
 
 RLadies+ (2026). *jinx: RLadies+ GitHub Organisation Management*. R
-package version 0.2.0, <https://github.com/rladies/jinx>.
+package version 0.2.0.9000, <https://github.com/rladies/jinx>.
 
     @Manual{,
       title = {jinx: RLadies+ GitHub Organisation Management},
       author = {{RLadies+}},
       year = {2026},
-      note = {R package version 0.2.0},
+      note = {R package version 0.2.0.9000},
       url = {https://github.com/rladies/jinx},
     }
