@@ -1,5 +1,7 @@
 # jinx (development version)
 
+# jinx 0.2.0
+
 ## Worker/cache ops via cloudflarer
 
 - **`/jinx workers-status` reports Workers invocation/error/CPU metrics** for

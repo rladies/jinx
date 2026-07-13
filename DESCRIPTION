@@ -1,6 +1,6 @@
 Package: jinx
 Title: RLadies+ GitHub Organisation Management
-Version: 0.1.1
+Version: 0.2.0
 Authors@R:
     person("RLadies+", email = "info@rladies.org", role = c("aut", "cre", "cph"),
            comment = c(ROR = "https://ror.org/05wpb1k41"))
