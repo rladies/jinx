@@ -94,6 +94,28 @@
 
 ## Directory
 
+- **`directory_purge_submissions()` erases a member's Airtable submissions for
+  GDPR right-to-erasure.** Given the directory slugs a purge removed, it deletes
+  every `submissions` row resolving to those slugs (by `directory_id`, falling
+  back to `identifier`), so no submitted PII lingers in Airtable and a later
+  sync cannot re-create the entry from a leftover row. Unlike
+  `directory_mark_synced()` (routine cleanup, which only flags `synced`), this
+  destroys the rows. The reviewed purge workflow calls it after force-pushing
+  the scrubbed history.
+
+- **`directory_mark_synced()` replaces the artifact-based Airtable cleanup.**
+  Called after a sync PR merges (and after a purge completes), it flags handled
+  submissions with a `synced` checkbox so `directory_sync_airtable()` skips them
+  on the next run: an update is flagged once its entry is fully incorporated in
+  `main`, and a delete request once its entry file is gone. It reconciles
+  statelessly — re-deriving incorporation from `main` using the same test the
+  sync uses to decide whether to commit — so it needs no state passed between
+  workflows and self-heals submissions already incorporated. This retires the
+  old flow, which uploaded Airtable record ids as a build artifact for a
+  merge-triggered workflow to download and delete; that flow broke silently
+  when the sync moved into jinx (the artifact was no longer produced).
+  Requires a `synced` checkbox field on the `submissions` table.
+
 - **The automated review lists clickable profile links instead of probing
   them.** `validate_directory_pr()` used to HTTP-check whether each social
   handle resolved, but the platforms block bot requests, so nearly every
