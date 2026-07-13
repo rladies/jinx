@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     <a class="navbar-brand me-2" href="../index.html">jinx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,8 +65,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.0" id="jinx-020">jinx 0.2.0<a class="anchor" aria-label="anchor" href="#jinx-020"></a></h2>
 <div class="section level3">
-<h3 id="workercache-ops-via-cloudflarer-development-version">Worker/cache ops via cloudflarer<a class="anchor" aria-label="anchor" href="#workercache-ops-via-cloudflarer-development-version"></a></h3>
+<h3 id="workercache-ops-via-cloudflarer-0-2-0">Worker/cache ops via cloudflarer<a class="anchor" aria-label="anchor" href="#workercache-ops-via-cloudflarer-0-2-0"></a></h3>
 <ul><li>
 <strong><code>/jinx workers-status</code> reports Workers invocation/error/CPU metrics</strong> for the <code>jinx</code> script, via <code><a href="https://rdrr.io/pkg/cloudflarer/man/cf_workers_invocations.html" class="external-link">cloudflarer::cf_workers_invocations()</a></code>. <code>jinx_safe</code> — read-only, same class as <code>gha-dashboard</code>.</li>
 <li>
@@ -76,27 +79,27 @@ document.addEventListener("DOMContentLoaded", function() {
 <li>All <code>cf_ops_*()</code> functions read <code>CLOUDFLARE_OPS_API_TOKEN</code> first, falling back to <code>CLOUDFLARE_API_TOKEN</code> if unset.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="website-analytics-cloudflare-web-analytics-rum-alongside-plausible-development-version">Website analytics: Cloudflare Web Analytics (RUM) alongside Plausible<a class="anchor" aria-label="anchor" href="#website-analytics-cloudflare-web-analytics-rum-alongside-plausible-development-version"></a></h3>
+<h3 id="website-analytics-cloudflare-web-analytics-rum-alongside-plausible-0-2-0">Website analytics: Cloudflare Web Analytics (RUM) alongside Plausible<a class="anchor" aria-label="anchor" href="#website-analytics-cloudflare-web-analytics-rum-alongside-plausible-0-2-0"></a></h3>
 <ul><li>
 <strong><code>/jinx cf-analytics [days]</code> reports on Cloudflare’s Web Analytics (RUM) beacon data</strong>, a new sibling to the existing Plausible-backed <code>/jinx website-analytics</code>. <code><a href="../reference/rum_collect_analytics.html">rum_collect_analytics()</a></code>/<code><a href="../reference/rum_format_analytics.html">rum_format_analytics()</a></code>/ <code><a href="../reference/rum_generate_report.html">rum_generate_report()</a></code> in <code>R/website-rum.R</code> query pageviews and top pages/referrers/countries via <code><a href="https://rdrr.io/pkg/cloudflarer/man/cf_rum_page_views.html" class="external-link">cloudflarer::cf_rum_page_views()</a></code> and <code>cf_rum_top()</code>. <code>jinx_safe</code> — aggregate traffic data, same sensitivity class as the Plausible command. No issue-publishing helper; like <code>gha-dashboard</code>, the report is returned directly as the command reply.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="question-log-read-the-d1-gap-report-from-r-development-version">Question log: read the D1 gap report from R<a class="anchor" aria-label="anchor" href="#question-log-read-the-d1-gap-report-from-r-development-version"></a></h3>
+<h3 id="question-log-read-the-d1-gap-report-from-r-0-2-0">Question log: read the D1 gap report from R<a class="anchor" aria-label="anchor" href="#question-log-read-the-d1-gap-report-from-r-0-2-0"></a></h3>
 <ul><li>
 <strong><code>/jinx questions [days]</code> now works from GitHub too, not just Slack.</strong> <code><a href="../reference/question_log_query.html">question_log_query()</a></code> reads the same <code>jinx-question-log</code> D1 database <code>worker/src/question-log.js</code> writes to, via <a href="https://drmowinckels.r-universe.dev/cloudflarer" class="external-link">cloudflarer</a>’s <code>cf_d1_query()</code>. <code><a href="../reference/question_gaps_rank.html">question_gaps_rank()</a></code> and <code><a href="../reference/question_downvoted_rank.html">question_downvoted_rank()</a></code> are R ports of the worker’s ranking logic, folding near-duplicate unanswered questions together and surfacing net-downvoted answers, worst first. <code><a href="../reference/question_log_format.html">question_log_format()</a></code> renders the outcome breakdown, top content gaps, and most-downvoted answers as markdown. Like its Slack counterpart, the command is restricted to the global team — the corpus is anonymous, but still internal usage insight.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="rag-cloudflare-calls-now-go-through-cloudflarer-development-version">RAG: Cloudflare calls now go through cloudflarer<a class="anchor" aria-label="anchor" href="#rag-cloudflare-calls-now-go-through-cloudflarer-development-version"></a></h3>
+<h3 id="rag-cloudflare-calls-now-go-through-cloudflarer-0-2-0">RAG: Cloudflare calls now go through cloudflarer<a class="anchor" aria-label="anchor" href="#rag-cloudflare-calls-now-go-through-cloudflarer-0-2-0"></a></h3>
 <ul><li>The RAG indexer’s Cloudflare calls are now built on <a href="https://drmowinckels.r-universe.dev/cloudflarer" class="external-link">cloudflarer</a> instead of a hand-rolled <code>httr2</code> request builder. <code><a href="../reference/cloudflare_account_id.html">cloudflare_account_id()</a></code> now delegates to <code><a href="https://rdrr.io/pkg/cloudflarer/man/cf_list_accounts.html" class="external-link">cloudflarer::cf_list_accounts()</a></code>; <code><a href="../reference/cloudflare_embed.html">cloudflare_embed()</a></code> and <code><a href="../reference/cloudflare_vectorize_upsert.html">cloudflare_vectorize_upsert()</a></code> stay custom (cloudflarer doesn’t wrap Workers AI inference or Vectorize v2) but now build on <code><a href="https://rdrr.io/pkg/cloudflarer/man/cf_request.html" class="external-link">cloudflarer::cf_request()</a></code> and unwrap responses with <code><a href="https://rdrr.io/pkg/cloudflarer/man/cf_resp.html" class="external-link">cloudflarer::cf_resp()</a></code>, which raises a classed <code>cloudflarer_error</code> on API failure instead of a bare HTTP-status error. <code><a href="../reference/cloudflare_vectorize_upsert.html">cloudflare_vectorize_upsert()</a></code>’s return value changed from the full <code>{success, errors, result}</code> envelope to just the unwrapped <code>result</code> payload.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="jinx-assistant-development-version">Jinx assistant<a class="anchor" aria-label="anchor" href="#jinx-assistant-development-version"></a></h3>
+<h3 id="jinx-assistant-0-2-0">Jinx assistant<a class="anchor" aria-label="anchor" href="#jinx-assistant-0-2-0"></a></h3>
 <ul><li><p><strong>Jinx now keeps an anonymous question-improvement log so the corpus can evolve.</strong> Every <code>@Jinx</code> mention or DM records the question text and a coarse outcome (<code>answered</code>, <code>no_match</code>, <code>coding_declined</code>, or <code>low_confidence</code>) to a Cloudflare D1 table — with no Slack user id, channel, or thread timestamp, so a logged question cannot be traced to who asked. Answers are linked so a 👍/👎 reaction updates that question’s score, turning “which answers were weak” into a maintainer to-do list. <code>/jinx questions [days]</code> surfaces the top gaps and most-downvoted answers; rows are purged after 180 days by a daily cron. Reading the log (via <code>/jinx questions</code> and <code>/jinx feedback</code>) is restricted to the global team, reusing the same Airtable member directory as <code><a href="../reference/cmd_authorize.html">cmd_authorize()</a></code>. Requires provisioning a <code>jinx-question-log</code> D1 database (see <code>wrangler.jsonc</code>).</p></li>
 <li><p><strong>A weekly digest turns those gaps into an action list.</strong> Every Monday a scheduled job reads the question log, clusters the questions Jinx couldn’t answer well (<code>no_match</code> / <code>low_confidence</code>, excluding declined coding questions), drafts a <em>proposed</em> Guide answer for the top gaps, and posts the lot — plus any 👎’d answers — to the global-team Slack channel (<code>SLACK_DIGEST_CHANNEL</code>, default <code>#team-jinx</code>) for review. The corpus stays human-authored: drafts are AI-suggested and unverified, only ever a Slack message for a person to confirm before editing the Guide — nothing is written to the RAG index automatically.</p></li>
 <li><p><strong>Global-team authorization matches on the Slack member id, not the handle.</strong> <code><a href="../reference/cmd_authorize.html">cmd_authorize()</a></code> (and the worker’s command gate) now compare the requesting Slack <code>user_id</code> against an <code>organiser_slack_id</code> column in the member directory, rather than the informal <code>@mention</code> in <code>organiser_slack</code>. Handle matching was unreliable (nicknames, real names with spaces) and impossible under Enterprise Grid, where <code>users.info</code> cannot resolve profiles. <code>bot-commands.yml</code> now passes <code>user_id</code> as the actor for Slack-sourced commands. Populate <code>organiser_slack_id</code> for each global-team member.</p></li>
 </ul></div>
 <div class="section level3">
-<h3 id="directory-development-version">Directory<a class="anchor" aria-label="anchor" href="#directory-development-version"></a></h3>
+<h3 id="directory-0-2-0">Directory<a class="anchor" aria-label="anchor" href="#directory-0-2-0"></a></h3>
 <ul><li><p><strong>The automated review lists clickable profile links instead of probing them.</strong> <code><a href="../reference/validate_directory_pr.html">validate_directory_pr()</a></code> used to HTTP-check whether each social handle resolved, but the platforms block bot requests, so nearly every entry was flagged (“may not resolve”) — noise that trained reviewers to ignore the report. It now renders each entry’s socials as ready-made links the reviewer clicks to confirm. Also fixes the Mastodon URL builder, which returned <code>NA</code> for the normal <code>@user@instance</code> form.</p></li>
 <li><p><strong><code><a href="../reference/directory_sync_airtable.html">directory_sync_airtable()</a></code> now produces real directory entries.</strong> It reads the live submissions base (<code>appzYxePUruG9Nwyg</code>, table <code>submissions</code>) with its linked <code>languages</code>, <code>countries</code>, and <code>interests</code> tables, and writes the full entry schema (<code>data/json/&lt;slug&gt;.json</code>), profile photos (<code>data/img/</code>), and contact emails (<code>contact/&lt;slug&gt;.json</code>). Returning submitters are matched to their existing entry by slug (<code>directory_id</code>, falling back to <code>identifier</code>) and merged as a partial update — <code>clear_fields</code> are wiped first, then submitted fields overlay the rest. Only genuinely changed files are committed (order- and formatting-insensitive comparison), and delete requests are reported in the PR body rather than executed. Replaces the earlier stub that targeted a placeholder base and wrote a name-plus-socials shape.</p></li>
 <li><p><strong>The directory sync runs from the private <code>rladies/directory</code> repo, not jinx.</strong> Directory submissions carry confidential data (contact emails), and jinx is public, so the sync and its logs must stay in the private repo, which installs jinx and calls <code><a href="../reference/directory_sync_airtable.html">directory_sync_airtable()</a></code>. With the global-team sync also gone, the public <code>ops-airtable-sync.yml</code> workflow is removed.</p></li>
@@ -104,14 +107,14 @@ document.addEventListener("DOMContentLoaded", function() {
 <li><p>The bundled <code>directory-entry.json</code> schema now matches the full entry shape (location, social media, interests, languages, activities, work, photo).</p></li>
 </ul></div>
 <div class="section level3">
-<h3 id="copilot-reviews-development-version">Copilot reviews<a class="anchor" aria-label="anchor" href="#copilot-reviews-development-version"></a></h3>
+<h3 id="copilot-reviews-0-2-0">Copilot reviews<a class="anchor" aria-label="anchor" href="#copilot-reviews-0-2-0"></a></h3>
 <ul><li>
 <strong>Jinx can summon GitHub Copilot to run the grimoire review gates.</strong> <code><a href="../reference/copilot_sync_repo.html">copilot_sync_repo()</a></code> fetches the four <a href="https://github.com/rladies/grimoire" class="external-link">rladies/grimoire</a> review skills (brand, blog, social, translation) plus the foundation brand ruleset and lands them in a target repo as <code>.github/copilot-instructions.md</code> and path-scoped <code>.github/instructions/*.instructions.md</code> via a pull request — the bridge that makes Copilot’s code review grimoire-aware. Run it with <code>/jinx copilot-sync &lt;owner/repo&gt;</code>.</li>
 <li>
 <strong>On-demand and automatic reviews.</strong> <code>/jinx review brand|blog|social|translation &lt;pr&gt;</code> (accepting <code>#42</code>, <code>owner/repo#42</code>, or a PR URL, plus <code>brand-check</code>/<code>blog-review</code>/<code>social-review</code>/<code>translate-review</code> aliases) requests a Copilot review on a PR and posts a scoping comment via <code><a href="../reference/copilot_review_pr.html">copilot_review_pr()</a></code>. The new <code>reusable-copilot-review.yml</code> workflow does the same automatically when a content PR opens. Both commands are gated to the global team.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="security-development-version">Security<a class="anchor" aria-label="anchor" href="#security-development-version"></a></h3>
+<h3 id="security-0-2-0">Security<a class="anchor" aria-label="anchor" href="#security-0-2-0"></a></h3>
 <ul><li>
 <strong>Privileged commands now require global-team membership.</strong> <code><a href="../reference/cmd_authorize.html">cmd_authorize()</a></code> gates every command before execution: read-only actions (help, reports, analytics, dashboards, lookups) stay open, while any mutating command (invite, offboard, chapter/CFP/poll creation, syncs, …) requires the requester to appear in the global team member directory in Airtable. GitHub commands are matched on the commenter’s login; Slack slash commands are matched on the signed <code>user_name</code>. The check fails closed — unknown actors and directory lookup failures are both denied — closing a path where any member of an allowlisted Slack workspace could trigger privileged GitHub actions. New commands are privileged by default until explicitly declared safe.</li>
 <li>
@@ -120,7 +123,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <strong>Command privilege is now keyword-labelled at each handler.</strong> Commands are declared in a single registry, each tagged <code>jinx_safe</code> or <code>jinx_gated</code> next to its handler; dispatch and the safe/gated classification both derive from it, and a test asserts every command carries a keyword and every parseable action is registered. Replaces the separate hand-maintained safe-command list, so a new command is labelled where it is defined.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<h3 id="bug-fixes-0-2-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-2-0"></a></h3>
 <ul><li>
 <strong><code>/jinx chapter-health</code> now reports real data.</strong> The command was a placeholder that echoed “Checking chapter health…”; it now runs the health check and summarises inactive chapters.</li>
 <li>
@@ -139,14 +142,14 @@ document.addEventListener("DOMContentLoaded", function() {
 <strong>Removed <code>gt_sync_airtable()</code>.</strong> It fetched global-team data and discarded it, duplicating the complete sync that already runs weekly in the website repo (<code>scripts/get_global_team.R</code>). Global-team sync is owned there. With the directory sync also moved out of jinx (see Directory), the <code>ops-airtable-sync.yml</code> workflow is removed entirely.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="meeting-scheduling-development-version">Meeting scheduling<a class="anchor" aria-label="anchor" href="#meeting-scheduling-development-version"></a></h3>
+<h3 id="meeting-scheduling-0-2-0">Meeting scheduling<a class="anchor" aria-label="anchor" href="#meeting-scheduling-0-2-0"></a></h3>
 <ul><li>
 <strong>New meeting-poll module backed by the samkoma API.</strong> <code><a href="../reference/meeting_poll_create.html">meeting_poll_create()</a></code> opens a “find a time” poll (public by default, returning a host <code>edit_token</code>), <code><a href="../reference/meeting_poll_get.html">meeting_poll_get()</a></code> / <code><a href="../reference/meeting_poll_best.html">meeting_poll_best()</a></code> read responses and ranked slots, <code><a href="../reference/meeting_poll_lock.html">meeting_poll_lock()</a></code> locks the chosen slot, and <code><a href="../reference/meeting_poll_ics.html">meeting_poll_ics()</a></code> exports it as an <code>.ics</code> file. Exposed in chat via <code>/jinx poll create …</code> and <code>/jinx poll best &lt;id&gt;</code>. Base URL is overridable through <code>SAMKOMA_BASE_URL</code>. Externally-sourced poll titles and participant names are markdown-neutralised before being rendered into bot-authored GitHub/Slack messages, so they cannot inject links or formatting.</li>
 <li>
 <strong>Global team onboarding opens an onboarding meeting poll.</strong> <code><a href="../reference/gt_finalize_onboarding.html">gt_finalize_onboarding()</a></code> now calls <code><a href="../reference/gt_schedule_onboarding_meeting.html">gt_schedule_onboarding_meeting()</a></code>, which opens a samkoma poll spanning a two-week window of candidate dates starting one week out and posts the poll link to the onboarding issue. A samkoma outage warns and is skipped rather than aborting onboarding.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="post-review-hardening-development-version">Post-review hardening<a class="anchor" aria-label="anchor" href="#post-review-hardening-development-version"></a></h3>
+<h3 id="post-review-hardening-0-2-0">Post-review hardening<a class="anchor" aria-label="anchor" href="#post-review-hardening-0-2-0"></a></h3>
 <ul><li>
 <strong>First-time contributor check actually works.</strong> <code>is_first_time_contributor()</code> was passing <code>creator=</code> to <code>GET /repos/{owner}/{repo}/pulls</code>, which the API silently ignores — every author looked like a first-timer until a repo had more than one PR total, and like a returning contributor after that. Now uses <code>GET /search/issues</code> with <code>is:pr/is:issue + author:</code> to count authored items correctly.</li>
 <li>
@@ -177,18 +180,18 @@ document.addEventListener("DOMContentLoaded", function() {
 <strong>Event-embedding KV write gets a 30-day TTL</strong> so a stale vector doesn’t outlive the model behind it.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="slack-bot-remember-the-thread-development-version">Slack bot: remember the thread<a class="anchor" aria-label="anchor" href="#slack-bot-remember-the-thread-development-version"></a></h3>
+<h3 id="slack-bot-remember-the-thread-0-2-0">Slack bot: remember the thread<a class="anchor" aria-label="anchor" href="#slack-bot-remember-the-thread-0-2-0"></a></h3>
 <ul><li>The Slack Q&amp;A bot now reads prior turns in the same thread via <code>conversations.replies</code> before calling the LLM, so follow-up questions no longer require restating the whole conversation. Up to the last 8 turns (capped at ~4k chars) are passed in as <code>user</code>/<code>assistant</code> history. Applies to both assistant DM threads and channel <code>app_mention</code> threads. The user’s two most recent prompts are also folded into the retrieval embedding so the right sources surface when the new question is a one-word follow-up.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="airtable-directory-sync-actually-open-a-pr-development-version">Airtable directory sync: actually open a PR<a class="anchor" aria-label="anchor" href="#airtable-directory-sync-actually-open-a-pr-development-version"></a></h3>
+<h3 id="airtable-directory-sync-actually-open-a-pr-0-2-0">Airtable directory sync: actually open a PR<a class="anchor" aria-label="anchor" href="#airtable-directory-sync-actually-open-a-pr-0-2-0"></a></h3>
 <ul><li>
 <code><a href="../reference/directory_create_pr.html">directory_create_pr()</a></code> was a stub that returned the directory’s pulls-page URL without creating a branch, writing files, or opening a PR. The function now creates a dated <code>jinx/airtable-sync-YYYYMMDD</code> branch, commits each changed <code>contact/{slug}.json</code> file via the contents API, and opens a PR back into <code>main</code> (returning the URL of an existing open PR if the branch was already in flight).</li>
 <li>
 <code>write_directory_entries()</code> now returns a list of <code>{filename, path, content, sha}</code> records for changed entries instead of only their filenames, so the PR step can actually write them.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="reports-stop-publishing-to-global-team-development-version">Reports: stop publishing to global-team<a class="anchor" aria-label="anchor" href="#reports-stop-publishing-to-global-team-development-version"></a></h3>
+<h3 id="reports-stop-publishing-to-global-team-0-2-0">Reports: stop publishing to global-team<a class="anchor" aria-label="anchor" href="#reports-stop-publishing-to-global-team-0-2-0"></a></h3>
 <ul><li>The weekly activity, monthly chapter-health, analytics dashboard, and GitHub Actions dashboard ops workflows no longer open issues in <code>rladies/global-team</code>. The publish helpers (<code>report_publish()</code>, <code>analytics_publish_dashboard()</code>, <code>gha_publish_dashboard()</code>, <code>event_publish_summary()</code>) and the matching scheduled workflows have been removed.</li>
 <li>
 <code><a href="../reference/chapter_report_health.html">chapter_report_health()</a></code> now returns the formatted markdown body instead of opening an issue.</li>
@@ -196,18 +199,18 @@ document.addEventListener("DOMContentLoaded", function() {
 <code>ops-event-sync.yml</code> keeps the meetup sync but no longer publishes a summary issue.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="contributors-push-directly-to-main-development-version">Contributors: push directly to main<a class="anchor" aria-label="anchor" href="#contributors-push-directly-to-main-development-version"></a></h3>
+<h3 id="contributors-push-directly-to-main-0-2-0">Contributors: push directly to main<a class="anchor" aria-label="anchor" href="#contributors-push-directly-to-main-0-2-0"></a></h3>
 <ul><li>
 <code><a href="../reference/contributor_update.html">contributor_update()</a></code> now commits the rendered contributors file straight to the default branch (<code>main</code> by default) and returns the commit URL. The previous behaviour of opening a <code>jinx/update-contributors</code> branch and PR has been removed. The <code>ops-update-contributors</code> workflow now declares <code>contents: write</code>.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="rag-tolerate-malformed-json-fields-development-version">RAG: tolerate malformed JSON fields<a class="anchor" aria-label="anchor" href="#rag-tolerate-malformed-json-fields-development-version"></a></h3>
+<h3 id="rag-tolerate-malformed-json-fields-0-2-0">RAG: tolerate malformed JSON fields<a class="anchor" aria-label="anchor" href="#rag-tolerate-malformed-json-fields-0-2-0"></a></h3>
 <ul><li>The <code>awesome-rladies-creations</code> packages feed has 41 entries where <code>pkdown_url</code> and/or <code>repo_url</code> parse as empty JSON objects (<code><a href="https://rdrr.io/r/base/Paren.html" class="external-link">{}</a></code>) rather than strings or <code>null</code>. The scheduled indexer crashed mid-run on 2026-05-24 with <code>missing value where TRUE/FALSE needed</code> when one of these reached <code><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar()</a></code>. The custom <code>%or%</code> operator and the downstream <code><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar()</a></code> checks now go through a new <code><a href="../reference/is_blank.html">is_blank()</a></code> helper that treats NULL, zero-length vectors and lists, NA, and the empty string uniformly as “missing”. Regression tests pin the empty-list and NA cases.</li>
 <li>
 <code><a href="../reference/parse_unix_date.html">parse_unix_date()</a></code> no longer errors when handed an empty list or any other non-character / non-numeric value; it returns <code>NULL</code>, matching its behaviour for <code>NULL</code> and <code>""</code>.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="rag-answer-when-is-the-next-event-across-all-chapters-development-version">RAG: answer “when is the next event” across all chapters<a class="anchor" aria-label="anchor" href="#rag-answer-when-is-the-next-event-across-all-chapters-development-version"></a></h3>
+<h3 id="rag-answer-when-is-the-next-event-across-all-chapters-0-2-0">RAG: answer “when is the next event” across all chapters<a class="anchor" aria-label="anchor" href="#rag-answer-when-is-the-next-event-across-all-chapters-0-2-0"></a></h3>
 <ul><li>
 <strong>The events indexer now emits a cross-chapter digest chunk.</strong> Asking Jinx for the next upcoming event used to fail whenever the soonest events happened to sit outside the handful of per-event chunks that vector search retrieved — “upcoming-ness” is a structured filter, not a semantic property, and only a few events are upcoming at any time (5 of 5,221 in the feed). <code><a href="../reference/gather_events_json.html">gather_events_json()</a></code> now also builds a single <code>events-digest</code> chunk (<code><a href="../reference/events_digest_chunk.html">events_digest_chunk()</a></code>) listing every upcoming event globally, soonest first, with a per-event link and venue. The worker pins this digest into context for event-intent questions so it always reaches the model, boosts its source weight, and allows the digest’s embedded per-event links to be cited. <code><a href="../reference/gather_all_chunks.html">gather_all_chunks()</a></code> now honours a chunk’s own <code>source_type</code>, falling back to the source default.</li>
 <li>Digest rendering is hardened against untrusted feed content: events with a missing or unparseable date sort last (not first, where they would be quoted as the next event), and Slack link metacharacters in meetup titles are neutralised so they cannot corrupt the rendered link.</li>
