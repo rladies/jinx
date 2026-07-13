@@ -8,7 +8,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/rladies/jinx/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/rladies/jinx/blob/v0.2.0/DESCRIPTION)
 
 RLadies+ (2026). *jinx: RLadies+ GitHub Organisation Management*. R
 package version 0.2.0, <https://github.com/rladies/jinx>.
