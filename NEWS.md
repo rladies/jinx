@@ -1,5 +1,26 @@
 # jinx (development version)
 
+## Worker/cache ops via cloudflarer
+
+- **`/jinx workers-status` reports Workers invocation/error/CPU metrics** for
+  the `jinx` script, via `cloudflarer::cf_workers_invocations()`. `jinx_safe`
+  — read-only, same class as `gha-dashboard`.
+- **`/jinx cache-purge <prefix> [<prefix> ...]` purges specific URL prefixes
+  from the Cloudflare cache**, via `cloudflarer::cf_purge_cache()`.
+  `jinx_gated` — the one genuinely mutating, production-affecting command in
+  this integration. The R wrapper (`cf_ops_purge_cache()`) deliberately does
+  not expose `purge_everything`; a maintainer needing a full-zone wipe calls
+  `cloudflarer::cf_purge_cache(purge_everything = TRUE)` directly. The
+  command handler echoes back exactly what was purged, and prefixes are
+  sanity-checked to look like domains before reaching the mutating call.
+- `cf_ops_list_kv_keys()`/`cf_ops_get_kv_value()` are exported for
+  console-only KV inspection during an incident — deliberately **not** wired
+  into a `/jinx` command, since the `SLACK_TOKENS` KV namespace holds live
+  Slack OAuth tokens and a chat-triggered arbitrary-namespace read would be a
+  real exfiltration path.
+- All `cf_ops_*()` functions read `CLOUDFLARE_OPS_API_TOKEN` first, falling
+  back to `CLOUDFLARE_API_TOKEN` if unset.
+
 ## Website analytics: Cloudflare Web Analytics (RUM) alongside Plausible
 
 - **`/jinx cf-analytics [days]` reports on Cloudflare's Web Analytics (RUM)

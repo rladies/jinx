@@ -109,6 +109,14 @@ jinx_commands <- function() {
       data <- gha_generate_dashboard()
       gha_format_dashboard(data)
     }),
+    "workers-status" = command_spec("jinx_safe", function(command) {
+      df <- cf_ops_workers_invocations()
+      cf_ops_format_workers_report(df)
+    }),
+    "cache-purge" = command_spec("jinx_gated", function(command) {
+      cf_ops_purge_cache(prefixes = command$prefixes)
+      glue::glue("Purged cache for: {paste(command$prefixes, collapse = ', ')}")
+    }),
     "contributors-list" = command_spec("jinx_safe", function(command) {
       target <- command$repo %||% "jinx"
       contribs <- contributor_list("rladies", target)
