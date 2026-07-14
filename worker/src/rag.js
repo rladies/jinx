@@ -1,10 +1,18 @@
 import { coding_decline_message, is_coding_question } from "./intent.js";
 import { no_match_quip } from "./quips.js";
 
+const EMBED_MODEL = "@cf/baai/bge-base-en-v1.5";
+export const CHAT_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast";
+
 const RETRIEVE_K = 20;
 const EVENT_RETRIEVE_K = 15;
 const TOP_K = 5;
 const MIN_SCORE = 0.4;
+
+// Below this reranked top score an answer still gets sent, but is logged as
+// low_confidence — thin retrieval that likely means a corpus gap. Heuristic and
+// tunable, not a hard cutoff; adjusted scores run roughly 0.3–0.9.
+const LOW_CONFIDENCE_SCORE = 0.5;
 
 const EVENT_RETRIEVAL_QUERY =
   "upcoming RLadies+ chapter event meetup workshop talk session when where";
@@ -16,8 +24,15 @@ const EVENT_EMBEDDING_KV_KEY = "rag:event_embedding:v1";
 const EVENT_INTENT_RE =
   /\b(event|events|meetup|meetups|workshop|workshops|talk|talks|session|sessions|happening|coming up|upcoming|soon|scheduled|next event|next meetup|when is the next|what.?s on|what.?s happening)\b/i;
 
+// The cross-chapter upcoming-events digest built by the R indexer. It is a
+// single chunk listing every upcoming event globally, soonest first — the
+// only source that can answer "when is the next event, regardless of
+// chapter". Pinned into context for event questions (see below).
+const EVENTS_DIGEST_TYPE = "events-digest";
+
 const SOURCE_WEIGHTS = {
   guide: 1.25,
+  "events-digest": 1.5,
   site: 1.05,
   "jinx-docs": 1.05,
   events: 1.05,
@@ -48,6 +63,7 @@ Rules:
 - **Branding is non-negotiable**: always write the organisation name as *RLadies+* — one word, no hyphen, trailing plus. Never write "R-Ladies", "R-Ladies+", "RLadies" (without the plus), or "R Ladies". This applies even when the source material you are quoting uses an older variant; correct it silently. The only exceptions are literal URLs and handles (e.g. *r-ladies.slack.com*, the *@rladies* GitHub org) which must stay as-is.
 - If the sources don't contain enough to answer an in-scope question, say so honestly — own it cheerfully ("my whiskers came up empty on that one") — and suggest asking a maintainer or checking the guide directly.
 - Event entries include "When:" and "Status: upcoming" or "Status: past" lines. When the user asks about *upcoming*, *next*, or *coming up* events, only use chunks marked "Status: upcoming" and quote the "When:" date; ignore past events for that question. If no upcoming events are in the sources, say so honestly rather than substituting a past one.
+- For "when is the next event" or "any upcoming events" questions — especially when the user does not name a chapter — prefer the source titled *Upcoming RLadies+ events*, which lists every upcoming event across all chapters soonest first. Answer with the soonest one (and a couple more if useful), quoting each date, and link to that specific event.
 
 Linking (do this — it is not optional):
 - Always include 1–2 inline Slack-formatted links in your answer, drawn from the URLs marked "Source URL:" in the material below. Wrap a relevant phrase, never a bare URL.
@@ -62,7 +78,12 @@ Answer: Chapters start by filling out the new-chapter form, then waiting for a G
 
 export async function rag_question_answer(env, query, history = []) {
   if (is_coding_question(query)) {
-    return { answer: coding_decline_message() };
+    return {
+      answer: coding_decline_message(),
+      outcome: "coding_declined",
+      top_score: null,
+      sources: null,
+    };
   }
 
   const { retrieval_text, prior_messages } = rag_history_normalize(
@@ -73,17 +94,36 @@ export async function rag_question_answer(env, query, history = []) {
   const matches = await rag_chunks_retrieve(env, embedding, query);
 
   if (matches.length === 0) {
-    return { answer: no_match_quip() };
+    return {
+      answer: no_match_quip(),
+      outcome: "no_match",
+      top_score: null,
+      sources: null,
+    };
   }
 
-  const result = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+  const result = await env.AI.run(CHAT_MODEL, {
     messages: rag_build_messages(query, matches, prior_messages),
     max_tokens: 400,
   });
 
   const raw = (result.response || "").trim();
   const answer = rag_repair_links(raw, rag_source_urls(matches));
-  return { answer };
+  const top_score = matches[0]?.adjusted_score ?? null;
+  const outcome =
+    top_score !== null && top_score < LOW_CONFIDENCE_SCORE
+      ? "low_confidence"
+      : "answered";
+  return { answer, outcome, top_score, sources: rag_match_sources(matches) };
+}
+
+export function rag_match_sources(matches) {
+  const types = [];
+  for (const m of matches || []) {
+    const t = m?.metadata?.source_type;
+    if (t && !types.includes(t)) types.push(t);
+  }
+  return types.length ? types.join(",") : null;
 }
 
 const HISTORY_TURN_LIMIT = 8;
@@ -151,14 +191,28 @@ export function rag_build_messages(query, matches, prior_messages = []) {
   ];
 }
 
+const DIGEST_LINK_RE = /<(https?:\/\/[^\s|>]+)\|/g;
+
 export function rag_source_urls(matches) {
-  return matches
-    .map((m) => m?.metadata?.url)
-    .filter((u) => typeof u === "string" && u.length > 0);
+  const urls = [];
+  for (const m of matches || []) {
+    const url = m?.metadata?.url;
+    if (typeof url === "string" && url.length > 0) urls.push(url);
+    // The digest embeds a per-event link on every line. Harvest only the
+    // URLs in <url|label> link position — the ones we intentionally emit —
+    // so an attacker-influenced URL sitting in a title or venue (untrusted
+    // feed content) can't slip past rag_repair_links' allow-list.
+    if (is_digest_match(m) && typeof m?.metadata?.text === "string") {
+      for (const match of m.metadata.text.matchAll(DIGEST_LINK_RE)) {
+        urls.push(match[1]);
+      }
+    }
+  }
+  return urls;
 }
 
 async function rag_query_embed(env, text) {
-  const result = await env.AI.run("@cf/baai/bge-base-en-v1.5", {
+  const result = await env.AI.run(EMBED_MODEL, {
     text: [text],
   });
   return result.data[0];
@@ -174,9 +228,28 @@ async function rag_chunks_retrieve(env, embedding, query) {
   if (is_event_question(query)) {
     const event_pool = await rag_event_pool_retrieve(env);
     raw = merge_matches(raw, event_pool);
+    return select_event_matches(raw, Date.now() / 1000);
   }
 
   return rerank_matches(raw, Date.now() / 1000).slice(0, TOP_K);
+}
+
+function is_digest_match(m) {
+  return m?.metadata?.source_type === EVENTS_DIGEST_TYPE;
+}
+
+// Reranking alone can bury the cross-chapter digest below individual
+// events with marginally better cosine scores, and TOP_K truncation can
+// drop it entirely — exactly the chunk an "regardless of chapter" event
+// question needs most. Force the digest to the front so it always reaches
+// the model, then fill the remaining slots with the best of the rest.
+// There is one global digest by construction; cap at one so it can never
+// starve the context of actual event/guide chunks.
+export function select_event_matches(matches, now_seconds) {
+  const ranked = rerank_matches(matches, now_seconds);
+  const digests = ranked.filter(is_digest_match).slice(0, 1);
+  const rest = ranked.filter((m) => !is_digest_match(m));
+  return [...digests, ...rest].slice(0, TOP_K);
 }
 
 async function rag_event_pool_retrieve(env) {
@@ -187,7 +260,9 @@ async function rag_event_pool_retrieve(env) {
       returnMetadata: "all",
     });
     return (results.matches || []).filter(
-      (m) => m.metadata?.source_type === "events" && m.score >= MIN_SCORE,
+      (m) =>
+        (m.metadata?.source_type === "events" || is_digest_match(m)) &&
+        m.score >= MIN_SCORE,
     );
   } catch (e) {
     console.warn("event-pool retrieval failed:", e.message);
@@ -288,7 +363,9 @@ function audience_penalty(url) {
 // similarity outranks the handful of genuinely upcoming events the user
 // almost certainly meant to ask about.
 function upcoming_event_boost(source_type, date_seconds, now_seconds) {
-  if (source_type !== "events") return 1.0;
+  if (source_type !== "events" && source_type !== EVENTS_DIGEST_TYPE) {
+    return 1.0;
+  }
   if (!date_seconds || date_seconds <= now_seconds) return 1.0;
   return UPCOMING_EVENT_BOOST;
 }

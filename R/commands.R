@@ -38,10 +38,14 @@ cmd_parse <- function(body) {
     "blog-add" = parse_blog_add_command(parts),
     "blog-check-links" = list(action = "blog-check-links"),
     "gha-dashboard" = list(action = "gha-dashboard"),
+    "workers-status" = list(action = "workers-status"),
+    "cache-purge" = parse_cache_purge_command(parts),
     contributors = parse_contributors_command(parts),
     events = parse_events_command(parts),
     analytics = list(action = "analytics"),
     "website-analytics" = parse_website_analytics_command(parts),
+    questions = parse_questions_command(parts),
+    "cf-analytics" = parse_cf_analytics_command(parts),
     cfp = parse_cfp_command(parts),
     poll = parse_poll_command(parts),
     translate = parse_translate_command(parts),
@@ -369,6 +373,58 @@ parse_website_analytics_command <- function(parts) {
   list(action = "website-analytics", period = period)
 }
 
+parse_questions_command <- function(parts) {
+  days <- if (length(parts) >= 2) {
+    suppressWarnings(as.integer(parts[2]))
+  } else {
+    7L
+  }
+  if (is.na(days) || days <= 0) {
+    return(list(
+      action = "error",
+      message = paste(
+        "Usage: `/jinx questions [days]`",
+        "where days is a positive integer"
+      )
+    ))
+  }
+  list(action = "questions", days = days)
+}
+
+parse_cf_analytics_command <- function(parts) {
+  days <- if (length(parts) >= 2) {
+    suppressWarnings(as.integer(parts[2]))
+  } else {
+    30L
+  }
+  if (is.na(days) || days <= 0) {
+    return(list(
+      action = "error",
+      message = paste(
+        "Usage: `/jinx cf-analytics [days]`",
+        "where days is a positive integer"
+      )
+    ))
+  }
+  list(action = "cf-analytics", days = days)
+}
+
+parse_cache_purge_command <- function(parts) {
+  usage <- paste(
+    "Usage: `/jinx cache-purge <prefix> [<prefix> ...]`,",
+    "e.g. `/jinx cache-purge rladies.org/blog`"
+  )
+  if (length(parts) < 2) {
+    return(list(action = "error", message = usage))
+  }
+  prefixes <- parts[-1]
+  valid <- grepl("^[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(/.*)?$", prefixes)
+  if (!all(valid)) {
+    return(list(action = "error", message = usage))
+  }
+  list(action = "cache-purge", prefixes = prefixes)
+}
+
 parse_translate_command <- function(parts) {
   if (length(parts) < 2) {
     return(list(
@@ -433,9 +489,15 @@ normalize_command <- function(parts) {
   phrases <- list(
     list(c("generate", "website", "analytics"), "website-analytics"),
     list(c("website", "analytics"), "website-analytics"),
+    list(c("question", "log"), "questions"),
+    list(c("rum", "analytics"), "cf-analytics"),
+    list(c("web", "analytics"), "cf-analytics"),
+    list(c("cloudflare", "analytics"), "cf-analytics"),
     list(c("generate", "analytics"), "analytics"),
     list(c("generate", "report"), "report"),
     list(c("generate", "dashboard"), "gha-dashboard"),
+    list(c("workers", "status"), "workers-status"),
+    list(c("purge", "cache"), "cache-purge"),
     list(c("check", "blog", "links"), "blog-check-links"),
     list(c("check", "chapter", "health"), "chapter-health"),
     list(c("setup", "chapter"), "chapter-setup"),

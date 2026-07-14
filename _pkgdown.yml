@@ -111,6 +111,11 @@ reference:
     contents:
       - starts_with("gha_")
 
+  - title: Worker/cache ops
+    desc: Cloudflare Workers status and cache-purge tooling
+    contents:
+      - starts_with("cf_ops_")
+
   - title: Contributors
     desc: Contributor tracking and recognition
     contents:
@@ -143,6 +148,21 @@ reference:
       - website_format_analytics
       - website_generate_report
       - website_publish_report
+
+  - title: Cloudflare Web Analytics (RUM)
+    desc: Real-user monitoring beacon reports
+    contents:
+      - rum_collect_analytics
+      - rum_format_analytics
+      - rum_generate_report
+
+  - title: Question log
+    desc: Anonymous question-improvement log gap reporting
+    contents:
+      - question_log_query
+      - question_gaps_rank
+      - question_downvoted_rank
+      - question_log_format
 
   - title: Conference coordination
     desc: CFP tracking and speaker recommendations

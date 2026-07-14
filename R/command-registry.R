@@ -109,6 +109,14 @@ jinx_commands <- function() {
       data <- gha_generate_dashboard()
       gha_format_dashboard(data)
     }),
+    "workers-status" = command_spec("jinx_safe", function(command) {
+      df <- cf_ops_workers_invocations()
+      cf_ops_format_workers_report(df)
+    }),
+    "cache-purge" = command_spec("jinx_gated", function(command) {
+      cf_ops_purge_cache(prefixes = command$prefixes)
+      glue::glue("Purged cache for: {paste(command$prefixes, collapse = ', ')}")
+    }),
     "contributors-list" = command_spec("jinx_safe", function(command) {
       target <- command$repo %||% "jinx"
       contribs <- contributor_list("rladies", target)
@@ -150,6 +158,21 @@ jinx_commands <- function() {
     }),
     "website-analytics" = command_spec("jinx_safe", function(command) {
       data <- website_generate_report(period = command$period)
+      data$markdown
+    }),
+    questions = command_spec("jinx_gated", function(command) {
+      rows <- question_log_query(
+        since_day = as.character(Sys.Date() - command$days)
+      )
+      gaps <- question_gaps_rank(rows)
+      downvoted <- question_downvoted_rank(rows)
+      question_log_format(rows, gaps, downvoted, days = command$days)
+    }),
+    "cf-analytics" = command_spec("jinx_safe", function(command) {
+      data <- rum_generate_report(
+        since = Sys.Date() - command$days,
+        until = Sys.Date()
+      )
       data$markdown
     }),
     "cfp-list" = command_spec("jinx_safe", function(command) {

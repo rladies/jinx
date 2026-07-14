@@ -22,7 +22,10 @@ describe("rag_chunk_id", {
 
 describe("cloudflare_embed", {
   it("returns one numeric vector per input text", {
-    body <- list(result = list(data = list(c(0.1, 0.2), c(0.3, 0.4))))
+    body <- list(
+      success = TRUE,
+      result = list(data = list(c(0.1, 0.2), c(0.3, 0.4)))
+    )
     local_mocked_responses(list(response_json(body = body)))
     vecs <- cloudflare_embed(
       c("hello", "world"),
@@ -32,23 +35,37 @@ describe("cloudflare_embed", {
     expect_length(vecs, 2L)
     expect_identical(vecs[[1]], c(0.1, 0.2))
   })
+
+  it("surfaces a classed cloudflarer_error on API failure", {
+    body <- list(
+      success = FALSE,
+      errors = list(list(code = 1000, message = "bad thing")),
+      result = NULL
+    )
+    local_mocked_responses(list(response_json(status_code = 400, body = body)))
+    expect_error(
+      cloudflare_embed("hello", account_id = "acc123", api_token = "tok"),
+      class = "cloudflarer_error"
+    )
+  })
 })
 
 describe("cloudflare_account_id", {
   it("returns the sole account ID when token has exactly one", {
-    body <- list(result = list(list(id = "acc123")))
+    body <- list(success = TRUE, result = list(list(id = "acc123")))
     local_mocked_responses(list(response_json(body = body)))
     expect_identical(cloudflare_account_id("tok"), "acc123")
   })
 
   it("aborts when token has multiple accounts", {
-    body <- list(result = list(list(id = "a"), list(id = "b")))
+    body <- list(success = TRUE, result = list(list(id = "a"), list(id = "b")))
     local_mocked_responses(list(response_json(body = body)))
     expect_error(cloudflare_account_id("tok"), "explicitly")
   })
 
   it("aborts when token has zero accounts", {
-    local_mocked_responses(list(response_json(body = list(result = list()))))
+    body <- list(success = TRUE, result = list())
+    local_mocked_responses(list(response_json(body = body)))
     expect_error(cloudflare_account_id("tok"), "no accessible")
   })
 })

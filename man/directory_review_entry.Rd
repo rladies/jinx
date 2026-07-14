@@ -4,7 +4,7 @@
 \alias{directory_review_entry}
 \title{Run all automated review checks on a single directory entry.}
 \usage{
-directory_review_entry(entry, filename, verify_handles = TRUE)
+directory_review_entry(entry, filename)
 }
 \description{
 Run all automated review checks on a single directory entry.

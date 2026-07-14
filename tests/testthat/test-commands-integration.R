@@ -237,6 +237,39 @@ describe("cmd_execute integration: producer to formatter", {
     expect_true(grepl("CI", result, fixed = TRUE))
   })
 
+  it("workers-status runs cf_ops_workers_invocations then formats the table", {
+    local_mocked_bindings(
+      cf_ops_workers_invocations = function(...) {
+        data.frame(
+          date = "2026-07-01",
+          script = "jinx",
+          requests = 100L,
+          errors = 0L,
+          subrequests = 10L,
+          cpu_p50_us = 12.5,
+          cpu_p99_us = 80.0,
+          stringsAsFactors = FALSE
+        )
+      }
+    )
+    result <- cmd_execute(list(action = "workers-status"))
+    expect_type(result, "character")
+    expect_true(grepl("2026-07-01", result, fixed = TRUE))
+  })
+
+  it("cache-purge purges and echoes back what was purged", {
+    local_mocked_bindings(
+      cf_ops_purge_cache = function(...) list(id = "purge1")
+    )
+    result <- cmd_execute(list(
+      action = "cache-purge",
+      prefixes = c("rladies.org/blog", "rladies.org/events")
+    ))
+    expect_type(result, "character")
+    expect_true(grepl("rladies.org/blog", result, fixed = TRUE))
+    expect_true(grepl("rladies.org/events", result, fixed = TRUE))
+  })
+
   it("events runs event_list_chapter then event_create_summary", {
     local_mocked_bindings(
       event_list_chapter = function(chapter, ...) {
@@ -308,6 +341,37 @@ describe("cmd_execute integration: producer to formatter", {
     result <- cmd_execute(list(action = "website-analytics", period = "30d"))
     expect_type(result, "character")
     expect_match(result, "Website Analytics")
+  })
+
+  it("questions formats the gap/downvote report from the D1 log", {
+    local_mocked_bindings(
+      question_log_query = function(...) {
+        data.frame(
+          question = "how do I start a chapter?",
+          outcome = "no_match",
+          up = 0L,
+          down = 0L,
+          stringsAsFactors = FALSE
+        )
+      }
+    )
+    result <- cmd_execute(list(action = "questions", days = 14))
+    expect_type(result, "character")
+    expect_match(result, "Question Log")
+  })
+
+  it("cf-analytics returns the markdown from the RUM report", {
+    local_mocked_bindings(
+      rum_generate_report = function(since, until, ...) {
+        list(
+          analytics = list(since = since, until = until),
+          markdown = "## Cloudflare Web Analytics\nbody"
+        )
+      }
+    )
+    result <- cmd_execute(list(action = "cf-analytics", days = 14))
+    expect_type(result, "character")
+    expect_match(result, "Cloudflare Web Analytics")
   })
 
   it("cfp-list formats the open CFP data frame", {

@@ -27,7 +27,9 @@ describe("jinx_commands registry", {
         "report-chapters",
         "analytics",
         "website-analytics",
+        "cf-analytics",
         "gha-dashboard",
+        "workers-status",
         "contributors-list",
         "contributors-org",
         "events",
@@ -58,6 +60,8 @@ describe("jinx_commands registry", {
       "/jinx chapter-update Oslo Norway",
       "/jinx report chapters",
       "/jinx gha-dashboard",
+      "/jinx workers-status",
+      "/jinx cache-purge rladies.org/blog",
       "/jinx contributors jinx",
       "/jinx contributors update jinx",
       "/jinx contributors org",
@@ -65,6 +69,8 @@ describe("jinx_commands registry", {
       "/jinx events sync",
       "/jinx analytics",
       "/jinx website-analytics 30d",
+      "/jinx questions 14",
+      "/jinx cf-analytics 14",
       "/jinx cfp list",
       "/jinx cfp add conf 2026-01-01 https://x.com",
       "/jinx cfp recommend conf @speaker",
@@ -92,6 +98,8 @@ describe("command_is_privileged", {
     expect_true(command_is_privileged("invite"))
     expect_true(command_is_privileged("blog-add"))
     expect_true(command_is_privileged("poll-create"))
+    expect_true(command_is_privileged("questions"))
+    expect_true(command_is_privileged("cache-purge"))
     expect_true(command_is_privileged("review"))
     expect_true(command_is_privileged("copilot-sync"))
   })

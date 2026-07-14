@@ -193,6 +193,41 @@ await step("Worker /slack/command help round-trip with signed body", async () =>
   }
 });
 
+// Auth-gate-only checks for the HTTP API routes -- never hit the real AI
+// model or a real Cloudflare Analytics query here (daily quota burn for no
+// benefit); confirming the 401 gate is wired post-deploy is what matters.
+// This same script also runs on pull_request (paths: this file), against
+// whatever's *currently deployed* -- which can't include a PR's own
+// not-yet-merged route additions. A 404 there means "not deployed yet," not
+// a regression, so it's tolerated alongside 401; anything else (a bare 200,
+// a 500) is not, and still fails the check.
+for (const path of ["/ai/generate", "/analytics/rum"]) {
+  await step(`Worker ${path} rejects a missing bearer key with 401`, async () => {
+    const res = await fetch(`${workerOrigin}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+    if (![401, 404].includes(res.status)) {
+      throw new Error(`expected 401 (or 404 if not yet deployed), got ${res.status}${await bodySnippet(res)}`);
+    }
+  });
+
+  await step(`Worker ${path} rejects a wrong bearer key with 401`, async () => {
+    const res = await fetch(`${workerOrigin}${path}`, {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer smoke-test-wrong-key",
+        "Content-Type": "application/json",
+      },
+      body: "{}",
+    });
+    if (![401, 404].includes(res.status)) {
+      throw new Error(`expected 401 (or 404 if not yet deployed), got ${res.status}${await bodySnippet(res)}`);
+    }
+  });
+}
+
 const passed = results.filter((r) => r.ok).length;
 console.log(`\n${passed}/${results.length} checks passed`);
 process.exit(hadFailure ? 1 : 0);

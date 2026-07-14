@@ -3,9 +3,13 @@ global_team_id: 3388327
 
 member_directory:
   base_id: appZjaV7eM0Y9FsHZ
-  table: Member
+  # Table referenced by its stable id — the display name does not resolve via
+  # the Airtable API (returns MODEL_NOT_FOUND), which broke authorization.
+  table: tblfFWklqjtGdBLiT
   github_field: GitHub handle
-  slack_field: organiser_slack
+  # Match Slack commands on the stable member id, not the informal @mention in
+  # organiser_slack (users.info can't resolve profiles under Enterprise Grid).
+  slack_id_field: organiser_slack_id
 
 teams:
   abstract-review:

@@ -18,7 +18,7 @@ const DEFAULT_QUERIES = [
 ];
 
 const EMBED_MODEL = "@cf/baai/bge-base-en-v1.5";
-const CHAT_MODEL = "@cf/meta/llama-3.1-8b-instruct";
+const CHAT_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast";
 const INDEX_NAME = process.env.VECTORIZE_INDEX || "rladies-content";
 const RETRIEVE_K = 20;
 const TOP_K = 5;

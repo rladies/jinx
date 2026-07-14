@@ -7,6 +7,12 @@ import {
   slack_message_post,
   slack_reminders_add,
 } from "./slack-api.js";
+import {
+  question_log_since,
+  question_gaps_rank,
+  question_downvoted_rank,
+} from "./question-log.js";
+import { slack_global_team_authorize } from "./authorize.js";
 
 const BOOKMARKS_CONFIG_URL =
   "https://raw.githubusercontent.com/rladies/jinx/main/inst/config/bookmarks.json";
@@ -35,11 +41,27 @@ async function bookmarks_config_fetch() {
   }
 }
 
-const LOCAL_COMMANDS = new Set(["setup-channel", "remind-me", "pair", "feedback"]);
+const LOCAL_COMMANDS = new Set([
+  "setup-channel",
+  "remind-me",
+  "pair",
+  "feedback",
+  "questions",
+]);
 
 export function slash_is_local(command) {
   const verb = command.split(/\s+/)[0];
   return LOCAL_COMMANDS.has(verb);
+}
+
+// Commands that expose the community's questions and answer feedback. Gated to
+// the global team — the question log is anonymous, but it is still the org's
+// operational data, not for every workspace member to browse. Authorization
+// reuses the shared Airtable member directory (see slack_global_team_authorize).
+const GLOBAL_TEAM_COMMANDS = new Set(["questions", "feedback"]);
+
+export function command_requires_global_team(command) {
+  return GLOBAL_TEAM_COMMANDS.has(command.split(/\s+/)[0]);
 }
 
 export async function slash_local_handle(env, teamId, command, params, responseUrl) {
@@ -48,6 +70,14 @@ export async function slash_local_handle(env, teamId, command, params, responseU
   const channelId = params.get("channel_id") || "";
   const channelName = params.get("channel_name") || "";
   const userId = params.get("user_id") || "";
+
+  if (command_requires_global_team(command)) {
+    const authz = await slack_global_team_authorize(env, { teamId, userId });
+    if (!authz.ok) {
+      await slash_respond(responseUrl, authz.message);
+      return;
+    }
+  }
 
   try {
     switch (verb) {
@@ -59,6 +89,8 @@ export async function slash_local_handle(env, teamId, command, params, responseU
         return await slash_pair(env, teamId, userId, args, responseUrl);
       case "feedback":
         return await slash_feedback(env, teamId, args, responseUrl);
+      case "questions":
+        return await slash_questions(env, args, responseUrl);
     }
   } catch (err) {
     console.error(`Local command "${verb}" failed:`, err);
@@ -244,6 +276,69 @@ async function slash_feedback(env, teamId, args, responseUrl) {
     ...sorted.map(([emoji, n]) => `:${emoji}:  ${n}`),
   ];
   await slash_respond(responseUrl, lines.join("\n"));
+}
+
+const GAP_LABELS = {
+  no_match: "came up empty",
+  coding_declined: "coding — declined",
+  low_confidence: "thin retrieval",
+};
+
+async function slash_questions(env, args, responseUrl) {
+  if (!env.QUESTION_LOG) {
+    await slash_respond(
+      responseUrl,
+      "🐈‍⬛ My question log isn't set up yet — nothing to peek at.",
+    );
+    return;
+  }
+
+  const days = Math.max(1, Math.min(90, parseInt((args || "").trim(), 10) || 30));
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const rows = await question_log_since(env, since);
+  if (rows.length === 0) {
+    await slash_respond(
+      responseUrl,
+      `🐈‍⬛ No questions logged in the last ${days} day${days === 1 ? "" : "s"} — quiet whiskers.`,
+    );
+    return;
+  }
+
+  const gaps = question_gaps_rank(rows, 10);
+  const downvoted = question_downvoted_rank(rows, 5);
+
+  const lines = [
+    `🔮 *What folks asked — last ${days} day${days === 1 ? "" : "s"}* (${rows.length} question${rows.length === 1 ? "" : "s"} logged):`,
+  ];
+
+  if (gaps.length) {
+    lines.push("", "*Gaps to close* (couldn't answer well):");
+    for (const g of gaps) {
+      const times = g.count > 1 ? ` _(×${g.count})_` : "";
+      lines.push(
+        `• ${quote_question(g.question)} — _${GAP_LABELS[g.outcome] || g.outcome}_${times}`,
+      );
+    }
+  } else {
+    lines.push("", "*Gaps to close:* none — I answered everything asked. 😺");
+  }
+
+  if (downvoted.length) {
+    lines.push("", "*Answers folks 👎'd:*");
+    for (const d of downvoted) {
+      lines.push(`• ${quote_question(d.question)} — 👎 ${d.down} / 👍 ${d.up}`);
+    }
+  }
+
+  await slash_respond(responseUrl, lines.join("\n"));
+}
+
+function quote_question(question) {
+  const s = (question || "").replace(/\s+/g, " ").trim();
+  return s.length > 120 ? `${s.slice(0, 117)}…` : s;
 }
 
 async function slash_respond(responseUrl, text) {

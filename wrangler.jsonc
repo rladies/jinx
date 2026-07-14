@@ -35,5 +35,25 @@
 			"binding": "AIRTABLE_BASES",
 			"id": "698b7f8a6f214bf9ad9ecfaa839638f4"
 		}
-	]
+	],
+	// Anonymous question-improvement log (see worker/src/question-log.js).
+	// Provisioned on the RLadies+ account; schema in worker/migrations. To
+	// re-apply migrations: `wrangler d1 migrations apply jinx-question-log --remote`.
+	"d1_databases": [
+		{
+			"binding": "QUESTION_LOG",
+			"database_name": "jinx-question-log",
+			"database_id": "4500d886-2593-44f9-9a01-d38cfa26e8dc",
+			"migrations_dir": "worker/migrations"
+		}
+	],
+	// Scheduled jobs (see the scheduled() handler in worker/src/index.js):
+	//   17 3 * * *  — daily purge of question-log rows past 180 days
+	//   0 9 * * 1   — weekly question-gap digest to the global-team channel
+	"triggers": {
+		"crons": [
+			"17 3 * * *",
+			"0 9 * * 1"
+		]
+	}
 }

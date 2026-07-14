@@ -1,6 +1,123 @@
 # jinx (development version)
 
+## HTTP API for other repos
+
+- **The Cloudflare Worker now exposes `POST /ai/generate` and
+  `POST /analytics/rum`**, authenticated with a shared `JINX_API_KEY` bearer
+  token (constant-time compared, `worker/src/api-auth.js`), so other RLadies+
+  repos can get Workers-AI text generation and Cloudflare Web Analytics data
+  without holding their own Cloudflare credentials. `/ai/generate` is a thin,
+  model-agnostic passthrough to the existing `AI` binding (model must be on a
+  Worker-side allowlist); `/analytics/rum` proxies a single window of the
+  GraphQL RUM query already used internally, with `dimension` validated
+  against a strict allowlist pattern before it's interpolated into the query
+  text. First consumer: `rladies/funders-reports`, replacing its own direct
+  `CLOUDFLARE_API_TOKEN` usage for both AI-drafted report prose and Web
+  Analytics collection. See the README's "HTTP API for other repos" section.
+
+# jinx 0.2.0
+
+## Worker/cache ops via cloudflarer
+
+- **`/jinx workers-status` reports Workers invocation/error/CPU metrics** for
+  the `jinx` script, via `cloudflarer::cf_workers_invocations()`. `jinx_safe`
+  — read-only, same class as `gha-dashboard`.
+- **`/jinx cache-purge <prefix> [<prefix> ...]` purges specific URL prefixes
+  from the Cloudflare cache**, via `cloudflarer::cf_purge_cache()`.
+  `jinx_gated` — the one genuinely mutating, production-affecting command in
+  this integration. The R wrapper (`cf_ops_purge_cache()`) deliberately does
+  not expose `purge_everything`; a maintainer needing a full-zone wipe calls
+  `cloudflarer::cf_purge_cache(purge_everything = TRUE)` directly. The
+  command handler echoes back exactly what was purged, and prefixes are
+  sanity-checked to look like domains before reaching the mutating call.
+- `cf_ops_list_kv_keys()`/`cf_ops_get_kv_value()` are exported for
+  console-only KV inspection during an incident — deliberately **not** wired
+  into a `/jinx` command, since the `SLACK_TOKENS` KV namespace holds live
+  Slack OAuth tokens and a chat-triggered arbitrary-namespace read would be a
+  real exfiltration path.
+- All `cf_ops_*()` functions read `CLOUDFLARE_OPS_API_TOKEN` first, falling
+  back to `CLOUDFLARE_API_TOKEN` if unset.
+
+## Website analytics: Cloudflare Web Analytics (RUM) alongside Plausible
+
+- **`/jinx cf-analytics [days]` reports on Cloudflare's Web Analytics (RUM)
+  beacon data**, a new sibling to the existing Plausible-backed
+  `/jinx website-analytics`. `rum_collect_analytics()`/`rum_format_analytics()`/
+  `rum_generate_report()` in `R/website-rum.R` query pageviews and top
+  pages/referrers/countries via `cloudflarer::cf_rum_page_views()` and
+  `cf_rum_top()`. `jinx_safe` — aggregate traffic data, same sensitivity class
+  as the Plausible command. No issue-publishing helper; like `gha-dashboard`,
+  the report is returned directly as the command reply.
+
+## Question log: read the D1 gap report from R
+
+- **`/jinx questions [days]` now works from GitHub too, not just Slack.**
+  `question_log_query()` reads the same `jinx-question-log` D1 database
+  `worker/src/question-log.js` writes to, via
+  [cloudflarer](https://drmowinckels.r-universe.dev/cloudflarer)'s
+  `cf_d1_query()`. `question_gaps_rank()` and `question_downvoted_rank()` are R
+  ports of the worker's ranking logic, folding near-duplicate unanswered
+  questions together and surfacing net-downvoted answers, worst first.
+  `question_log_format()` renders the outcome breakdown, top content gaps, and
+  most-downvoted answers as markdown. Like its Slack counterpart, the command
+  is restricted to the global team — the corpus is anonymous, but still
+  internal usage insight.
+
+## RAG: Cloudflare calls now go through cloudflarer
+
+- The RAG indexer's Cloudflare calls are now built on
+  [cloudflarer](https://drmowinckels.r-universe.dev/cloudflarer) instead of a
+  hand-rolled `httr2` request builder. `cloudflare_account_id()` now delegates
+  to `cloudflarer::cf_list_accounts()`; `cloudflare_embed()` and
+  `cloudflare_vectorize_upsert()` stay custom (cloudflarer doesn't wrap Workers
+  AI inference or Vectorize v2) but now build on `cloudflarer::cf_request()`
+  and unwrap responses with `cloudflarer::cf_resp()`, which raises a classed
+  `cloudflarer_error` on API failure instead of a bare HTTP-status error.
+  `cloudflare_vectorize_upsert()`'s return value changed from the full
+  `{success, errors, result}` envelope to just the unwrapped `result` payload.
+
+## Jinx assistant
+
+- **Jinx now keeps an anonymous question-improvement log so the corpus can
+  evolve.** Every `@Jinx` mention or DM records the question text and a coarse
+  outcome (`answered`, `no_match`, `coding_declined`, or `low_confidence`) to a
+  Cloudflare D1 table — with no Slack user id, channel, or thread timestamp, so
+  a logged question cannot be traced to who asked. Answers are linked so a 👍/👎
+  reaction updates that question's score, turning "which answers were weak" into
+  a maintainer to-do list. `/jinx questions [days]` surfaces the top gaps and
+  most-downvoted answers; rows are purged after 180 days by a daily cron. Reading
+  the log (via `/jinx questions` and `/jinx feedback`) is restricted to the
+  global team, reusing the same Airtable member directory as `cmd_authorize()`.
+  Requires provisioning a `jinx-question-log` D1 database (see `wrangler.jsonc`).
+
+- **A weekly digest turns those gaps into an action list.** Every Monday a
+  scheduled job reads the question log, clusters the questions Jinx couldn't
+  answer well (`no_match` / `low_confidence`, excluding declined coding
+  questions), drafts a _proposed_ Guide answer for the top gaps, and posts the
+  lot — plus any 👎'd answers — to the global-team Slack channel
+  (`SLACK_DIGEST_CHANNEL`, default `#team-jinx`) for review. The corpus stays
+  human-authored: drafts are AI-suggested and unverified, only ever a Slack
+  message for a person to confirm before editing the Guide — nothing is written
+  to the RAG index automatically.
+
+- **Global-team authorization matches on the Slack member id, not the handle.**
+  `cmd_authorize()` (and the worker's command gate) now compare the requesting
+  Slack `user_id` against an `organiser_slack_id` column in the member directory,
+  rather than the informal `@mention` in `organiser_slack`. Handle matching was
+  unreliable (nicknames, real names with spaces) and impossible under Enterprise
+  Grid, where `users.info` cannot resolve profiles. `bot-commands.yml` now passes
+  `user_id` as the actor for Slack-sourced commands. Populate `organiser_slack_id`
+  for each global-team member.
+
 ## Directory
+
+- **The automated review lists clickable profile links instead of probing
+  them.** `validate_directory_pr()` used to HTTP-check whether each social
+  handle resolved, but the platforms block bot requests, so nearly every
+  entry was flagged ("may not resolve") — noise that trained reviewers to
+  ignore the report. It now renders each entry's socials as ready-made links
+  the reviewer clicks to confirm. Also fixes the Mastodon URL builder, which
+  returned `NA` for the normal `@user@instance` form.
 
 - **`directory_sync_airtable()` now produces real directory entries.** It reads
   the live submissions base (`appzYxePUruG9Nwyg`, table `submissions`) with its
@@ -251,6 +368,32 @@ content, sha}` records for changed entries instead of only their
 - `parse_unix_date()` no longer errors when handed an empty list or
   any other non-character / non-numeric value; it returns `NULL`,
   matching its behaviour for `NULL` and `""`.
+
+## RAG: answer "when is the next event" across all chapters
+
+- **The events indexer now emits a cross-chapter digest chunk.**
+  Asking Jinx for the next upcoming event used to fail whenever the
+  soonest events happened to sit outside the handful of per-event
+  chunks that vector search retrieved — "upcoming-ness" is a
+  structured filter, not a semantic property, and only a few events
+  are upcoming at any time (5 of 5,221 in the feed). `gather_events_json()`
+  now also builds a single `events-digest` chunk (`events_digest_chunk()`)
+  listing every upcoming event globally, soonest first, with a per-event
+  link and venue. The worker pins this digest into context for
+  event-intent questions so it always reaches the model, boosts its
+  source weight, and allows the digest's embedded per-event links to be
+  cited. `gather_all_chunks()` now honours a chunk's own `source_type`,
+  falling back to the source default.
+- Digest rendering is hardened against untrusted feed content: events
+  with a missing or unparseable date sort last (not first, where they
+  would be quoted as the next event), and Slack link metacharacters in
+  meetup titles are neutralised so they cannot corrupt the rendered
+  link.
+- **`parse_unix_date()` no longer crashes the indexer on a malformed
+  date string.** `as.POSIXct()` with the default format raises an error
+  (not a warning) on an unparseable string, which `suppressWarnings()`
+  does not catch; a single bad date in the feed would abort the whole
+  index build. Parse failures now degrade to `NULL`.
 
 # jinx 0.1.1
 
