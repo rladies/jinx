@@ -2,31 +2,38 @@
 % Please edit documentation in R/website-analytics.R
 \name{website_collect_analytics}
 \alias{website_collect_analytics}
-\title{Collect website analytics from Plausible}
+\title{Collect website analytics from Cloudflare Web Analytics}
 \usage{
 website_collect_analytics(
-  site_id = Sys.getenv("PLAUSIBLE_SITE_ID"),
-  api_key = Sys.getenv("PLAUSIBLE_API_KEY"),
-  base_url = Sys.getenv("PLAUSIBLE_URL", "https://plausible.io"),
-  period = c("30d", "7d", "month", "6mo", "12mo")
+  from = NULL,
+  to = NULL,
+  site_tag = Sys.getenv("CLOUDFLARE_SITE_TAG"),
+  account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
+  api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
 )
 }
 \arguments{
-\item{site_id}{Plausible site ID (domain). Defaults to
-\code{Sys.getenv("PLAUSIBLE_SITE_ID")}.}
+\item{from, to}{Date window (a \code{Date} or \code{"YYYY-MM-DD"} string). When both are
+\code{NULL}, defaults to the last 30 days.}
 
-\item{api_key}{Plausible API key. Defaults to
-\code{Sys.getenv("PLAUSIBLE_API_KEY")}.}
+\item{site_tag}{Cloudflare Web Analytics site tag. Defaults to
+\code{Sys.getenv("CLOUDFLARE_SITE_TAG")}.}
 
-\item{base_url}{Plausible instance URL. Defaults to
-\code{Sys.getenv("PLAUSIBLE_URL", "https://plausible.io")}.}
+\item{account_id}{Cloudflare account tag. Defaults to
+\code{Sys.getenv("CLOUDFLARE_ACCOUNT_ID")}.}
 
-\item{period}{Time period: \code{"30d"}, \code{"7d"}, \code{"month"}, \code{"6mo"}, \code{"12mo"}.}
+\item{api_token}{Cloudflare API token with Account Analytics Read. Defaults
+to \code{Sys.getenv("CLOUDFLARE_API_TOKEN")}.}
 }
 \value{
 Named list with \code{aggregate}, \code{timeseries}, \code{top_pages}, and
 \code{top_sources}.
 }
 \description{
-Queries the Plausible Analytics API for visitor and pageview metrics.
+Queries the Cloudflare GraphQL Analytics API for visitor and pageview
+metrics over a date window. The website moved to Cloudflare, so Plausible has
+been removed; the Cloudflare collector is pending a token and site tag and is
+\strong{not yet implemented}. The intended return shape matches what
+\code{\link[=website_format_analytics]{website_format_analytics()}} consumes: \code{aggregate}, \code{timeseries},
+\code{top_pages}, and \code{top_sources}.
 }

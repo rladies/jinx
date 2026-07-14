@@ -143,6 +143,16 @@
 - The bundled `directory-entry.json` schema now matches the full entry shape
   (location, social media, interests, languages, activities, work, photo).
 
+## Website analytics
+
+- **Plausible removed; website analytics moves to Cloudflare.** The website now
+  runs on Cloudflare, so all Plausible code and `PLAUSIBLE_*` environment
+  variables have been dropped. `website_collect_analytics()` now takes a
+  `from`/`to` date window and reads `CLOUDFLARE_API_TOKEN` /
+  `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_SITE_TAG`; the Cloudflare Web Analytics
+  query is not yet implemented and currently aborts with setup guidance. The
+  markdown/Slack formatting helpers are unchanged.
+
 ## Copilot reviews
 
 - **Jinx can summon GitHub Copilot to run the grimoire review gates.**

@@ -21,7 +21,7 @@
 | `/jinx events <chapter>`                             | List recent events for a chapter                                                           |
 | `/jinx events sync`                                  | Sync and publish event summary                                                             |
 | `/jinx analytics`                                    | Generate analytics dashboard                                                               |
-| `/jinx generate website analytics [period]`          | Generate Plausible website report (7d/30d/month/6mo/12mo)                                  |
+| `/jinx generate website analytics [period]`          | Generate Cloudflare website report (not yet implemented)                                   |
 | `/jinx cfp list`                                     | List open calls for proposals                                                              |
 | `/jinx cfp add <conf> <deadline> <url>`              | Track a new CFP                                                                            |
 | `/jinx cfp recommend <conf> @speaker`                | Recommend a speaker                                                                        |

@@ -1,88 +1,41 @@
-#' Collect website analytics from Plausible
+#' Collect website analytics from Cloudflare Web Analytics
 #'
-#' Queries the Plausible Analytics API for visitor and pageview metrics.
+#' Queries the Cloudflare GraphQL Analytics API for visitor and pageview
+#' metrics over a date window. The website moved to Cloudflare, so Plausible has
+#' been removed; the Cloudflare collector is pending a token and site tag and is
+#' **not yet implemented**. The intended return shape matches what
+#' [website_format_analytics()] consumes: `aggregate`, `timeseries`,
+#' `top_pages`, and `top_sources`.
 #'
-#' @param site_id Plausible site ID (domain). Defaults to
-#'   `Sys.getenv("PLAUSIBLE_SITE_ID")`.
-#' @param api_key Plausible API key. Defaults to
-#'   `Sys.getenv("PLAUSIBLE_API_KEY")`.
-#' @param base_url Plausible instance URL. Defaults to
-#'   `Sys.getenv("PLAUSIBLE_URL", "https://plausible.io")`.
-#' @param period Time period: `"30d"`, `"7d"`, `"month"`, `"6mo"`, `"12mo"`.
+#' @param from,to Date window (a `Date` or `"YYYY-MM-DD"` string). When both are
+#'   `NULL`, defaults to the last 30 days.
+#' @param site_tag Cloudflare Web Analytics site tag. Defaults to
+#'   `Sys.getenv("CLOUDFLARE_SITE_TAG")`.
+#' @param account_id Cloudflare account tag. Defaults to
+#'   `Sys.getenv("CLOUDFLARE_ACCOUNT_ID")`.
+#' @param api_token Cloudflare API token with Account Analytics Read. Defaults
+#'   to `Sys.getenv("CLOUDFLARE_API_TOKEN")`.
 #' @return Named list with `aggregate`, `timeseries`, `top_pages`, and
 #'   `top_sources`.
 #' @export
 website_collect_analytics <- function(
-  site_id = Sys.getenv("PLAUSIBLE_SITE_ID"),
-  api_key = Sys.getenv("PLAUSIBLE_API_KEY"),
-  base_url = Sys.getenv("PLAUSIBLE_URL", "https://plausible.io"),
-  period = c("30d", "7d", "month", "6mo", "12mo")
+  from = NULL,
+  to = NULL,
+  site_tag = Sys.getenv("CLOUDFLARE_SITE_TAG"),
+  account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
+  api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
 ) {
-  period <- match.arg(period)
-  cli::cli_h2("Collecting website analytics for {site_id}")
-
-  aggregate <- website_plausible_query(
-    base_url,
-    api_key,
-    "/api/v1/stats/aggregate",
-    site_id = site_id,
-    period = period,
-    metrics = "visitors,pageviews,bounce_rate,visit_duration"
-  )
-
-  timeseries <- website_plausible_query(
-    base_url,
-    api_key,
-    "/api/v1/stats/timeseries",
-    site_id = site_id,
-    period = period,
-    metrics = "visitors,pageviews"
-  )
-
-  top_pages <- website_plausible_query(
-    base_url,
-    api_key,
-    "/api/v1/stats/breakdown",
-    site_id = site_id,
-    period = period,
-    property = "event:page",
-    metrics = "visitors,pageviews",
-    limit = "10"
-  )
-
-  top_sources <- website_plausible_query(
-    base_url,
-    api_key,
-    "/api/v1/stats/breakdown",
-    site_id = site_id,
-    period = period,
-    property = "visit:source",
-    metrics = "visitors",
-    limit = "10"
-  )
-
-  cli::cli_alert_success(
-    "Collected analytics: {aggregate$results$visitors$value} visitors"
-  )
-
-  list(
-    site_id = site_id,
-    period = period,
-    aggregate = aggregate,
-    timeseries = timeseries,
-    top_pages = top_pages,
-    top_sources = top_sources
-  )
-}
-
-website_plausible_query <- function(base_url, api_key, endpoint, ...) {
-  params <- list(...)
-  req <- httr2::request(paste0(base_url, endpoint)) |>
-    httr2::req_headers(Authorization = paste("Bearer", api_key)) |>
-    httr2::req_url_query(!!!params)
-
-  resp <- httr2::req_perform(req)
-  httr2::resp_body_json(resp)
+  cli::cli_abort(c(
+    "Cloudflare Web Analytics collection is not yet implemented.",
+    i = paste(
+      "Plausible has been removed; the Cloudflare collector needs a token",
+      "and site tag."
+    ),
+    i = paste(
+      "Set {.envvar CLOUDFLARE_API_TOKEN}, {.envvar CLOUDFLARE_ACCOUNT_ID},",
+      "and {.envvar CLOUDFLARE_SITE_TAG}."
+    )
+  ))
 }
 
 #' Format website analytics as markdown
@@ -211,26 +164,21 @@ website_format_analytics <- function(analytics) {
 
 #' Generate a website analytics report
 #'
-#' Collects Plausible analytics and formats as markdown.
+#' Collects website analytics and formats as markdown.
 #'
 #' @inheritParams website_collect_analytics
+#' @param period Deprecated Plausible period string, accepted for backward
+#'   compatibility with the command registry and ignored.
 #' @param output_path Optional path to write JSON data.
 #' @return Named list with `analytics` and `markdown` (invisibly).
 #' @export
 website_generate_report <- function(
-  site_id = Sys.getenv("PLAUSIBLE_SITE_ID"),
-  api_key = Sys.getenv("PLAUSIBLE_API_KEY"),
-  base_url = Sys.getenv("PLAUSIBLE_URL", "https://plausible.io"),
-  period = c("30d", "7d", "month", "6mo", "12mo"),
+  from = NULL,
+  to = NULL,
+  period = NULL,
   output_path = NULL
 ) {
-  period <- match.arg(period)
-  analytics <- website_collect_analytics(
-    site_id = site_id,
-    api_key = api_key,
-    base_url = base_url,
-    period = period
-  )
+  analytics <- website_collect_analytics(from = from, to = to)
   markdown <- website_format_analytics(analytics)
 
   result <- list(analytics = analytics, markdown = markdown)
