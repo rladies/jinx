@@ -43,15 +43,15 @@ Module-specific secrets are only needed if you want that module’s
 features. A missing module secret is not fatal — Jinx skips the module
 and logs a hint:
 
-| Secret                   | Used by                |
-|--------------------------|------------------------|
-| `AIRTABLE_API_KEY`       | Airtable sync          |
-| `BSKY_USER`, `BSKY_PASS` | Bluesky announcements  |
-| `MASTODON_TOKEN`         | Mastodon announcements |
-| `LINKEDIN_ACCESS_TOKEN`  | LinkedIn announcements |
-| `SLACK_TOKEN`            | Slack management       |
-| `MAILCHIMP_API_KEY`      | Newsletter             |
-| `PLAUSIBLE_API_KEY`      | Website analytics      |
+| Secret | Used by |
+|----|----|
+| `AIRTABLE_API_KEY` | Airtable sync |
+| `BSKY_USER`, `BSKY_PASS` | Bluesky announcements |
+| `MASTODON_TOKEN` | Mastodon announcements |
+| `LINKEDIN_ACCESS_TOKEN` | LinkedIn announcements |
+| `SLACK_TOKEN` | Slack management |
+| `MAILCHIMP_API_KEY` | Newsletter |
+| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_SITE_TAG` | Website analytics |
 
 ## Configuration files
 

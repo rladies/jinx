@@ -1,37 +1,46 @@
-# Collect website analytics from Plausible
+# Collect website analytics from Cloudflare Web Analytics
 
-Queries the Plausible Analytics API for visitor and pageview metrics.
+Queries the Cloudflare GraphQL Analytics API for visitor and pageview
+metrics over a date window. The website moved to Cloudflare, so
+Plausible has been removed; the Cloudflare collector is pending a token
+and site tag and is **not yet implemented**. The intended return shape
+matches what
+[`website_format_analytics()`](https://rladies.github.io/jinx/reference/website_format_analytics.md)
+consumes: `aggregate`, `timeseries`, `top_pages`, and `top_sources`.
 
 ## Usage
 
 ``` r
 website_collect_analytics(
-  site_id = Sys.getenv("PLAUSIBLE_SITE_ID"),
-  api_key = Sys.getenv("PLAUSIBLE_API_KEY"),
-  base_url = Sys.getenv("PLAUSIBLE_URL", "https://plausible.io"),
-  period = c("30d", "7d", "month", "6mo", "12mo")
+  from = NULL,
+  to = NULL,
+  site_tag = Sys.getenv("CLOUDFLARE_SITE_TAG"),
+  account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
+  api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
 )
 ```
 
 ## Arguments
 
-- site_id:
+- from, to:
 
-  Plausible site ID (domain). Defaults to
-  `Sys.getenv("PLAUSIBLE_SITE_ID")`.
+  Date window (a `Date` or `"YYYY-MM-DD"` string). When both are `NULL`,
+  defaults to the last 30 days.
 
-- api_key:
+- site_tag:
 
-  Plausible API key. Defaults to `Sys.getenv("PLAUSIBLE_API_KEY")`.
+  Cloudflare Web Analytics site tag. Defaults to
+  `Sys.getenv("CLOUDFLARE_SITE_TAG")`.
 
-- base_url:
+- account_id:
 
-  Plausible instance URL. Defaults to
-  `Sys.getenv("PLAUSIBLE_URL", "https://plausible.io")`.
+  Cloudflare account tag. Defaults to
+  `Sys.getenv("CLOUDFLARE_ACCOUNT_ID")`.
 
-- period:
+- api_token:
 
-  Time period: `"30d"`, `"7d"`, `"month"`, `"6mo"`, `"12mo"`.
+  Cloudflare API token with Account Analytics Read. Defaults to
+  `Sys.getenv("CLOUDFLARE_API_TOKEN")`.
 
 ## Value
 

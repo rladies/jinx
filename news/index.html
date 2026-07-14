@@ -112,6 +112,11 @@ document.addEventListener("DOMContentLoaded", function() {
 <li><p>The bundled <code>directory-entry.json</code> schema now matches the full entry shape (location, social media, interests, languages, activities, work, photo).</p></li>
 </ul></div>
 <div class="section level3">
+<h3 id="website-analytics-0-2-0">Website analytics<a class="anchor" aria-label="anchor" href="#website-analytics-0-2-0"></a></h3>
+<ul><li>
+<strong>Plausible removed; website analytics moves to Cloudflare.</strong> The website now runs on Cloudflare, so all Plausible code and <code>PLAUSIBLE_*</code> environment variables have been dropped. <code><a href="../reference/website_collect_analytics.html">website_collect_analytics()</a></code> now takes a <code>from</code>/<code>to</code> date window and reads <code>CLOUDFLARE_API_TOKEN</code> / <code>CLOUDFLARE_ACCOUNT_ID</code> / <code>CLOUDFLARE_SITE_TAG</code>; the Cloudflare Web Analytics query is not yet implemented and currently aborts with setup guidance. The markdown/Slack formatting helpers are unchanged.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="copilot-reviews-0-2-0">Copilot reviews<a class="anchor" aria-label="anchor" href="#copilot-reviews-0-2-0"></a></h3>
 <ul><li>
 <strong>Jinx can summon GitHub Copilot to run the grimoire review gates.</strong> <code><a href="../reference/copilot_sync_repo.html">copilot_sync_repo()</a></code> fetches the four <a href="https://github.com/rladies/grimoire" class="external-link">rladies/grimoire</a> review skills (brand, blog, social, translation) plus the foundation brand ruleset and lands them in a target repo as <code>.github/copilot-instructions.md</code> and path-scoped <code>.github/instructions/*.instructions.md</code> via a pull request — the bridge that makes Copilot’s code review grimoire-aware. Run it with <code>/jinx copilot-sync &lt;owner/repo&gt;</code>.</li>

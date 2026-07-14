@@ -1,38 +1,29 @@
 # Generate a website analytics report
 
-Collects Plausible analytics and formats as markdown.
+Collects website analytics and formats as markdown.
 
 ## Usage
 
 ``` r
 website_generate_report(
-  site_id = Sys.getenv("PLAUSIBLE_SITE_ID"),
-  api_key = Sys.getenv("PLAUSIBLE_API_KEY"),
-  base_url = Sys.getenv("PLAUSIBLE_URL", "https://plausible.io"),
-  period = c("30d", "7d", "month", "6mo", "12mo"),
+  from = NULL,
+  to = NULL,
+  period = NULL,
   output_path = NULL
 )
 ```
 
 ## Arguments
 
-- site_id:
+- from, to:
 
-  Plausible site ID (domain). Defaults to
-  `Sys.getenv("PLAUSIBLE_SITE_ID")`.
-
-- api_key:
-
-  Plausible API key. Defaults to `Sys.getenv("PLAUSIBLE_API_KEY")`.
-
-- base_url:
-
-  Plausible instance URL. Defaults to
-  `Sys.getenv("PLAUSIBLE_URL", "https://plausible.io")`.
+  Date window (a `Date` or `"YYYY-MM-DD"` string). When both are `NULL`,
+  defaults to the last 30 days.
 
 - period:
 
-  Time period: `"30d"`, `"7d"`, `"month"`, `"6mo"`, `"12mo"`.
+  Deprecated Plausible period string, accepted for backward
+  compatibility with the command registry and ignored.
 
 - output_path:
 

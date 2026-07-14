@@ -271,10 +271,10 @@ Org-wide activity analytics
 
 ## Website analytics
 
-Plausible website performance reports
+Cloudflare Web Analytics website performance reports
 
 - [`website_collect_analytics()`](https://rladies.github.io/jinx/reference/website_collect_analytics.md)
-  : Collect website analytics from Plausible
+  : Collect website analytics from Cloudflare Web Analytics
 - [`website_format_analytics()`](https://rladies.github.io/jinx/reference/website_format_analytics.md)
   : Format website analytics as markdown
 - [`website_generate_report()`](https://rladies.github.io/jinx/reference/website_generate_report.md)
