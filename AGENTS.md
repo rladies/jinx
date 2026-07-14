@@ -48,11 +48,16 @@ The Slack bridge runs as a Cloudflare Worker at
     /slack/install      GET    Start OAuth install flow
     /slack/oauth        GET    OAuth callback
     /airtable/webhook   POST   Form submissions from Airtable
+    /ai/generate        POST   Workers AI passthrough for other RLadies+ repos
+    /analytics/rum      POST   Cloudflare Web Analytics (RUM) proxy for other RLadies+ repos
 
 Routes follow `/<service>/<action>` — never flat paths like
 `/slack-interact` or `/airtable-webhook`. Slack-side endpoints all run
 through `verifySlackSignature()` in the router; `/airtable/webhook` uses
-its own `x-airtable-secret` header.
+its own `x-airtable-secret` header; `/ai/generate` and `/analytics/rum`
+are gated by a shared `JINX_API_KEY` bearer token (constant-time
+compared, `worker/src/api-auth.js`) — see the README’s “HTTP API for
+other repos” section for the request/response contract of each.
 
 ### Airtable invite-approval flow
 
@@ -161,6 +166,8 @@ To add a workspace: set its team ID as a worker secret, redeploy, run
 | `SLACK_COMMUNITY_INVITE_CHANNEL` | Channel ID in the community workspace where invite cards are posted |
 | `AIRTABLE_WEBHOOK_SECRET` | Verify Airtable webhook requests |
 | `AIRTABLE_API_KEY` | Airtable PAT — scope defines the base allowlist (see below) |
+| `JINX_API_KEY` | Bearer key gating `/ai/generate` and `/analytics/rum` for other repos |
+| `CLOUDFLARE_API_TOKEN` | Backs `/analytics/rum`’s GraphQL query — same value as the GitHub Actions secret of the same name, provisioned into this second (Worker runtime) plane |
 
 ### Worker vars (in `wrangler.jsonc`)
 

@@ -119,8 +119,10 @@ document.addEventListener("DOMContentLoaded", function() {
 /slack/interact     POST   Block Kit button clicks from Slack
 /slack/install      GET    Start OAuth install flow
 /slack/oauth        GET    OAuth callback
-/airtable/webhook   POST   Form submissions from Airtable</code></pre>
-<p>Routes follow <code>/&lt;service&gt;/&lt;action&gt;</code> — never flat paths like <code>/slack-interact</code> or <code>/airtable-webhook</code>. Slack-side endpoints all run through <code>verifySlackSignature()</code> in the router; <code>/airtable/webhook</code> uses its own <code>x-airtable-secret</code> header.</p>
+/airtable/webhook   POST   Form submissions from Airtable
+/ai/generate        POST   Workers AI passthrough for other RLadies+ repos
+/analytics/rum      POST   Cloudflare Web Analytics (RUM) proxy for other RLadies+ repos</code></pre>
+<p>Routes follow <code>/&lt;service&gt;/&lt;action&gt;</code> — never flat paths like <code>/slack-interact</code> or <code>/airtable-webhook</code>. Slack-side endpoints all run through <code>verifySlackSignature()</code> in the router; <code>/airtable/webhook</code> uses its own <code>x-airtable-secret</code> header; <code>/ai/generate</code> and <code>/analytics/rum</code> are gated by a shared <code>JINX_API_KEY</code> bearer token (constant-time compared, <code>worker/src/api-auth.js</code>) — see the README’s “HTTP API for other repos” section for the request/response contract of each.</p>
 </div>
 <div class="section level3">
 <h3 id="airtable-invite-approval-flow">Airtable invite-approval flow<a class="anchor" aria-label="anchor" href="#airtable-invite-approval-flow"></a></h3>
@@ -171,7 +173,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 <div class="section level3">
 <h3 id="worker-secrets-via-wrangler-secret-put">Worker secrets (via <code>wrangler secret put</code>)<a class="anchor" aria-label="anchor" href="#worker-secrets-via-wrangler-secret-put"></a></h3>
-<table class="table"><colgroup><col width="31%"><col width="68%"></colgroup><thead><tr><th>Secret</th>
+<table class="table"><colgroup><col width="17%"><col width="82%"></colgroup><thead><tr><th>Secret</th>
 <th>Purpose</th>
 </tr></thead><tbody><tr><td><code>SLACK_SIGNING_SECRET</code></td>
 <td>Verify Slack request authenticity (app-global)</td>
@@ -189,6 +191,10 @@ document.addEventListener("DOMContentLoaded", function() {
 <td>Verify Airtable webhook requests</td>
 </tr><tr><td><code>AIRTABLE_API_KEY</code></td>
 <td>Airtable PAT — scope defines the base allowlist (see below)</td>
+</tr><tr><td><code>JINX_API_KEY</code></td>
+<td>Bearer key gating <code>/ai/generate</code> and <code>/analytics/rum</code> for other repos</td>
+</tr><tr><td><code>CLOUDFLARE_API_TOKEN</code></td>
+<td>Backs <code>/analytics/rum</code>’s GraphQL query — same value as the GitHub Actions secret of the same name, provisioned into this second (Worker runtime) plane</td>
 </tr></tbody></table></div>
 <div class="section level3">
 <h3 id="worker-vars-in-wranglerjsonc">Worker vars (in <code>wrangler.jsonc</code>)<a class="anchor" aria-label="anchor" href="#worker-vars-in-wranglerjsonc"></a></h3>

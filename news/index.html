@@ -65,6 +65,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
+<div class="section level3">
+<h3 id="http-api-for-other-repos-development-version">HTTP API for other repos<a class="anchor" aria-label="anchor" href="#http-api-for-other-repos-development-version"></a></h3>
+<ul><li>
+<strong>The Cloudflare Worker now exposes <code>POST /ai/generate</code> and <code>POST /analytics/rum</code></strong>, authenticated with a shared <code>JINX_API_KEY</code> bearer token (constant-time compared, <code>worker/src/api-auth.js</code>), so other RLadies+ repos can get Workers-AI text generation and Cloudflare Web Analytics data without holding their own Cloudflare credentials. <code>/ai/generate</code> is a thin, model-agnostic passthrough to the existing <code>AI</code> binding (model must be on a Worker-side allowlist); <code>/analytics/rum</code> proxies a single window of the GraphQL RUM query already used internally, with <code>dimension</code> validated against a strict allowlist pattern before it’s interpolated into the query text. First consumer: <code>rladies/funders-reports</code>, replacing its own direct <code>CLOUDFLARE_API_TOKEN</code> usage for both AI-drafted report prose and Web Analytics collection. See the README’s “HTTP API for other repos” section.</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="jinx-020">jinx 0.2.0<a class="anchor" aria-label="anchor" href="#jinx-020"></a></h2>
