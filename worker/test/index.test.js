@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import worker from "../src/index.js";
-import { makeEnv, makeCtx, signSlack } from "./_helpers.js";
+import { makeEnv, makeCtx, signSlack, jsonResponse } from "./_helpers.js";
 
 vi.mock("../src/question-digest.js", () => ({
   question_digest_post: vi.fn(async () => true),
@@ -140,6 +140,80 @@ describe("worker fetch routing", () => {
     await ctx.flush();
     expect(question_log_purge).toHaveBeenCalledTimes(1);
     expect(question_digest_post).not.toHaveBeenCalled();
+  });
+
+  it("rejects /ai/generate and /analytics/rum without a valid bearer key", async () => {
+    const env = makeEnv();
+    for (const path of ["/ai/generate", "/analytics/rum"]) {
+      const noAuth = await worker.fetch(
+        makeRequest(`https://jinx.example.com${path}`, {
+          method: "POST",
+          body: "{}",
+        }),
+        env,
+        makeCtx()
+      );
+      expect(noAuth.status).toBe(401);
+
+      const badAuth = await worker.fetch(
+        makeRequest(`https://jinx.example.com${path}`, {
+          method: "POST",
+          headers: { authorization: "Bearer wrong-key" },
+          body: "{}",
+        }),
+        env,
+        makeCtx()
+      );
+      expect(badAuth.status).toBe(401);
+    }
+  });
+
+  it("routes an authenticated /ai/generate request to the AI binding", async () => {
+    const env = {
+      ...makeEnv(),
+      AI: { run: vi.fn(async () => ({ response: "hi there" })) },
+    };
+    const res = await worker.fetch(
+      makeRequest("https://jinx.example.com/ai/generate", {
+        method: "POST",
+        headers: { authorization: "Bearer test-jinx-api-key" },
+        body: JSON.stringify({
+          model: "@cf/meta/llama-3.3-70b-instruct",
+          messages: [{ role: "user", content: "hi" }],
+        }),
+      }),
+      env,
+      makeCtx()
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.result.response).toBe("hi there");
+  });
+
+  it("routes an authenticated /analytics/rum request to Cloudflare's GraphQL API", async () => {
+    const env = makeEnv();
+    vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
+      jsonResponse({
+        data: { viewer: { accounts: [{ rumPageloadEventsAdaptiveGroups: [] }] } },
+      })
+    );
+    const res = await worker.fetch(
+      makeRequest("https://jinx.example.com/analytics/rum", {
+        method: "POST",
+        headers: { authorization: "Bearer test-jinx-api-key" },
+        body: JSON.stringify({
+          account_id: "acc-1",
+          site_tag: "site-1",
+          since: "2025-01-01T00:00:00Z",
+          until: "2025-02-01T00:00:00Z",
+        }),
+      }),
+      env,
+      makeCtx()
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.groups).toEqual([]);
   });
 
   it("does not require a Slack signature on the Airtable webhook", async () => {

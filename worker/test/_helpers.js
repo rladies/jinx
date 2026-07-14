@@ -119,6 +119,8 @@ export function makeEnv(overrides = {}) {
     AIRTABLE_API_KEY: "test-airtable-key",
     GITHUB_REPO: "rladies/jinx",
     GITHUB_TOKEN: "test-gh-token",
+    JINX_API_KEY: "test-jinx-api-key",
+    CLOUDFLARE_API_TOKEN: "test-cf-api-token",
     SLACK_TOKENS: makeKv(),
     AIRTABLE_BASES: makeKv(),
     ...overrides,

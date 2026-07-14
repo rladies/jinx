@@ -193,6 +193,36 @@ await step("Worker /slack/command help round-trip with signed body", async () =>
   }
 });
 
+// Auth-gate-only checks for the HTTP API routes -- never hit the real AI
+// model or a real Cloudflare Analytics query here (daily quota burn for no
+// benefit); confirming the 401 gate is wired post-deploy is what matters.
+for (const path of ["/ai/generate", "/analytics/rum"]) {
+  await step(`Worker ${path} rejects a missing bearer key with 401`, async () => {
+    const res = await fetch(`${workerOrigin}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+    if (res.status !== 401) {
+      throw new Error(`expected 401, got ${res.status}${await bodySnippet(res)}`);
+    }
+  });
+
+  await step(`Worker ${path} rejects a wrong bearer key with 401`, async () => {
+    const res = await fetch(`${workerOrigin}${path}`, {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer smoke-test-wrong-key",
+        "Content-Type": "application/json",
+      },
+      body: "{}",
+    });
+    if (res.status !== 401) {
+      throw new Error(`expected 401, got ${res.status}${await bodySnippet(res)}`);
+    }
+  });
+}
+
 const passed = results.filter((r) => r.ok).length;
 console.log(`\n${passed}/${results.length} checks passed`);
 process.exit(hadFailure ? 1 : 0);
