@@ -1,0 +1,85 @@
+name: Infra · Wrangler canary
+
+# Proactively probes whether a newer wrangler release still works against the
+# real Cloudflare API, so a breaking release is caught here instead of by a
+# failed production deploy (see infra-deploy-worker.yml's pinned version).
+# Uses `wrangler versions upload`, not `deploy` -- it hits the same
+# authenticated upload path that actually broke on 2026-07-14, but Cloudflare
+# never routes production traffic to an uploaded-but-unpromoted version, so
+# this is safe to run daily with zero user-facing risk. It does not auto-bump
+# the pin; a human decides when to move it forward.
+
+on:
+  schedule:
+    - cron: "13 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pinned:
+    name: Canary — pinned wrangler (4.107.0)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      result: ${{ steps.upload.outcome }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Upload a canary version (no traffic shift)
+        id: upload
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: >
+          npx --yes wrangler@4.107.0 versions upload
+          --tag canary-pinned
+          --message "Wrangler canary (pinned 4.107.0), run ${{ github.run_id }}"
+
+  latest:
+    name: Canary — wrangler@latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      result: ${{ steps.upload.outcome }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Upload a canary version (no traffic shift)
+        id: upload
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: >
+          npx --yes wrangler@latest versions upload
+          --tag canary-latest
+          --message "Wrangler canary (latest), run ${{ github.run_id }}"
+
+  notify-latest-regression:
+    name: Notify Slack if wrangler@latest broke something the pin doesn't have
+    needs: [pinned, latest]
+    if: needs.latest.outputs.result == 'failure'
+    uses: ./.github/workflows/reusable-slack-fail-notify.yml
+    with:
+      message: >-
+        🐤 Jinx wrangler canary: @latest failed
+        (pinned 4.107.0 ${{ needs.pinned.outputs.result == 'failure' && 'ALSO failed -- likely not a wrangler-version-specific issue' || 'still succeeds -- do not bump the pin yet' }})
+        — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run logs>
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
+      SLACK_CHANNEL: ${{ secrets.SLACK_HEALTHCHECK_CHANNEL }}
