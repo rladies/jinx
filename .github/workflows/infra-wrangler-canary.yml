@@ -13,6 +13,9 @@ on:
   schedule:
     - cron: "13 6 * * *"
   workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/infra-wrangler-canary.yml"
 
 permissions:
   contents: read
@@ -73,7 +76,7 @@ jobs:
   notify-latest-regression:
     name: Notify Slack if wrangler@latest broke something the pin doesn't have
     needs: [pinned, latest]
-    if: needs.latest.outputs.result == 'failure'
+    if: needs.latest.outputs.result == 'failure' && github.event_name != 'pull_request'
     uses: ./.github/workflows/reusable-slack-fail-notify.yml
     with:
       message: >-
