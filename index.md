@@ -132,19 +132,24 @@ GitHub comment.
 Beyond the reusable GitHub Actions workflows above, Jinx’s Cloudflare
 Worker exposes a small authenticated HTTP API so other RLadies+ repos
 can get Cloudflare-backed capabilities without holding their own
-Cloudflare credentials. First consumer: `rladies/funders-reports`, for
-AI-drafted report prose and Web Analytics data.
+Cloudflare credentials. First consumer: `rladies/quarto-rladies-report`,
+for AI-drafted report prose.
 
 | Route | What it does |
 |----|----|
 | `POST /ai/generate` | Thin passthrough to the Workers AI binding. Body: `{model, messages, response_format?, max_tokens?}` — `model` must be on a Worker-side allowlist. Returns [result](https://github.com/soumyaray/result) (Workers AI’s native response shape). |
-| `POST /analytics/rum` | Proxies a single window of Cloudflare Web Analytics (RUM) GraphQL data. Body: `{account_id, site_tag, since, until, dimension?, limit?}`. Returns `{groups: [...]}`. Chunking across wider date ranges and retries are the caller’s responsibility. |
 
-Both routes require `Authorization: Bearer <JINX_API_KEY>` — ask a Jinx
-admin for the key rather than requesting a Cloudflare token of your own.
-A missing or wrong key gets a `401`. See `.github/AGENTS.md`’s “Endpoint
+Requires `Authorization: Bearer <JINX_API_KEY>` — ask a Jinx admin for
+the key rather than requesting a Cloudflare token of your own. A missing
+or wrong key gets a `401`. See `.github/AGENTS.md`’s “Endpoint
 conventions” and “Worker secrets” sections for the underlying
 implementation and secret names.
+
+Cloudflare Web Analytics doesn’t need an HTTP route:
+[`jinx::rum_collect_analytics()`](https://rladies.github.io/jinx/reference/rum_collect_analytics.md)
+is exported directly from this R package (see `R/website-rum.R`) — a
+calling repo can add `jinx` as a dependency and call it, rather than
+going through the Worker at all.
 
 ## Documentation
 

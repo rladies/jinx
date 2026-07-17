@@ -305,16 +305,10 @@ on every push to <code>worker/</code> on <code>main</code>.</p>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="ex">wrangler</span> secret put SLACK_CLIENT_ID</span>
 <span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="ex">wrangler</span> secret put SLACK_CLIENT_SECRET</span>
 <span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="ex">wrangler</span> secret put GITHUB_PAT</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="ex">wrangler</span> secret put JINX_API_KEY</span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="ex">wrangler</span> secret put CLOUDFLARE_API_TOKEN</span></code></pre></div>
-<p><code>JINX_API_KEY</code> and <code>CLOUDFLARE_API_TOKEN</code> back
-the <code>/ai/generate</code> and <code>/analytics/rum</code> HTTP API
-routes (see the “HTTP API for other repos” section of the README) —
-other RLadies+ repos authenticate to these with
-<code>JINX_API_KEY</code>, and <code>CLOUDFLARE_API_TOKEN</code>’s value
-should match the existing GitHub Actions secret of the same name (same
-Cloudflare token, provisioned into a second plane for the Worker to use
-it at runtime).</p>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="ex">wrangler</span> secret put JINX_API_KEY</span></code></pre></div>
+<p><code>JINX_API_KEY</code> backs the <code>/ai/generate</code> HTTP
+API route (see the “HTTP API for other repos” section of the README) —
+other RLadies+ repos authenticate to it with this bearer key.</p>
 <p>KV namespaces (<code>SLACK_TOKENS</code>,
 <code>AIRTABLE_BASES</code>) and the Vectorize index
 (<code>rladies-content</code>) are declared in

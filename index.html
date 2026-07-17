@@ -200,28 +200,23 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="section level2">
 <h2 id="http-api-for-other-repos">HTTP API for other repos<a class="anchor" aria-label="anchor" href="#http-api-for-other-repos"></a>
 </h2>
-<p>Beyond the reusable GitHub Actions workflows above, Jinx’s Cloudflare Worker exposes a small authenticated HTTP API so other RLadies+ repos can get Cloudflare-backed capabilities without holding their own Cloudflare credentials. First consumer: <code>rladies/funders-reports</code>, for AI-drafted report prose and Web Analytics data.</p>
+<p>Beyond the reusable GitHub Actions workflows above, Jinx’s Cloudflare Worker exposes a small authenticated HTTP API so other RLadies+ repos can get Cloudflare-backed capabilities without holding their own Cloudflare credentials. First consumer: <code>rladies/quarto-rladies-report</code>, for AI-drafted report prose.</p>
 <table class="table">
 <colgroup>
-<col width="7%">
-<col width="92%">
+<col width="8%">
+<col width="91%">
 </colgroup>
 <thead><tr>
 <th>Route</th>
 <th>What it does</th>
 </tr></thead>
-<tbody>
-<tr>
+<tbody><tr>
 <td><code>POST /ai/generate</code></td>
 <td>Thin passthrough to the Workers AI binding. Body: <code>{model, messages, response_format?, max_tokens?}</code> — <code>model</code> must be on a Worker-side allowlist. Returns <a href="https://github.com/soumyaray/result" class="external-link">result</a> (Workers AI’s native response shape).</td>
-</tr>
-<tr>
-<td><code>POST /analytics/rum</code></td>
-<td>Proxies a single window of Cloudflare Web Analytics (RUM) GraphQL data. Body: <code>{account_id, site_tag, since, until, dimension?, limit?}</code>. Returns <code>{groups: [...]}</code>. Chunking across wider date ranges and retries are the caller’s responsibility.</td>
-</tr>
-</tbody>
+</tr></tbody>
 </table>
-<p>Both routes require <code>Authorization: Bearer &lt;JINX_API_KEY&gt;</code> — ask a Jinx admin for the key rather than requesting a Cloudflare token of your own. A missing or wrong key gets a <code>401</code>. See <code>.github/AGENTS.md</code>’s “Endpoint conventions” and “Worker secrets” sections for the underlying implementation and secret names.</p>
+<p>Requires <code>Authorization: Bearer &lt;JINX_API_KEY&gt;</code> — ask a Jinx admin for the key rather than requesting a Cloudflare token of your own. A missing or wrong key gets a <code>401</code>. See <code>.github/AGENTS.md</code>’s “Endpoint conventions” and “Worker secrets” sections for the underlying implementation and secret names.</p>
+<p>Cloudflare Web Analytics doesn’t need an HTTP route: <code><a href="reference/rum_collect_analytics.html">jinx::rum_collect_analytics()</a></code> is exported directly from this R package (see <code>R/website-rum.R</code>) — a calling repo can add <code>jinx</code> as a dependency and call it, rather than going through the Worker at all.</p>
 </div>
 <div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>

@@ -168,15 +168,11 @@ wrangler secret put SLACK_CLIENT_ID
 wrangler secret put SLACK_CLIENT_SECRET
 wrangler secret put GITHUB_PAT
 wrangler secret put JINX_API_KEY
-wrangler secret put CLOUDFLARE_API_TOKEN
 ```
 
-`JINX_API_KEY` and `CLOUDFLARE_API_TOKEN` back the `/ai/generate` and
-`/analytics/rum` HTTP API routes (see the “HTTP API for other repos”
-section of the README) — other RLadies+ repos authenticate to these with
-`JINX_API_KEY`, and `CLOUDFLARE_API_TOKEN`’s value should match the
-existing GitHub Actions secret of the same name (same Cloudflare token,
-provisioned into a second plane for the Worker to use it at runtime).
+`JINX_API_KEY` backs the `/ai/generate` HTTP API route (see the “HTTP
+API for other repos” section of the README) — other RLadies+ repos
+authenticate to it with this bearer key.
 
 KV namespaces (`SLACK_TOKENS`, `AIRTABLE_BASES`) and the Vectorize index
 (`rladies-content`) are declared in `wrangler.jsonc` — adding one means
