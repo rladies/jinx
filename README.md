@@ -127,12 +127,27 @@ prose and Web Analytics data.
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `POST /ai/generate`   | Thin passthrough to the Workers AI binding. Body: `{model, messages, response_format?, max_tokens?}` — `model` must be on a Worker-side allowlist. Returns `{result}` (Workers AI's native response shape).                                         |
 | `POST /analytics/rum` | Proxies a single window of Cloudflare Web Analytics (RUM) GraphQL data. Body: `{account_id, site_tag, since, until, dimension?, limit?}`. Returns `{groups: [...]}`. Chunking across wider date ranges and retries are the caller's responsibility. |
+| `POST /links/shorten` | Creates (or reuses) a `l.rladies.org` short link. Body: `{url, slug?}`. Returns `{code, url, short_url}`. Re-shortening a URL that already has a short link returns the existing one instead of minting a duplicate.                                |
 
-Both routes require `Authorization: Bearer <JINX_API_KEY>` — ask a Jinx admin
-for the key rather than requesting a Cloudflare token of your own. A missing
-or wrong key gets a `401`. See `.github/AGENTS.md`'s "Endpoint conventions"
-and "Worker secrets" sections for the underlying implementation and secret
-names.
+All three routes require `Authorization: Bearer <JINX_API_KEY>` — ask a Jinx
+admin for the key rather than requesting a Cloudflare token of your own. A
+missing or wrong key gets a `401`. See `.github/AGENTS.md`'s "Endpoint
+conventions" and "Worker secrets" sections for the underlying implementation
+and secret names.
+
+## URL shortener
+
+Jinx runs a small URL shortener at `l.rladies.org`. Short links can be
+created two ways:
+
+- In Slack, `/jinx shorten <url> [slug]` — restricted to the organisers
+  workspace, since an open shortener would be an open-redirect/phishing risk
+  if anyone in the (openly joinable) community workspace could mint links.
+- Via the HTTP API above (`POST /links/shorten`), for other RLadies+ repos.
+
+Requesting a short link for a destination that already has one returns the
+existing short link rather than creating a duplicate — including when a
+custom slug is requested for an already-shortened destination.
 
 ## Documentation
 

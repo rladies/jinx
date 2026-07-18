@@ -12,7 +12,8 @@ import {
   question_gaps_rank,
   question_downvoted_rank,
 } from "./question-log.js";
-import { slack_global_team_authorize } from "./authorize.js";
+import { slack_global_team_authorize, slack_is_organizer_workspace } from "./authorize.js";
+import { short_link_create } from "./short-links.js";
 
 const BOOKMARKS_CONFIG_URL =
   "https://raw.githubusercontent.com/rladies/jinx/main/inst/config/bookmarks.json";
@@ -47,6 +48,7 @@ const LOCAL_COMMANDS = new Set([
   "pair",
   "feedback",
   "questions",
+  "shorten",
 ]);
 
 export function slash_is_local(command) {
@@ -64,6 +66,17 @@ export function command_requires_global_team(command) {
   return GLOBAL_TEAM_COMMANDS.has(command.split(/\s+/)[0]);
 }
 
+// Link creation is restricted to the organiser workspace (not the openly
+// joinable community one) so an open shortener can't be abused as a
+// phishing/open-redirect vector by an arbitrary community member. Unlike the
+// global-team commands above, any organiser-workspace member may shorten --
+// no Airtable directory check.
+const ORGANIZER_WORKSPACE_COMMANDS = new Set(["shorten"]);
+
+export function command_requires_organizer_workspace(command) {
+  return ORGANIZER_WORKSPACE_COMMANDS.has(command.split(/\s+/)[0]);
+}
+
 export async function slash_local_handle(env, teamId, command, params, responseUrl) {
   const [verb, ...rest] = command.split(/\s+/);
   const args = rest.join(" ").trim();
@@ -79,6 +92,14 @@ export async function slash_local_handle(env, teamId, command, params, responseU
     }
   }
 
+  if (command_requires_organizer_workspace(command) && !slack_is_organizer_workspace(env, teamId)) {
+    await slash_respond(
+      responseUrl,
+      "🚫 Shortening links is for the organisers workspace only — sorry, house rules!",
+    );
+    return;
+  }
+
   try {
     switch (verb) {
       case "setup-channel":
@@ -91,6 +112,8 @@ export async function slash_local_handle(env, teamId, command, params, responseU
         return await slash_feedback(env, teamId, args, responseUrl);
       case "questions":
         return await slash_questions(env, args, responseUrl);
+      case "shorten":
+        return await slash_shorten(env, userId, args, responseUrl);
     }
   } catch (err) {
     console.error(`Local command "${verb}" failed:`, err);
@@ -339,6 +362,29 @@ async function slash_questions(env, args, responseUrl) {
 function quote_question(question) {
   const s = (question || "").replace(/\s+/g, " ").trim();
   return s.length > 120 ? `${s.slice(0, 117)}…` : s;
+}
+
+async function slash_shorten(env, userId, args, responseUrl) {
+  const [rawUrl, slug] = (args || "").trim().split(/\s+/);
+  if (!rawUrl) {
+    await slash_respond(
+      responseUrl,
+      "Usage: `/jinx shorten <url> [slug]` — for example: `/jinx shorten https://guide.rladies.org/events/ conf-2026`",
+    );
+    return;
+  }
+
+  try {
+    const { shortUrl, created } = await short_link_create(env, {
+      url: rawUrl,
+      slug,
+      createdBy: userId,
+    });
+    const verb = created ? "Minted" : "Already had";
+    await slash_respond(responseUrl, `🔗 ${verb} a short link: ${shortUrl}`);
+  } catch (err) {
+    await slash_respond(responseUrl, `😿 Couldn't shorten that: ${err.message}`);
+  }
 }
 
 async function slash_respond(responseUrl, text) {

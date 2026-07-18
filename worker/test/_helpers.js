@@ -123,6 +123,7 @@ export function makeEnv(overrides = {}) {
     CLOUDFLARE_API_TOKEN: "test-cf-api-token",
     SLACK_TOKENS: makeKv(),
     AIRTABLE_BASES: makeKv(),
+    SHORT_LINKS: makeKv(),
     ...overrides,
   };
 }
