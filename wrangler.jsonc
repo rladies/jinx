@@ -67,5 +67,10 @@
 			"pattern": "l.rladies.org/*",
 			"zone_name": "rladies.org"
 		}
-	]
+	],
+	// Adding `routes` above flips wrangler's default for this to false, which
+	// silently took down the primary https://jinx.rladies.workers.dev URL that
+	// Slack's slash-command/event-subscription config points at. Keep this
+	// explicit so a future `routes` addition can't repeat that outage.
+	"workers_dev": true
 }
