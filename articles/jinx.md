@@ -37,6 +37,7 @@ Jinx replies right under the comment, as `jinx[bot]`.
     /jinx report weekly
     /jinx chapter-setup Berlin Germany
     /jinx announce https://rladies.org/blog/<slug>/
+    /jinx review blog #42
 
 There’s no setup on your end — if you have RLadies+ organiser access,
 you can summon Jinx.

@@ -138,10 +138,11 @@ for AI-drafted report prose.
 | Route | What it does |
 |----|----|
 | `POST /ai/generate` | Thin passthrough to the Workers AI binding. Body: `{model, messages, response_format?, max_tokens?}` — `model` must be on a Worker-side allowlist. Returns [result](https://github.com/soumyaray/result) (Workers AI’s native response shape). |
+| `POST /links/shorten` | Creates (or reuses) a `l.rladies.org` short link. Body: `{url, slug?}`. Returns `{code, url, short_url}`. Re-shortening a URL that already has a short link returns the existing one instead of minting a duplicate. |
 
-Requires `Authorization: Bearer <JINX_API_KEY>` — ask a Jinx admin for
-the key rather than requesting a Cloudflare token of your own. A missing
-or wrong key gets a `401`. See `.github/AGENTS.md`’s “Endpoint
+Both routes require `Authorization: Bearer <JINX_API_KEY>` — ask a Jinx
+admin for the key rather than requesting a Cloudflare token of your own.
+A missing or wrong key gets a `401`. See `.github/AGENTS.md`’s “Endpoint
 conventions” and “Worker secrets” sections for the underlying
 implementation and secret names.
 
@@ -150,6 +151,22 @@ Cloudflare Web Analytics doesn’t need an HTTP route:
 is exported directly from this R package (see `R/website-rum.R`) — a
 calling repo can add `jinx` as a dependency and call it, rather than
 going through the Worker at all.
+
+## URL shortener
+
+Jinx runs a small URL shortener at `l.rladies.org`. Short links can be
+created two ways:
+
+- In Slack, `/jinx shorten <url> [slug]` — restricted to the organisers
+  workspace, since an open shortener would be an open-redirect/phishing
+  risk if anyone in the (openly joinable) community workspace could mint
+  links.
+- Via the HTTP API above (`POST /links/shorten`), for other RLadies+
+  repos.
+
+Requesting a short link for a destination that already has one returns
+the existing short link rather than creating a duplicate — including
+when a custom slug is requested for an already-shortened destination.
 
 ## Documentation
 

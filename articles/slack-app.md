@@ -39,9 +39,26 @@ ones:
   organiser to action (see *Approving Slack invites* below).
 - `/jinx blog-add <url>` — auto-create a blog entry PR on the website
   from a URL.
+- `/jinx review brand|blog|social|translation <pr>` — summon a GitHub
+  Copilot content review on a PR (see *Copilot content reviews* below).
 
 The canonical reference, kept in sync with the package, is at
 [inst/commands/help.md](https://github.com/rladies/jinx/blob/main/inst/commands/help.md).
+
+### Copilot content reviews
+
+Jinx can put a draft PR through a GitHub Copilot review keyed to the
+RLadies+ [grimoire](https://github.com/rladies/grimoire) gates — brand,
+blog, social, or translation. From Slack, name the gate and the PR
+(owner/repo and number, since Slack isn’t inside a repo):
+
+    /jinx review blog rladies/rladies.github.io#42
+
+Copilot posts its findings on the PR as a tiered Blockers / Warnings /
+Nits punch list. It’s a *pre-human* review gate — it flags issues for
+you to fix, and never approves, merges, or publishes. Turning this on
+for a repo is a one-time admin step; see [Operating
+Jinx](https://rladies.github.io/jinx/articles/workflows.md).
 
 ### Ask Jinx anything about RLadies+
 

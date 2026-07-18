@@ -145,8 +145,25 @@ invites</em> below).</li>
 <li>
 <code>/jinx blog-add &lt;url&gt;</code> — auto-create a blog entry
 PR on the website from a URL.</li>
+<li>
+<code>/jinx review brand|blog|social|translation &lt;pr&gt;</code> —
+summon a GitHub Copilot content review on a PR (see <em>Copilot content
+reviews</em> below).</li>
 </ul>
 <p>The canonical reference, kept in sync with the package, is at <a href="https://github.com/rladies/jinx/blob/main/inst/commands/help.md" class="external-link">inst/commands/help.md</a>.</p>
+</div>
+<div class="section level3">
+<h3 id="copilot-content-reviews">Copilot content reviews<a class="anchor" aria-label="anchor" href="#copilot-content-reviews"></a>
+</h3>
+<p>Jinx can put a draft PR through a GitHub Copilot review keyed to the
+RLadies+ <a href="https://github.com/rladies/grimoire" class="external-link">grimoire</a>
+gates — brand, blog, social, or translation. From Slack, name the gate
+and the PR (owner/repo and number, since Slack isn’t inside a repo):</p>
+<pre><code>/jinx review blog rladies/rladies.github.io#42</code></pre>
+<p>Copilot posts its findings on the PR as a tiered Blockers / Warnings
+/ Nits punch list. It’s a <em>pre-human</em> review gate — it flags
+issues for you to fix, and never approves, merges, or publishes. Turning
+this on for a repo is a one-time admin step; see <a href="workflows.html">Operating Jinx</a>.</p>
 </div>
 <div class="section level3">
 <h3 id="ask-jinx-anything-about-rladies">Ask Jinx anything about RLadies+<a class="anchor" aria-label="anchor" href="#ask-jinx-anything-about-rladies"></a>

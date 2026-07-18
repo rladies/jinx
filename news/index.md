@@ -2,6 +2,17 @@
 
 ## jinx (development version)
 
+### URL shortener
+
+- **Jinx runs a URL shortener at `l.rladies.org`**, backed by
+  `worker/src/short-links.js` and a `SHORT_LINKS` KV namespace. Create a
+  link via `/jinx shorten <url> [slug]` in Slack (organisers workspace
+  only — an open shortener reachable from the community workspace would
+  be an open-redirect/phishing risk) or `POST /links/shorten` on the
+  HTTP API for other repos. Re-shortening a URL that already has a short
+  link returns the existing one instead of minting a duplicate, even
+  when a conflicting custom slug is requested.
+
 ### HTTP API for other repos
 
 - **The Cloudflare Worker now exposes `POST /ai/generate`**,

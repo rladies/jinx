@@ -66,6 +66,11 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="url-shortener-development-version">URL shortener<a class="anchor" aria-label="anchor" href="#url-shortener-development-version"></a></h3>
+<ul><li>
+<strong>Jinx runs a URL shortener at <code>l.rladies.org</code></strong>, backed by <code>worker/src/short-links.js</code> and a <code>SHORT_LINKS</code> KV namespace. Create a link via <code>/jinx shorten &lt;url&gt; [slug]</code> in Slack (organisers workspace only — an open shortener reachable from the community workspace would be an open-redirect/phishing risk) or <code>POST /links/shorten</code> on the HTTP API for other repos. Re-shortening a URL that already has a short link returns the existing one instead of minting a duplicate, even when a conflicting custom slug is requested.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="http-api-for-other-repos-development-version">HTTP API for other repos<a class="anchor" aria-label="anchor" href="#http-api-for-other-repos-development-version"></a></h3>
 <ul><li>
 <strong>The Cloudflare Worker now exposes <code>POST /ai/generate</code></strong>, authenticated with a shared <code>JINX_API_KEY</code> bearer token (constant-time compared, <code>worker/src/api-auth.js</code>), so other RLadies+ repos can get Workers-AI text generation without holding their own Cloudflare credentials. It’s a thin, model-agnostic passthrough to the existing <code>AI</code> binding (model must be on a Worker-side allowlist). First consumer: <code>rladies/quarto-rladies-report</code>, for AI-drafted report prose. See the README’s “HTTP API for other repos” section. (Web Analytics doesn’t need an HTTP route — <code><a href="../reference/rum_collect_analytics.html">rum_collect_analytics()</a></code> is already exported directly from this package for a calling repo to add as an R dependency instead.)</li>

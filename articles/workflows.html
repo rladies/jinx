@@ -266,6 +266,53 @@ org-level secrets — no copy-pasting.</p>
 <code>reusable-post-checklist.yml</code>.</p>
 </div>
 <div class="section level2">
+<h2 id="copilot-reviews-grimoire-gates">Copilot reviews (grimoire gates)<a class="anchor" aria-label="anchor" href="#copilot-reviews-grimoire-gates"></a>
+</h2>
+<p>Jinx can hand a content review to <strong>GitHub Copilot</strong>,
+guided by the four review “gates” in <a href="https://github.com/rladies/grimoire" class="external-link">rladies/grimoire</a> — brand,
+blog, social, and translation. Grimoire is a set of Claude Agent Skills,
+and Copilot only reads its own instruction files, so Jinx bridges the
+two. Setup is two steps per repo.</p>
+<p><strong>1. Sync the gates into the repo.</strong> Run
+<code>/jinx copilot-sync &lt;owner/repo&gt;</code> (or call
+<code><a href="../reference/copilot_sync_repo.html">jinx::copilot_sync_repo()</a></code>). It opens a PR adding
+<code>.github/copilot-instructions.md</code> and path-scoped
+<code>.github/instructions/*.instructions.md</code> so Copilot’s review
+speaks the RLadies+ brand and voice. Re-run it whenever grimoire changes
+to refresh the instructions. The gate-to-path mapping lives in
+<code>inst/config/copilot-review.yml</code> — tune the globs to the
+target repo’s layout, then re-sync.</p>
+<p><strong>2. Wire the reusable so Copilot reviews every content
+PR.</strong> It needs <code>pull-requests: write</code> (to request the
+reviewer) on top of the usual <code>contents: read</code> /
+<code>packages: read</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># .github/workflows/jinx-copilot-review.yml</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> Copilot review</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="at">    </span><span class="fu">types</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">opened</span><span class="kw">,</span><span class="at"> ready_for_review</span><span class="kw">,</span><span class="at"> synchronize</span><span class="kw">]</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="at">    </span><span class="fu">paths</span><span class="kw">:</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"content/**"</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="fu">permissions</span><span class="kw">:</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="at">  </span><span class="fu">contents</span><span class="kw">:</span><span class="at"> read</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="at">  </span><span class="fu">packages</span><span class="kw">:</span><span class="at"> read</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="at">  </span><span class="fu">pull-requests</span><span class="kw">:</span><span class="at"> write</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="at">  </span><span class="fu">copilot-review</span><span class="kw">:</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="at">    </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> rladies/jinx/.github/workflows/reusable-copilot-review.yml@main</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="at">    </span><span class="fu">secrets</span><span class="kw">:</span><span class="at"> inherit</span></span></code></pre></div>
+<p>On demand, an organiser can also summon a review from Slack or a
+GitHub comment, naming the gate and the PR:</p>
+<pre><code>/jinx review blog rladies/rladies.github.io#42</code></pre>
+<p>Copilot posts its findings on the PR as a tiered Blockers / Warnings
+/ Nits punch list. It is a <em>pre-human</em> review gate — it flags
+issues for a human to act on, and never approves, merges, or
+publishes.</p>
+<p>Two prerequisites are org-level, not per-repo: Copilot code review
+must be enabled on the RLadies+ org, and the jinx GitHub App needs Pull
+Requests (R/W) — which the registration above already grants.</p>
+</div>
+<div class="section level2">
 <h2 id="the-bot-image">The bot image<a class="anchor" aria-label="anchor" href="#the-bot-image"></a>
 </h2>
 <p>Workflows run inside <code>ghcr.io/rladies/jinx-bot:latest</code>,
@@ -300,12 +347,12 @@ the workflow needs.</p>
 front door for Slack and Airtable. It’s deployed by <a href="https://github.com/rladies/jinx/blob/main/.github/workflows/infra-deploy-worker.yml" class="external-link"><code>infra-deploy-worker.yml</code></a>
 on every push to <code>worker/</code> on <code>main</code>.</p>
 <p>Worker secrets are managed through Wrangler:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="bu">cd</span> worker</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="ex">wrangler</span> secret put SLACK_SIGNING_SECRET</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="ex">wrangler</span> secret put SLACK_CLIENT_ID</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="ex">wrangler</span> secret put SLACK_CLIENT_SECRET</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="ex">wrangler</span> secret put GITHUB_PAT</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="ex">wrangler</span> secret put JINX_API_KEY</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="bu">cd</span> worker</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="ex">wrangler</span> secret put SLACK_SIGNING_SECRET</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="ex">wrangler</span> secret put SLACK_CLIENT_ID</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="ex">wrangler</span> secret put SLACK_CLIENT_SECRET</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="ex">wrangler</span> secret put GITHUB_PAT</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="ex">wrangler</span> secret put JINX_API_KEY</span></code></pre></div>
 <p><code>JINX_API_KEY</code> backs the <code>/ai/generate</code> HTTP
 API route (see the “HTTP API for other repos” section of the README) —
 other RLadies+ repos authenticate to it with this bearer key.</p>
