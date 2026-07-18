@@ -4,10 +4,18 @@ name: Infra · Wrangler canary
 # real Cloudflare API, so a breaking release is caught here instead of by a
 # failed production deploy (see infra-deploy-worker.yml's pinned version).
 # Uses `wrangler versions upload`, not `deploy` -- it hits the same
-# authenticated upload path that actually broke on 2026-07-14, but Cloudflare
-# never routes production traffic to an uploaded-but-unpromoted version, so
-# this is safe to run daily with zero user-facing risk. It does not auto-bump
-# the pin; a human decides when to move it forward.
+# authenticated upload path as a real deploy, but Cloudflare never routes
+# production traffic to an uploaded-but-unpromoted version, so this is safe
+# to run daily with zero user-facing risk. It does not auto-bump the pin; a
+# human decides when to move it forward.
+#
+# Note: this workflow was originally written to guard against a wrangler
+# version regression, but the incident that prompted it (deploys failing
+# from 2026-07-14 onward) turned out to be an unrelated CLOUDFLARE_API_TOKEN
+# permission gap (Workers Scripts was Read, not Edit) -- this canary caught
+# that failure too (it failed identically regardless of wrangler version),
+# just not for the reason it was designed for. Kept as-is: it's still real
+# protection against an actual future wrangler regression.
 
 on:
   schedule:
