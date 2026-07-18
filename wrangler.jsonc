@@ -60,11 +60,16 @@
 			"0 9 * * 1"
 		]
 	},
-	// Requires a DNS record for l.rladies.org (proxied through Cloudflare) on
-	// the rladies.org zone -- the route alone won't receive traffic without it.
+	// Requires a DNS record for each hostname below (proxied through
+	// Cloudflare) on the rladies.org zone -- the route alone won't receive
+	// traffic without it.
 	"routes": [
 		{
 			"pattern": "l.rladies.org/*",
+			"zone_name": "rladies.org"
+		},
+		{
+			"pattern": "jinx.rladies.org/*",
 			"zone_name": "rladies.org"
 		}
 	],
