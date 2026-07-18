@@ -201,7 +201,7 @@ await step("Worker /slack/command help round-trip with signed body", async () =>
 // not-yet-merged route additions. A 404 there means "not deployed yet," not
 // a regression, so it's tolerated alongside 401; anything else (a bare 200,
 // a 500) is not, and still fails the check.
-for (const path of ["/ai/generate", "/analytics/rum"]) {
+for (const path of ["/ai/generate"]) {
   await step(`Worker ${path} rejects a missing bearer key with 401`, async () => {
     const res = await fetch(`${workerOrigin}${path}`, {
       method: "POST",

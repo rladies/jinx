@@ -13,18 +13,16 @@
 
 ## HTTP API for other repos
 
-- **The Cloudflare Worker now exposes `POST /ai/generate` and
-  `POST /analytics/rum`**, authenticated with a shared `JINX_API_KEY` bearer
-  token (constant-time compared, `worker/src/api-auth.js`), so other RLadies+
-  repos can get Workers-AI text generation and Cloudflare Web Analytics data
-  without holding their own Cloudflare credentials. `/ai/generate` is a thin,
+- **The Cloudflare Worker now exposes `POST /ai/generate`**, authenticated
+  with a shared `JINX_API_KEY` bearer token (constant-time compared,
+  `worker/src/api-auth.js`), so other RLadies+ repos can get Workers-AI text
+  generation without holding their own Cloudflare credentials. It's a thin,
   model-agnostic passthrough to the existing `AI` binding (model must be on a
-  Worker-side allowlist); `/analytics/rum` proxies a single window of the
-  GraphQL RUM query already used internally, with `dimension` validated
-  against a strict allowlist pattern before it's interpolated into the query
-  text. First consumer: `rladies/funders-reports`, replacing its own direct
-  `CLOUDFLARE_API_TOKEN` usage for both AI-drafted report prose and Web
-  Analytics collection. See the README's "HTTP API for other repos" section.
+  Worker-side allowlist). First consumer: `rladies/quarto-rladies-report`,
+  for AI-drafted report prose. See the README's "HTTP API for other repos"
+  section. (Web Analytics doesn't need an HTTP route — `rum_collect_analytics()`
+  is already exported directly from this package for a calling repo to add
+  as an R dependency instead.)
 
 # jinx 0.2.0
 

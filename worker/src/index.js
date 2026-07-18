@@ -10,7 +10,6 @@ import { question_log_purge } from "./question-log.js";
 import { question_digest_post } from "./question-digest.js";
 import { bearer_token_extract, api_key_verify } from "./api-auth.js";
 import { ai_generate_handle } from "./ai-api.js";
-import { analytics_rum_handle } from "./analytics-rum.js";
 import {
   links_shorten_handle,
   short_link_redirect_handle,
@@ -30,7 +29,6 @@ const SLACK_ROUTES = {
 // Slack's per-route signature scheme, since these callers aren't Slack.
 const API_ROUTES = {
   "/ai/generate": ai_generate_handle,
-  "/analytics/rum": analytics_rum_handle,
   "/links/shorten": links_shorten_handle,
 };
 

@@ -50,8 +50,19 @@ jobs:
         with:
           persist-credentials: false
 
+      # Pinned (see infra-wrangler-canary.yml for how future bumps get
+      # vetted) so a floating `wrangler@4` can't silently pick up a new
+      # release without us noticing. Note: the 2026-07-14 deploy failure
+      # this was originally written to explain turned out to be unrelated
+      # to the wrangler version -- the real cause was CLOUDFLARE_API_TOKEN
+      # being rotated on 2026-07-11 with Workers Scripts set to Read
+      # instead of Edit, confirmed by the same auth error persisting across
+      # every wrangler version (4.107.0 through 4.112.0) until the token's
+      # permission was fixed. The coincidental timing with wrangler's own
+      # auto-upgrade misled the initial diagnosis. Bump deliberately once
+      # the canary shows a newer version is safe.
       - name: Validate worker bundle
-        run: npx --yes wrangler@4 deploy --dry-run --outdir /tmp/worker-dist
+        run: npx --yes wrangler@4.107.0 deploy --dry-run --outdir /tmp/worker-dist
 
   deploy:
     name: Deploy worker
@@ -68,7 +79,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx --yes wrangler@4 deploy
+        run: npx --yes wrangler@4.107.0 deploy
 
   notify-failure:
     name: Notify Slack on deploy failure

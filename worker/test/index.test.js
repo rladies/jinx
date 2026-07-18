@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import worker from "../src/index.js";
-import { makeEnv, makeCtx, signSlack, jsonResponse } from "./_helpers.js";
+import { makeEnv, makeCtx, signSlack } from "./_helpers.js";
 
 vi.mock("../src/question-digest.js", () => ({
   question_digest_post: vi.fn(async () => true),
@@ -142,9 +142,9 @@ describe("worker fetch routing", () => {
     expect(question_digest_post).not.toHaveBeenCalled();
   });
 
-  it("rejects /ai/generate, /analytics/rum, and /links/shorten without a valid bearer key", async () => {
+  it("rejects /ai/generate and /links/shorten without a valid bearer key", async () => {
     const env = makeEnv();
-    for (const path of ["/ai/generate", "/analytics/rum", "/links/shorten"]) {
+    for (const path of ["/ai/generate", "/links/shorten"]) {
       const noAuth = await worker.fetch(
         makeRequest(`https://jinx.example.com${path}`, {
           method: "POST",
@@ -188,32 +188,6 @@ describe("worker fetch routing", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.result.response).toBe("hi there");
-  });
-
-  it("routes an authenticated /analytics/rum request to Cloudflare's GraphQL API", async () => {
-    const env = makeEnv();
-    vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
-      jsonResponse({
-        data: { viewer: { accounts: [{ rumPageloadEventsAdaptiveGroups: [] }] } },
-      })
-    );
-    const res = await worker.fetch(
-      makeRequest("https://jinx.example.com/analytics/rum", {
-        method: "POST",
-        headers: { authorization: "Bearer test-jinx-api-key" },
-        body: JSON.stringify({
-          account_id: "acc-1",
-          site_tag: "site-1",
-          since: "2025-01-01T00:00:00Z",
-          until: "2025-02-01T00:00:00Z",
-        }),
-      }),
-      env,
-      makeCtx()
-    );
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.groups).toEqual([]);
   });
 
   it("routes an authenticated /links/shorten request to create a short link", async () => {

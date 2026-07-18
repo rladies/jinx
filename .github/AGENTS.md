@@ -44,11 +44,12 @@ The Slack bridge runs as a Cloudflare Worker at `https://jinx.rladies.workers.de
 /slack/oauth        GET    OAuth callback
 /airtable/webhook   POST   Form submissions from Airtable
 /ai/generate        POST   Workers AI passthrough for other RLadies+ repos
-/analytics/rum      POST   Cloudflare Web Analytics (RUM) proxy for other RLadies+ repos
 /links/shorten      POST   Create (or reuse) a l.rladies.org short link
 ```
 
-Routes follow `/<service>/<action>` — never flat paths like `/slack-interact` or `/airtable-webhook`. Slack-side endpoints all run through `verifySlackSignature()` in the router; `/airtable/webhook` uses its own `x-airtable-secret` header; `/ai/generate`, `/analytics/rum`, and `/links/shorten` are gated by a shared `JINX_API_KEY` bearer token (constant-time compared, `worker/src/api-auth.js`) — see the README's "HTTP API for other repos" section for the request/response contract of each.
+Routes follow `/<service>/<action>` — never flat paths like `/slack-interact` or `/airtable-webhook`. Slack-side endpoints all run through `verifySlackSignature()` in the router; `/airtable/webhook` uses its own `x-airtable-secret` header; `/ai/generate` and `/links/shorten` are gated by a shared `JINX_API_KEY` bearer token (constant-time compared, `worker/src/api-auth.js`) — see the README's "HTTP API for other repos" section for the request/response contract of each.
+
+(An earlier `/analytics/rum` route proxying Cloudflare Web Analytics was removed — `rum_collect_analytics()`, already exported from the `jinx` R package, covers that need directly as an R dependency instead.)
 
 The same worker also answers `GET <code>` on a second hostname, `l.rladies.org`
 (routed via the `routes` entry in `wrangler.jsonc`, not the `/<service>/<action>`
@@ -66,9 +67,10 @@ returns the existing code — the reverse index is the source of truth even
 when a custom slug is requested, so a slug for an already-shortened
 destination is rejected with a pointer to the existing code rather than
 creating a duplicate. Slack-side creation is restricted to the organiser
-workspace (`teamId === env.SLACK_ORGANIZER_TEAM_ID`, checked in
-`slash-local.js` before dispatch) since an open shortener reachable from the
-community workspace would be an open-redirect/phishing risk.
+workspace (`slack_is_organizer_workspace()` in `worker/src/authorize.js`,
+shared with the Global Team gate, checked in `slash-local.js` before
+dispatch) since an open shortener reachable from the community workspace
+would be an open-redirect/phishing risk.
 
 ### Airtable invite-approval flow
 
@@ -131,18 +133,17 @@ To add a workspace: set its team ID as a worker secret, redeploy, run `/slack/in
 
 ### Worker secrets (via `wrangler secret put`)
 
-| Secret                           | Purpose                                                                                                                                                |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `SLACK_SIGNING_SECRET`           | Verify Slack request authenticity (app-global)                                                                                                         |
-| `SLACK_CLIENT_ID`                | OAuth client ID (app-global)                                                                                                                           |
-| `SLACK_CLIENT_SECRET`            | OAuth client secret (app-global)                                                                                                                       |
-| `SLACK_ORGANIZER_TEAM_ID`        | Organiser workspace team ID — required for allowlist + RAG bot                                                                                         |
-| `SLACK_COMMUNITY_TEAM_ID`        | Community workspace team ID — required for allowlist + Airtable webhook                                                                                |
-| `SLACK_COMMUNITY_INVITE_CHANNEL` | Channel ID in the community workspace where invite cards are posted                                                                                    |
-| `AIRTABLE_WEBHOOK_SECRET`        | Verify Airtable webhook requests                                                                                                                       |
-| `AIRTABLE_API_KEY`               | Airtable PAT — scope defines the base allowlist (see below)                                                                                            |
-| `JINX_API_KEY`                   | Bearer key gating `/ai/generate` and `/analytics/rum` for other repos                                                                                  |
-| `CLOUDFLARE_API_TOKEN`           | Backs `/analytics/rum`'s GraphQL query — same value as the GitHub Actions secret of the same name, provisioned into this second (Worker runtime) plane |
+| Secret                           | Purpose                                                                 |
+| -------------------------------- | ----------------------------------------------------------------------- |
+| `SLACK_SIGNING_SECRET`           | Verify Slack request authenticity (app-global)                          |
+| `SLACK_CLIENT_ID`                | OAuth client ID (app-global)                                            |
+| `SLACK_CLIENT_SECRET`            | OAuth client secret (app-global)                                        |
+| `SLACK_ORGANIZER_TEAM_ID`        | Organiser workspace team ID — required for allowlist + RAG bot          |
+| `SLACK_COMMUNITY_TEAM_ID`        | Community workspace team ID — required for allowlist + Airtable webhook |
+| `SLACK_COMMUNITY_INVITE_CHANNEL` | Channel ID in the community workspace where invite cards are posted     |
+| `AIRTABLE_WEBHOOK_SECRET`        | Verify Airtable webhook requests                                        |
+| `AIRTABLE_API_KEY`               | Airtable PAT — scope defines the base allowlist (see below)             |
+| `JINX_API_KEY`                   | Bearer key gating `/ai/generate` for other repos                        |
 
 ### Worker vars (in `wrangler.jsonc`)
 
