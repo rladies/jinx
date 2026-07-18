@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { slack_global_team_authorize } from "../src/authorize.js";
+import { slack_global_team_authorize, slack_is_organizer_workspace } from "../src/authorize.js";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -14,6 +14,17 @@ function mockAirtable(pages) {
 }
 
 const ORG_ENV = { SLACK_ORGANIZER_TEAM_ID: "T_ORG", AIRTABLE_API_KEY: "k" };
+
+describe("slack_is_organizer_workspace", () => {
+  it("is true only for the configured organiser team id", () => {
+    expect(slack_is_organizer_workspace(ORG_ENV, "T_ORG")).toBe(true);
+    expect(slack_is_organizer_workspace(ORG_ENV, "T_COMMUNITY")).toBe(false);
+  });
+
+  it("is false when no organiser team id is configured", () => {
+    expect(slack_is_organizer_workspace({}, "T_ORG")).toBe(false);
+  });
+});
 
 describe("slack_global_team_authorize", () => {
   it("allows a member whose Slack user id is in the directory", async () => {

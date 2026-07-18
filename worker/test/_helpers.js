@@ -122,6 +122,7 @@ export function makeEnv(overrides = {}) {
     JINX_API_KEY: "test-jinx-api-key",
     SLACK_TOKENS: makeKv(),
     AIRTABLE_BASES: makeKv(),
+    SHORT_LINKS: makeKv(),
     ...overrides,
   };
 }

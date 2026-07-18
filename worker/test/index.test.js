@@ -142,28 +142,30 @@ describe("worker fetch routing", () => {
     expect(question_digest_post).not.toHaveBeenCalled();
   });
 
-  it("rejects /ai/generate without a valid bearer key", async () => {
+  it("rejects /ai/generate and /links/shorten without a valid bearer key", async () => {
     const env = makeEnv();
-    const noAuth = await worker.fetch(
-      makeRequest("https://jinx.example.com/ai/generate", {
-        method: "POST",
-        body: "{}",
-      }),
-      env,
-      makeCtx()
-    );
-    expect(noAuth.status).toBe(401);
+    for (const path of ["/ai/generate", "/links/shorten"]) {
+      const noAuth = await worker.fetch(
+        makeRequest(`https://jinx.example.com${path}`, {
+          method: "POST",
+          body: "{}",
+        }),
+        env,
+        makeCtx()
+      );
+      expect(noAuth.status).toBe(401);
 
-    const badAuth = await worker.fetch(
-      makeRequest("https://jinx.example.com/ai/generate", {
-        method: "POST",
-        headers: { authorization: "Bearer wrong-key" },
-        body: "{}",
-      }),
-      env,
-      makeCtx()
-    );
-    expect(badAuth.status).toBe(401);
+      const badAuth = await worker.fetch(
+        makeRequest(`https://jinx.example.com${path}`, {
+          method: "POST",
+          headers: { authorization: "Bearer wrong-key" },
+          body: "{}",
+        }),
+        env,
+        makeCtx()
+      );
+      expect(badAuth.status).toBe(401);
+    }
   });
 
   it("routes an authenticated /ai/generate request to the AI binding", async () => {
@@ -186,6 +188,48 @@ describe("worker fetch routing", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.result.response).toBe("hi there");
+  });
+
+  it("routes an authenticated /links/shorten request to create a short link", async () => {
+    const env = makeEnv();
+    const res = await worker.fetch(
+      makeRequest("https://jinx.example.com/links/shorten", {
+        method: "POST",
+        headers: { authorization: "Bearer test-jinx-api-key" },
+        body: JSON.stringify({ url: "https://guide.rladies.org/events/" }),
+      }),
+      env,
+      makeCtx()
+    );
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.short_url).toMatch(/^https:\/\/l\.rladies\.org\//);
+  });
+
+  it("redirects GET requests on the l.rladies.org host to the stored URL", async () => {
+    const env = makeEnv();
+    await env.SHORT_LINKS.put(
+      "code:abc1234",
+      JSON.stringify({ url: "https://guide.rladies.org/events/" })
+    );
+
+    const res = await worker.fetch(
+      makeRequest("https://l.rladies.org/abc1234"),
+      env,
+      makeCtx()
+    );
+    expect(res.status).toBe(301);
+    expect(res.headers.get("Location")).toBe("https://guide.rladies.org/events/");
+  });
+
+  it("returns 404 for an unknown code on the l.rladies.org host", async () => {
+    const env = makeEnv();
+    const res = await worker.fetch(
+      makeRequest("https://l.rladies.org/nope"),
+      env,
+      makeCtx()
+    );
+    expect(res.status).toBe(404);
   });
 
   it("does not require a Slack signature on the Airtable webhook", async () => {

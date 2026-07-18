@@ -30,6 +30,10 @@ const AUTHZ_UNVERIFIABLE =
   "😿 I couldn't check your global-team membership just now. Please try again " +
   "in a moment.";
 
+export function slack_is_organizer_workspace(env, teamId) {
+  return Boolean(env.SLACK_ORGANIZER_TEAM_ID) && teamId === env.SLACK_ORGANIZER_TEAM_ID;
+}
+
 function normalize_id(x) {
   return String(x ?? "")
     .trim()
@@ -62,7 +66,7 @@ async function member_slack_ids(env) {
 // otherwise `message` is an ephemeral refusal. Never throws — a lookup failure
 // resolves to a fail-closed { ok: false } with the unverifiable message.
 export async function slack_global_team_authorize(env, { teamId, userId }) {
-  if (!env.SLACK_ORGANIZER_TEAM_ID || teamId !== env.SLACK_ORGANIZER_TEAM_ID) {
+  if (!slack_is_organizer_workspace(env, teamId)) {
     return { ok: false, message: AUTHZ_WORKSPACE };
   }
   if (!env.AIRTABLE_API_KEY) {
