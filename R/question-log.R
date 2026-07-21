@@ -1,3 +1,201 @@
+up_reactions <- c(
+  "+1",
+  "thumbsup",
+  "heart",
+  "heart_eyes",
+  "tada",
+  "raised_hands",
+  "star-struck",
+  "100"
+)
+down_reactions <- c("-1", "thumbsdown", "disappointed", "confused")
+
+#' Classify a Slack reaction as an up- or down-vote
+#'
+#' R port of `reaction_direction()` from `worker/src/question-log.js`.
+#' Strips a skin-tone modifier suffix (e.g. `"thumbsup::skin-tone-3"`)
+#' before matching.
+#'
+#' @param reaction Raw reaction name.
+#' @return `"up"`, `"down"`, or `NULL` for a neutral reaction.
+#' @export
+reaction_direction <- function(reaction) {
+  if (is.null(reaction) || is.na(reaction)) {
+    reaction <- ""
+  }
+  r <- strsplit(reaction, "::", fixed = TRUE)[[1]][1]
+  if (is.na(r)) {
+    r <- ""
+  }
+  if (r %in% up_reactions) {
+    return("up")
+  }
+  if (r %in% down_reactions) {
+    return("down")
+  }
+  NULL
+}
+
+#' Increment the daily reaction-feedback counter for a workspace
+#'
+#' R port of the KV counter logic in `slack_event_handle_reaction()`
+#' (`worker/src/slack-events.js`, deleted as part of the reaction-handling
+#' migration). Backs `/jinx feedback`.
+#'
+#' @param team_id Slack team id.
+#' @param reaction Raw reaction name.
+#' @param namespace_id KV namespace ID for `SLACK_TOKENS`.
+#' @param account_id Cloudflare account ID. Defaults to env
+#'   `CLOUDFLARE_ACCOUNT_ID`.
+#' @param api_token Cloudflare API token. Defaults to env
+#'   `CLOUDFLARE_API_TOKEN`.
+#' @return Invisibly, the new count for today.
+#' @export
+reaction_log_increment <- function(
+  team_id,
+  reaction,
+  namespace_id = slack_tokens_namespace_id(),
+  account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
+  api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
+) {
+  day <- format(Sys.Date(), "%Y-%m-%d")
+  key <- glue::glue("reaction_log:{team_id}:{day}:{reaction}")
+  prior <- tryCatch(
+    jsonlite::fromJSON(cf_ops_get_kv_value(
+      account_id = account_id,
+      namespace_id = namespace_id,
+      key_name = key,
+      token = api_token
+    )),
+    error = function(e) NULL
+  )
+  count <- as.integer((prior$count %||% 0L) + 1L)
+  cf_ops_kv_put(
+    account_id = account_id,
+    namespace_id = namespace_id,
+    key_name = key,
+    value = jsonlite::toJSON(
+      list(
+        count = count,
+        last_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+      ),
+      auto_unbox = TRUE
+    ),
+    ttl_seconds = 180L * 24L * 60L * 60L,
+    token = api_token
+  )
+  invisible(count)
+}
+
+#' Apply a reaction vote to the question it answered
+#'
+#' R port of `question_vote_apply()` from `worker/src/slack-events.js`
+#' (deleted as part of the reaction-handling migration). Looks up the D1
+#' row an answer message links to via the `answer_link:{team_id}:
+#' {channel}:{ts}` KV key, and increments its up/down count.
+#'
+#' @param team_id Slack team id.
+#' @param item Reaction event's `item` list: `type`, `channel`, `ts`.
+#' @param reaction Raw reaction name.
+#' @param namespace_id KV namespace ID for `SLACK_TOKENS`.
+#' @param account_id Cloudflare account ID. Defaults to env
+#'   `CLOUDFLARE_ACCOUNT_ID`.
+#' @param database_id D1 database ID. Defaults to the provisioned
+#'   `jinx-question-log` database.
+#' @param api_token Cloudflare API token. Defaults to env
+#'   `CLOUDFLARE_API_TOKEN`.
+#' @return `TRUE` if a vote was applied, `FALSE` otherwise.
+#' @export
+question_vote_apply <- function(
+  team_id,
+  item,
+  reaction,
+  namespace_id = slack_tokens_namespace_id(),
+  account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
+  database_id = "4500d886-2593-44f9-9a01-d38cfa26e8dc",
+  api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
+) {
+  if (
+    is.null(item) ||
+      !identical(item$type, "message") ||
+      is.null(item$channel) ||
+      is.null(item$ts)
+  ) {
+    return(FALSE)
+  }
+  dir <- reaction_direction(reaction)
+  if (is.null(dir)) {
+    return(FALSE)
+  }
+
+  key <- glue::glue("answer_link:{team_id}:{item$channel}:{item$ts}")
+  id_raw <- tryCatch(
+    cf_ops_get_kv_value(
+      account_id = account_id,
+      namespace_id = namespace_id,
+      key_name = key,
+      token = api_token
+    ),
+    error = function(e) NA_character_
+  )
+  id <- if (is.character(id_raw) && grepl("^[0-9]+$", id_raw %||% "")) {
+    as.integer(id_raw)
+  } else {
+    NA_integer_
+  }
+  if (is.na(id)) {
+    return(FALSE)
+  }
+
+  column <- if (dir == "up") "up" else "down"
+  result <- tryCatch(
+    {
+      cloudflarer::cf_d1_query(
+        account_id = account_id,
+        database_id = database_id,
+        sql = glue::glue(
+          "UPDATE questions SET {column} = {column} + 1 WHERE id = ?"
+        ),
+        params = list(id),
+        token = api_token
+      )
+      TRUE
+    },
+    error = function(e) {
+      cli::cli_warn("question_log vote failed: {conditionMessage(e)}")
+      FALSE
+    }
+  )
+  result
+}
+
+#' Apply an incoming Slack reaction event
+#'
+#' The `reaction_added` event handler registered in `jinx_events()`:
+#' increments the reaction-feedback tally and applies a vote to the
+#' question the reacted-to message answered, if any.
+#'
+#' @param team_id Slack team id.
+#' @param event The event's `event` payload: `reaction`, `item`.
+#' @return Invisibly, `NULL`.
+#' @export
+reaction_event_apply <- function(team_id, event) {
+  reaction <- event$reaction %||% ""
+  tryCatch(
+    reaction_log_increment(team_id, reaction),
+    error = function(e) {
+      cli::cli_warn("reaction_log write failed: {conditionMessage(e)}")
+    }
+  )
+  tryCatch(
+    question_vote_apply(team_id, event$item, reaction),
+    error = function(e) {
+      cli::cli_warn("question_vote failed: {conditionMessage(e)}")
+    }
+  )
+  invisible(NULL)
+}
+
 #' Query the anonymous question log
 #'
 #' Reads rows from the Cloudflare D1 `jinx-question-log` database via
