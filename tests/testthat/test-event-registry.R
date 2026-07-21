@@ -101,6 +101,63 @@ describe("event_execute", {
     expect_identical(called$team_id, "T_ORG")
   })
 
+  it("dispatches airtable_webhook to airtable_webhook_process", {
+    called <- NULL
+    local_mocked_bindings(
+      airtable_webhook_process = function(
+        email,
+        record_id,
+        base_id,
+        table_id,
+        ...
+      ) {
+        called <<- list(email = email, record_id = record_id)
+      }
+    )
+    event_execute(list(
+      kind = "airtable_webhook",
+      event = list(
+        email = "ada@example.com",
+        record_id = "rec1",
+        base_id = "app1",
+        table_id = "tbl1"
+      )
+    ))
+    expect_identical(called$email, "ada@example.com")
+    expect_identical(called$record_id, "rec1")
+  })
+
+  it("dispatches slack_interaction to slack_interaction_process", {
+    called <- NULL
+    local_mocked_bindings(
+      slack_interaction_process = function(
+        action_id,
+        action_data,
+        admin_user,
+        response_url
+      ) {
+        called <<- list(
+          action_id = action_id,
+          admin_user = admin_user,
+          response_url = response_url
+        )
+      }
+    )
+    event_execute(list(
+      kind = "slack_interaction",
+      team_id = "T_ORG",
+      response_url = "https://hooks.slack.com/r/1",
+      event = list(
+        action_id = "invite_approve",
+        action_data = list(email = "ada@example.com"),
+        admin_user = "bob"
+      )
+    ))
+    expect_identical(called$action_id, "invite_approve")
+    expect_identical(called$admin_user, "bob")
+    expect_identical(called$response_url, "https://hooks.slack.com/r/1")
+  })
+
   it("returns invisibly for a NULL event", {
     expect_null(event_execute(NULL))
   })
