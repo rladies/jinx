@@ -7,10 +7,6 @@
 #' team being an allowed workspace (see [event_authorize()]) - so there is
 #' no keyword wrapper here, just a handler per kind.
 #'
-#' `airtable_webhook` and `slack_interaction` are registered once the
-#' Airtable invite-flow migration lands - only `team_join`/`reaction_added`
-#' have R-side handlers so far.
-#'
 #' @return A named list of handler functions, each `function(event)`.
 #' @keywords internal
 #' @noRd
@@ -21,6 +17,17 @@ jinx_events <- function() {
     },
     reaction_added = function(event) {
       reaction_event_apply(event$team_id, event$event)
+    },
+    airtable_webhook = function(event) {
+      do.call(airtable_webhook_process, event$event)
+    },
+    slack_interaction = function(event) {
+      slack_interaction_process(
+        action_id = event$event$action_id,
+        action_data = event$event$action_data,
+        admin_user = event$event$admin_user,
+        response_url = event$response_url
+      )
     }
   )
 }

@@ -75,7 +75,7 @@ async function route(request, env, ctx) {
   }
 
   if (url.pathname === "/airtable/webhook") {
-    return airtable_webhook_handle(request, env);
+    return airtable_webhook_handle(request, env, ctx);
   }
 
   const apiHandler = API_ROUTES[url.pathname];

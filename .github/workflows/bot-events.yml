@@ -47,14 +47,17 @@ jobs:
           fi
 
       # No GitHub App token step: unlike jinx_commands(), none of the
-      # jinx_events() handlers touch the GitHub API - only Slack Web API and
-      # Cloudflare REST (D1/KV). Add one here if a future event kind needs it.
+      # jinx_events() handlers touch the GitHub API - only Slack Web API,
+      # Cloudflare REST (D1/KV), and Airtable REST. Add one here if a future
+      # event kind needs it.
       - name: Run event
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
           SLACK_ORGANISER_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
           SLACK_COMMUNITY_TOKEN: ${{ secrets.SLACK_COMMUNITY_TOKEN }}
+          SLACK_COMMUNITY_INVITE_CHANNEL: ${{ vars.SLACK_COMMUNITY_INVITE_CHANNEL }}
           SLACK_ORGANIZER_TEAM_ID: ${{ vars.SLACK_ORGANIZER_TEAM_ID }}
           SLACK_COMMUNITY_TEAM_ID: ${{ vars.SLACK_COMMUNITY_TEAM_ID }}
           EVENT_KIND: ${{ github.event.client_payload.kind }}
