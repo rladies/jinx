@@ -1,5 +1,24 @@
 # jinx (development version)
 
+## Question digest and retention purge move to R
+
+- **The weekly question-gap digest and the daily question-log retention
+  purge are now GitHub Actions calling `jinx::question_digest_post()` and
+  `jinx::question_log_purge()` directly**, not Cloudflare Cron Triggers
+  running `worker/src/question-digest.js` (deleted) and
+  `question_log_purge()` in `worker/src/question-log.js` (removed). Both
+  were cron-triggered batch jobs with no live caller waiting on a
+  response, so there was nothing requiring them to run at the edge — this
+  removes a JS/R duplicate-implementation risk in favour of a single R
+  implementation. New: `cloudflare_generate()` (Workers AI chat
+  completion, sibling of `cloudflare_embed()`), `question_log_purge()`,
+  and six `question_digest_*`/`question_content_gaps()` functions in
+  `R/question-digest.R`. The worker-local `/jinx questions`/`/jinx
+feedback` Slack commands stay JS — moving those to the GitHub Actions
+  dispatch path would trade their current sub-second response for a
+  measured ~2–2.5 minute round-trip, an unacceptable regression for an
+  interactive command.
+
 ## URL shortener
 
 - **Jinx runs a URL shortener at `l.rladies.org`**, backed by

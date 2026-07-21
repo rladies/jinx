@@ -51,15 +51,6 @@
 			"migrations_dir": "worker/migrations"
 		}
 	],
-	// Scheduled jobs (see the scheduled() handler in worker/src/index.js):
-	//   17 3 * * *  — daily purge of question-log rows past 180 days
-	//   0 9 * * 1   — weekly question-gap digest to the global-team channel
-	"triggers": {
-		"crons": [
-			"17 3 * * *",
-			"0 9 * * 1"
-		]
-	},
 	// Requires a DNS record for each hostname below (proxied through
 	// Cloudflare) on the rladies.org zone -- the route alone won't receive
 	// traffic without it.

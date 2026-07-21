@@ -6,7 +6,6 @@
 
 const QUESTION_MAX_CHARS = 500;
 const ANSWER_LINK_TTL_SECONDS = 7 * 24 * 60 * 60;
-const RETENTION_DAYS = 180;
 
 const GAP_OUTCOMES = new Set(["no_match", "coding_declined", "low_confidence"]);
 
@@ -156,26 +155,4 @@ export function question_downvoted_rank(rows, limit = 10) {
     .filter((r) => (r.down || 0) > (r.up || 0))
     .sort((a, b) => b.down - b.up - (a.down - a.up))
     .slice(0, limit);
-}
-
-// D1 rows do not expire on their own the way the KV reaction tallies do, so the
-// scheduled handler calls this daily to honour the 180-day retention promise in
-// PRIVACY.md. Deletes whole rows past the window — question text and vote counts
-// alike.
-export async function question_log_purge(env, retentionDays = RETENTION_DAYS) {
-  if (!env.QUESTION_LOG) return 0;
-  const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 10);
-  try {
-    const res = await env.QUESTION_LOG.prepare(
-      "DELETE FROM questions WHERE day < ?",
-    )
-      .bind(cutoff)
-      .run();
-    return res?.meta?.changes ?? 0;
-  } catch (e) {
-    console.error("question_log purge failed:", e.message);
-    return 0;
-  }
 }
