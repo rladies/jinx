@@ -106,6 +106,21 @@ reference:
     contents:
       - starts_with("slack_")
 
+  - title: Event dispatch
+    desc: R-side handling of the slack-event repository_dispatch contract
+    contents:
+      - event_parse
+      - event_authorize
+      - event_execute
+
+  - title: Welcome messages
+    desc: Welcome DMs for newly joined Slack members
+    contents:
+      - welcome_send
+      - welcome_message_render
+      - pending_link_consume
+      - channel_index_load
+
   - title: GHA dashboard
     desc: GitHub Actions workflow status
     contents:
@@ -163,6 +178,10 @@ reference:
       - question_gaps_rank
       - question_downvoted_rank
       - question_log_format
+      - question_vote_apply
+      - reaction_log_increment
+      - reaction_direction
+      - reaction_event_apply
 
   - title: Conference coordination
     desc: CFP tracking and speaker recommendations
