@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
-      group: pkgdown-${{ github.event_name }}
+      group: pkgdown-${{ github.event_name }}-${{ github.ref }}
       cancel-in-progress: true
 
     env:
