@@ -1,0 +1,27 @@
+name: Bot · Question Log Purge
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: bot-question-log-purge
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: ghcr.io/rladies/jinx-bot:latest
+
+    steps:
+      - name: Purge question-log rows past retention
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: Rscript -e 'jinx::question_log_purge(retention_days = 180)'
