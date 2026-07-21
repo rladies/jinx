@@ -1,13 +1,11 @@
 import { rag_question_answer } from "./rag.js";
-import { question_capture, question_vote_apply } from "./question-log.js";
+import { question_capture } from "./question-log.js";
 import { fetch_failure_quip } from "./quips.js";
-import { pending_link_key } from "./airtable-invite.js";
+import { github_dispatch_send } from "./github-dispatch.js";
 import {
   slack_assistant_set_status,
   slack_assistant_set_suggested_prompts,
   slack_assistant_set_title,
-  slack_channel_id_lookup,
-  slack_conversations_open,
   slack_conversations_replies,
   slack_file_upload_text,
   slack_message_post,
@@ -17,52 +15,6 @@ import {
 } from "./slack-api.js";
 
 const LONG_ANSWER_THRESHOLD = 3000;
-
-const WELCOME_CONFIG_URL =
-  "https://raw.githubusercontent.com/rladies/jinx/main/inst/config/welcome-channels.json";
-
-const WELCOME_TEMPLATE_URL = (workspace) =>
-  `https://raw.githubusercontent.com/rladies/jinx/main/inst/templates/slack-welcome-${workspace}.md`;
-
-async function welcome_config_fetch() {
-  try {
-    const res = await fetch(WELCOME_CONFIG_URL, {
-      headers: { "User-Agent": "rladies-jinx" },
-      cf: { cacheTtl: 300, cacheEverything: true },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch (e) {
-    console.warn("Welcome config fetch failed:", e.message);
-    return null;
-  }
-}
-
-async function welcome_template_fetch(workspace) {
-  try {
-    const res = await fetch(WELCOME_TEMPLATE_URL(workspace), {
-      headers: { "User-Agent": "rladies-jinx" },
-      cf: { cacheTtl: 300, cacheEverything: true },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.text();
-  } catch (e) {
-    console.warn(`Welcome template fetch failed (${workspace}):`, e.message);
-    return null;
-  }
-}
-
-function workspace_for_team(env, teamId) {
-  if (env.SLACK_ORGANIZER_TEAM_ID && teamId === env.SLACK_ORGANIZER_TEAM_ID) {
-    return "organisers";
-  }
-  return "community";
-}
-
-async function channel_mention(env, teamId, name) {
-  const id = await slack_channel_id_lookup(env, teamId, name);
-  return id ? `<#${id}|${name}>` : `#${name}`;
-}
 
 const ASSISTANT_CONFIG_URL =
   "https://raw.githubusercontent.com/rladies/jinx/main/inst/config/assistant-prompts.json";
@@ -128,7 +80,13 @@ export async function slack_event_handle(env, ctx, body) {
       console.warn(`Ignoring team_join from team ${teamId}`);
       return new Response("", { status: 200 });
     }
-    ctx.waitUntil(slack_event_handle_team_join(env, teamId, event.user));
+    ctx.waitUntil(
+      github_dispatch_send(env, "slack-event", {
+        kind: "team_join",
+        team_id: teamId,
+        event: { user: event.user },
+      }).catch((e) => console.error("team_join dispatch failed:", e)),
+    );
     return new Response("", { status: 200 });
   }
 
@@ -333,6 +291,12 @@ async function slack_bot_user_id(env, teamId) {
   return team?.bot_user_id || null;
 }
 
+// Cheap pre-filters only — team allowlist (by the caller), message-type,
+// bot-message-match, and dedup — before spinning up a GitHub Actions
+// container. Most reactions in a workspace are not on the bot's own
+// messages, so filtering here keeps dispatch volume sane; the actual
+// tallying/vote-apply logic lives in R (see question_log.R's
+// reaction_event_apply()).
 async function slack_event_handle_reaction(env, teamId, event, eventId) {
   if (event.item?.type !== "message") return;
   if (!env.SLACK_TOKENS) return;
@@ -349,97 +313,14 @@ async function slack_event_handle_reaction(env, teamId, event, eventId) {
     }).catch((e) => console.warn("reaction_seen write failed:", e));
   }
 
-  const day = new Date().toISOString().slice(0, 10);
   const reaction = (event.reaction || "").split("::")[0];
   if (!reaction) return;
-  const key = `reaction_log:${teamId}:${day}:${reaction}`;
-  const prior = await env.SLACK_TOKENS.get(key, "json").catch(() => null);
-  const count = (prior?.count || 0) + 1;
-  await env.SLACK_TOKENS.put(
-    key,
-    JSON.stringify({ count, last_at: new Date().toISOString() }),
-    { expirationTtl: 180 * 24 * 60 * 60 },
-  ).catch((e) => console.error("reaction_log write failed:", e));
 
-  await question_vote_apply(env, { teamId, item: event.item, reaction }).catch(
-    (e) => console.warn("question_vote failed:", e.message),
-  );
-}
-
-async function slack_event_handle_team_join(env, teamId, user) {
-  if (!user?.id) return;
-  const email = user.profile?.email || "";
-  const link = await slack_pending_link_consume(env, email);
-
-  const channelId = await slack_dm_open(env, teamId, user.id);
-  if (!channelId) return;
-
-  const workspace = workspace_for_team(env, teamId);
-  const text = await welcome_message_render(
-    env,
-    teamId,
-    workspace,
-    user.id,
-    link,
-  );
-
-  await slack_message_post(env, teamId, {
-    channel: channelId,
-    text,
-    unfurl_links: false,
-    unfurl_media: false,
-  }).catch((e) => console.error("Welcome DM post failed:", e));
-}
-
-async function welcome_message_render(env, teamId, workspace, userId, link) {
-  const [cfg, template] = await Promise.all([
-    welcome_config_fetch(),
-    welcome_template_fetch(workspace),
-  ]);
-
-  if (!cfg || !template) {
-    return welcome_message_fallback(userId, link);
-  }
-
-  const ws = cfg[workspace] || {};
-  const welcomeChannelName = ws.welcome_channel || "welcome";
-  const helpChannelName = ws.help_channel || "help-how_to_slack";
-  const cocUrl = cfg.coc_url || "https://rladies.org/about/coc/";
-  const starterChannels = [...(cfg.common || []), ...(ws.extras || [])];
-
-  const [welcomeMention, helpMention, ...starterMentions] = await Promise.all([
-    channel_mention(env, teamId, welcomeChannelName),
-    channel_mention(env, teamId, helpChannelName),
-    ...starterChannels.map((c) => channel_mention(env, teamId, c.name)),
-  ]);
-
-  const starterLines = starterChannels
-    .map((c, i) => `  - ${starterMentions[i]} — ${c.desc}`)
-    .join("\n");
-
-  let rendered = template
-    .replace(/\{\{user_id\}\}/g, userId)
-    .replace(/\{\{coc_url\}\}/g, cocUrl)
-    .replace(/\{\{welcome_channel\}\}/g, welcomeMention)
-    .replace(/\{\{help_channel\}\}/g, helpMention)
-    .replace(/\{\{starter_channels\}\}/g, starterLines);
-
-  if (link) {
-    rendered +=
-      "\n\n_:sparkles: I matched you up with your RLadies+ chapter sign-up — welcome aboard!_";
-  }
-  return rendered;
-}
-
-function welcome_message_fallback(userId, link) {
-  const chapterLine = link
-    ? "\n\nI matched you up with your RLadies+ chapter sign-up — welcome aboard! 💜"
-    : "";
-  return (
-    `Hi <@${userId}>! 🔮 I'm Jinx (they/them), the RLadies+ community bot.` +
-    chapterLine +
-    "\n\nAsk me anything about RLadies+ — chapters, events, the guide, code of conduct — and I'll pad off to look it up for you."
-  );
+  await github_dispatch_send(env, "slack-event", {
+    kind: "reaction_added",
+    team_id: teamId,
+    event: { reaction, item: event.item },
+  }).catch((e) => console.error("reaction dispatch failed:", e));
 }
 
 async function slack_event_handle_dm(
@@ -570,28 +451,6 @@ async function slack_event_handle_assistant_start(env, teamId, thread) {
   }).catch((e) =>
     console.warn("assistant setSuggestedPrompts failed:", e.message),
   );
-}
-
-async function slack_pending_link_consume(env, email) {
-  if (!email || !env.SLACK_TOKENS) return null;
-  const key = pending_link_key(email);
-  const link = await env.SLACK_TOKENS.get(key, "json").catch(() => null);
-  if (link) {
-    await env.SLACK_TOKENS.delete(key).catch((e) =>
-      console.error("pending_link delete failed:", e),
-    );
-  }
-  return link;
-}
-
-async function slack_dm_open(env, teamId, userId) {
-  try {
-    const res = await slack_conversations_open(env, teamId, { users: userId });
-    return res?.channel?.id || null;
-  } catch (e) {
-    console.error("conversations.open failed:", e);
-    return null;
-  }
 }
 
 export function slack_event_strip_mention(text) {

@@ -1,5 +1,52 @@
 # jinx (development version)
 
+## Event dispatch contract + welcome/reaction handling move to R
+
+- **A new `slack-event` `repository_dispatch` type carries passive Slack
+  events (`team_join`, `reaction_added`, and — once the Airtable invite
+  flow migrates — `airtable_webhook`/`slack_interaction`) from the
+  Cloudflare Worker to a new `bot-events.yml` workflow**, mirroring the
+  existing `slack-command` dispatch that already relays slash commands.
+  New `R/event-registry.R` (`event_parse()`, `event_authorize()`,
+  `event_execute()`) is the event-side companion to
+  `command-registry.R`'s command pipeline.
+- **Welcome DMs for new Slack members and reaction-based feedback
+  tallying/voting are now rendered and applied entirely in R**, not the
+  Worker. New `R/welcome.R` (`welcome_send()`, `welcome_message_render()`,
+  channel lookup/mention, DM-open, pending-link consume) reads the
+  welcome config and templates directly from this package's `inst/`
+  instead of the Worker's redundant GitHub-raw fetch of the same files.
+  The two welcome templates' placeholder syntax changed from
+  `{{lowercase}}` to `<UPPERCASE>` to match this package's existing
+  `render_template()` convention. New `question_vote_apply()` and
+  `reaction_log_increment()` in `R/question-log.R` replace the
+  equivalent JS functions (deleted from `worker/src/slack-events.js`
+  and `worker/src/question-log.js`).
+- New shared Slack Web API primitives in `R/slack-manage.R`
+  (`slack_api_call()`, `slack_bot_token()`, `slack_workspace_for_team()`,
+  `slack_response_url_post()`) and KV write primitives in `R/cf-ops.R`
+  (`cf_ops_kv_put()`, `cf_ops_kv_delete()`) underpin the above and are
+  reused by the still-to-come Airtable invite-flow migration.
+- The Worker's JS keeps only cheap, fail-fast pre-filters before
+  dispatching (team allowlist, message-type/bot-message-match checks,
+  event dedup) — spinning up a GitHub Actions container only for
+  reactions that are actually on the bot's own messages, not every
+  reaction in a workspace.
+- **Requires a new `SLACK_COMMUNITY_TOKEN` GitHub secret** (alongside the
+  existing `SLACK_ORGANISER_TOKEN`) so welcome DMs work in the community
+  workspace, not just the organiser one.
+- Failure isolation between independent side effects now matches the
+  deleted JS's per-operation `.catch()` behaviour: a KV cleanup failure in
+  `pending_link_consume()` no longer blocks sending the welcome DM, and a
+  reaction-tally write failure in `reaction_event_apply()` no longer
+  blocks applying the actual 👍/👎 vote (or vice versa). `bot-events.yml`
+  also gained a `notify-failure` job (posting to the existing Slack
+  healthcheck channel via `reusable-slack-fail-notify.yml`) so a failed
+  event run is visible instead of silent, and its Slack-metadata masking
+  no longer attempts (incorrectly) to mask the multi-line nested `event`
+  JSON payload — only the single-line `team_id`/`response_url` fields,
+  which is all `::add-mask::` can actually mask.
+
 ## URL shortener
 
 - **Jinx runs a URL shortener at `l.rladies.org`**, backed by

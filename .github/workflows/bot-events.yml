@@ -1,0 +1,89 @@
+name: Bot · Events
+
+on:
+  repository_dispatch:
+    types: [slack-event]
+
+permissions:
+  contents: read
+
+jobs:
+  handle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: ghcr.io/rladies/jinx-bot:latest
+
+    steps:
+      # Only mask single-line scalar values here - GitHub's ::add-mask::
+      # registers everything up to the first newline as the secret to mask,
+      # so masking a multi-line toJSON() blob (as the nested `event` payload
+      # would be) only hides its opening brace and leaks the rest verbatim.
+      # `event` (which can carry an applicant's email/name) is never echoed
+      # anywhere in this workflow - it only flows into EVENT_JSON below,
+      # which Actions does not print - so there is nothing else to mask.
+      - name: Mask Slack metadata
+        run: |
+          echo "::add-mask::${{ github.event.client_payload.team_id }}"
+          echo "::add-mask::${{ github.event.client_payload.response_url }}"
+
+      # Airtable webhooks have no Slack team_id at all - the Worker already
+      # verified the webhook's shared secret before dispatching, so there is
+      # no workspace to check here.
+      - name: Verify Slack workspace
+        if: github.event.client_payload.kind != 'airtable_webhook'
+        env:
+          TEAM_ID: ${{ github.event.client_payload.team_id }}
+          ORGANIZER_TEAM_ID: ${{ vars.SLACK_ORGANIZER_TEAM_ID }}
+          COMMUNITY_TEAM_ID: ${{ vars.SLACK_COMMUNITY_TEAM_ID }}
+        run: |
+          if [ -z "$ORGANIZER_TEAM_ID" ] && [ -z "$COMMUNITY_TEAM_ID" ]; then
+            echo "::error::Neither SLACK_ORGANIZER_TEAM_ID nor SLACK_COMMUNITY_TEAM_ID set as org/repo vars"
+            exit 1
+          fi
+          if [ "$TEAM_ID" != "$ORGANIZER_TEAM_ID" ] && [ "$TEAM_ID" != "$COMMUNITY_TEAM_ID" ]; then
+            echo "::error::Slack team_id not in allowlist; refusing to run"
+            exit 1
+          fi
+
+      # No GitHub App token step: unlike jinx_commands(), none of the
+      # jinx_events() handlers touch the GitHub API - only Slack Web API and
+      # Cloudflare REST (D1/KV). Add one here if a future event kind needs it.
+      - name: Run event
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SLACK_ORGANISER_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
+          SLACK_COMMUNITY_TOKEN: ${{ secrets.SLACK_COMMUNITY_TOKEN }}
+          SLACK_ORGANIZER_TEAM_ID: ${{ vars.SLACK_ORGANIZER_TEAM_ID }}
+          SLACK_COMMUNITY_TEAM_ID: ${{ vars.SLACK_COMMUNITY_TEAM_ID }}
+          EVENT_KIND: ${{ github.event.client_payload.kind }}
+          EVENT_TEAM_ID: ${{ github.event.client_payload.team_id }}
+          EVENT_RESPONSE_URL: ${{ github.event.client_payload.response_url }}
+          EVENT_JSON: ${{ toJSON(github.event.client_payload.event) }}
+        run: |
+          Rscript -e '
+            payload <- list(
+              kind = Sys.getenv("EVENT_KIND"),
+              team_id = if (nzchar(Sys.getenv("EVENT_TEAM_ID"))) Sys.getenv("EVENT_TEAM_ID") else NULL,
+              response_url = if (nzchar(Sys.getenv("EVENT_RESPONSE_URL"))) Sys.getenv("EVENT_RESPONSE_URL") else NULL,
+              event = jsonlite::fromJSON(Sys.getenv("EVENT_JSON"), simplifyVector = FALSE)
+            )
+            parsed <- jinx::event_parse(payload)
+            authz <- jinx::event_authorize(parsed)
+            if (!isTRUE(authz$ok)) {
+              cli::cli_warn(authz$message %||% "Event not authorized; skipping.")
+              quit(status = 0)
+            }
+            jinx::event_execute(parsed)
+          '
+
+  notify-failure:
+    needs: handle
+    if: failure()
+    uses: ./.github/workflows/reusable-slack-fail-notify.yml
+    with:
+      message: "😿 Jinx event handler failed (kind: `${{ github.event.client_payload.kind }}`) — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run logs>"
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
+      SLACK_CHANNEL: ${{ secrets.SLACK_HEALTHCHECK_CHANNEL }}
