@@ -329,9 +329,11 @@ meeting_poll_ics <- function(id, base_url = samkoma_base_url()) {
 
 #' Neutralise markdown control characters in externally-sourced text
 #'
-#' Poll titles and participant names come from the samkoma API and are
-#' rendered into messages authored by the bot on GitHub and Slack. The
-#' two renderers escape differently, so this:
+#' Shared by anything that renders externally- or user-sourced text (poll
+#' titles/participant names from the samkoma API, logged question text and
+#' AI-drafted answers in the weekly question digest) into messages authored
+#' by the bot on GitHub and Slack. The two renderers escape differently, so
+#' this:
 #' - collapses newlines (blocks heading/list/blockquote injection),
 #' - HTML-entity-encodes `&`, `<`, `>` (neutralises Slack `<url|text>`
 #'   links, GitHub autolinks, and raw HTML; both renderers display the
@@ -345,7 +347,7 @@ meeting_poll_ics <- function(id, base_url = samkoma_base_url()) {
 #' @return The neutralised string.
 #' @keywords internal
 #' @noRd
-samkoma_escape_md <- function(x) {
+escape_markdown <- function(x) {
   if (!is.character(x) || length(x) == 0) {
     return(x)
   }
@@ -370,7 +372,7 @@ samkoma_escape_md <- function(x) {
 #' @export
 meeting_poll_format_created <- function(created, title) {
   glue::glue(
-    "\U0001f4c5 **Meeting poll created: {samkoma_escape_md(title)}**\n\n",
+    "\U0001f4c5 **Meeting poll created: {escape_markdown(title)}**\n\n",
     "Paint when you're free here: {created$url}\n\n",
     "_Once everyone has voted, run `/jinx poll best {created$id}`",
     " to see the top slots._"
@@ -388,7 +390,7 @@ meeting_poll_format_best <- function(best, title = NULL, top = 3) {
   heading <- if (is.null(title)) {
     "## Best meeting times"
   } else {
-    glue::glue("## Best meeting times: {samkoma_escape_md(title)}")
+    glue::glue("## Best meeting times: {escape_markdown(title)}")
   }
   if (nrow(best) == 0) {
     return(paste0(heading, "\n\n_No availability submitted yet._"))
@@ -396,8 +398,8 @@ meeting_poll_format_best <- function(best, title = NULL, top = 3) {
   total <- attr(best, "total") %||% 0L
   n <- min(top, nrow(best))
   rows <- best[seq_len(n), , drop = FALSE]
-  rows$slot <- samkoma_escape_md(rows$slot)
-  rows$names <- samkoma_escape_md(rows$names)
+  rows$slot <- escape_markdown(rows$slot)
+  rows$names <- escape_markdown(rows$names)
   lines <- vapply(
     seq_len(nrow(rows)),
     function(i) {

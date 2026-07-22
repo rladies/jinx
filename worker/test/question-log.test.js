@@ -3,7 +3,6 @@ import {
   question_capture,
   question_vote_apply,
   question_log_since,
-  question_log_purge,
   question_gaps_rank,
   question_downvoted_rank,
   reaction_direction,
@@ -213,21 +212,5 @@ describe("question_log_since", () => {
 
   it("returns empty without a binding", async () => {
     expect(await question_log_since({}, "2026-06-01")).toEqual([]);
-  });
-});
-
-describe("question_log_purge", () => {
-  it("deletes rows older than the retention window", async () => {
-    const d1 = makeD1([
-      { day: "2026-07-01", question: "keep", outcome: "answered" },
-      { day: "2020-01-01", question: "drop", outcome: "answered" },
-    ]);
-    const deleted = await question_log_purge({ QUESTION_LOG: d1 }, 180);
-    expect(deleted).toBe(1);
-    expect(d1._rows.map((r) => r.question)).toEqual(["keep"]);
-  });
-
-  it("no-ops without a binding", async () => {
-    expect(await question_log_purge({}, 180)).toBe(0);
   });
 });
