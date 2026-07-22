@@ -1,38 +1,16 @@
 import { describe, it, expect } from "vitest";
 import {
   question_capture,
-  question_vote_apply,
   question_log_since,
   question_log_purge,
   question_gaps_rank,
   question_downvoted_rank,
-  reaction_direction,
 } from "../src/question-log.js";
 import { makeKv, makeD1 } from "./_helpers.js";
 
 function makeEnv({ d1 = makeD1(), kv = makeKv() } = {}) {
   return { QUESTION_LOG: d1, SLACK_TOKENS: kv };
 }
-
-describe("reaction_direction", () => {
-  it("maps thumbs and common positives/negatives", () => {
-    expect(reaction_direction("thumbsup")).toBe("up");
-    expect(reaction_direction("+1")).toBe("up");
-    expect(reaction_direction("heart")).toBe("up");
-    expect(reaction_direction("thumbsdown")).toBe("down");
-    expect(reaction_direction("-1")).toBe("down");
-  });
-
-  it("strips skin-tone modifiers before matching", () => {
-    expect(reaction_direction("thumbsup::skin-tone-3")).toBe("up");
-  });
-
-  it("returns null for neutral reactions", () => {
-    expect(reaction_direction("eyes")).toBeNull();
-    expect(reaction_direction("")).toBeNull();
-    expect(reaction_direction(undefined)).toBeNull();
-  });
-});
 
 describe("question_capture", () => {
   it("stores an anonymous row with no identifiers", async () => {
@@ -112,65 +90,6 @@ describe("question_capture", () => {
     });
     expect(id).toBeNull();
     expect(env.QUESTION_LOG._rows).toHaveLength(0);
-  });
-});
-
-describe("question_vote_apply", () => {
-  async function seedLinked(env) {
-    return question_capture(env, {
-      teamId: "T1",
-      channel: "C1",
-      answerTs: "1.5",
-      question: "q",
-      outcome: "answered",
-      top_score: 0.7,
-      sources: "guide",
-    });
-  }
-
-  it("increments up on a positive reaction to a linked answer", async () => {
-    const env = makeEnv();
-    const id = await seedLinked(env);
-    const applied = await question_vote_apply(env, {
-      teamId: "T1",
-      item: { type: "message", channel: "C1", ts: "1.5" },
-      reaction: "thumbsup",
-    });
-    expect(applied).toBe(true);
-    expect(env.QUESTION_LOG._rows.find((r) => r.id === id).up).toBe(1);
-  });
-
-  it("increments down on a negative reaction", async () => {
-    const env = makeEnv();
-    const id = await seedLinked(env);
-    await question_vote_apply(env, {
-      teamId: "T1",
-      item: { type: "message", channel: "C1", ts: "1.5" },
-      reaction: "thumbsdown",
-    });
-    expect(env.QUESTION_LOG._rows.find((r) => r.id === id).down).toBe(1);
-  });
-
-  it("ignores reactions on messages with no linked question", async () => {
-    const env = makeEnv();
-    const applied = await question_vote_apply(env, {
-      teamId: "T1",
-      item: { type: "message", channel: "C1", ts: "9.9" },
-      reaction: "thumbsup",
-    });
-    expect(applied).toBe(false);
-  });
-
-  it("ignores neutral reactions", async () => {
-    const env = makeEnv();
-    await seedLinked(env);
-    const applied = await question_vote_apply(env, {
-      teamId: "T1",
-      item: { type: "message", channel: "C1", ts: "1.5" },
-      reaction: "eyes",
-    });
-    expect(applied).toBe(false);
-    expect(env.QUESTION_LOG._rows[0].up).toBe(0);
   });
 });
 

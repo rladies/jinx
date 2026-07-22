@@ -10,30 +10,6 @@ const RETENTION_DAYS = 180;
 
 const GAP_OUTCOMES = new Set(["no_match", "coding_declined", "low_confidence"]);
 
-const UP_REACTIONS = new Set([
-  "+1",
-  "thumbsup",
-  "heart",
-  "heart_eyes",
-  "tada",
-  "raised_hands",
-  "star-struck",
-  "100",
-]);
-const DOWN_REACTIONS = new Set([
-  "-1",
-  "thumbsdown",
-  "disappointed",
-  "confused",
-]);
-
-export function reaction_direction(reaction) {
-  const r = (reaction || "").split("::")[0];
-  if (UP_REACTIONS.has(r)) return "up";
-  if (DOWN_REACTIONS.has(r)) return "down";
-  return null;
-}
-
 function answer_link_key(teamId, channel, ts) {
   return `answer_link:${teamId}:${channel}:${ts}`;
 }
@@ -77,38 +53,6 @@ export async function question_capture(
     ).catch((e) => console.warn("answer_link write failed:", e.message));
   }
   return id;
-}
-
-// Apply a 👍/👎 to the question a reaction's target message answered. Reactions
-// on anything Jinx posted that is not a linked answer (welcomes, prompts, long
-// answers uploaded as files) fall through untouched. The reacting user is never
-// read here — only the item they reacted to.
-export async function question_vote_apply(env, { teamId, item, reaction }) {
-  if (!env.QUESTION_LOG || !env.SLACK_TOKENS) return false;
-  if (item?.type !== "message" || !item.channel || !item.ts) return false;
-
-  const dir = reaction_direction(reaction);
-  if (!dir) return false;
-
-  const idRaw = await env.SLACK_TOKENS.get(
-    answer_link_key(teamId, item.channel, item.ts),
-  ).catch(() => null);
-  if (!idRaw) return false;
-  const id = Number(idRaw);
-  if (!Number.isInteger(id)) return false;
-
-  const column = dir === "up" ? "up" : "down";
-  try {
-    await env.QUESTION_LOG.prepare(
-      `UPDATE questions SET ${column} = ${column} + 1 WHERE id = ?`,
-    )
-      .bind(id)
-      .run();
-  } catch (e) {
-    console.error("question_log vote failed:", e.message);
-    return false;
-  }
-  return true;
 }
 
 export async function question_log_since(env, sinceDay) {

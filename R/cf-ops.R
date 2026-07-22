@@ -131,6 +131,63 @@ cf_ops_get_kv_value <- function(
   )
 }
 
+#' Write a single value to a Cloudflare KV namespace
+#'
+#' Wraps [cloudflarer::cf_put_kv_value()]. Unlike [cf_ops_list_kv_keys()]/
+#' [cf_ops_get_kv_value()], this is not a general-purpose "read/write any
+#' key" tool exposed to a `/jinx` command — it's called internally by
+#' event/command handlers against a small set of hardcoded key patterns
+#' (e.g. `pending_link:{email}`, `channel_index:{team_id}`), the same
+#' scoping the exfiltration concern in those two functions' docs warns
+#' about.
+#'
+#' @inheritParams cf_ops_list_kv_keys
+#' @param key_name Key to write.
+#' @param value Character value to store.
+#' @param ttl_seconds Optional expiration TTL in seconds.
+#' @return The API response (invisibly).
+#' @export
+cf_ops_kv_put <- function(
+  account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
+  namespace_id,
+  key_name,
+  value,
+  ttl_seconds = NULL,
+  token = cf_ops_token()
+) {
+  invisible(cloudflarer::cf_put_kv_value(
+    account_id = account_id,
+    namespace_id = namespace_id,
+    key_name = key_name,
+    value = value,
+    expiration_ttl = ttl_seconds,
+    token = token
+  ))
+}
+
+#' Delete a single value from a Cloudflare KV namespace
+#'
+#' Wraps [cloudflarer::cf_delete_kv_value()]. See [cf_ops_kv_put()] for
+#' why this is narrowly scoped rather than a general-purpose tool.
+#'
+#' @inheritParams cf_ops_list_kv_keys
+#' @param key_name Key to delete.
+#' @return The API response (invisibly).
+#' @export
+cf_ops_kv_delete <- function(
+  account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
+  namespace_id,
+  key_name,
+  token = cf_ops_token()
+) {
+  invisible(cloudflarer::cf_delete_kv_value(
+    account_id = account_id,
+    namespace_id = namespace_id,
+    key_name = key_name,
+    token = token
+  ))
+}
+
 #' Purge specific URLs or prefixes from the Cloudflare cache
 #'
 #' Thin wrapper over [cloudflarer::cf_purge_cache()] that deliberately

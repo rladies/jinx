@@ -1,5 +1,211 @@
 library(httr2)
 
+describe("reaction_direction", {
+  it("maps thumbs and common positives/negatives", {
+    expect_identical(reaction_direction("thumbsup"), "up")
+    expect_identical(reaction_direction("+1"), "up")
+    expect_identical(reaction_direction("heart"), "up")
+    expect_identical(reaction_direction("thumbsdown"), "down")
+    expect_identical(reaction_direction("-1"), "down")
+  })
+
+  it("strips skin-tone modifiers before matching", {
+    expect_identical(reaction_direction("thumbsup::skin-tone-3"), "up")
+  })
+
+  it("returns NULL for neutral reactions", {
+    expect_null(reaction_direction("eyes"))
+    expect_null(reaction_direction(""))
+    expect_null(reaction_direction(NA))
+  })
+})
+
+describe("reaction_log_increment", {
+  it("increments the daily counter for a workspace/reaction pair", {
+    responses <- list(
+      response_json(body = list(count = 2L, last_at = "2026-07-01T00:00:00Z")),
+      response_json(body = list(success = TRUE))
+    )
+    local_mocked_responses(responses)
+    count <- reaction_log_increment(
+      "T_ORG",
+      "thumbsup",
+      namespace_id = "ns1",
+      account_id = "acc123",
+      api_token = "tok"
+    )
+    expect_identical(count, 3L)
+  })
+
+  it("starts at 1 when there is no prior count", {
+    local_mocked_responses(list(
+      response(status_code = 404, body = charToRaw("")),
+      response_json(body = list(success = TRUE))
+    ))
+    count <- reaction_log_increment(
+      "T_ORG",
+      "thumbsup",
+      namespace_id = "ns1",
+      account_id = "acc123",
+      api_token = "tok"
+    )
+    expect_identical(count, 1L)
+  })
+})
+
+describe("question_vote_apply", {
+  it("increments up on a positive reaction to a linked answer", {
+    local_mocked_responses(list(
+      response(body = charToRaw("1")),
+      response_json(
+        body = list(
+          success = TRUE,
+          result = list(list(
+            success = TRUE,
+            meta = list(),
+            results = list()
+          ))
+        )
+      )
+    ))
+    applied <- question_vote_apply(
+      "T_ORG",
+      item = list(type = "message", channel = "C1", ts = "1.5"),
+      reaction = "thumbsup",
+      namespace_id = "ns1",
+      account_id = "acc123",
+      database_id = "db1",
+      api_token = "tok"
+    )
+    expect_true(applied)
+  })
+
+  it("ignores reactions on non-message items", {
+    applied <- question_vote_apply(
+      "T_ORG",
+      item = list(type = "file", channel = "C1", ts = "1.5"),
+      reaction = "thumbsup"
+    )
+    expect_false(applied)
+  })
+
+  it("ignores neutral reactions", {
+    applied <- question_vote_apply(
+      "T_ORG",
+      item = list(type = "message", channel = "C1", ts = "1.5"),
+      reaction = "eyes"
+    )
+    expect_false(applied)
+  })
+
+  it("ignores reactions with no linked answer", {
+    local_mocked_responses(list(response(
+      status_code = 404,
+      body = charToRaw("")
+    )))
+    applied <- question_vote_apply(
+      "T_ORG",
+      item = list(type = "message", channel = "C1", ts = "9.9"),
+      reaction = "thumbsup",
+      namespace_id = "ns1",
+      account_id = "acc123",
+      api_token = "tok"
+    )
+    expect_false(applied)
+  })
+
+  it("returns FALSE and warns instead of throwing when the D1 update fails", {
+    local_mocked_responses(list(
+      response(body = charToRaw("1")),
+      response_json(status_code = 500, body = list(success = FALSE))
+    ))
+    expect_warning(
+      applied <- question_vote_apply(
+        "T_ORG",
+        item = list(type = "message", channel = "C1", ts = "1.5"),
+        reaction = "thumbsup",
+        namespace_id = "ns1",
+        account_id = "acc123",
+        database_id = "db1",
+        api_token = "tok"
+      ),
+      "question_log vote failed"
+    )
+    expect_false(applied)
+  })
+})
+
+describe("reaction_event_apply", {
+  it("calls both the tally and the vote apply", {
+    tally_args <- NULL
+    vote_args <- NULL
+    local_mocked_bindings(
+      reaction_log_increment = function(team_id, reaction, ...) {
+        tally_args <<- list(team_id = team_id, reaction = reaction)
+        1L
+      },
+      question_vote_apply = function(team_id, item, reaction, ...) {
+        vote_args <<- list(team_id = team_id, item = item, reaction = reaction)
+        TRUE
+      }
+    )
+    reaction_event_apply(
+      "T_ORG",
+      list(
+        reaction = "thumbsup",
+        item = list(type = "message", channel = "C1", ts = "1.0")
+      )
+    )
+    expect_identical(tally_args$team_id, "T_ORG")
+    expect_identical(tally_args$reaction, "thumbsup")
+    expect_identical(vote_args$reaction, "thumbsup")
+  })
+
+  it("still applies the vote when the tally increment fails", {
+    vote_called <- FALSE
+    local_mocked_bindings(
+      reaction_log_increment = function(...) stop("KV put unavailable"),
+      question_vote_apply = function(...) {
+        vote_called <<- TRUE
+        TRUE
+      }
+    )
+    expect_warning(
+      reaction_event_apply(
+        "T_ORG",
+        list(
+          reaction = "thumbsup",
+          item = list(type = "message", channel = "C1", ts = "1.0")
+        )
+      ),
+      "reaction_log write failed"
+    )
+    expect_true(vote_called)
+  })
+
+  it("still applies the tally when the vote apply fails", {
+    tally_called <- FALSE
+    local_mocked_bindings(
+      reaction_log_increment = function(...) {
+        tally_called <<- TRUE
+        1L
+      },
+      question_vote_apply = function(...) stop("D1 unavailable")
+    )
+    expect_warning(
+      reaction_event_apply(
+        "T_ORG",
+        list(
+          reaction = "thumbsup",
+          item = list(type = "message", channel = "C1", ts = "1.0")
+        )
+      ),
+      "question_vote failed"
+    )
+    expect_true(tally_called)
+  })
+})
+
 describe("question_gaps_rank", {
   it("keeps only gap outcomes and folds near-duplicates by count", {
     rows <- data.frame(
