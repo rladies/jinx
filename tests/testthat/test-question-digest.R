@@ -138,7 +138,8 @@ describe("question_digest_format", {
       stringsAsFactors = FALSE
     )
     drafts <- gaps
-    drafts$draft <- "Click <https://evil.example|here> & read [more](javascript:1)"
+    drafts$draft <-
+      "Click <https://evil.example|here> & read [more](javascript:1)"
     md <- question_digest_format(
       days = 7,
       total = 1,
@@ -248,7 +249,7 @@ describe("question_digest_build", {
 })
 
 describe("question_digest_post", {
-  it("posts the digest text and returns TRUE when there's something to report", {
+  it("posts the digest and returns TRUE when there's something to report", {
     posted <- list()
     local_mocked_bindings(
       question_digest_build = function(...) "the digest text",

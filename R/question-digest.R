@@ -2,12 +2,18 @@ digest_gap_outcomes <- c("no_match", "low_confidence")
 
 draft_system_prompt <- paste0(
   "You are helping the RLadies+ global team improve their organiser Guide. ",
-  "You are given a question that Jinx (the RLadies+ assistant) could not answer well.\n\n",
-  "Draft a SHORT proposed Guide answer (2\u20134 sentences) for a human to review before publishing. Rules:\n",
-  "- Only state what you are genuinely confident is accurate RLadies+ practice. ",
-  "If you are unsure of specifics (dates, amounts, exact process), say plainly what the team needs to confirm rather than inventing it.\n",
-  "- Write the organisation name as *RLadies+* \u2014 one word, trailing plus, no hyphen.\n",
-  "- No preamble, no \"here is a draft\" \u2014 just the proposed answer text.\n",
+  "You are given a question that Jinx (the RLadies+ assistant) could not ",
+  "answer well.\n\n",
+  "Draft a SHORT proposed Guide answer (2\u20134 sentences) for a human to ",
+  "review before publishing. Rules:\n",
+  "- Only state what you are genuinely confident is accurate RLadies+ ",
+  "practice. If you are unsure of specifics (dates, amounts, exact ",
+  "process), say plainly what the team needs to confirm rather than ",
+  "inventing it.\n",
+  "- Write the organisation name as *RLadies+* \u2014 one word, trailing ",
+  "plus, no hyphen.\n",
+  "- No preamble, no \"here is a draft\" \u2014 just the proposed answer ",
+  "text.\n",
   "- Never invent URLs, names, figures, or policies."
 )
 
@@ -85,7 +91,8 @@ question_draft_guide_snippet <- function(
         list(
           role = "user",
           content = glue::glue(
-            "Question Jinx could not answer well:\n\"{question}\"\n\nDraft a proposed Guide answer."
+            "Question Jinx could not answer well:\n\"{question}\"\n\n",
+            "Draft a proposed Guide answer."
           )
         )
       ),
@@ -101,6 +108,125 @@ question_draft_guide_snippet <- function(
   )
   draft <- trimws(draft %||% "")
   if (nzchar(draft)) draft else NULL
+}
+
+digest_header_line <- function(days, total) {
+  day_word <- if (days == 1) "day" else "days"
+  question_word <- if (total == 1) "question" else "questions"
+  glue::glue(
+    "\U0001F52E *Jinx weekly question review \u2014 last {days} {day_word}* ",
+    "({total} {question_word} logged)"
+  )
+}
+
+digest_drafted_gap_lines <- function(drafts) {
+  n_drafts <- nrow(drafts)
+  if (n_drafts == 0L) {
+    return(character())
+  }
+  lines <- c(
+    "",
+    paste0(
+      "*Gaps to close* \u2014 the Guide may be thin here. ",
+      "Each carries a *draft* answer to review:"
+    )
+  )
+  for (i in seq_len(n_drafts)) {
+    d_question <- drafts$question[i]
+    d_count <- drafts$count[i]
+    d_draft <- drafts$draft[i]
+    times <- if (d_count > 1) glue::glue(" _(asked \u00D7{d_count})_") else ""
+    lines <- c(
+      lines,
+      "",
+      glue::glue("\u2022 *{digest_truncate(d_question)}*{times}"),
+      if (!is.na(d_draft) && nzchar(d_draft)) {
+        glue::glue("    \u25E6 _draft:_ {escape_markdown(d_draft)}")
+      } else {
+        "    \u25E6 _(couldn't draft one \u2014 needs the team to write this)_"
+      }
+    )
+  }
+  lines
+}
+
+digest_undrafted_gap_lines <- function(gaps, n_drafts) {
+  undrafted <- if (nrow(gaps) > n_drafts) {
+    gaps[seq(n_drafts + 1L, nrow(gaps)), , drop = FALSE]
+  } else {
+    gaps[0L, , drop = FALSE]
+  }
+  if (nrow(undrafted) == 0L) {
+    return(character())
+  }
+  lines <- c("", "*More gaps* (no draft \u2014 pick these up next):")
+  for (i in seq_len(nrow(undrafted))) {
+    g_question <- undrafted$question[i]
+    g_count <- undrafted$count[i]
+    times <- if (g_count > 1) glue::glue(" _(\u00D7{g_count})_") else ""
+    lines <- c(lines, glue::glue("\u2022 {digest_truncate(g_question)}{times}"))
+  }
+  lines
+}
+
+digest_gaps_lines <- function(gaps, drafts) {
+  n_drafts <- nrow(drafts)
+  lines <- c(
+    digest_drafted_gap_lines(drafts),
+    digest_undrafted_gap_lines(gaps, n_drafts)
+  )
+  if (nrow(gaps) == 0L) {
+    lines <- c(
+      lines,
+      "",
+      paste0(
+        "*Gaps to close:* none this week \u2014 I answered everything asked. ",
+        "\U0001F63A"
+      )
+    )
+  }
+  lines
+}
+
+digest_downvoted_lines <- function(downvoted) {
+  if (nrow(downvoted) == 0L) {
+    return(character())
+  }
+  lines <- c(
+    "",
+    "*Answers folks \U0001F44E'd* (may be wrong, stale, or mis-retrieved):"
+  )
+  for (i in seq_len(nrow(downvoted))) {
+    lines <- c(
+      lines,
+      glue::glue(
+        "\u2022 {digest_truncate(downvoted$question[i])} \u2014 ",
+        "\U0001F44E {downvoted$down[i]} / \U0001F44D {downvoted$up[i]}"
+      )
+    )
+  }
+  lines
+}
+
+digest_coding_declined_lines <- function(coding_count) {
+  if (coding_count == 0L) {
+    return(character())
+  }
+  coding_word <- if (coding_count == 1) "question" else "questions"
+  c(
+    "",
+    glue::glue(
+      "_FYI: I declined {coding_count} coding {coding_word} \u2192 ",
+      "pointed to *#help-r* (working as designed, not a Guide gap)._"
+    )
+  )
+}
+
+digest_footer_line <- function() {
+  paste0(
+    "\U0001F408\u200D\U00002B1B _Drafts are AI-suggested and ",
+    "*unverified* \u2014 please confirm before adding anything to the Guide._"
+  )
 }
 
 #' Format the weekly question-gap digest as Slack mrkdwn
@@ -127,109 +253,14 @@ question_digest_format <- function(
   downvoted,
   coding_count
 ) {
-  day_word <- if (days == 1) "day" else "days"
-  question_word <- if (total == 1) "question" else "questions"
-  lines <- glue::glue(
-    "\U0001F52E *Jinx weekly question review \u2014 last {days} {day_word}* ",
-    "({total} {question_word} logged)"
-  )
-
-  n_drafts <- nrow(drafts)
-  if (n_drafts > 0L) {
-    lines <- c(
-      lines,
-      "",
-      "*Gaps to close* \u2014 the Guide may be thin here. Each carries a *draft* answer to review:"
-    )
-    for (i in seq_len(n_drafts)) {
-      d_question <- drafts$question[i]
-      d_count <- drafts$count[i]
-      d_draft <- drafts$draft[i]
-      times <- if (d_count > 1) {
-        glue::glue(" _(asked \u00D7{d_count})_")
-      } else {
-        ""
-      }
-      lines <- c(
-        lines,
-        "",
-        glue::glue("\u2022 *{digest_truncate(d_question)}*{times}")
-      )
-      lines <- c(
-        lines,
-        if (!is.na(d_draft) && nzchar(d_draft)) {
-          glue::glue("    \u25E6 _draft:_ {escape_markdown(d_draft)}")
-        } else {
-          "    \u25E6 _(couldn't draft one \u2014 needs the team to write this)_"
-        }
-      )
-    }
-  }
-
-  undrafted <- if (nrow(gaps) > n_drafts) {
-    gaps[seq(n_drafts + 1L, nrow(gaps)), , drop = FALSE]
-  } else {
-    gaps[0L, , drop = FALSE]
-  }
-  if (nrow(undrafted) > 0L) {
-    lines <- c(lines, "", "*More gaps* (no draft \u2014 pick these up next):")
-    for (i in seq_len(nrow(undrafted))) {
-      g_question <- undrafted$question[i]
-      g_count <- undrafted$count[i]
-      times <- if (g_count > 1) glue::glue(" _(\u00D7{g_count})_") else ""
-      lines <- c(
-        lines,
-        glue::glue("\u2022 {digest_truncate(g_question)}{times}")
-      )
-    }
-  }
-
-  if (nrow(gaps) == 0L) {
-    lines <- c(
-      lines,
-      "",
-      "*Gaps to close:* none this week \u2014 I answered everything asked. \U0001F63A"
-    )
-  }
-
-  if (nrow(downvoted) > 0L) {
-    lines <- c(
-      lines,
-      "",
-      "*Answers folks \U0001F44E'd* (may be wrong, stale, or mis-retrieved):"
-    )
-    for (i in seq_len(nrow(downvoted))) {
-      lines <- c(
-        lines,
-        glue::glue(
-          "\u2022 {digest_truncate(downvoted$question[i])} \u2014 ",
-          "\U0001F44E {downvoted$down[i]} / \U0001F44D {downvoted$up[i]}"
-        )
-      )
-    }
-  }
-
-  if (coding_count > 0L) {
-    coding_word <- if (coding_count == 1) "question" else "questions"
-    lines <- c(
-      lines,
-      "",
-      glue::glue(
-        "_FYI: I declined {coding_count} coding {coding_word} \u2192 pointed to *#help-r* ",
-        "(working as designed, not a Guide gap)._"
-      )
-    )
-  }
-
   lines <- c(
-    lines,
+    digest_header_line(days, total),
+    digest_gaps_lines(gaps, drafts),
+    digest_downvoted_lines(downvoted),
+    digest_coding_declined_lines(coding_count),
     "",
-    paste0(
-      "\U0001F408\u200D\U00002B1B _Drafts are AI-suggested and *unverified* \u2014 ",
-      "please confirm before adding anything to the Guide._"
-    )
+    digest_footer_line()
   )
-
   paste(lines, collapse = "\n")
 }
 
@@ -325,7 +356,10 @@ question_digest_post <- function(
   resp <- slack_post_message(text, channel = channel, token = slack_token)
   if (!isTRUE(resp$ok)) {
     cli::cli_abort(
-      "Failed to post weekly digest to #{channel}: {resp$error %||% 'unknown error'}"
+      paste0(
+        "Failed to post weekly digest to #{channel}: ",
+        "{resp$error %||% 'unknown error'}"
+      )
     )
   }
   invisible(TRUE)
