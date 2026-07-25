@@ -87,6 +87,64 @@ reaction_log_increment <- function(
   invisible(count)
 }
 
+question_vote_item_valid <- function(item) {
+  !is.null(item) &&
+    identical(item$type, "message") &&
+    !is.null(item$channel) &&
+    !is.null(item$ts)
+}
+
+question_vote_answer_id <- function(
+  team_id,
+  item,
+  namespace_id,
+  account_id,
+  api_token
+) {
+  key <- glue::glue("answer_link:{team_id}:{item$channel}:{item$ts}")
+  id_raw <- tryCatch(
+    cf_ops_get_kv_value(
+      account_id = account_id,
+      namespace_id = namespace_id,
+      key_name = key,
+      token = api_token
+    ),
+    error = function(e) NA_character_
+  )
+  if (is.character(id_raw) && grepl("^[0-9]+$", id_raw %||% "")) {
+    as.integer(id_raw)
+  } else {
+    NA_integer_
+  }
+}
+
+question_vote_update_db <- function(
+  id,
+  column,
+  account_id,
+  database_id,
+  api_token
+) {
+  tryCatch(
+    {
+      cloudflarer::cf_d1_query(
+        account_id = account_id,
+        database_id = database_id,
+        sql = glue::glue(
+          "UPDATE questions SET {column} = {column} + 1 WHERE id = ?"
+        ),
+        params = list(id),
+        token = api_token
+      )
+      TRUE
+    },
+    error = function(e) {
+      cli::cli_warn("question_log vote failed: {conditionMessage(e)}")
+      FALSE
+    }
+  )
+}
+
 #' Apply a reaction vote to the question it answered
 #'
 #' R port of `question_vote_apply()` from `worker/src/slack-events.js`
@@ -115,12 +173,7 @@ question_vote_apply <- function(
   database_id = "4500d886-2593-44f9-9a01-d38cfa26e8dc",
   api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
 ) {
-  if (
-    is.null(item) ||
-      !identical(item$type, "message") ||
-      is.null(item$channel) ||
-      is.null(item$ts)
-  ) {
+  if (!question_vote_item_valid(item)) {
     return(FALSE)
   }
   dir <- reaction_direction(reaction)
@@ -128,45 +181,19 @@ question_vote_apply <- function(
     return(FALSE)
   }
 
-  key <- glue::glue("answer_link:{team_id}:{item$channel}:{item$ts}")
-  id_raw <- tryCatch(
-    cf_ops_get_kv_value(
-      account_id = account_id,
-      namespace_id = namespace_id,
-      key_name = key,
-      token = api_token
-    ),
-    error = function(e) NA_character_
+  id <- question_vote_answer_id(
+    team_id,
+    item,
+    namespace_id,
+    account_id,
+    api_token
   )
-  id <- if (is.character(id_raw) && grepl("^[0-9]+$", id_raw %||% "")) {
-    as.integer(id_raw)
-  } else {
-    NA_integer_
-  }
   if (is.na(id)) {
     return(FALSE)
   }
 
   column <- if (dir == "up") "up" else "down"
-  result <- tryCatch(
-    {
-      cloudflarer::cf_d1_query(
-        account_id = account_id,
-        database_id = database_id,
-        sql = glue::glue(
-          "UPDATE questions SET {column} = {column} + 1 WHERE id = ?"
-        ),
-        params = list(id),
-        token = api_token
-      )
-      TRUE
-    },
-    error = function(e) {
-      cli::cli_warn("question_log vote failed: {conditionMessage(e)}")
-      FALSE
-    }
-  )
-  result
+  question_vote_update_db(id, column, account_id, database_id, api_token)
 }
 
 #' Apply an incoming Slack reaction event
