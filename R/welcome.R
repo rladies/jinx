@@ -327,8 +327,8 @@ welcome_message_render <- function(team_id, user_id, workspace, link = NULL) {
   if (!is.null(link)) {
     rendered <- paste0(
       rendered,
-      "\n\n_:sparkles: I matched you up with your RLadies+ chapter sign-up \u2014 ",
-      "welcome aboard!_"
+      "\n\n_:sparkles: I matched you up with your RLadies+ chapter ",
+      "sign-up \u2014 welcome aboard!_"
     )
   }
   rendered
