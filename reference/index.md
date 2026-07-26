@@ -299,12 +299,31 @@ Anonymous question-improvement log gap reporting
 
 - [`question_log_query()`](https://rladies.github.io/jinx/reference/question_log_query.md)
   : Query the anonymous question log
+- [`question_log_purge()`](https://rladies.github.io/jinx/reference/question_log_purge.md)
+  : Purge question-log rows past the retention window
 - [`question_gaps_rank()`](https://rladies.github.io/jinx/reference/question_gaps_rank.md)
   : Rank content-gap questions by normalized-duplicate count
 - [`question_downvoted_rank()`](https://rladies.github.io/jinx/reference/question_downvoted_rank.md)
   : Rank questions where downvotes exceed upvotes
 - [`question_log_format()`](https://rladies.github.io/jinx/reference/question_log_format.md)
   : Format a question-log report as markdown
+
+## Question digest
+
+Weekly question-gap digest posted to Slack
+
+- [`question_content_gaps()`](https://rladies.github.io/jinx/reference/question_content_gaps.md)
+  : Rank content gaps for the weekly digest
+- [`question_coding_declined_count()`](https://rladies.github.io/jinx/reference/question_coding_declined_count.md)
+  : Count coding questions Jinx declined
+- [`question_draft_guide_snippet()`](https://rladies.github.io/jinx/reference/question_draft_guide_snippet.md)
+  : Draft a proposed Guide answer for a content-gap question
+- [`question_digest_format()`](https://rladies.github.io/jinx/reference/question_digest_format.md)
+  : Format the weekly question-gap digest as Slack mrkdwn
+- [`question_digest_build()`](https://rladies.github.io/jinx/reference/question_digest_build.md)
+  : Build the weekly question-gap digest text
+- [`question_digest_post()`](https://rladies.github.io/jinx/reference/question_digest_post.md)
+  : Build and post the weekly question-gap digest to Slack
 
 ## Conference coordination
 
@@ -378,6 +397,8 @@ Build the Cloudflare Vectorize index that powers the Slack bot
   : Stable vector ID for a chunk
 - [`cloudflare_embed()`](https://rladies.github.io/jinx/reference/cloudflare_embed.md)
   : Embed texts with a Cloudflare Workers AI model
+- [`cloudflare_generate()`](https://rladies.github.io/jinx/reference/cloudflare_generate.md)
+  : Generate chat-completion text with a Cloudflare Workers AI model
 - [`cloudflare_vectorize_upsert()`](https://rladies.github.io/jinx/reference/cloudflare_vectorize_upsert.md)
   : Upsert vectors into a Cloudflare Vectorize index
 - [`cloudflare_account_id()`](https://rladies.github.io/jinx/reference/cloudflare_account_id.md)

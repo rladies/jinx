@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     <a class="navbar-brand me-2" href="../index.html">jinx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -928,6 +928,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
         <dt>
 
+          <code><a href="question_log_purge.html">question_log_purge()</a></code>
+
+        </dt>
+        <dd>Purge question-log rows past the retention window</dd>
+
+        <dt>
+
           <code><a href="question_gaps_rank.html">question_gaps_rank()</a></code>
 
         </dt>
@@ -946,6 +953,57 @@ document.addEventListener("DOMContentLoaded", function() {
 
         </dt>
         <dd>Format a question-log report as markdown</dd>
+      </dl></div><div class="section level2">
+      <h2 id="question-digest">Question digest<a class="anchor" aria-label="anchor" href="#question-digest"></a></h2>
+
+      <div class="section-desc"><p>Weekly question-gap digest posted to Slack</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="question_content_gaps.html">question_content_gaps()</a></code>
+
+        </dt>
+        <dd>Rank content gaps for the weekly digest</dd>
+
+        <dt>
+
+          <code><a href="question_coding_declined_count.html">question_coding_declined_count()</a></code>
+
+        </dt>
+        <dd>Count coding questions Jinx declined</dd>
+
+        <dt>
+
+          <code><a href="question_draft_guide_snippet.html">question_draft_guide_snippet()</a></code>
+
+        </dt>
+        <dd>Draft a proposed Guide answer for a content-gap question</dd>
+
+        <dt>
+
+          <code><a href="question_digest_format.html">question_digest_format()</a></code>
+
+        </dt>
+        <dd>Format the weekly question-gap digest as Slack mrkdwn</dd>
+
+        <dt>
+
+          <code><a href="question_digest_build.html">question_digest_build()</a></code>
+
+        </dt>
+        <dd>Build the weekly question-gap digest text</dd>
+
+        <dt>
+
+          <code><a href="question_digest_post.html">question_digest_post()</a></code>
+
+        </dt>
+        <dd>Build and post the weekly question-gap digest to Slack</dd>
       </dl></div><div class="section level2">
       <h2 id="conference-coordination">Conference coordination<a class="anchor" aria-label="anchor" href="#conference-coordination"></a></h2>
 
@@ -1159,6 +1217,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
         </dt>
         <dd>Embed texts with a Cloudflare Workers AI model</dd>
+
+        <dt>
+
+          <code><a href="cloudflare_generate.html">cloudflare_generate()</a></code>
+
+        </dt>
+        <dd>Generate chat-completion text with a Cloudflare Workers AI model</dd>
 
         <dt>
 

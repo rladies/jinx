@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     <a class="navbar-brand me-2" href="../index.html">jinx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,6 +65,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
+<div class="section level3">
+<h3 id="question-digest-and-retention-purge-move-to-r-development-version">Question digest and retention purge move to R<a class="anchor" aria-label="anchor" href="#question-digest-and-retention-purge-move-to-r-development-version"></a></h3>
+<ul><li>
+<strong>The weekly question-gap digest and the daily question-log retention purge are now GitHub Actions calling <code><a href="../reference/question_digest_post.html">jinx::question_digest_post()</a></code> and <code><a href="../reference/question_log_purge.html">jinx::question_log_purge()</a></code> directly</strong>, not Cloudflare Cron Triggers running <code>worker/src/question-digest.js</code> (deleted) and <code><a href="../reference/question_log_purge.html">question_log_purge()</a></code> in <code>worker/src/question-log.js</code> (removed). Both were cron-triggered batch jobs with no live caller waiting on a response, so there was nothing requiring them to run at the edge — this removes a JS/R duplicate-implementation risk in favour of a single R implementation. New: <code><a href="../reference/cloudflare_generate.html">cloudflare_generate()</a></code> (Workers AI chat completion, sibling of <code><a href="../reference/cloudflare_embed.html">cloudflare_embed()</a></code>), <code><a href="../reference/question_log_purge.html">question_log_purge()</a></code>, and six <code>question_digest_*</code>/<code><a href="../reference/question_content_gaps.html">question_content_gaps()</a></code> functions in <code>R/question-digest.R</code>. The worker-local <code>/jinx questions</code>/<code>/jinx feedback</code> Slack commands stay JS — moving those to the GitHub Actions dispatch path would trade their current sub-second response for a measured ~2–2.5 minute round-trip, an unacceptable regression for an interactive command.</li>
+</ul></div>
 <div class="section level3">
 <h3 id="url-shortener-development-version">URL shortener<a class="anchor" aria-label="anchor" href="#url-shortener-development-version"></a></h3>
 <ul><li>
