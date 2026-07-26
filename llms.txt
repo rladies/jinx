@@ -325,6 +325,13 @@ Automated pull request review
 
 Airtable bidirectional sync
 
+- [`airtable_base_allowed()`](https://rladies.github.io/jinx/reference/airtable_base_allowed.md)
+  : Check whether an Airtable base is within the configured token's
+  scope
+- [`airtable_record_update()`](https://rladies.github.io/jinx/reference/airtable_record_update.md)
+  : Update fields on an Airtable record
+- [`airtable_webhook_process()`](https://rladies.github.io/jinx/reference/airtable_webhook_process.md)
+  : Process an Airtable invite-request webhook
 - [`directory_sync_airtable()`](https://rladies.github.io/jinx/reference/directory_sync_airtable.md)
   : Sync directory entries from Airtable
 
@@ -365,11 +372,20 @@ Slack messaging and automation
 - [`slack_conversations_open()`](https://rladies.github.io/jinx/reference/slack_conversations_open.md)
   : Open a Slack direct message channel
 
+- [`slack_interaction_process()`](https://rladies.github.io/jinx/reference/slack_interaction_process.md)
+  : Process a Slack interaction from the invite-approval flow
+
+- [`slack_invite_approval_checklist_blocks()`](https://rladies.github.io/jinx/reference/slack_invite_approval_checklist_blocks.md)
+  : Build the post-approval checklist Block Kit card
+
 - [`slack_invite_batch()`](https://rladies.github.io/jinx/reference/slack_invite_batch.md)
   : Send pending Slack invitations
 
 - [`slack_invite_request()`](https://rladies.github.io/jinx/reference/slack_invite_request.md)
   : Request a Slack invitation for someone not yet on the workspace
+
+- [`slack_invite_request_blocks()`](https://rladies.github.io/jinx/reference/slack_invite_request_blocks.md)
+  : Build the initial Slack invite-request Block Kit card
 
 - [`slack_post_message()`](https://rladies.github.io/jinx/reference/slack_post_message.md)
   : Post a message to a Slack channel

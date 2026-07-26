@@ -29,6 +29,42 @@
   sub-second response for a measured ~2–2.5 minute round-trip, an
   unacceptable regression for an interactive command.
 
+### Airtable invite-approval flow moves to R
+
+- **The Airtable invite-approval flow (approve/deny/mark-sent, and the
+  incoming Airtable webhook) now runs in R**, using the
+  `airtable_webhook` and `slack_interaction` `slack-event` kinds added
+  to `jinx_events()`. New `R/airtable-invite.R`:
+  [`airtable_record_update()`](https://rladies.github.io/jinx/reference/airtable_record_update.md)
+  (R’s first Airtable *write* primitive - everything in
+  `R/airtable-sync.R` is read-only),
+  [`airtable_base_allowed()`](https://rladies.github.io/jinx/reference/airtable_base_allowed.md)
+  (KV-cached Meta API scope check),
+  [`slack_invite_request_blocks()`](https://rladies.github.io/jinx/reference/slack_invite_request_blocks.md)/[`slack_invite_approval_checklist_blocks()`](https://rladies.github.io/jinx/reference/slack_invite_approval_checklist_blocks.md)
+  (Block Kit builders),
+  [`airtable_webhook_process()`](https://rladies.github.io/jinx/reference/airtable_webhook_process.md),
+  and
+  [`slack_interaction_process()`](https://rladies.github.io/jinx/reference/slack_interaction_process.md).
+- The Worker keeps only what must stay at the edge: the shared-secret
+  check on `/airtable/webhook`, and Slack signature/team-allowlist
+  verification plus an immediate “Processing…” placeholder ack on
+  `/slack/interact` (`worker/src/airtable-invite.js` shrank from 344 to
+  ~135 lines). The two-step message replacement (JS ack → R final state)
+  means an approval card can take up to a couple of minutes to reach its
+  final state - acceptable for an admin-only approval flow with no
+  user-facing latency requirement.
+- Fixes from review:
+  [`airtable_record_update()`](https://rladies.github.io/jinx/reference/airtable_record_update.md)’s
+  URL is now built with
+  [`httr2::req_url_path_append()`](https://httr2.r-lib.org/reference/req_url.html)
+  instead of unescaped
+  [`glue::glue()`](https://glue.tidyverse.org/reference/glue.html)
+  interpolation, restoring the `encodeURIComponent()` escaping the
+  deleted JS had; `slack_interaction_mark_sent()`’s pending-link KV
+  write now has its own error handling (matching the deleted JS), so a
+  KV failure no longer gets misreported as an Airtable failure when the
+  actual Airtable update succeeded.
+
 ### Event dispatch contract + welcome/reaction handling move to R
 
 - **A new `slack-event` `repository_dispatch` type carries passive Slack
