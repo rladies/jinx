@@ -1,7 +1,7 @@
-import { slack_token_get, slack_team_is_allowed } from "./slack-api.js";
-import { airtable_base_is_allowed } from "./airtable-meta.js";
+import { slack_team_is_allowed } from "./slack-api.js";
+import { github_dispatch_send } from "./github-dispatch.js";
 
-export async function airtable_webhook_handle(request, env) {
+export async function airtable_webhook_handle(request, env, ctx) {
   const secret = env.AIRTABLE_WEBHOOK_SECRET;
   if (!secret) {
     console.error("AIRTABLE_WEBHOOK_SECRET is not configured");
@@ -43,45 +43,22 @@ export async function airtable_webhook_handle(request, env) {
     return new Response("Invalid table_id", { status: 400 });
   }
 
-  try {
-    if (!(await airtable_base_is_allowed(env, baseId))) {
-      console.warn(`Rejected webhook from unknown base ${baseId}`);
-      return new Response("Base not in Airtable token scope", { status: 403 });
-    }
-  } catch (err) {
-    console.error("Airtable Meta API allowlist check failed:", err);
-    return new Response("Could not verify base allowlist", { status: 503 });
-  }
-
-  const blocks = slack_invite_request_blocks({
-    email,
-    name,
-    chapter,
-    recordId,
-    baseId,
-    tableId,
-  });
-
-  const token = await slack_token_get(env, env.SLACK_COMMUNITY_TEAM_ID);
-
-  const res = await fetch("https://slack.com/api/chat.postMessage", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      channel: env.SLACK_COMMUNITY_INVITE_CHANNEL,
-      text: `New Slack invite request from ${name || email}`,
-      blocks,
-    }),
-  });
-
-  const result = await res.json();
-  if (!result.ok) {
-    console.error("Failed to post invite request to Slack:", result.error);
-    return new Response(`Slack error: ${result.error}`, { status: 502 });
-  }
+  // Base-allowlist check, card building, and posting all now happen in R
+  // (airtable_webhook_process(), triggered by this dispatch) - this handler
+  // only verifies the webhook is genuinely from Airtable and shaped right.
+  ctx.waitUntil(
+    github_dispatch_send(env, "slack-event", {
+      kind: "airtable_webhook",
+      event: {
+        email,
+        name,
+        chapter,
+        record_id: recordId,
+        base_id: baseId,
+        table_id: tableId,
+      },
+    }).catch((e) => console.error("airtable_webhook dispatch failed:", e)),
+  );
 
   return new Response("OK", { status: 200 });
 }
@@ -127,218 +104,32 @@ export async function slack_interaction_handle(env, ctx, body) {
   const actionData = JSON.parse(action.value);
   const adminUser = interaction.user?.username || "unknown";
 
-  if (action.action_id === "invite_approve") {
-    ctx.waitUntil(slack_invite_process_approval(env, actionData, adminUser, responseUrl));
-  } else if (action.action_id === "invite_deny") {
-    ctx.waitUntil(slack_invite_process_denial(env, actionData, adminUser, responseUrl));
-  } else if (action.action_id === "invite_mark_sent") {
-    ctx.waitUntil(slack_invite_process_sent(env, actionData, adminUser, responseUrl));
-  }
-
-  return new Response("", { status: 200 });
-}
-
-async function slack_invite_process_approval(env, data, approver, responseUrl) {
-  await fetch(responseUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      replace_original: true,
-      blocks: slack_invite_approval_checklist_blocks({
-        email: data.email,
-        approver,
-        recordId: data.record_id,
-        baseId: data.base_id,
-        tableId: data.table_id,
-      }),
-      text: `Approved by @${approver} - invite ${data.email} manually`,
-    }),
-  });
-}
-
-async function slack_invite_process_sent(env, data, sender, responseUrl) {
-  try {
-    if (data.record_id && data.base_id && data.table_id && env.AIRTABLE_API_KEY) {
-      await airtable_record_update(env, data.base_id, data.table_id, data.record_id, { invited: true });
-    }
-
-    if (data.email && env.SLACK_TOKENS) {
-      await env.SLACK_TOKENS.put(
-        pending_link_key(data.email),
-        JSON.stringify({
-          email: data.email,
-          record_id: data.record_id || null,
-          base_id: data.base_id || null,
-          table_id: data.table_id || null,
-          approver: data.approver || null,
-          marked_sent_by: sender,
-          marked_sent_at: new Date().toISOString(),
-        }),
-        { expirationTtl: 90 * 24 * 60 * 60 }
-      ).catch((err) => console.error("pending_link write failed:", err));
-    }
-
-    const approverLine = data.approver
-      ? ` — approved by @${data.approver}`
-      : "";
-
-    await fetch(responseUrl, {
+  // Ack immediately with a placeholder - R replaces this via response_url
+  // once it actually processes the approve/deny/mark-sent action, which
+  // can take a couple of minutes end-to-end via the GitHub Actions dispatch.
+  ctx.waitUntil(
+    fetch(responseUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         replace_original: true,
-        text: `✅ Invite sent to ${data.email} by @${sender}${approverLine}`,
+        text: "⏳ Processing…",
       }),
-    });
-  } catch (err) {
-    console.error("Mark-sent processing failed:", err);
-    await fetch(responseUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        replace_original: false,
-        text: `😿 Failed to mark ${data.email} as invited in Airtable: ${err.message}`,
-      }),
-    });
-  }
-}
-
-async function slack_invite_process_denial(env, data, adminUser, responseUrl) {
-  if (data.record_id && data.base_id && data.table_id && env.AIRTABLE_API_KEY) {
-    await airtable_record_update(env, data.base_id, data.table_id, data.record_id, { denied: true }).catch(
-      (err) => console.error("Airtable update failed:", err)
-    );
-  }
-
-  await fetch(responseUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      replace_original: true,
-      text: `❌ *Denied* by @${adminUser} — ${data.email} will not be invited`,
-    }),
-  });
-}
-
-export function pending_link_key(email) {
-  return `pending_link:${email.trim().toLowerCase()}`;
-}
-
-async function airtable_record_update(env, baseId, tableId, recordId, fields) {
-  const res = await fetch(
-    `https://api.airtable.com/v0/${encodeURIComponent(baseId)}/${encodeURIComponent(tableId)}/${encodeURIComponent(recordId)}`,
-    {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${env.AIRTABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ fields }),
-    }
+    }).catch((e) => console.error("Processing ack failed:", e)),
   );
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Airtable update failed (${res.status}): ${text}`);
-  }
-}
-
-function slack_invite_request_blocks({ email, name, chapter, recordId, baseId, tableId }) {
-  const buttonValue = JSON.stringify({
-    email,
-    name,
-    record_id: recordId,
-    base_id: baseId,
-    table_id: tableId,
-  });
-
-  return [
-    {
-      type: "header",
-      text: {
-        type: "plain_text",
-        text: "💜 New Slack invite request",
-        emoji: true,
+  ctx.waitUntil(
+    github_dispatch_send(env, "slack-event", {
+      kind: "slack_interaction",
+      team_id: teamId,
+      response_url: responseUrl,
+      event: {
+        action_id: action.action_id,
+        action_data: actionData,
+        admin_user: adminUser,
       },
-    },
-    {
-      type: "section",
-      fields: [
-        { type: "mrkdwn", text: `*Name:*\n${name || "_not provided_"}` },
-        { type: "mrkdwn", text: `*Email:*\n${email}` },
-        { type: "mrkdwn", text: `*Chapter:*\n${chapter || "_not provided_"}` },
-        { type: "mrkdwn", text: `*Airtable ID:*\n\`${recordId || "n/a"}\`` },
-      ],
-    },
-    {
-      type: "actions",
-      elements: [
-        {
-          type: "button",
-          text: { type: "plain_text", text: "✓ Approve", emoji: true },
-          style: "primary",
-          action_id: "invite_approve",
-          value: buttonValue,
-        },
-        {
-          type: "button",
-          text: { type: "plain_text", text: "✗ Deny", emoji: true },
-          style: "danger",
-          action_id: "invite_deny",
-          value: buttonValue,
-        },
-      ],
-    },
-  ];
-}
+    }).catch((e) => console.error("slack_interaction dispatch failed:", e)),
+  );
 
-function slack_invite_approval_checklist_blocks({ email, approver, recordId, baseId, tableId }) {
-  return [
-    {
-      type: "header",
-      text: {
-        type: "plain_text",
-        text: "✅ Approved — invite this person",
-        emoji: true,
-      },
-    },
-    {
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: `Approved by *@${approver}*. Send the invite manually:\n\n  1. Open the workspace menu (top-left).\n  2. Choose *Invite people to RLadies+*.\n  3. Paste this email and send:`,
-      },
-    },
-    {
-      type: "section",
-      text: { type: "mrkdwn", text: `\`${email}\`` },
-    },
-    {
-      type: "actions",
-      elements: [
-        {
-          type: "button",
-          text: { type: "plain_text", text: "✓ Mark invite sent", emoji: true },
-          style: "primary",
-          action_id: "invite_mark_sent",
-          value: JSON.stringify({
-            email,
-            record_id: recordId,
-            approver,
-            base_id: baseId,
-            table_id: tableId,
-          }),
-        },
-      ],
-    },
-    {
-      type: "context",
-      elements: [
-        {
-          type: "mrkdwn",
-          text: "Click *Mark invite sent* once the invite has been delivered — that flips the Airtable record.",
-        },
-      ],
-    },
-  ];
+  return new Response("", { status: 200 });
 }
