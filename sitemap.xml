@@ -36,6 +36,8 @@
 <url><loc>https://rladies.github.io/jinx/reference/blog_create_entry.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cf_ops_format_workers_report.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cf_ops_get_kv_value.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/cf_ops_kv_delete.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/cf_ops_kv_put.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cf_ops_list_kv_keys.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cf_ops_list_workers_scripts.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cf_ops_purge_cache.html</loc></url>
@@ -44,6 +46,7 @@
 <url><loc>https://rladies.github.io/jinx/reference/cfp_create_issue.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cfp_list_open.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/cfp_recommend_speaker.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/channel_index_load.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_check_health.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_create.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_create_pr.html</loc></url>
@@ -118,8 +121,11 @@
 <url><loc>https://rladies.github.io/jinx/reference/directory_verify_handles.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/directory_write_entries.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/embed_chunks.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/event_authorize.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/event_create_summary.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/event_execute.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/event_list_chapter.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/event_parse.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/event_sync_chapters.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/event_to_chunk.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/events_digest_chunk.html</loc></url>
@@ -201,6 +207,7 @@
 <url><loc>https://rladies.github.io/jinx/reference/normalize_twitter.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/pack_pieces.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/parse_unix_date.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/pending_link_consume.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/pkgdown_llms_chunks.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/prepare_inactivity_emails.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/punct_name.html</loc></url>
@@ -215,6 +222,7 @@
 <url><loc>https://rladies.github.io/jinx/reference/question_log_format.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/question_log_purge.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/question_log_query.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/question_vote_apply.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/rag_chunk_id.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/rag_fetch_json.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/rag_fetch_text.html</loc></url>
@@ -223,6 +231,9 @@
 <url><loc>https://rladies.github.io/jinx/reference/rag_request.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/rag_user_agent.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/random_emoji.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/reaction_direction.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/reaction_event_apply.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/reaction_log_increment.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/remote_file_chunks.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/render_repo_meta_text.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/render_team_text.html</loc></url>
@@ -236,11 +247,18 @@
 <url><loc>https://rladies.github.io/jinx/reference/rum_format_analytics.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/rum_generate_report.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/short_url.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/slack_api_call.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/slack_bot_token.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/slack_channel_id_lookup.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/slack_channel_mention.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/slack_conversations_open.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/slack_invite_batch.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/slack_invite_request.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/slack_link_label.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/slack_post_message.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/slack_response_url_post.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/slack_subscribe_rss.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/slack_workspace_for_team.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/slugify_awesome.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/split_by_sections.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/split_to_target.html</loc></url>
@@ -260,6 +278,8 @@
 <url><loc>https://rladies.github.io/jinx/reference/website_generate_report.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/website_merge_pending.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/website_publish_report.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/welcome_message_render.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/welcome_send.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/youtube_playlist_items.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/youtube_request.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/youtube_uploads_playlist.html</loc></url>

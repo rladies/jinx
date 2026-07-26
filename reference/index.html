@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     <a class="navbar-brand me-2" href="../index.html">jinx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -530,6 +530,41 @@ document.addEventListener("DOMContentLoaded", function() {
 
       <dl><dt>
 
+          <code><a href="slack_api_call.html">slack_api_call()</a></code>
+
+        </dt>
+        <dd>Call a Slack Web API method</dd>
+
+        <dt>
+
+          <code><a href="slack_bot_token.html">slack_bot_token()</a></code>
+
+        </dt>
+        <dd>Resolve the bot token for a jinx-operated Slack workspace</dd>
+
+        <dt>
+
+          <code><a href="slack_channel_id_lookup.html">slack_channel_id_lookup()</a></code>
+
+        </dt>
+        <dd>Look up a Slack channel's ID by name</dd>
+
+        <dt>
+
+          <code><a href="slack_channel_mention.html">slack_channel_mention()</a></code>
+
+        </dt>
+        <dd>Resolve a channel name to a Slack <code>&lt;#id|name&gt;</code> mention</dd>
+
+        <dt>
+
+          <code><a href="slack_conversations_open.html">slack_conversations_open()</a></code>
+
+        </dt>
+        <dd>Open a Slack direct message channel</dd>
+
+        <dt>
+
           <code><a href="slack_invite_batch.html">slack_invite_batch()</a></code>
 
         </dt>
@@ -551,10 +586,91 @@ document.addEventListener("DOMContentLoaded", function() {
 
         <dt>
 
+          <code><a href="slack_response_url_post.html">slack_response_url_post()</a></code>
+
+        </dt>
+        <dd>Reply to a Slack interaction via its <code>response_url</code></dd>
+
+        <dt>
+
           <code><a href="slack_subscribe_rss.html">slack_subscribe_rss()</a></code>
 
         </dt>
         <dd>Post a request to subscribe an RSS feed to a Slack channel</dd>
+
+        <dt>
+
+          <code><a href="slack_workspace_for_team.html">slack_workspace_for_team()</a></code>
+
+        </dt>
+        <dd>Map a Slack team id to its workspace name</dd>
+      </dl></div><div class="section level2">
+      <h2 id="event-dispatch">Event dispatch<a class="anchor" aria-label="anchor" href="#event-dispatch"></a></h2>
+
+      <div class="section-desc"><p>R-side handling of the slack-event repository_dispatch contract</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="event_parse.html">event_parse()</a></code>
+
+        </dt>
+        <dd>Parse a <code>slack-event</code> dispatch payload</dd>
+
+        <dt>
+
+          <code><a href="event_authorize.html">event_authorize()</a></code>
+
+        </dt>
+        <dd>Authorize a parsed event before execution</dd>
+
+        <dt>
+
+          <code><a href="event_execute.html">event_execute()</a></code>
+
+        </dt>
+        <dd>Execute a parsed, authorized event</dd>
+      </dl></div><div class="section level2">
+      <h2 id="welcome-messages">Welcome messages<a class="anchor" aria-label="anchor" href="#welcome-messages"></a></h2>
+
+      <div class="section-desc"><p>Welcome DMs for newly joined Slack members</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="welcome_send.html">welcome_send()</a></code>
+
+        </dt>
+        <dd>Send a welcome DM to a newly joined Slack member</dd>
+
+        <dt>
+
+          <code><a href="welcome_message_render.html">welcome_message_render()</a></code>
+
+        </dt>
+        <dd>Render a welcome DM for a newly joined Slack member</dd>
+
+        <dt>
+
+          <code><a href="pending_link_consume.html">pending_link_consume()</a></code>
+
+        </dt>
+        <dd>Consume a pending chapter sign-up link for a newly joined email</dd>
+
+        <dt>
+
+          <code><a href="channel_index_load.html">channel_index_load()</a></code>
+
+        </dt>
+        <dd>Load (and cache) a workspace's full channel name-to-id index</dd>
       </dl></div><div class="section level2">
       <h2 id="gha-dashboard">GHA dashboard<a class="anchor" aria-label="anchor" href="#gha-dashboard"></a></h2>
 
@@ -594,6 +710,20 @@ document.addEventListener("DOMContentLoaded", function() {
 
         </dt>
         <dd>Read a single value from a Cloudflare KV namespace</dd>
+
+        <dt>
+
+          <code><a href="cf_ops_kv_delete.html">cf_ops_kv_delete()</a></code>
+
+        </dt>
+        <dd>Delete a single value from a Cloudflare KV namespace</dd>
+
+        <dt>
+
+          <code><a href="cf_ops_kv_put.html">cf_ops_kv_put()</a></code>
+
+        </dt>
+        <dd>Write a single value to a Cloudflare KV namespace</dd>
 
         <dt>
 
@@ -722,6 +852,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
       <dl><dt>
 
+          <code><a href="event_authorize.html">event_authorize()</a></code>
+
+        </dt>
+        <dd>Authorize a parsed event before execution</dd>
+
+        <dt>
+
           <code><a href="event_create_summary.html">event_create_summary()</a></code>
 
         </dt>
@@ -729,10 +866,24 @@ document.addEventListener("DOMContentLoaded", function() {
 
         <dt>
 
+          <code><a href="event_execute.html">event_execute()</a></code>
+
+        </dt>
+        <dd>Execute a parsed, authorized event</dd>
+
+        <dt>
+
           <code><a href="event_list_chapter.html">event_list_chapter()</a></code>
 
         </dt>
         <dd>List events for a chapter</dd>
+
+        <dt>
+
+          <code><a href="event_parse.html">event_parse()</a></code>
+
+        </dt>
+        <dd>Parse a <code>slack-event</code> dispatch payload</dd>
 
         <dt>
 
@@ -953,6 +1104,34 @@ document.addEventListener("DOMContentLoaded", function() {
 
         </dt>
         <dd>Format a question-log report as markdown</dd>
+
+        <dt>
+
+          <code><a href="question_vote_apply.html">question_vote_apply()</a></code>
+
+        </dt>
+        <dd>Apply a reaction vote to the question it answered</dd>
+
+        <dt>
+
+          <code><a href="reaction_log_increment.html">reaction_log_increment()</a></code>
+
+        </dt>
+        <dd>Increment the daily reaction-feedback counter for a workspace</dd>
+
+        <dt>
+
+          <code><a href="reaction_direction.html">reaction_direction()</a></code>
+
+        </dt>
+        <dd>Classify a Slack reaction as an up- or down-vote</dd>
+
+        <dt>
+
+          <code><a href="reaction_event_apply.html">reaction_event_apply()</a></code>
+
+        </dt>
+        <dd>Apply an incoming Slack reaction event</dd>
       </dl></div><div class="section level2">
       <h2 id="question-digest">Question digest<a class="anchor" aria-label="anchor" href="#question-digest"></a></h2>
 

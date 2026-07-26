@@ -348,14 +348,70 @@ Chapter activity monitoring and outreach
 
 Slack messaging and automation
 
+- [`slack_api_call()`](https://rladies.github.io/jinx/reference/slack_api_call.md)
+  : Call a Slack Web API method
+
+- [`slack_bot_token()`](https://rladies.github.io/jinx/reference/slack_bot_token.md)
+  : Resolve the bot token for a jinx-operated Slack workspace
+
+- [`slack_channel_id_lookup()`](https://rladies.github.io/jinx/reference/slack_channel_id_lookup.md)
+  : Look up a Slack channel's ID by name
+
+- [`slack_channel_mention()`](https://rladies.github.io/jinx/reference/slack_channel_mention.md)
+  :
+
+  Resolve a channel name to a Slack `<#id|name>` mention
+
+- [`slack_conversations_open()`](https://rladies.github.io/jinx/reference/slack_conversations_open.md)
+  : Open a Slack direct message channel
+
 - [`slack_invite_batch()`](https://rladies.github.io/jinx/reference/slack_invite_batch.md)
   : Send pending Slack invitations
+
 - [`slack_invite_request()`](https://rladies.github.io/jinx/reference/slack_invite_request.md)
   : Request a Slack invitation for someone not yet on the workspace
+
 - [`slack_post_message()`](https://rladies.github.io/jinx/reference/slack_post_message.md)
   : Post a message to a Slack channel
+
+- [`slack_response_url_post()`](https://rladies.github.io/jinx/reference/slack_response_url_post.md)
+  :
+
+  Reply to a Slack interaction via its `response_url`
+
 - [`slack_subscribe_rss()`](https://rladies.github.io/jinx/reference/slack_subscribe_rss.md)
   : Post a request to subscribe an RSS feed to a Slack channel
+
+- [`slack_workspace_for_team()`](https://rladies.github.io/jinx/reference/slack_workspace_for_team.md)
+  : Map a Slack team id to its workspace name
+
+## Event dispatch
+
+R-side handling of the slack-event repository_dispatch contract
+
+- [`event_parse()`](https://rladies.github.io/jinx/reference/event_parse.md)
+  :
+
+  Parse a `slack-event` dispatch payload
+
+- [`event_authorize()`](https://rladies.github.io/jinx/reference/event_authorize.md)
+  : Authorize a parsed event before execution
+
+- [`event_execute()`](https://rladies.github.io/jinx/reference/event_execute.md)
+  : Execute a parsed, authorized event
+
+## Welcome messages
+
+Welcome DMs for newly joined Slack members
+
+- [`welcome_send()`](https://rladies.github.io/jinx/reference/welcome_send.md)
+  : Send a welcome DM to a newly joined Slack member
+- [`welcome_message_render()`](https://rladies.github.io/jinx/reference/welcome_message_render.md)
+  : Render a welcome DM for a newly joined Slack member
+- [`pending_link_consume()`](https://rladies.github.io/jinx/reference/pending_link_consume.md)
+  : Consume a pending chapter sign-up link for a newly joined email
+- [`channel_index_load()`](https://rladies.github.io/jinx/reference/channel_index_load.md)
+  : Load (and cache) a workspace's full channel name-to-id index
 
 ## GHA dashboard
 
@@ -372,6 +428,10 @@ Cloudflare Workers status and cache-purge tooling
   : Format Workers invocation metrics as a markdown table
 - [`cf_ops_get_kv_value()`](https://rladies.github.io/jinx/reference/cf_ops_get_kv_value.md)
   : Read a single value from a Cloudflare KV namespace
+- [`cf_ops_kv_delete()`](https://rladies.github.io/jinx/reference/cf_ops_kv_delete.md)
+  : Delete a single value from a Cloudflare KV namespace
+- [`cf_ops_kv_put()`](https://rladies.github.io/jinx/reference/cf_ops_kv_put.md)
+  : Write a single value to a Cloudflare KV namespace
 - [`cf_ops_list_kv_keys()`](https://rladies.github.io/jinx/reference/cf_ops_list_kv_keys.md)
   : List keys in a Cloudflare KV namespace
 - [`cf_ops_list_workers_scripts()`](https://rladies.github.io/jinx/reference/cf_ops_list_workers_scripts.md)
@@ -415,10 +475,23 @@ Reusable PR/issue automation across repos
 
 Chapter event management
 
+- [`event_authorize()`](https://rladies.github.io/jinx/reference/event_authorize.md)
+  : Authorize a parsed event before execution
+
 - [`event_create_summary()`](https://rladies.github.io/jinx/reference/event_create_summary.md)
   : Create a formatted event summary
+
+- [`event_execute()`](https://rladies.github.io/jinx/reference/event_execute.md)
+  : Execute a parsed, authorized event
+
 - [`event_list_chapter()`](https://rladies.github.io/jinx/reference/event_list_chapter.md)
   : List events for a chapter
+
+- [`event_parse()`](https://rladies.github.io/jinx/reference/event_parse.md)
+  :
+
+  Parse a `slack-event` dispatch payload
+
 - [`event_sync_chapters()`](https://rladies.github.io/jinx/reference/event_sync_chapters.md)
   : Sync events across all chapters
 
@@ -494,6 +567,14 @@ Anonymous question-improvement log gap reporting
   : Rank questions where downvotes exceed upvotes
 - [`question_log_format()`](https://rladies.github.io/jinx/reference/question_log_format.md)
   : Format a question-log report as markdown
+- [`question_vote_apply()`](https://rladies.github.io/jinx/reference/question_vote_apply.md)
+  : Apply a reaction vote to the question it answered
+- [`reaction_log_increment()`](https://rladies.github.io/jinx/reference/reaction_log_increment.md)
+  : Increment the daily reaction-feedback counter for a workspace
+- [`reaction_direction()`](https://rladies.github.io/jinx/reference/reaction_direction.md)
+  : Classify a Slack reaction as an up- or down-vote
+- [`reaction_event_apply()`](https://rladies.github.io/jinx/reference/reaction_event_apply.md)
+  : Apply an incoming Slack reaction event
 
 ## Question digest
 
