@@ -160,9 +160,20 @@ reference:
     desc: Anonymous question-improvement log gap reporting
     contents:
       - question_log_query
+      - question_log_purge
       - question_gaps_rank
       - question_downvoted_rank
       - question_log_format
+
+  - title: Question digest
+    desc: Weekly question-gap digest posted to Slack
+    contents:
+      - question_content_gaps
+      - question_coding_declined_count
+      - question_draft_guide_snippet
+      - question_digest_format
+      - question_digest_build
+      - question_digest_post
 
   - title: Conference coordination
     desc: CFP tracking and speaker recommendations
@@ -193,5 +204,6 @@ reference:
       - chunk_markdown
       - rag_chunk_id
       - cloudflare_embed
+      - cloudflare_generate
       - cloudflare_vectorize_upsert
       - cloudflare_account_id

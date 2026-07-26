@@ -183,19 +183,19 @@ describe("meeting_poll_lock", {
   })
 })
 
-describe("samkoma_escape_md", {
+describe("escape_markdown", {
   it("leaves plain text untouched", {
-    expect_identical(samkoma_escape_md("Team sync"), "Team sync")
+    expect_identical(escape_markdown("Team sync"), "Team sync")
   })
 
   it("breaks markdown links so they cannot be injected", {
-    out <- samkoma_escape_md("[click](https://evil.example)")
+    out <- escape_markdown("[click](https://evil.example)")
     expect_match(out, "\\[click\\]", fixed = TRUE)
     expect_false(grepl("(?<!\\\\)[][]", out, perl = TRUE))
   })
 
   it("entity-encodes angle brackets and ampersands", {
-    out <- samkoma_escape_md("<https://evil|x> & co")
+    out <- escape_markdown("<https://evil|x> & co")
     expect_false(grepl("<", out, fixed = TRUE))
     expect_false(grepl(">", out, fixed = TRUE))
     expect_match(out, "&lt;", fixed = TRUE)
@@ -203,12 +203,12 @@ describe("samkoma_escape_md", {
   })
 
   it("collapses newlines so block markdown cannot be injected", {
-    out <- samkoma_escape_md("line1\n# heading\n- item")
+    out <- escape_markdown("line1\n# heading\n- item")
     expect_false(grepl("\n", out, fixed = TRUE))
   })
 
   it("escapes the backslash before adding its own escapes", {
-    expect_identical(samkoma_escape_md("a\\b"), "a\\\\b")
+    expect_identical(escape_markdown("a\\b"), "a\\\\b")
   })
 })
 

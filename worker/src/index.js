@@ -6,8 +6,6 @@ import {
 } from "./airtable-invite.js";
 import { slack_command_handle } from "./slash-command.js";
 import { slack_signature_verify } from "./slack-api.js";
-import { question_log_purge } from "./question-log.js";
-import { question_digest_post } from "./question-digest.js";
 import { bearer_token_extract, api_key_verify } from "./api-auth.js";
 import { ai_generate_handle } from "./ai-api.js";
 import {
@@ -15,8 +13,6 @@ import {
   short_link_redirect_handle,
   SHORT_LINK_HOST,
 } from "./short-links.js";
-
-const DIGEST_CRON = "0 9 * * 1";
 
 const SLACK_ROUTES = {
   "/slack/command": slack_command_handle,
@@ -42,14 +38,6 @@ export default {
         status: 503,
         headers: { "Content-Type": "text/plain" },
       });
-    }
-  },
-
-  async scheduled(event, env, ctx) {
-    if (event.cron === DIGEST_CRON) {
-      ctx.waitUntil(question_digest_post(env, { days: 7 }));
-    } else {
-      ctx.waitUntil(question_log_purge(env));
     }
   },
 };

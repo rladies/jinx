@@ -94,6 +94,46 @@ describe("question_log_query", {
   })
 })
 
+describe("question_log_purge", {
+  it("returns the number of rows deleted", {
+    body <- list(
+      success = TRUE,
+      result = list(list(
+        success = TRUE,
+        meta = list(changes = 3L),
+        results = list()
+      ))
+    )
+    local_mocked_responses(list(response_json(body = body)))
+    deleted <- question_log_purge(
+      retention_days = 180,
+      account_id = "acc123",
+      database_id = "db1",
+      api_token = "tok"
+    )
+    expect_identical(deleted, 3L)
+  })
+
+  it("returns 0 when nothing was deleted", {
+    body <- list(
+      success = TRUE,
+      result = list(list(
+        success = TRUE,
+        meta = list(changes = 0L),
+        results = list()
+      ))
+    )
+    local_mocked_responses(list(response_json(body = body)))
+    deleted <- question_log_purge(
+      retention_days = 180,
+      account_id = "acc123",
+      database_id = "db1",
+      api_token = "tok"
+    )
+    expect_identical(deleted, 0L)
+  })
+})
+
 describe("parse_questions_command", {
   it("defaults to 7 days", {
     cmd <- cmd_parse("/jinx questions")

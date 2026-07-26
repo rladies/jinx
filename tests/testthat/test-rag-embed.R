@@ -50,6 +50,36 @@ describe("cloudflare_embed", {
   })
 })
 
+describe("cloudflare_generate", {
+  it("returns the model's response text", {
+    body <- list(success = TRUE, result = list(response = "A short draft."))
+    local_mocked_responses(list(response_json(body = body)))
+    text <- cloudflare_generate(
+      messages = list(list(role = "user", content = "hello")),
+      account_id = "acc123",
+      api_token = "tok"
+    )
+    expect_identical(text, "A short draft.")
+  })
+
+  it("surfaces a classed cloudflarer_error on API failure", {
+    body <- list(
+      success = FALSE,
+      errors = list(list(code = 1000, message = "bad thing")),
+      result = NULL
+    )
+    local_mocked_responses(list(response_json(status_code = 400, body = body)))
+    expect_error(
+      cloudflare_generate(
+        messages = list(list(role = "user", content = "hello")),
+        account_id = "acc123",
+        api_token = "tok"
+      ),
+      class = "cloudflarer_error"
+    )
+  })
+})
+
 describe("cloudflare_account_id", {
   it("returns the sole account ID when token has exactly one", {
     body <- list(success = TRUE, result = list(list(id = "acc123")))

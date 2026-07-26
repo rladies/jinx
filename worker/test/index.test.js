@@ -2,15 +2,6 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import worker from "../src/index.js";
 import { makeEnv, makeCtx, signSlack } from "./_helpers.js";
 
-vi.mock("../src/question-digest.js", () => ({
-  question_digest_post: vi.fn(async () => true),
-}));
-vi.mock("../src/question-log.js", () => ({
-  question_log_purge: vi.fn(async () => 0),
-}));
-import { question_digest_post } from "../src/question-digest.js";
-import { question_log_purge } from "../src/question-log.js";
-
 afterEach(() => {
   vi.restoreAllMocks();
 });
@@ -122,24 +113,6 @@ describe("worker fetch routing", () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.response_type).toBe("ephemeral");
-  });
-
-  it("runs the weekly gap digest on the digest cron", async () => {
-    vi.clearAllMocks();
-    const ctx = makeCtx();
-    await worker.scheduled({ cron: "0 9 * * 1" }, makeEnv(), ctx);
-    await ctx.flush();
-    expect(question_digest_post).toHaveBeenCalledTimes(1);
-    expect(question_log_purge).not.toHaveBeenCalled();
-  });
-
-  it("runs the retention purge on other crons", async () => {
-    vi.clearAllMocks();
-    const ctx = makeCtx();
-    await worker.scheduled({ cron: "17 3 * * *" }, makeEnv(), ctx);
-    await ctx.flush();
-    expect(question_log_purge).toHaveBeenCalledTimes(1);
-    expect(question_digest_post).not.toHaveBeenCalled();
   });
 
   it("rejects /ai/generate and /links/shorten without a valid bearer key", async () => {
