@@ -381,7 +381,8 @@ slack_interaction_deny <- function(data, admin_user, response_url) {
   slack_response_url_post(
     response_url,
     text = glue::glue(
-      "\U0000274C *Denied* by @{admin_user} \U00002014 {data$email} will not be invited"
+      "\U0000274C *Denied* by @{admin_user} \U00002014 {data$email} ",
+      "will not be invited"
     ),
     replace_original = TRUE
   )
@@ -453,7 +454,8 @@ slack_interaction_mark_sent <- function(data, sender, response_url) {
     slack_response_url_post(
       response_url,
       text = glue::glue(
-        "\U0001F63F Failed to mark {data$email} as invited in Airtable: {conditionMessage(result)}"
+        "\U0001F63F Failed to mark {data$email} as invited in Airtable: ",
+        "{conditionMessage(result)}"
       ),
       replace_original = FALSE
     )
