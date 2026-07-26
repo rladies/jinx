@@ -20,6 +20,8 @@ jobs:
     name: goodpractice check
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
         with:
