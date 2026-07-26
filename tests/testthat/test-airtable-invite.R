@@ -283,7 +283,7 @@ describe("slack_interaction_process", {
     expect_true(posted$replace_original)
   })
 
-  it("marks the record invited, writes the pending link, and confirms for invite_mark_sent", {
+  it("marks invited, writes the pending link, and confirms for mark_sent", {
     update_args <- NULL
     put_args <- NULL
     posted <- NULL
