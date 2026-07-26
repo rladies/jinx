@@ -46,7 +46,7 @@ export async function slack_command_handle(env, ctx, body) {
     text: randomAck(command),
   });
 
-  const dispatchPromise = github_dispatch_send(env, {
+  const dispatchPromise = github_dispatch_send(env, "slack-command", {
     command,
     team_id: teamId,
     user_id: params.get("user_id") || "",
