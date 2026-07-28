@@ -382,3 +382,182 @@ welcome_send <- function(team_id, user) {
   )
   invisible(NULL)
 }
+
+slack_conversations_join <- function(team_id, channel_id, workspace) {
+  token <- slack_bot_token(workspace)
+  slack_api_call(token, "conversations.join", list(channel = channel_id))
+}
+
+slack_conversations_info <- function(team_id, channel_id, workspace) {
+  token <- slack_bot_token(workspace)
+  slack_api_call(token, "conversations.info", list(channel = channel_id))
+}
+
+slack_bookmarks_list <- function(team_id, channel_id, workspace) {
+  token <- slack_bot_token(workspace)
+  slack_api_call(token, "bookmarks.list", list(channel_id = channel_id))
+}
+
+slack_bookmarks_add <- function(
+  team_id,
+  channel_id,
+  title,
+  link,
+  emoji,
+  workspace
+) {
+  token <- slack_bot_token(workspace)
+  body <- list(
+    channel_id = channel_id,
+    title = title,
+    type = "link",
+    link = link
+  )
+  if (!is.null(emoji) && nzchar(emoji)) {
+    body$emoji <- emoji
+  }
+  slack_api_call(token, "bookmarks.add", body)
+}
+
+channel_bookmarks_config <- function() {
+  path <- system.file("config", "bookmarks.json", package = "jinx")
+  cfg <- jsonlite::fromJSON(path, simplifyVector = FALSE)
+  Filter(
+    function(b) !is.null(b$title) && !is.null(b$link),
+    cfg$bookmarks %||% list()
+  )
+}
+
+setup_channel_ensure_membership <- function(team_id, channel_id, workspace) {
+  info <- tryCatch(
+    slack_conversations_info(team_id, channel_id, workspace),
+    error = function(e) NULL
+  )
+  if (is.null(info)) {
+    return(list(
+      ok = FALSE,
+      message = glue::glue(
+        "I can't quite see into <#{channel_id}> from here."
+      )
+    ))
+  }
+
+  is_private <- isTRUE(info$channel$is_private)
+  is_member <- isTRUE(info$channel$is_member)
+
+  if (is_member || !is_private) {
+    if (!is_member) {
+      tryCatch(
+        slack_conversations_join(team_id, channel_id, workspace),
+        error = function(e) {
+          cli::cli_warn("conversations.join failed: {conditionMessage(e)}")
+        }
+      )
+    }
+    return(list(ok = TRUE, message = NULL))
+  }
+
+  list(
+    ok = FALSE,
+    message = paste0(
+      "\U0001F408\u200D\U00002B1B I'm not in <#",
+      channel_id,
+      "> yet (and I can't let myself in \u2014 no thumbs!). Invite me ",
+      "first, since it's a private channel, then run ",
+      "`/jinx setup-channel` again."
+    )
+  )
+}
+
+setup_channel_apply_bookmarks <- function(team_id, channel_id, workspace) {
+  existing <- tryCatch(
+    slack_bookmarks_list(team_id, channel_id, workspace),
+    error = function(e) list()
+  )
+  existing_links <- tolower(vapply(
+    existing$bookmarks %||% list(),
+    function(b) b$link %||% "",
+    character(1)
+  ))
+
+  added <- character(0)
+  skipped <- character(0)
+  for (bm in channel_bookmarks_config()) {
+    if (tolower(bm$link) %in% existing_links) {
+      skipped <- c(skipped, bm$title)
+      next
+    }
+    ok <- tryCatch(
+      {
+        slack_bookmarks_add(
+          team_id,
+          channel_id,
+          bm$title,
+          bm$link,
+          bm$emoji,
+          workspace
+        )
+        TRUE
+      },
+      error = function(e) {
+        cli::cli_warn("bookmark {bm$title} failed: {conditionMessage(e)}")
+        FALSE
+      }
+    )
+    if (ok) {
+      added <- c(added, bm$title)
+    }
+  }
+  list(added = added, skipped = skipped)
+}
+
+#' Set up a Slack channel with RLadies+ bookmarks
+#'
+#' The `"setup-channel"` command handler: joins the channel if needed
+#' (public channels only - a private channel requires a human invite
+#' first), then adds any bookmarks from `inst/config/bookmarks.json`
+#' the channel doesn't already have. R port of `slash_setup_channel()`
+#' from the deleted `worker/src/slash-local.js`; reads the bookmarks
+#' config directly from this package's `inst/` instead of the Worker's
+#' redundant GitHub-raw fetch of the same file.
+#'
+#' @param team_id Slack team id.
+#' @param channel_id Channel to set up.
+#' @param channel_name Channel display name, for the reply text.
+#' @return Character scalar reply text.
+#' @export
+setup_channel_process <- function(team_id, channel_id, channel_name) {
+  if (is.null(channel_id) || !nzchar(channel_id)) {
+    return(paste0(
+      "Pop into the channel you want to set up and run this again \u2014 ",
+      "I can only tidy the room I'm standing in."
+    ))
+  }
+
+  workspace <- slack_workspace_for_team(team_id)
+
+  membership <- setup_channel_ensure_membership(team_id, channel_id, workspace)
+  if (!membership$ok) {
+    return(membership$message)
+  }
+
+  bookmarks <- setup_channel_apply_bookmarks(team_id, channel_id, workspace)
+
+  lines <- glue::glue(
+    "\U0001F52E Set up *#{channel_name %||% channel_id}* with ",
+    "RLadies+ resources."
+  )
+  if (length(bookmarks$added)) {
+    lines <- c(
+      lines,
+      glue::glue("*Added:* {paste(bookmarks$added, collapse = ', ')}")
+    )
+  }
+  if (length(bookmarks$skipped)) {
+    lines <- c(
+      lines,
+      glue::glue("*Already there:* {paste(bookmarks$skipped, collapse = ', ')}")
+    )
+  }
+  paste(lines, collapse = "\n")
+}

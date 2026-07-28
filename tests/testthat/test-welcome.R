@@ -271,3 +271,245 @@ describe("welcome_send", {
     expect_false(posted)
   })
 })
+
+describe("channel_bookmarks_config", {
+  it("reads the bundled bookmarks config", {
+    bookmarks <- channel_bookmarks_config()
+    expect_true(length(bookmarks) >= 1)
+    titles <- vapply(bookmarks, function(b) b$title, character(1))
+    expect_true("RLadies+ Guide" %in% titles)
+    links <- vapply(bookmarks, function(b) b$link, character(1))
+    expect_true(all(startsWith(links, "https://")))
+  })
+})
+
+describe("slack_conversations_join", {
+  it("calls conversations.join with the channel id", {
+    local_mocked_bindings(
+      slack_bot_token = function(workspace) "xoxb-test",
+      slack_api_call = function(token, method, body) {
+        expect_identical(method, "conversations.join")
+        expect_identical(body$channel, "C1")
+        list(ok = TRUE)
+      }
+    )
+    result <- slack_conversations_join("T_ORG", "C1", "organiser")
+    expect_true(result$ok)
+  })
+})
+
+describe("slack_conversations_info", {
+  it("calls conversations.info with the channel id", {
+    local_mocked_bindings(
+      slack_bot_token = function(workspace) "xoxb-test",
+      slack_api_call = function(token, method, body) {
+        expect_identical(method, "conversations.info")
+        expect_identical(body$channel, "C1")
+        list(ok = TRUE, channel = list(is_private = FALSE, is_member = TRUE))
+      }
+    )
+    result <- slack_conversations_info("T_ORG", "C1", "organiser")
+    expect_true(result$channel$is_member)
+  })
+})
+
+describe("slack_bookmarks_list", {
+  it("calls bookmarks.list with the channel id", {
+    local_mocked_bindings(
+      slack_bot_token = function(workspace) "xoxb-test",
+      slack_api_call = function(token, method, body) {
+        expect_identical(method, "bookmarks.list")
+        expect_identical(body$channel_id, "C1")
+        list(ok = TRUE, bookmarks = list())
+      }
+    )
+    result <- slack_bookmarks_list("T_ORG", "C1", "organiser")
+    expect_true(result$ok)
+  })
+})
+
+describe("slack_bookmarks_add", {
+  it("includes the emoji when provided", {
+    local_mocked_bindings(
+      slack_bot_token = function(workspace) "xoxb-test",
+      slack_api_call = function(token, method, body) {
+        expect_identical(method, "bookmarks.add")
+        expect_identical(body$emoji, ":sparkles:")
+        list(ok = TRUE)
+      }
+    )
+    slack_bookmarks_add(
+      "T_ORG",
+      "C1",
+      "RLadies+ Guide",
+      "https://guide.rladies.org",
+      ":sparkles:",
+      "organiser"
+    )
+  })
+
+  it("omits the emoji field when NULL", {
+    local_mocked_bindings(
+      slack_bot_token = function(workspace) "xoxb-test",
+      slack_api_call = function(token, method, body) {
+        expect_null(body$emoji)
+        list(ok = TRUE)
+      }
+    )
+    slack_bookmarks_add(
+      "T_ORG",
+      "C1",
+      "Title",
+      "https://x.example",
+      NULL,
+      "organiser"
+    )
+  })
+})
+
+describe("setup_channel_ensure_membership", {
+  it("joins a public channel it is not a member of", {
+    joined <- FALSE
+    local_mocked_bindings(
+      slack_conversations_info = function(...) {
+        list(channel = list(is_private = FALSE, is_member = FALSE))
+      },
+      slack_conversations_join = function(...) {
+        joined <<- TRUE
+        list(ok = TRUE)
+      }
+    )
+    result <- setup_channel_ensure_membership("T_ORG", "C1", "organiser")
+    expect_true(result$ok)
+    expect_true(joined)
+  })
+
+  it("does not attempt to join a channel it is already in", {
+    joined <- FALSE
+    local_mocked_bindings(
+      slack_conversations_info = function(...) {
+        list(channel = list(is_private = FALSE, is_member = TRUE))
+      },
+      slack_conversations_join = function(...) {
+        joined <<- TRUE
+        list(ok = TRUE)
+      }
+    )
+    result <- setup_channel_ensure_membership("T_ORG", "C1", "organiser")
+    expect_true(result$ok)
+    expect_false(joined)
+  })
+
+  it("refuses a private channel it is not a member of", {
+    local_mocked_bindings(
+      slack_conversations_info = function(...) {
+        list(channel = list(is_private = TRUE, is_member = FALSE))
+      }
+    )
+    result <- setup_channel_ensure_membership("T_ORG", "C1", "organiser")
+    expect_false(result$ok)
+    expect_match(result$message, "private channel")
+  })
+
+  it("returns a failure message when conversations.info errors", {
+    local_mocked_bindings(
+      slack_conversations_info = function(...) stop("HTTP 404")
+    )
+    result <- setup_channel_ensure_membership("T_ORG", "C1", "organiser")
+    expect_false(result$ok)
+    expect_match(result$message, "can't quite see")
+  })
+
+  it("warns but does not fail when conversations.join errors", {
+    local_mocked_bindings(
+      slack_conversations_info = function(...) {
+        list(channel = list(is_private = FALSE, is_member = FALSE))
+      },
+      slack_conversations_join = function(...) stop("channel_not_found")
+    )
+    expect_warning(
+      result <- setup_channel_ensure_membership("T_ORG", "C1", "organiser"),
+      "conversations.join failed"
+    )
+    expect_true(result$ok)
+  })
+})
+
+describe("setup_channel_apply_bookmarks", {
+  it("adds bookmarks not already present and skips existing ones", {
+    added_titles <- character(0)
+    local_mocked_bindings(
+      slack_bookmarks_list = function(...) {
+        list(bookmarks = list(list(link = "https://guide.rladies.org")))
+      },
+      slack_bookmarks_add = function(
+        team_id,
+        channel_id,
+        title,
+        link,
+        emoji,
+        workspace
+      ) {
+        added_titles <<- c(added_titles, title)
+        list(ok = TRUE)
+      }
+    )
+    result <- setup_channel_apply_bookmarks("T_ORG", "C1", "organiser")
+    expect_true("RLadies+ Guide" %in% result$skipped)
+    expect_false("RLadies+ Guide" %in% result$added)
+    expect_true(length(result$added) > 0)
+    expect_identical(sort(added_titles), sort(result$added))
+  })
+
+  it("warns but continues when a bookmark add fails", {
+    local_mocked_bindings(
+      slack_bookmarks_list = function(...) list(bookmarks = list()),
+      slack_bookmarks_add = function(team_id, channel_id, title, ...) {
+        if (identical(title, "Code of Conduct")) {
+          stop("rate limited")
+        }
+        list(ok = TRUE)
+      }
+    )
+    expect_warning(
+      result <- setup_channel_apply_bookmarks("T_ORG", "C1", "organiser"),
+      "Code of Conduct"
+    )
+    expect_false("Code of Conduct" %in% result$added)
+    expect_true("RLadies+ Guide" %in% result$added)
+  })
+})
+
+describe("setup_channel_process", {
+  it("asks the user to run it from within the target channel", {
+    result <- setup_channel_process("T_ORG", "", "general")
+    expect_match(result, "channel you want to set up")
+  })
+
+  it("reports the private-channel refusal message directly", {
+    local_mocked_bindings(
+      slack_workspace_for_team = function(team_id, ...) "organiser",
+      setup_channel_ensure_membership = function(...) {
+        list(ok = FALSE, message = "private channel message")
+      }
+    )
+    result <- setup_channel_process("T_ORG", "C1", "general")
+    expect_identical(result, "private channel message")
+  })
+
+  it("reports added and already-there bookmarks on success", {
+    local_mocked_bindings(
+      slack_workspace_for_team = function(team_id, ...) "organiser",
+      setup_channel_ensure_membership = function(...) {
+        list(ok = TRUE, message = NULL)
+      },
+      setup_channel_apply_bookmarks = function(...) {
+        list(added = c("RLadies+ Guide"), skipped = c("Code of Conduct"))
+      }
+    )
+    result <- setup_channel_process("T_ORG", "C1", "general")
+    expect_match(result, "#general", fixed = TRUE)
+    expect_match(result, "Added.*RLadies\\+ Guide")
+    expect_match(result, "Already there.*Code of Conduct")
+  })
+})

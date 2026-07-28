@@ -65,11 +65,6 @@ export async function slack_reaction_remove(
   });
 }
 
-export async function slack_conversations_open(env, teamId, { users }) {
-  const token = await slack_token_get(env, teamId);
-  return slack_api_call(token, "conversations.open", { users });
-}
-
 export async function slack_conversations_replies(
   env,
   teamId,
@@ -77,16 +72,6 @@ export async function slack_conversations_replies(
 ) {
   const token = await slack_token_get(env, teamId);
   return slack_api_call(token, "conversations.replies", { channel, ts, limit });
-}
-
-export async function slack_conversations_join(env, teamId, channelId) {
-  const token = await slack_token_get(env, teamId);
-  return slack_api_call(token, "conversations.join", { channel: channelId });
-}
-
-export async function slack_conversations_info(env, teamId, channelId) {
-  const token = await slack_token_get(env, teamId);
-  return slack_api_call(token, "conversations.info", { channel: channelId });
 }
 
 export async function slack_conversations_list(
@@ -129,29 +114,6 @@ export async function slack_channel_id_lookup(env, teamId, name) {
     }
   }
   return index?.names?.[name] || null;
-}
-
-export async function slack_bookmarks_list(env, teamId, channelId) {
-  const token = await slack_token_get(env, teamId);
-  return slack_api_call(token, "bookmarks.list", { channel_id: channelId });
-}
-
-export async function slack_bookmarks_add(
-  env,
-  teamId,
-  { channelId, title, link, emoji },
-) {
-  const token = await slack_token_get(env, teamId);
-  const body = { channel_id: channelId, title, type: "link", link };
-  if (emoji) body.emoji = emoji;
-  return slack_api_call(token, "bookmarks.add", body);
-}
-
-export async function slack_reminders_add(env, teamId, { text, time, user }) {
-  const token = await slack_token_get(env, teamId);
-  const body = { text, time };
-  if (user) body.user = user;
-  return slack_api_call(token, "reminders.add", body);
 }
 
 export async function slack_assistant_set_status(
