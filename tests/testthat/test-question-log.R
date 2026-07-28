@@ -206,6 +206,98 @@ describe("reaction_event_apply", {
   })
 })
 
+describe("question_feedback_summary", {
+  it("aborts on a missing team_id instead of scanning the whole namespace", {
+    expect_error(
+      question_feedback_summary(NULL, days = 7, namespace_id = "ns1"),
+      "non-empty team_id"
+    )
+    expect_error(
+      question_feedback_summary("", days = 7, namespace_id = "ns1"),
+      "non-empty team_id"
+    )
+  })
+
+  it("aggregates counts by reaction across matching days", {
+    today <- format(Sys.Date(), "%Y-%m-%d")
+    yesterday <- format(Sys.Date() - 1, "%Y-%m-%d")
+    too_old <- format(Sys.Date() - 30, "%Y-%m-%d")
+    local_mocked_responses(list(
+      response_json(
+        body = list(
+          success = TRUE,
+          result = list(
+            list(name = glue::glue("reaction_log:T_ORG:{today}:thumbsup")),
+            list(name = glue::glue("reaction_log:T_ORG:{yesterday}:thumbsup")),
+            list(
+              name = glue::glue("reaction_log:T_ORG:{yesterday}:thumbsdown")
+            ),
+            list(name = glue::glue("reaction_log:T_ORG:{too_old}:thumbsup"))
+          ),
+          result_info = list(cursor = "", list_complete = TRUE)
+        )
+      ),
+      response_json(body = list(count = 2L)),
+      response_json(body = list(count = 3L)),
+      response_json(body = list(count = 1L))
+    ))
+    summary <- question_feedback_summary(
+      "T_ORG",
+      days = 7,
+      namespace_id = "ns1",
+      account_id = "acc123",
+      api_token = "tok"
+    )
+    expect_identical(summary$days, 7)
+    expect_identical(summary$entries, 3L)
+    expect_equal(unname(summary$totals[["thumbsup"]]), 5)
+    expect_equal(unname(summary$totals[["thumbsdown"]]), 1)
+  })
+
+  it("returns an empty summary when there are no matching keys", {
+    local_mocked_responses(list(
+      response_json(
+        body = list(
+          success = TRUE,
+          result = list(),
+          result_info = list(cursor = "", list_complete = TRUE)
+        )
+      )
+    ))
+    summary <- question_feedback_summary(
+      "T_ORG",
+      days = 7,
+      namespace_id = "ns1",
+      account_id = "acc123",
+      api_token = "tok"
+    )
+    expect_identical(summary$entries, 0L)
+    expect_length(summary$totals, 0)
+  })
+})
+
+describe("question_feedback_format", {
+  it("formats a summary with entries, sorted descending", {
+    text <- question_feedback_format(list(
+      days = 7,
+      entries = 3L,
+      totals = c(thumbsup = 5L, thumbsdown = 1L)
+    ))
+    expect_match(text, "thumbsup")
+    expect_match(text, "5")
+    expect_match(text, "3 entries")
+  })
+
+  it("returns an encouraging message when there are no entries", {
+    text <- question_feedback_format(list(
+      days = 7,
+      entries = 0L,
+      totals = integer(0)
+    ))
+    expect_match(text, "no one's looking")
+  })
+})
+
 describe("question_gaps_rank", {
   it("keeps only gap outcomes and folds near-duplicates by count", {
     rows <- data.frame(

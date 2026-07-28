@@ -360,6 +360,49 @@ describe("cmd_execute integration: producer to formatter", {
     expect_match(result, "Question Log")
   })
 
+  it("feedback formats the reaction tally from the KV summary", {
+    local_mocked_bindings(
+      question_feedback_summary = function(team_id, days, ...) {
+        list(
+          days = days,
+          entries = 3L,
+          totals = c(thumbsup = 2L, thumbsdown = 1L)
+        )
+      }
+    )
+    result <- cmd_execute(list(
+      action = "feedback",
+      team_id = "T_ORG",
+      days = 7
+    ))
+    expect_type(result, "character")
+    expect_match(result, "thumbsup")
+  })
+
+  it("setup-channel passes team_id/channel_id/channel_name through", {
+    called <- NULL
+    local_mocked_bindings(
+      setup_channel_process = function(team_id, channel_id, channel_name) {
+        called <<- list(
+          team_id = team_id,
+          channel_id = channel_id,
+          channel_name = channel_name
+        )
+        "done"
+      }
+    )
+    result <- cmd_execute(list(
+      action = "setup-channel",
+      team_id = "T_ORG",
+      channel_id = "C1",
+      channel_name = "general"
+    ))
+    expect_identical(result, "done")
+    expect_identical(called$team_id, "T_ORG")
+    expect_identical(called$channel_id, "C1")
+    expect_identical(called$channel_name, "general")
+  })
+
   it("cf-analytics returns the markdown from the RUM report", {
     local_mocked_bindings(
       rum_generate_report = function(since, until, ...) {

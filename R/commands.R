@@ -45,6 +45,8 @@ cmd_parse <- function(body) {
     analytics = list(action = "analytics"),
     "website-analytics" = parse_website_analytics_command(parts),
     questions = parse_questions_command(parts),
+    feedback = parse_feedback_command(parts),
+    "setup-channel" = list(action = "setup-channel"),
     "cf-analytics" = parse_cf_analytics_command(parts),
     cfp = parse_cfp_command(parts),
     poll = parse_poll_command(parts),
@@ -58,6 +60,37 @@ cmd_parse <- function(body) {
     help = list(action = "help"),
     list(action = "unknown", raw = paste(parts, collapse = " "))
   )
+}
+
+#' Attach Slack context fields to a parsed command
+#'
+#' A handful of dispatched commands (`"feedback"`, `"setup-channel"`) act on
+#' the Slack workspace/channel the command was run from, rather than only on
+#' fields parsed from the command text itself. Owning that merge here -
+#' mirroring how [event_parse()] owns shaping the `slack-event` payload -
+#' keeps the calling workflow YAML a thin, untested plumbing layer instead
+#' of the place command semantics live.
+#'
+#' @param command Parsed command list from [cmd_parse()], or `NULL`.
+#' @param team_id Slack team id the command was run from.
+#' @param channel_id Slack channel id the command was run from.
+#' @param channel_name Slack channel display name.
+#' @return `command` with `team_id`/`channel_id`/`channel_name` added, or
+#'   `NULL` unchanged if `command` was `NULL`.
+#' @export
+cmd_attach_slack_context <- function(
+  command,
+  team_id,
+  channel_id,
+  channel_name
+) {
+  if (is.null(command)) {
+    return(NULL)
+  }
+  command$team_id <- team_id
+  command$channel_id <- channel_id
+  command$channel_name <- channel_name
+  command
 }
 
 parse_review_command <- function(parts) {
@@ -389,6 +422,24 @@ parse_questions_command <- function(parts) {
     ))
   }
   list(action = "questions", days = days)
+}
+
+parse_feedback_command <- function(parts) {
+  days <- if (length(parts) >= 2) {
+    suppressWarnings(as.integer(parts[2]))
+  } else {
+    7L
+  }
+  if (is.na(days) || days <= 0) {
+    return(list(
+      action = "error",
+      message = paste(
+        "Usage: `/jinx feedback [days]`",
+        "where days is a positive integer"
+      )
+    ))
+  }
+  list(action = "feedback", days = days)
 }
 
 parse_cf_analytics_command <- function(parts) {

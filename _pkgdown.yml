@@ -120,6 +120,7 @@ reference:
       - welcome_message_render
       - pending_link_consume
       - channel_index_load
+      - setup_channel_process
 
   - title: GHA dashboard
     desc: GitHub Actions workflow status
@@ -183,6 +184,8 @@ reference:
       - reaction_log_increment
       - reaction_direction
       - reaction_event_apply
+      - question_feedback_summary
+      - question_feedback_format
 
   - title: Question digest
     desc: Weekly question-gap digest posted to Slack
