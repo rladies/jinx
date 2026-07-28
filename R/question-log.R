@@ -462,3 +462,111 @@ question_log_format <- function(rows, gaps, downvoted, days) {
     "{downvoted_section}\n"
   )
 }
+
+reaction_log_key_parts <- function(key_name, prefix) {
+  rest <- sub(prefix, "", key_name, fixed = TRUE)
+  parts <- strsplit(rest, ":", fixed = TRUE)[[1]]
+  list(
+    day = parts[1] %||% NA_character_,
+    reaction = paste(parts[-1], collapse = ":")
+  )
+}
+
+#' Summarize reaction-feedback tallies for a Slack workspace
+#'
+#' Aggregates the `reaction_log:{team_id}:{day}:{reaction}` KV counters
+#' [reaction_log_increment()] writes, across the last `days` days.
+#' Backs the `"feedback"` command. R port of `slash_feedback()` from
+#' the deleted `worker/src/slash-local.js`.
+#'
+#' @param team_id Slack team id. Required (aborts if missing) - a blank
+#'   prefix would otherwise scan every key in the namespace across both
+#'   workspaces instead of just this one's.
+#' @param days Number of days to look back.
+#' @param namespace_id KV namespace ID for `SLACK_TOKENS`.
+#' @param account_id Cloudflare account ID. Defaults to env
+#'   `CLOUDFLARE_ACCOUNT_ID`.
+#' @param api_token Cloudflare API token. Defaults to env
+#'   `CLOUDFLARE_API_TOKEN`.
+#' @return A list with `days`, `entries` (integer count of KV entries
+#'   scanned), and `totals` (a named integer vector, reaction name to
+#'   summed count, sorted descending).
+#' @export
+question_feedback_summary <- function(
+  team_id,
+  days = 7,
+  namespace_id = slack_tokens_namespace_id(),
+  account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
+  api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
+) {
+  if (is.null(team_id) || length(team_id) != 1 || !nzchar(team_id)) {
+    cli::cli_abort("question_feedback_summary() requires a non-empty team_id.")
+  }
+  since <- as.character(Sys.Date() - days)
+  prefix <- glue::glue("reaction_log:{team_id}:")
+  keys <- cf_ops_list_kv_keys(
+    account_id = account_id,
+    namespace_id = namespace_id,
+    prefix = prefix,
+    token = api_token
+  )
+  if (nrow(keys) == 0L) {
+    return(list(days = days, entries = 0L, totals = integer(0)))
+  }
+
+  parsed <- lapply(keys$name, reaction_log_key_parts, prefix = prefix)
+  day <- vapply(parsed, `[[`, character(1), "day")
+  reaction <- vapply(parsed, `[[`, character(1), "reaction")
+  keep <- !is.na(day) & nzchar(reaction) & day >= since
+  if (!any(keep)) {
+    return(list(days = days, entries = 0L, totals = integer(0)))
+  }
+
+  counts <- vapply(
+    keys$name[keep],
+    function(key_name) {
+      raw <- tryCatch(
+        cf_ops_get_kv_value(
+          account_id = account_id,
+          namespace_id = namespace_id,
+          key_name = key_name,
+          token = api_token
+        ),
+        error = function(e) NULL
+      )
+      entry <- tryCatch(jsonlite::fromJSON(raw), error = function(e) NULL)
+      as.integer(entry$count %||% 0L)
+    },
+    integer(1)
+  )
+
+  totals <- sort(tapply(counts, reaction[keep], sum), decreasing = TRUE)
+  list(days = days, entries = sum(keep), totals = totals)
+}
+
+#' Format a reaction-feedback summary as a reply
+#'
+#' @param summary A list from [question_feedback_summary()].
+#' @return Character scalar reply text.
+#' @export
+question_feedback_format <- function(summary) {
+  day_word <- if (summary$days == 1) "day" else "days"
+  if (length(summary$totals) == 0L) {
+    return(glue::glue(
+      "\U0001F4CA No reactions on my answers in the last ",
+      "{summary$days} {day_word} \u2014 either I'm doing great or no one's ",
+      "looking. \U0001F408 Once folks react with \U0001F44D / \U0001F44E, ",
+      "the counts will land here."
+    ))
+  }
+
+  entry_word <- if (summary$entries == 1) "entry" else "entries"
+  lines <- c(
+    glue::glue(
+      "\U0001F4CA *Jinx feedback \u2014 last {summary$days} {day_word}* ",
+      "({summary$entries} {entry_word}):"
+    ),
+    glue::glue(":{names(summary$totals)}:  {summary$totals}")
+  )
+  paste(lines, collapse = "\n")
+}

@@ -369,3 +369,47 @@ describe("cmd_parse copilot-sync", {
     expect_identical(cmd$action, "error")
   })
 })
+
+describe("cmd_parse feedback", {
+  it("defaults to 7 days", {
+    cmd <- cmd_parse("/jinx feedback")
+    expect_identical(cmd$action, "feedback")
+    expect_identical(cmd$days, 7L)
+  })
+
+  it("parses an explicit day count", {
+    cmd <- cmd_parse("/jinx feedback 14")
+    expect_identical(cmd$days, 14L)
+  })
+
+  it("errors on a non-positive day count", {
+    cmd <- cmd_parse("/jinx feedback 0")
+    expect_identical(cmd$action, "error")
+  })
+})
+
+describe("cmd_parse setup-channel", {
+  it("takes no arguments", {
+    cmd <- cmd_parse("/jinx setup-channel")
+    expect_identical(cmd$action, "setup-channel")
+  })
+})
+
+describe("cmd_attach_slack_context", {
+  it("adds team_id/channel_id/channel_name to a parsed command", {
+    cmd <- cmd_attach_slack_context(
+      list(action = "feedback", days = 7),
+      "T_ORG",
+      "C1",
+      "general"
+    )
+    expect_identical(cmd$action, "feedback")
+    expect_identical(cmd$team_id, "T_ORG")
+    expect_identical(cmd$channel_id, "C1")
+    expect_identical(cmd$channel_name, "general")
+  })
+
+  it("returns NULL unchanged for a NULL command", {
+    expect_null(cmd_attach_slack_context(NULL, "T_ORG", "C1", "general"))
+  })
+})
