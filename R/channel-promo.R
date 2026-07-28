@@ -61,7 +61,7 @@ promo_recent_load <- function(
     ),
     error = function(e) NA_character_
   )
-  if (is.null(raw) || length(raw) != 1L || is.na(raw) || !nzchar(raw)) {
+  if (length(raw) != 1L || is.na(raw) || !nzchar(raw)) {
     return(character())
   }
   parsed <- tryCatch(
@@ -280,12 +280,14 @@ channel_promo_build <- function(
   api_token = Sys.getenv("CLOUDFLARE_API_TOKEN"),
   model = workers_ai_chat_model()
 ) {
+  if (!nzchar(team_id)) {
+    cli::cli_abort(
+      "team_id is empty; set the {.envvar SLACK_COMMUNITY_TEAM_ID} env var."
+    )
+  }
   channels <- slack_conversations_list(team_id, "community")
   eligible <- promo_eligible_channels(channels, target_channel, skip)
   if (nrow(eligible) == 0L) {
-    cli::cli_alert_info(
-      "No community channels with a description to promote."
-    )
     return(NULL)
   }
 

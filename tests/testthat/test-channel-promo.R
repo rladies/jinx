@@ -240,17 +240,22 @@ describe("channel_promo_build", {
       },
       promo_recent_load = function(...) character()
     )
-    expect_message(
-      result <- channel_promo_build(
+    expect_null(
+      channel_promo_build(
         team_id = "T",
         target_channel = "general",
         skip = character(),
         account_id = "a",
         api_token = "t"
-      ),
-      "No community channels"
+      )
     )
-    expect_null(result)
+  })
+
+  it("aborts when team_id is empty", {
+    expect_error(
+      channel_promo_build(team_id = "", account_id = "a", api_token = "t"),
+      "team_id is empty"
+    )
   })
 })
 
@@ -346,5 +351,80 @@ describe("channel_promo_post", {
       "not_in_channel"
     )
     expect_false(saved)
+  })
+})
+
+describe("promo_skip_channels", {
+  it("parses a comma-separated list, trimming blanks and empties", {
+    withr::local_envvar(SLACK_PROMO_SKIP = "general, random ,,announcements")
+    expect_identical(
+      promo_skip_channels(),
+      c("general", "random", "announcements")
+    )
+  })
+
+  it("returns an empty vector when unset", {
+    withr::local_envvar(SLACK_PROMO_SKIP = "")
+    expect_identical(promo_skip_channels(), character())
+  })
+})
+
+describe("promo_recent_load", {
+  it("parses a stored JSON array of channel ids", {
+    local_mocked_bindings(cf_ops_get_kv_value = function(...) '["C1","C2"]')
+    expect_identical(
+      promo_recent_load("T", "ns", "a", "t"),
+      c("C1", "C2")
+    )
+  })
+
+  it("returns an empty vector when the key is missing or unreadable", {
+    local_mocked_bindings(
+      cf_ops_get_kv_value = function(...) cli::cli_abort("404 not found")
+    )
+    expect_identical(promo_recent_load("T", "ns", "a", "t"), character())
+  })
+
+  it("returns an empty vector for an empty stored value", {
+    local_mocked_bindings(cf_ops_get_kv_value = function(...) "")
+    expect_identical(promo_recent_load("T", "ns", "a", "t"), character())
+  })
+
+  it("returns an empty vector for malformed JSON", {
+    local_mocked_bindings(cf_ops_get_kv_value = function(...) "{not json")
+    expect_identical(promo_recent_load("T", "ns", "a", "t"), character())
+  })
+})
+
+describe("promo_recent_save", {
+  it("writes the recent ids as a JSON array under the team's key", {
+    captured <- list()
+    local_mocked_bindings(
+      cf_ops_kv_put = function(key_name, value, ...) {
+        captured[["key"]] <<- key_name
+        captured[["value"]] <<- value
+        invisible(TRUE)
+      }
+    )
+    promo_recent_save("T123", c("C1", "C2"), "ns", "a", "t")
+    expect_identical(captured$key, "promo_recent:T123")
+    expect_match(captured$value, "C1", fixed = TRUE)
+    expect_match(captured$value, "C2", fixed = TRUE)
+  })
+
+  it("round-trips with promo_recent_load", {
+    store <- NULL
+    local_mocked_bindings(
+      cf_ops_kv_put = function(value, ...) {
+        store <<- value
+        invisible(TRUE)
+      },
+      cf_ops_get_kv_value = function(...) store
+    )
+    promo_recent_save("T", c("C1", "C2", "C3"), "ns", "a", "t")
+    expect_identical(
+      promo_recent_load("T", "ns", "a", "t"),
+      c("C1", "C2", "C3")
+    )
   })
 })
