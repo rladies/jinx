@@ -1,0 +1,41 @@
+name: Bot · Channel Promo
+
+on:
+  schedule:
+    - cron: "0 15 * * 3"
+  workflow_dispatch: {}
+
+concurrency:
+  group: bot-channel-promo
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  promo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: ghcr.io/rladies/jinx-bot:latest
+
+    steps:
+      - name: Post the weekly community channel spotlight
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SLACK_COMMUNITY_TOKEN: ${{ secrets.SLACK_COMMUNITY_TOKEN }}
+          SLACK_COMMUNITY_TEAM_ID: ${{ vars.SLACK_COMMUNITY_TEAM_ID }}
+          SLACK_PROMO_CHANNEL: ${{ vars.SLACK_PROMO_CHANNEL }}
+          SLACK_PROMO_SKIP: ${{ vars.SLACK_PROMO_SKIP }}
+        run: Rscript -e 'jinx::channel_promo_post()'
+
+  notify-failure:
+    needs: promo
+    if: failure()
+    uses: ./.github/workflows/reusable-slack-fail-notify.yml
+    with:
+      message: "😿 Jinx channel-promo run failed — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run logs>"
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
+      SLACK_CHANNEL: ${{ secrets.SLACK_HEALTHCHECK_CHANNEL }}
