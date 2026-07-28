@@ -118,35 +118,36 @@ promo_eligible_channels <- function(
   }
 
   skip_set <- tolower(c(skip, target_channel))
-  rows <- list()
-  for (channel in channels) {
-    id <- channel$id %||% NA_character_
-    name <- channel$name %||% NA_character_
-    if (is.na(id) || is.na(name)) {
-      next
-    }
-    if (isTRUE(channel$is_archived)) {
-      next
-    }
-    if (tolower(name) %in% skip_set) {
-      next
-    }
-    description <- promo_clean_description(channel$purpose$value %||% "")
-    if (!nzchar(description)) {
-      next
-    }
-    rows[[length(rows) + 1L]] <- data.frame(
-      id = id,
-      name = name,
-      description = description,
-      stringsAsFactors = FALSE
-    )
-  }
-
+  rows <- Filter(
+    Negate(is.null),
+    lapply(channels, promo_channel_row, skip_set = skip_set)
+  )
   if (length(rows) == 0L) {
     return(empty)
   }
   do.call(rbind, rows)
+}
+
+promo_channel_row <- function(channel, skip_set) {
+  id <- channel$id %||% NA_character_
+  name <- channel$name %||% NA_character_
+  is_droppable <- is.na(id) ||
+    is.na(name) ||
+    isTRUE(channel$is_archived) ||
+    tolower(name) %in% skip_set
+  if (is_droppable) {
+    return(NULL)
+  }
+  description <- promo_clean_description(channel$purpose$value %||% "")
+  if (!nzchar(description)) {
+    return(NULL)
+  }
+  data.frame(
+    id = id,
+    name = name,
+    description = description,
+    stringsAsFactors = FALSE
+  )
 }
 
 #' Pick the next channel to spotlight, round-robin
