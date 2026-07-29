@@ -93,6 +93,16 @@ describe("invite_verify_handle", () => {
     expect(res.status).toBe(410);
   });
 
+  it("shows a request-an-invite button on dead-end pages when a form url is set", async () => {
+    const env = seededEnv({ INVITE_FORM_URL: "https://airtable.com/shrTEST" });
+    fakeFetch();
+    const res = await invite_verify_handle(env, makeCtx(), "nope");
+    expect(res.status).toBe(410);
+    const html = await res.text();
+    expect(html).toContain("https://airtable.com/shrTEST");
+    expect(html).toContain("Request an invite");
+  });
+
   it("holds a request from an existing member and does not mint an invite", async () => {
     const env = seededEnv({
       INVITE_TOKENS: makeKv({
