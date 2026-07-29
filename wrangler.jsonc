@@ -69,12 +69,9 @@
 			"pattern": "jinx.rladies.org/*",
 			"zone_name": "rladies.org"
 		},
-		// Unlike the routes above (which need a manually-created proxied DNS
-		// record), a custom_domain makes Cloudflare auto-provision the DNS
-		// record + SSL cert for join.rladies.org on deploy -- no manual DNS step.
 		{
-			"pattern": "join.rladies.org",
-			"custom_domain": true
+			"pattern": "join.rladies.org/*",
+			"zone_name": "rladies.org"
 		}
 	],
 	// Adding `routes` above flips wrangler's default for this to false, which
