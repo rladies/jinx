@@ -41,11 +41,9 @@
 		},
 		// Masked Slack-invite gateway (worker/src/invite-gateway.js): per-person
 		// verify/invite tokens + the config:master_invite_link value.
-		// TODO(before merge): replace the placeholder id with the real one from
-		//   `wrangler kv namespace create INVITE_TOKENS`
 		{
 			"binding": "INVITE_TOKENS",
-			"id": "00000000000000000000000000000000"
+			"id": "ff1a988c316046ed994d638250e36551"
 		}
 	],
 	// Anonymous question-improvement log (see worker/src/question-log.js).
@@ -71,9 +69,12 @@
 			"pattern": "jinx.rladies.org/*",
 			"zone_name": "rladies.org"
 		},
+		// Unlike the routes above (which need a manually-created proxied DNS
+		// record), a custom_domain makes Cloudflare auto-provision the DNS
+		// record + SSL cert for join.rladies.org on deploy -- no manual DNS step.
 		{
-			"pattern": "join.rladies.org/*",
-			"zone_name": "rladies.org"
+			"pattern": "join.rladies.org",
+			"custom_domain": true
 		}
 	],
 	// Adding `routes` above flips wrangler's default for this to false, which
