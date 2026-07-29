@@ -110,6 +110,22 @@ describe("invite_verify_handle", () => {
     expect(calls.patches.some((p) => p.fields["Invite link"])).toBe(false);
     expect(calls.posts.length).toBeGreaterThan(0); // alert posted
   });
+
+  it("keeps the token for retry if the Airtable stamp fails", async () => {
+    const env = seededEnv({
+      INVITE_TOKENS: makeKv({
+        "verify:tokF": JSON.stringify({ record_id: "recP", email: "a@example.com" }),
+      }),
+    });
+    mockFetch(async (url) =>
+      url.includes("api.airtable.com")
+        ? jsonResponse({ error: "boom" }, 500)
+        : jsonResponse({ ok: true }),
+    );
+    const res = await invite_verify_handle(env, makeCtx(), "tokF");
+    expect(res.status).toBe(503);
+    expect(await env.INVITE_TOKENS.get("verify:tokF")).not.toBe(null);
+  });
 });
 
 describe("invite_send", () => {
@@ -185,6 +201,38 @@ describe("invite_redeem_handle", () => {
     fakeFetch();
     const res = await invite_redeem_handle(env, makeCtx(), jreq("red2"), "red2");
     expect(res.status).toBe(503);
+  });
+});
+
+describe("invite budget alert", () => {
+  const redeemEnv = (masterOver) =>
+    seededEnv({
+      INVITE_TOKENS: makeKv({
+        "token:b": JSON.stringify({ record_id: "recP", email: "a@e.com", uses_left: 3 }),
+        [_internals.MASTER_KEY]: JSON.stringify(master(masterOver)),
+      }),
+    });
+
+  it("alerts once when usage crosses the low threshold (even on overshoot)", async () => {
+    // used 355 -> 356; remaining 44 <= 50. Exact-equality on 50 would miss this.
+    const env = redeemEnv({ used: 355 });
+    const calls = fakeFetch();
+    const ctx = makeCtx();
+    await invite_redeem_handle(env, ctx, jreq("b"), "b");
+    await ctx.flush();
+    expect(calls.posts.length).toBe(1);
+    const m = await env.INVITE_TOKENS.get(_internals.MASTER_KEY, "json");
+    expect(m.low_alerted).toBe(true);
+    expect(m.used).toBe(356);
+  });
+
+  it("does not re-alert once low_alerted is set", async () => {
+    const env = redeemEnv({ used: 380, low_alerted: true });
+    const calls = fakeFetch();
+    const ctx = makeCtx();
+    await invite_redeem_handle(env, ctx, jreq("b"), "b");
+    await ctx.flush();
+    expect(calls.posts.length).toBe(0);
   });
 });
 
@@ -297,6 +345,18 @@ describe("invite_start_handle", () => {
     });
     const res = await invite_start_handle(req, env);
     expect(res.status).toBe(401);
+  });
+
+  it("rejects a malformed email", async () => {
+    const env = seededEnv();
+    fakeFetch();
+    const req = new Request("https://x/invite/start", {
+      method: "POST",
+      headers: { "x-airtable-secret": env.AIRTABLE_WEBHOOK_SECRET },
+      body: JSON.stringify({ email: "not-an-email" }),
+    });
+    const res = await invite_start_handle(req, env);
+    expect(res.status).toBe(400);
   });
 
   it("starts the pipeline for a valid request", async () => {
