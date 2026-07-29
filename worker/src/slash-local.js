@@ -6,6 +6,7 @@ import {
   slack_conversations_open,
   slack_message_post,
   slack_reminders_add,
+  slack_user_email,
 } from "./slack-api.js";
 import {
   question_log_since,
@@ -14,6 +15,7 @@ import {
 } from "./question-log.js";
 import { slack_global_team_authorize, slack_is_organizer_workspace } from "./authorize.js";
 import { short_link_create } from "./short-links.js";
+import { invite_link_update, invite_link_status } from "./invite-gateway.js";
 
 const BOOKMARKS_CONFIG_URL =
   "https://raw.githubusercontent.com/rladies/jinx/main/inst/config/bookmarks.json";
@@ -49,6 +51,7 @@ const LOCAL_COMMANDS = new Set([
   "feedback",
   "questions",
   "shorten",
+  "invite-link",
 ]);
 
 export function slash_is_local(command) {
@@ -77,6 +80,25 @@ export function command_requires_organizer_workspace(command) {
   return ORGANIZER_WORKSPACE_COMMANDS.has(command.split(/\s+/)[0]);
 }
 
+// Setting the live Slack invite link controls who can join the community
+// workspace, so it's locked to a single account -- the RLadies+ Leadership
+// account (leadership@rladies.org by default; override via INVITE_ADMIN_EMAIL).
+// We match on verified email, not the Slack user id, since the latter differs
+// per workspace and isn't human-checkable.
+const LEADERSHIP_COMMANDS = new Set(["invite-link"]);
+
+export function command_requires_leadership(command) {
+  return LEADERSHIP_COMMANDS.has(command.split(/\s+/)[0]);
+}
+
+async function is_leadership(env, teamId, userId) {
+  const admin = (env.INVITE_ADMIN_EMAIL || "leadership@rladies.org")
+    .trim()
+    .toLowerCase();
+  const email = await slack_user_email(env, teamId, userId).catch(() => null);
+  return Boolean(email) && email.toLowerCase() === admin;
+}
+
 export async function slash_local_handle(env, teamId, command, params, responseUrl) {
   const [verb, ...rest] = command.split(/\s+/);
   const args = rest.join(" ").trim();
@@ -100,6 +122,14 @@ export async function slash_local_handle(env, teamId, command, params, responseU
     return;
   }
 
+  if (command_requires_leadership(command) && !(await is_leadership(env, teamId, userId))) {
+    await slash_respond(
+      responseUrl,
+      "🔒 Updating the invite link is limited to the RLadies+ Leadership account (leadership@rladies.org).",
+    );
+    return;
+  }
+
   try {
     switch (verb) {
       case "setup-channel":
@@ -114,6 +144,8 @@ export async function slash_local_handle(env, teamId, command, params, responseU
         return await slash_questions(env, args, responseUrl);
       case "shorten":
         return await slash_shorten(env, userId, args, responseUrl);
+      case "invite-link":
+        return await slash_invite_link(env, args, responseUrl);
     }
   } catch (err) {
     console.error(`Local command "${verb}" failed:`, err);
@@ -384,6 +416,36 @@ async function slash_shorten(env, userId, args, responseUrl) {
     await slash_respond(responseUrl, `🔗 ${verb} a short link: ${shortUrl}`);
   } catch (err) {
     await slash_respond(responseUrl, `😿 Couldn't shorten that: ${err.message}`);
+  }
+}
+
+async function slash_invite_link(env, args, responseUrl) {
+  if (!args) {
+    const status = await invite_link_status(env);
+    if (!status) {
+      await slash_respond(
+        responseUrl,
+        "🔮 No invite link is set yet. Set one with `/jinx invite-link <url>`.",
+      );
+      return;
+    }
+    await slash_respond(
+      responseUrl,
+      `🔮 Current invite link: *${status.used}/${status.cap}* used (~${status.remaining} left) · ${status.low_alerted ? "low-budget warning already sent" : "not yet low"}.`,
+    );
+    return;
+  }
+
+  const [url, capArg] = args.split(/\s+/);
+  const cap = capArg ? parseInt(capArg, 10) : undefined;
+  try {
+    const { cap: finalCap } = await invite_link_update(env, url, cap);
+    await slash_respond(
+      responseUrl,
+      `✅ Invite link updated — budget reset to *0/${finalCap}*. Any invites already emailed now point at the new link.`,
+    );
+  } catch (err) {
+    await slash_respond(responseUrl, `😿 ${err.message}`);
   }
 }
 

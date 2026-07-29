@@ -89,6 +89,15 @@ export async function slack_conversations_info(env, teamId, channelId) {
   return slack_api_call(token, "conversations.info", { channel: channelId });
 }
 
+// The email on a user's profile, or null. Requires users:read.email; used to
+// authorize commands against a specific account rather than a Slack user id
+// (which changes per workspace and isn't human-verifiable).
+export async function slack_user_email(env, teamId, userId) {
+  const token = await slack_token_get(env, teamId);
+  const res = await slack_api_call(token, "users.info", { user: userId });
+  return res.user?.profile?.email || null;
+}
+
 // users.lookupByEmail returns `users_not_found` for a non-member, which is a
 // normal "not in the workspace" answer here rather than a failure -- so this
 // resolves to null instead of throwing (unlike slack_api_call).
