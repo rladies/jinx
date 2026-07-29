@@ -12,7 +12,8 @@
 // mint their own code. Acceptable here -- creation is low-volume and
 // human/CI-driven, not a public high-throughput endpoint -- but worth
 // revisiting (e.g. a Durable Object lock) if that usage pattern changes.
-const CODE_ALPHABET = "23456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ";
+import { random_id } from "./random-id.js";
+
 const CODE_LENGTH = 7;
 const CODE_GEN_ATTEMPTS = 5;
 const SLUG_PATTERN = /^[a-zA-Z0-9_-]{3,32}$/;
@@ -141,19 +142,12 @@ function reverse_key_for(url) {
 
 async function random_unused_code(env) {
   for (let attempt = 0; attempt < CODE_GEN_ATTEMPTS; attempt++) {
-    const candidate = random_code();
+    const candidate = random_id(CODE_LENGTH);
     if (!(await env.SHORT_LINKS.get(`code:${candidate}`))) {
       return candidate;
     }
   }
   throw new ShortLinkError("Couldn't find a free short code -- try again.", 500);
-}
-
-function random_code() {
-  const bytes = crypto.getRandomValues(new Uint8Array(CODE_LENGTH));
-  let code = "";
-  for (const b of bytes) code += CODE_ALPHABET[b % CODE_ALPHABET.length];
-  return code;
 }
 
 async function write_link(env, code, url, createdBy, reverseKey) {

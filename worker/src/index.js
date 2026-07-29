@@ -13,6 +13,11 @@ import {
   short_link_redirect_handle,
   SHORT_LINK_HOST,
 } from "./short-links.js";
+import {
+  invite_gateway_handle,
+  invite_start_handle,
+  JOIN_HOST,
+} from "./invite-gateway.js";
 
 const SLACK_ROUTES = {
   "/slack/command": slack_command_handle,
@@ -49,6 +54,10 @@ async function route(request, env, ctx) {
     return short_link_redirect_handle(env, url.pathname.slice(1));
   }
 
+  if (url.hostname === JOIN_HOST) {
+    return invite_gateway_handle(env, ctx, request);
+  }
+
   if (request.method === "GET" && url.pathname === "/slack/install") {
     return slack_oauth_install_handle(env, url);
   }
@@ -64,6 +73,10 @@ async function route(request, env, ctx) {
 
   if (url.pathname === "/airtable/webhook") {
     return airtable_webhook_handle(request, env, ctx);
+  }
+
+  if (url.pathname === "/invite/start") {
+    return invite_start_handle(request, env);
   }
 
   const apiHandler = API_ROUTES[url.pathname];

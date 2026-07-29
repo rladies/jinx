@@ -89,6 +89,25 @@ export async function slack_conversations_info(env, teamId, channelId) {
   return slack_api_call(token, "conversations.info", { channel: channelId });
 }
 
+// users.lookupByEmail returns `users_not_found` for a non-member, which is a
+// normal "not in the workspace" answer here rather than a failure -- so this
+// resolves to null instead of throwing (unlike slack_api_call).
+export async function slack_user_lookup_by_email(env, teamId, email) {
+  const token = await slack_token_get(env, teamId);
+  const res = await fetch("https://slack.com/api/users.lookupByEmail", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({ email }),
+  });
+  const result = await res.json();
+  if (result.ok) return result.user || null;
+  if (result.error === "users_not_found") return null;
+  throw new Error(`Slack users.lookupByEmail failed: ${result.error}`);
+}
+
 export async function slack_conversations_list(
   env,
   teamId,
