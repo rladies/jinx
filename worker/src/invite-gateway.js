@@ -48,13 +48,6 @@ const DEFAULT_DISPOSABLE_DOMAINS = new Set([
   "mintemail.com",
 ]);
 
-class GatewayError extends Error {
-  constructor(message, status) {
-    super(message);
-    this.status = status;
-  }
-}
-
 // --- routing -------------------------------------------------------------
 
 export async function invite_gateway_handle(env, ctx, url) {
