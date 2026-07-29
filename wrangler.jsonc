@@ -38,6 +38,14 @@
 		{
 			"binding": "SHORT_LINKS",
 			"id": "22243a634eea4065a5572870c204c75f"
+		},
+		// Masked Slack-invite gateway (worker/src/invite-gateway.js): per-person
+		// verify/invite tokens + the config:master_invite_link value.
+		// TODO(before merge): replace the placeholder id with the real one from
+		//   `wrangler kv namespace create INVITE_TOKENS`
+		{
+			"binding": "INVITE_TOKENS",
+			"id": "00000000000000000000000000000000"
 		}
 	],
 	// Anonymous question-improvement log (see worker/src/question-log.js).
@@ -61,6 +69,10 @@
 		},
 		{
 			"pattern": "jinx.rladies.org/*",
+			"zone_name": "rladies.org"
+		},
+		{
+			"pattern": "join.rladies.org/*",
 			"zone_name": "rladies.org"
 		}
 	],

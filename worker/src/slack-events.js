@@ -2,6 +2,7 @@ import { rag_question_answer } from "./rag.js";
 import { question_capture } from "./question-log.js";
 import { fetch_failure_quip } from "./quips.js";
 import { github_dispatch_send } from "./github-dispatch.js";
+import { invite_mark_joined } from "./invite-gateway.js";
 import {
   slack_assistant_set_status,
   slack_assistant_set_suggested_prompts,
@@ -86,6 +87,11 @@ export async function slack_event_handle(env, ctx, body) {
         team_id: teamId,
         event: { user: event.user },
       }).catch((e) => console.error("team_join dispatch failed:", e)),
+    );
+    ctx.waitUntil(
+      invite_mark_joined(env, event.user?.profile?.email).catch((e) =>
+        console.error("invite_mark_joined failed:", e),
+      ),
     );
     return new Response("", { status: 200 });
   }
