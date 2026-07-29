@@ -50,7 +50,8 @@ const DEFAULT_DISPOSABLE_DOMAINS = new Set([
 
 // --- routing -------------------------------------------------------------
 
-export async function invite_gateway_handle(env, ctx, url) {
+export async function invite_gateway_handle(env, ctx, request) {
+  const url = new URL(request.url);
   const parts = url.pathname.split("/").filter(Boolean);
   const [section, token] = parts;
 
@@ -61,11 +62,11 @@ export async function invite_gateway_handle(env, ctx, url) {
       200,
     );
   }
-  if (section === "verify" && token) {
+  if (section === "verify" && token && request.method === "GET") {
     return invite_verify_handle(env, ctx, token);
   }
   if (section === "j" && token) {
-    return invite_redeem_handle(env, ctx, token);
+    return invite_redeem_handle(env, ctx, request, token);
   }
   return html_page("Not found", "That link doesn't lead anywhere.", 404);
 }
@@ -153,7 +154,7 @@ export async function invite_send(env, recordId, email) {
 
 // --- redeem (redirect to the masked master link) -------------------------
 
-export async function invite_redeem_handle(env, ctx, token) {
+export async function invite_redeem_handle(env, ctx, request, token) {
   const key = INVITE_PREFIX + token;
   const entry = await env.INVITE_TOKENS.get(key, "json").catch(() => null);
   if (!entry || (entry.uses_left ?? 0) <= 0) {
@@ -171,6 +172,32 @@ export async function invite_redeem_handle(env, ctx, token) {
       "We couldn't complete your invite right now. Please try again shortly, or contact an organiser.",
       503,
     );
+  }
+
+  // Bot gate (Cloudflare Turnstile), active only when a widget is configured.
+  // When on: a GET shows the challenge and the redirect happens on the
+  // POST-back after we verify the token server-side. When off: a GET redeems
+  // directly, exactly as before -- so this is a no-op until the keys are set.
+  const turnstileOn = env.TURNSTILE_SECRET && env.TURNSTILE_SITE_KEY;
+  if (turnstileOn) {
+    if (request.method !== "POST") {
+      return turnstile_challenge_page(env, token);
+    }
+    const form = await request.formData().catch(() => null);
+    const passed = await turnstile_verify(
+      env,
+      form?.get("cf-turnstile-response"),
+      request,
+    );
+    if (!passed) {
+      return html_page(
+        "One more try",
+        "We couldn't confirm you're human. Open your invitation link again to retry.",
+        403,
+      );
+    }
+  } else if (request.method !== "GET") {
+    return html_page("Not found", "That link doesn't lead anywhere.", 404);
   }
 
   // Enforce single-use-ish: decrement before redirecting. KV has no
@@ -386,6 +413,53 @@ function random_token() {
 
 function today() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function turnstile_challenge_page(env, token) {
+  const action = `/j/${encodeURIComponent(token)}`;
+  const body = `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One quick check · RLadies+</title>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#faf8fb;
+color:#241026;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.card{max-width:30rem;margin:1.5rem;padding:2rem 2.25rem;background:#fff;border:1px solid #e8e1ec;
+border-radius:1rem;box-shadow:0 4px 16px rgba(36,16,38,.06);text-align:center}
+h1{font-size:1.3rem;margin:0 0 .5rem;color:#562457}p{margin:0 0 1.25rem;color:#4a3f52;line-height:1.5}
+.cf-turnstile{display:inline-block}</style></head>
+<body><div class="card"><h1>Almost there 💜</h1>
+<p>One quick check before we take you to the RLadies+ Community Slack.</p>
+<form method="POST" action="${action}">
+<div class="cf-turnstile" data-sitekey="${escape_html(env.TURNSTILE_SITE_KEY)}" data-callback="onOk"></div>
+<noscript><p>Please enable JavaScript to continue.</p></noscript>
+</form>
+<script>function onOk(){document.forms[0].submit();}</script>
+</div></body></html>`;
+  return new Response(body, {
+    status: 200,
+    headers: { "Content-Type": "text/html; charset=utf-8" },
+  });
+}
+
+async function turnstile_verify(env, cfToken, request) {
+  if (!cfToken) return false;
+  const body = new URLSearchParams({
+    secret: env.TURNSTILE_SECRET,
+    response: String(cfToken),
+  });
+  const ip = request.headers.get("CF-Connecting-IP");
+  if (ip) body.set("remoteip", ip);
+  const res = await fetch(
+    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body,
+    },
+  )
+    .then((r) => r.json())
+    .catch(() => null);
+  return Boolean(res?.success);
 }
 
 function html_page(title, message, status) {

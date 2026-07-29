@@ -57,6 +57,8 @@ function fakeFetch({ member = null, records = [] } = {}) {
 
 const master = (over = {}) => ({ url: "https://join.slack.com/t/x/shared_invite/zt-1", cap: 400, used: 0, ...over });
 
+const jreq = (t, init) => new Request(`https://${JOIN_HOST}/j/${t}`, init);
+
 describe("invite_verify_handle", () => {
   it("stamps verified, deletes the token, and confirms", async () => {
     const env = seededEnv({
@@ -148,7 +150,7 @@ describe("invite_redeem_handle", () => {
     const calls = fakeFetch();
     const ctx = makeCtx();
 
-    const res = await invite_redeem_handle(env, ctx, "red1");
+    const res = await invite_redeem_handle(env, ctx, jreq("red1"), "red1");
     expect(res.status).toBe(302);
     expect(res.headers.get("location")).toBe(master().url);
 
@@ -170,7 +172,7 @@ describe("invite_redeem_handle", () => {
       }),
     });
     fakeFetch();
-    const res = await invite_redeem_handle(env, makeCtx(), "dead");
+    const res = await invite_redeem_handle(env, makeCtx(), jreq("dead"), "dead");
     expect(res.status).toBe(410);
   });
 
@@ -181,8 +183,57 @@ describe("invite_redeem_handle", () => {
       }),
     });
     fakeFetch();
-    const res = await invite_redeem_handle(env, makeCtx(), "red2");
+    const res = await invite_redeem_handle(env, makeCtx(), jreq("red2"), "red2");
     expect(res.status).toBe(503);
+  });
+});
+
+describe("turnstile gate", () => {
+  const tsEnv = (over = {}) =>
+    seededEnv({
+      TURNSTILE_SECRET: "ts-secret",
+      TURNSTILE_SITE_KEY: "ts-site-key",
+      INVITE_TOKENS: makeKv({
+        "token:t1": JSON.stringify({ record_id: "recP", email: "a@e.com", uses_left: 3 }),
+        [_internals.MASTER_KEY]: JSON.stringify(master()),
+      }),
+      ...over,
+    });
+
+  it("shows a challenge page on GET and does not consume the token", async () => {
+    const env = tsEnv();
+    fakeFetch();
+    const res = await invite_redeem_handle(env, makeCtx(), jreq("t1"), "t1");
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain("challenges.cloudflare.com/turnstile");
+    expect(html).toContain("ts-site-key");
+    expect((await env.INVITE_TOKENS.get("token:t1", "json")).uses_left).toBe(3);
+  });
+
+  it("redirects on POST when the turnstile token verifies", async () => {
+    const env = tsEnv();
+    mockFetch(async (url) =>
+      url.includes("siteverify")
+        ? jsonResponse({ success: true })
+        : jsonResponse({ id: "recX", fields: {} }),
+    );
+    const body = new URLSearchParams({ "cf-turnstile-response": "good" });
+    const res = await invite_redeem_handle(env, makeCtx(), jreq("t1", { method: "POST", body }), "t1");
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toBe(master().url);
+    expect((await env.INVITE_TOKENS.get("token:t1", "json")).uses_left).toBe(2);
+  });
+
+  it("rejects a POST when turnstile fails and keeps the token unused", async () => {
+    const env = tsEnv();
+    mockFetch(async (url) =>
+      url.includes("siteverify") ? jsonResponse({ success: false }) : jsonResponse({ ok: true }),
+    );
+    const body = new URLSearchParams({ "cf-turnstile-response": "bad" });
+    const res = await invite_redeem_handle(env, makeCtx(), jreq("t1", { method: "POST", body }), "t1");
+    expect(res.status).toBe(403);
+    expect((await env.INVITE_TOKENS.get("token:t1", "json")).uses_left).toBe(3);
   });
 });
 
@@ -273,11 +324,11 @@ describe("invite_gateway_handle routing", () => {
       }),
     });
     fakeFetch();
-    const root = await invite_gateway_handle(env, makeCtx(), new URL(`https://${JOIN_HOST}/`));
+    const root = await invite_gateway_handle(env, makeCtx(), new Request(`https://${JOIN_HOST}/`));
     expect(root.status).toBe(200);
-    const redeem = await invite_gateway_handle(env, makeCtx(), new URL(`https://${JOIN_HOST}/j/r`));
+    const redeem = await invite_gateway_handle(env, makeCtx(), new Request(`https://${JOIN_HOST}/j/r`));
     expect(redeem.status).toBe(302);
-    const missing = await invite_gateway_handle(env, makeCtx(), new URL(`https://${JOIN_HOST}/wat/x`));
+    const missing = await invite_gateway_handle(env, makeCtx(), new Request(`https://${JOIN_HOST}/wat/x`));
     expect(missing.status).toBe(404);
   });
 });

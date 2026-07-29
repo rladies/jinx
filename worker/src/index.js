@@ -54,8 +54,8 @@ async function route(request, env, ctx) {
     return short_link_redirect_handle(env, url.pathname.slice(1));
   }
 
-  if (request.method === "GET" && url.hostname === JOIN_HOST) {
-    return invite_gateway_handle(env, ctx, url);
+  if (url.hostname === JOIN_HOST) {
+    return invite_gateway_handle(env, ctx, request);
   }
 
   if (request.method === "GET" && url.pathname === "/slack/install") {
