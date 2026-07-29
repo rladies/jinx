@@ -56,9 +56,10 @@ export async function invite_gateway_handle(env, ctx, request) {
 
   if (!section) {
     return html_page(
-      "RLadies+ Slack",
-      "Nothing to see here — this is the RLadies+ Slack join gateway. 🔮",
+      "RLadies+ Community Slack",
+      "This is the RLadies+ Slack join gateway. Hoping to join us? Head to rladies.org to request an invite. 🔮",
       200,
+      form_cta(env),
     );
   }
   if (section === "verify" && token && request.method === "GET") {
@@ -67,7 +68,12 @@ export async function invite_gateway_handle(env, ctx, request) {
   if (section === "j" && token) {
     return invite_redeem_handle(env, ctx, request, token);
   }
-  return html_page("Not found", "That link doesn't lead anywhere.", 404);
+  return html_page(
+    "Nothing here",
+    "That link doesn't lead anywhere. If you're hoping to join the RLadies+ Community Slack, you can request an invite below.",
+    404,
+    form_cta(env),
+  );
 }
 
 // --- verify (double opt-in) ---------------------------------------------
@@ -78,9 +84,10 @@ export async function invite_verify_handle(env, ctx, token) {
   );
   if (!entry) {
     return html_page(
-      "Link expired",
-      "This confirmation link has expired or was already used. Please submit the join form again.",
+      "This link has expired",
+      "This confirmation link has already been used or has expired — no worries. Just request to join again and we'll send you a fresh one.",
       410,
+      form_cta(env),
     );
   }
 
@@ -95,8 +102,8 @@ export async function invite_verify_handle(env, ctx, token) {
   } catch (e) {
     console.error("verify: pipeline update failed:", e);
     return html_page(
-      "One moment",
-      "We couldn't confirm your email just now — please open the link again in a minute.",
+      "Just a hiccup",
+      "Something went wrong on our end while confirming your email. Please open the link again in a minute — it should work the second time.",
       503,
     );
   }
@@ -111,8 +118,8 @@ export async function invite_verify_handle(env, ctx, token) {
   );
 
   return html_page(
-    "Email confirmed",
-    "✅ Thanks — your email is confirmed. Your invitation to the RLadies+ Community Slack is on its way; check your inbox shortly. 💜",
+    "You're verified! 💜",
+    "Thanks — your email is confirmed. We're sorting out your personal invitation to the RLadies+ Community Slack now; it'll land in your inbox in a few minutes. See you in there!",
     200,
   );
 }
@@ -177,15 +184,16 @@ export async function invite_redeem_handle(env, ctx, request, token) {
   const usesLeft = entry?.uses_left ?? 0;
   if (!entry || usesLeft <= 0) {
     return html_page(
-      "Link expired",
-      "This invitation link has expired or has already been used. Ask an organiser to re-send your invite.",
+      "This invite has expired",
+      "This invitation link has already been used or has expired. Ask an RLadies+ organiser to re-send it, or request to join again below.",
       410,
+      form_cta(env),
     );
   }
   if (!master?.url) {
     return html_page(
-      "Temporarily unavailable",
-      "We couldn't complete your invite right now. Please try again shortly, or contact an organiser.",
+      "One moment",
+      "We couldn't finish setting up your invite just now. Please try your link again shortly — and if it keeps happening, give an RLadies+ organiser a nudge.",
       503,
     );
   }
@@ -234,8 +242,8 @@ async function turnstile_gate(env, request, token) {
   return passed
     ? null
     : html_page(
-        "One more try",
-        "We couldn't confirm you're human. Open your invitation link again to retry.",
+        "Let's try that again",
+        "We couldn't quite confirm you're human. Open your invitation link again and give it another go — it usually works the second time.",
         403,
       );
 }
@@ -455,6 +463,8 @@ color:#241026;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .card{max-width:${maxWidth};margin:1.5rem;padding:2rem 2.25rem;background:#fff;border:1px solid #e8e1ec;
 border-radius:1rem;box-shadow:0 4px 16px rgba(36,16,38,.06)${center ? ";text-align:center" : ""}}
 h1{font-size:1.35rem;margin:0 0 .5rem;color:#562457}p{margin:0 0 1rem;line-height:1.55;color:#4a3f52}
+.cta{margin-bottom:0}.cta a{display:inline-block;margin-top:.25rem;padding:.55rem 1.15rem;background:#883889;
+color:#fff;text-decoration:none;border-radius:.6rem;font-weight:600}.cta a:hover{background:#562457}
 .cf-turnstile{display:inline-block}</style></head>
 <body><div class="card">${inner}</div></body></html>`;
 }
@@ -466,10 +476,18 @@ function html_response(body, status) {
   });
 }
 
+// Optional "request an invite" button, shown on dead-end pages only when a
+// form URL is configured (env.INVITE_FORM_URL) -- a no-op until it's set.
+function form_cta(env) {
+  return env.INVITE_FORM_URL
+    ? { href: env.INVITE_FORM_URL, label: "Request an invite" }
+    : null;
+}
+
 function turnstile_challenge_page(env, token) {
   const action = `/j/${encodeURIComponent(token)}`;
   const inner = `<h1>Almost there 💜</h1>
-<p>One quick check before we take you to the RLadies+ Community Slack.</p>
+<p>Just checking you're human before we open the door to the RLadies+ Community Slack — one tap and you're in.</p>
 <form method="POST" action="${action}">
 <div class="cf-turnstile" data-sitekey="${escape_html(env.TURNSTILE_SITE_KEY)}" data-callback="onOk"></div>
 <noscript><p>Please enable JavaScript to continue.</p></noscript>
@@ -503,8 +521,11 @@ async function turnstile_verify(env, cfToken, request) {
   return Boolean(res?.success);
 }
 
-function html_page(title, message, status) {
-  const inner = `<h1>${escape_html(title)}</h1><p>${escape_html(message)}</p>`;
+function html_page(title, message, status, cta) {
+  const link = cta?.href
+    ? `<p class="cta"><a href="${escape_html(cta.href)}">${escape_html(cta.label)}</a></p>`
+    : "";
+  const inner = `<h1>${escape_html(title)}</h1><p>${escape_html(message)}</p>${link}`;
   return html_response(page_shell(title, inner), status);
 }
 
