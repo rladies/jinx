@@ -164,17 +164,30 @@ challenge_extract_json <- function(text) {
   substr(text, start, max(closes))
 }
 
+challenge_scalar_field <- function(value) {
+  if (length(value) != 1L || !is.character(value) || !nzchar(trimws(value))) {
+    return(NULL)
+  }
+  trimws(value)
+}
+
+challenge_clean_tests <- function(tests) {
+  if (is.list(tests)) {
+    tests <- unlist(tests)
+  }
+  if (!is.character(tests)) {
+    return(character())
+  }
+  as.character(tests[!is.na(tests) & nzchar(trimws(tests))])
+}
+
 challenge_validate <- function(parsed) {
   scalars <- c("title", "difficulty", "prompt", "sample", "solution")
   if (!all(c(scalars, "tests") %in% names(parsed))) {
     return(NULL)
   }
   fields <- lapply(scalars, function(field) {
-    value <- parsed[[field]]
-    if (length(value) != 1L || !is.character(value) || !nzchar(trimws(value))) {
-      return(NULL)
-    }
-    trimws(value)
+    challenge_scalar_field(parsed[[field]])
   })
   names(fields) <- scalars
   if (any(vapply(fields, is.null, logical(1)))) {
@@ -184,14 +197,7 @@ challenge_validate <- function(parsed) {
   if (!difficulty %in% r_challenge_difficulties()$level) {
     return(NULL)
   }
-  tests <- parsed$tests
-  if (is.list(tests)) {
-    tests <- unlist(tests)
-  }
-  if (!is.character(tests)) {
-    return(NULL)
-  }
-  tests <- tests[!is.na(tests) & nzchar(trimws(tests))]
+  tests <- challenge_clean_tests(parsed$tests)
   if (length(tests) == 0L) {
     return(NULL)
   }
@@ -201,7 +207,7 @@ challenge_validate <- function(parsed) {
     prompt = fields$prompt,
     sample = fields$sample,
     solution = fields$solution,
-    tests = as.character(tests)
+    tests = tests
   )
 }
 
