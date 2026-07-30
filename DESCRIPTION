@@ -33,9 +33,11 @@ Imports:
     xml2,
     yaml
 Suggests:
+    callr,
     httptest2,
     knitr,
     pkgdown,
+    reprex,
     testthat (>= 3.0.0),
     withr
 VignetteBuilder: knitr
