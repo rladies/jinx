@@ -48,7 +48,7 @@ describe("r_challenge_difficulties()", {
       r_challenge_difficulty_badge("beginner"),
       intToUtf8(0x1F7E2)
     )
-    expect_identical(r_challenge_difficulty_label("advanced"), "Advanced")
+    expect_identical(r_challenge_difficulty_label("advanced"), "Oracle")
   })
 
   it("errors on an unknown level", {
@@ -275,9 +275,11 @@ describe("r_challenge_draft_build()", {
 })
 
 describe("r_challenge_format_slack()", {
-  it("includes the difficulty badge, title, and prompt", {
+  it("includes the difficulty badge, tier label, title, and prompt", {
     out <- r_challenge_format_slack(sample_challenge())
     expect_match(out, intToUtf8(0x1F7E2), fixed = TRUE)
+    expect_match(out, "Novice", fixed = TRUE)
+    expect_match(out, "brewing in the cauldron", fixed = TRUE)
     expect_match(out, "Double it", fixed = TRUE)
     expect_match(out, "Write double", fixed = TRUE)
   })
