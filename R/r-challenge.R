@@ -6,7 +6,7 @@
 r_challenge_difficulties <- function() {
   data.frame(
     level = c("beginner", "intermediate", "advanced"),
-    label = c("Beginner", "Intermediate", "Advanced"),
+    label = c("Novice", "Adept", "Oracle"),
     badge = c("\U0001F7E2", "\U0001F7E1", "\U0001F534"),
     stringsAsFactors = FALSE
   )
@@ -489,7 +489,8 @@ r_challenge_format_slack <- function(challenge) {
   badge <- r_challenge_difficulty_badge(challenge$difficulty)
   label <- r_challenge_difficulty_label(challenge$difficulty)
   lines <- c(
-    glue::glue("\U0001F9E9 *Weekly R Challenge* \u2014 {badge} {label}"),
+    glue::glue("\U0001F52E *What's brewing in the cauldron?*"),
+    glue::glue("This week's R challenge \u2014 {badge} *{label}*"),
     "",
     glue::glue("*{escape_markdown(challenge$title)}*"),
     "",
@@ -499,8 +500,8 @@ r_challenge_format_slack <- function(challenge) {
     challenge_code_fence(challenge$sample),
     "",
     glue::glue(
-      "React \u2705 if you solved it, \U0001F914 if you're stuck \u2014 ",
-      "and share your solution in the \U0001F9F5"
+      "React \u2705 if you cracked it, \U0001F914 if you're still stewing ",
+      "\u2014 share your brew in the \U0001F9F5"
     )
   )
   paste(lines, collapse = "\n")
