@@ -382,6 +382,34 @@ function remaining(master) {
   return (master.cap ?? 0) - (master.used ?? 0);
 }
 
+// --- invite link maintenance (the /jinx invite-link command) --------------
+
+export async function invite_link_update(env, url, cap) {
+  const clean = String(url || "").trim();
+  if (!/^https:\/\/join\.slack\.com\/\S+/.test(clean)) {
+    throw new Error(
+      "that isn't a Slack invite link (expected https://join.slack.com/…)",
+    );
+  }
+  const current = await master_link_get(env);
+  const finalCap = Number.isFinite(cap) && cap > 0 ? cap : (current?.cap ?? 400);
+  // Fresh link: reset the usage counter and clear low_alerted by writing a
+  // clean record (master_link_put persists only the fields we pass).
+  await master_link_put(env, { url: clean, cap: finalCap, used: 0 });
+  return { cap: finalCap };
+}
+
+export async function invite_link_status(env) {
+  const m = await master_link_get(env);
+  if (!m?.url) return null;
+  return {
+    cap: m.cap ?? 0,
+    used: m.used ?? 0,
+    remaining: remaining(m),
+    low_alerted: Boolean(m.low_alerted),
+  };
+}
+
 // --- Airtable pipeline helpers ------------------------------------------
 
 function pipeline_url(env, recordId) {

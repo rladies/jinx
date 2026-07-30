@@ -7,6 +7,8 @@ import {
   invite_mark_joined,
   invite_pipeline_start,
   invite_start_handle,
+  invite_link_update,
+  invite_link_status,
   JOIN_HOST,
   _internals,
 } from "../src/invite-gateway.js";
@@ -382,6 +384,48 @@ describe("invite_start_handle", () => {
     const json = await res.json();
     expect(json.verify_url).toContain(`https://${JOIN_HOST}/verify/`);
     expect(calls.creates.length).toBe(1);
+  });
+});
+
+describe("invite_link_update / invite_link_status", () => {
+  it("rejects a non-Slack URL", async () => {
+    const env = seededEnv({ INVITE_TOKENS: makeKv() });
+    await expect(invite_link_update(env, "https://evil.example/x")).rejects.toThrow();
+  });
+
+  it("stores a fresh link, resets used, keeps the existing cap, clears low_alerted", async () => {
+    const env = seededEnv({
+      INVITE_TOKENS: makeKv({
+        [_internals.MASTER_KEY]: JSON.stringify({
+          url: "https://join.slack.com/t/x/shared_invite/old",
+          cap: 250,
+          used: 200,
+          low_alerted: true,
+        }),
+      }),
+    });
+    const { cap } = await invite_link_update(env, "https://join.slack.com/t/x/shared_invite/zt-new");
+    expect(cap).toBe(250);
+    const m = await env.INVITE_TOKENS.get(_internals.MASTER_KEY, "json");
+    expect(m.used).toBe(0);
+    expect(m.low_alerted).toBeUndefined();
+    expect(m.url).toContain("zt-new");
+  });
+
+  it("accepts an explicit cap and reports status", async () => {
+    const env = seededEnv({ INVITE_TOKENS: makeKv() });
+    await invite_link_update(env, "https://join.slack.com/t/x/shared_invite/zt-1", 500);
+    expect(await invite_link_status(env)).toMatchObject({
+      cap: 500,
+      used: 0,
+      remaining: 500,
+      low_alerted: false,
+    });
+  });
+
+  it("status is null when no link is set", async () => {
+    const env = seededEnv({ INVITE_TOKENS: makeKv() });
+    expect(await invite_link_status(env)).toBe(null);
   });
 });
 
