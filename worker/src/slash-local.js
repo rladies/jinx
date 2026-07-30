@@ -6,14 +6,17 @@ import {
   slack_conversations_open,
   slack_message_post,
   slack_reminders_add,
-  slack_user_email,
 } from "./slack-api.js";
 import {
   question_log_since,
   question_gaps_rank,
   question_downvoted_rank,
 } from "./question-log.js";
-import { slack_global_team_authorize, slack_is_organizer_workspace } from "./authorize.js";
+import {
+  slack_global_team_authorize,
+  slack_is_organizer_workspace,
+  slack_leadership_authorize,
+} from "./authorize.js";
 import { short_link_create } from "./short-links.js";
 import { invite_link_update, invite_link_status } from "./invite-gateway.js";
 
@@ -80,23 +83,14 @@ export function command_requires_organizer_workspace(command) {
   return ORGANIZER_WORKSPACE_COMMANDS.has(command.split(/\s+/)[0]);
 }
 
-// Setting the live Slack invite link controls who can join the community
-// workspace, so it's locked to a single account -- the RLadies+ Leadership
-// account (leadership@rladies.org by default; override via INVITE_ADMIN_EMAIL).
-// We match on verified email, not the Slack user id, since the latter differs
-// per workspace and isn't human-checkable.
+// The invite-link command is gated to the RLadies+ Leadership account. The
+// check itself (verified-email match, and why it is deliberately not
+// workspace-scoped) lives in slack_leadership_authorize in authorize.js,
+// alongside the other trust boundaries.
 const LEADERSHIP_COMMANDS = new Set(["invite-link"]);
 
 export function command_requires_leadership(command) {
   return LEADERSHIP_COMMANDS.has(command.split(/\s+/)[0]);
-}
-
-async function is_leadership(env, teamId, userId) {
-  const admin = (env.INVITE_ADMIN_EMAIL || "leadership@rladies.org")
-    .trim()
-    .toLowerCase();
-  const email = await slack_user_email(env, teamId, userId).catch(() => null);
-  return Boolean(email) && email.toLowerCase() === admin;
 }
 
 export async function slash_local_handle(env, teamId, command, params, responseUrl) {
@@ -122,12 +116,12 @@ export async function slash_local_handle(env, teamId, command, params, responseU
     return;
   }
 
-  if (command_requires_leadership(command) && !(await is_leadership(env, teamId, userId))) {
-    await slash_respond(
-      responseUrl,
-      "🔒 Updating the invite link is limited to the RLadies+ Leadership account (leadership@rladies.org).",
-    );
-    return;
+  if (command_requires_leadership(command)) {
+    const authz = await slack_leadership_authorize(env, { teamId, userId });
+    if (!authz.ok) {
+      await slash_respond(responseUrl, authz.message);
+      return;
+    }
   }
 
   try {

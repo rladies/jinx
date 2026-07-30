@@ -11,7 +11,7 @@ afterEach(() => {
 });
 
 describe("slash_local_handle invite-link leadership gate", () => {
-  function run(command, { userEmail } = {}) {
+  function run(command, { userEmail, tokens } = {}) {
     const posts = [];
     vi.spyOn(globalThis, "fetch").mockImplementation(async (url, init) => {
       if (url.includes("users.info")) {
@@ -28,7 +28,7 @@ describe("slash_local_handle invite-link leadership gate", () => {
     });
     const env = {
       INVITE_ADMIN_EMAIL: "leadership@rladies.org",
-      INVITE_TOKENS: makeKv(),
+      INVITE_TOKENS: tokens || makeKv(),
       SLACK_TOKENS: makeKv({ "team:T_ORG": JSON.stringify({ bot_token: "xoxb" }) }),
     };
     return slash_local_handle(
@@ -57,6 +57,33 @@ describe("slash_local_handle invite-link leadership gate", () => {
     expect(posts[0].text).toMatch(/updated/i);
     const m = await env.INVITE_TOKENS.get("config:master_invite_link", "json");
     expect(m.url).toContain("zt-1");
+  });
+
+  it("shows usage without leaking the url when called with no args", async () => {
+    const tokens = makeKv({
+      "config:master_invite_link": JSON.stringify({ url: LINK, cap: 400, used: 120 }),
+    });
+    const { posts } = await run("invite-link", {
+      userEmail: "leadership@rladies.org",
+      tokens,
+    });
+    expect(posts[0].text).toMatch(/120\/400/);
+    expect(posts[0].text).not.toContain("zt-1");
+  });
+
+  it("says no link is set yet when the status is empty", async () => {
+    const { posts } = await run("invite-link", {
+      userEmail: "leadership@rladies.org",
+    });
+    expect(posts[0].text).toMatch(/No invite link is set yet/i);
+  });
+
+  it("reports the validation error for a non-Slack url and stores nothing", async () => {
+    const { posts, env } = await run("invite-link https://evil.example/x", {
+      userEmail: "leadership@rladies.org",
+    });
+    expect(posts[0].text).toMatch(/isn't a Slack invite link/i);
+    expect(await env.INVITE_TOKENS.get("config:master_invite_link")).toBe(null);
   });
 });
 
