@@ -1,5 +1,24 @@
 # jinx (development version)
 
+## Weekly community channel spotlight
+
+- **Jinx now posts a weekly "channel spotlight" to the community
+  workspace**, promoting one public channel at a time so members discover
+  the quieter channels beyond the busy few. A GitHub Actions cron
+  (`bot-channel-promo.yml`) calls `jinx::channel_promo_post()`, which lists
+  the community's public channels, keeps those that have a description,
+  picks the next one round-robin (state stored in KV, so every channel
+  gets a turn before any repeats), and drafts a short invitation in Jinx's
+  voice via Workers AI — falling back to the channel's own description if
+  the model call fails. The generated blurb is escaped before posting, so
+  a channel's user-controlled description can't inject links or
+  `<!channel>` mass-pings into the broadcast. New: `channel_promo_post()`,
+  `channel_promo_build()`, `channel_promo_format()`,
+  `promo_eligible_channels()`, `promo_pick_channel()`, and `promo_blurb()`
+  in `R/channel-promo.R`. Configurable via `SLACK_PROMO_CHANNEL` (target,
+  default `general`) and `SLACK_PROMO_SKIP` (comma-separated names to never
+  feature).
+
 ## Question digest and retention purge move to R
 
 - **The weekly question-gap digest and the daily question-log retention

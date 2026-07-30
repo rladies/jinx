@@ -194,6 +194,16 @@ reference:
       - question_digest_build
       - question_digest_post
 
+  - title: Channel promotion
+    desc: Weekly community channel spotlight posted to Slack
+    contents:
+      - channel_promo_post
+      - channel_promo_build
+      - channel_promo_format
+      - promo_eligible_channels
+      - promo_pick_channel
+      - promo_blurb
+
   - title: Conference coordination
     desc: CFP tracking and speaker recommendations
     contents:
