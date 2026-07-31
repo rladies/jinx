@@ -177,7 +177,10 @@ describe("r_challenge_reprex_check()", {
       MY_API_TOKEN = "leaky-token"
     ))
     res <- r_challenge_reprex_check(
-      "peek <- function() paste0(Sys.getenv('SHORTIO'), Sys.getenv('MY_API_TOKEN'))",
+      paste0(
+        "peek <- function() ",
+        "paste0(Sys.getenv('SHORTIO'), Sys.getenv('MY_API_TOKEN'))"
+      ),
       "identical(peek(), '')"
     )
     expect_true(res$ok)
