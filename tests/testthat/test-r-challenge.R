@@ -155,6 +155,43 @@ describe("r_challenge_reprex_check()", {
     )
     expect_false(fail$ok)
   })
+
+  it("keeps only locale/path/lib env vars and drops secrets", {
+    got <- r_challenge_env_keep(c(
+      "PATH",
+      "HOME",
+      "LC_ALL",
+      "R_LIBS_USER",
+      "CLOUDFLARE_API_TOKEN",
+      "SHORTIO",
+      "AIRTABLE_PAT"
+    ))
+    expect_identical(got, c(TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE))
+  })
+
+  it("does not leak operator secrets into the verification session", {
+    skip_if_not_installed("reprex")
+    skip_if_not_installed("callr")
+    withr::local_envvar(c(
+      SHORTIO = "leaky-shortio",
+      MY_API_TOKEN = "leaky-token"
+    ))
+    res <- r_challenge_reprex_check(
+      "peek <- function() paste0(Sys.getenv('SHORTIO'), Sys.getenv('MY_API_TOKEN'))",
+      "identical(peek(), '')"
+    )
+    expect_true(res$ok)
+  })
+
+  it("is not fooled by a solution that redefines stopifnot", {
+    skip_if_not_installed("reprex")
+    skip_if_not_installed("callr")
+    res <- r_challenge_reprex_check(
+      "stopifnot <- function(...) invisible(TRUE)\nf <- function() 1",
+      "identical(f(), 999L)"
+    )
+    expect_false(res$ok)
+  })
 })
 
 describe("r_challenge_adversarial_check()", {

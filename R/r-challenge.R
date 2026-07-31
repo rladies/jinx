@@ -152,8 +152,12 @@ r_challenge_generate <- function(
   )
 }
 
+is_scalar_string <- function(x) {
+  length(x) == 1L && is.character(x) && !is.na(x) && nzchar(trimws(x))
+}
+
 challenge_extract_json <- function(text) {
-  if (is.null(text) || !nzchar(trimws(text %||% ""))) {
+  if (!is_scalar_string(text)) {
     return(NA_character_)
   }
   start <- regexpr("\\{", text)
@@ -165,7 +169,7 @@ challenge_extract_json <- function(text) {
 }
 
 challenge_scalar_field <- function(value) {
-  if (length(value) != 1L || !is.character(value) || !nzchar(trimws(value))) {
+  if (!is_scalar_string(value)) {
     return(NULL)
   }
   trimws(value)
@@ -178,7 +182,7 @@ challenge_clean_tests <- function(tests) {
   if (!is.character(tests)) {
     return(character())
   }
-  as.character(tests[!is.na(tests) & nzchar(trimws(tests))])
+  tests[!is.na(tests) & nzchar(trimws(tests))]
 }
 
 challenge_validate <- function(parsed) {
@@ -211,6 +215,14 @@ challenge_validate <- function(parsed) {
   )
 }
 
+challenge_parse_json <- function(text) {
+  json <- challenge_extract_json(text)
+  if (is.na(json)) {
+    return(NULL)
+  }
+  tryCatch(jsonlite::fromJSON(json), error = function(e) NULL)
+}
+
 #' Parse a model completion into a structured challenge
 #'
 #' Tolerates prose or code fences around the JSON. Returns `NULL` for any
@@ -222,23 +234,35 @@ challenge_validate <- function(parsed) {
 #'   `solution`, and `tests` (character vector), or `NULL` if invalid.
 #' @export
 r_challenge_parse <- function(text) {
-  json <- challenge_extract_json(text)
-  if (is.na(json)) {
-    return(NULL)
-  }
-  parsed <- tryCatch(jsonlite::fromJSON(json), error = function(e) NULL)
+  parsed <- challenge_parse_json(text)
   if (is.null(parsed) || !is.list(parsed)) {
     return(NULL)
   }
   challenge_validate(parsed)
 }
 
+r_challenge_env_keep <- function(names) {
+  allowed <- c(
+    "PATH",
+    "HOME",
+    "LANG",
+    "LANGUAGE",
+    "TZ",
+    "TMPDIR",
+    "TMP",
+    "TEMP",
+    "R_HOME"
+  )
+  names %in% allowed | grepl("^(R_LIBS|LC_)", names)
+}
+
 #' Run a challenge's reference solution in an isolated R session
 #'
 #' Default verification runner: executes the solution and its tests with
 #' [reprex::reprex()] inside a fresh [callr::r()] session that has a
-#' wall-clock timeout and a secret-scrubbed environment, so running
-#' model-generated code cannot reach tokens or hang the caller.
+#' wall-clock timeout and an allowlisted environment (only locale, path and
+#' temp vars pass; user `.Renviron`/`.Rprofile` are disabled), so running
+#' model-generated code cannot reach operator secrets or hang the caller.
 #'
 #' @param code Character vector of R source lines to run.
 #' @param timeout Wall-clock timeout in seconds.
@@ -254,15 +278,14 @@ r_challenge_reprex_runner <- function(code, timeout = 60) {
       "{.pkg reprex} and {.pkg callr} are needed to verify challenges."
     )
   }
-  env <- Sys.getenv()
-  secret <- grepl(
-    "TOKEN|SECRET|KEY|PASSWORD|CREDENTIAL",
-    names(env),
-    ignore.case = TRUE
-  )
-  env <- env[!secret]
+  keep <- r_challenge_env_keep
+  environment(keep) <- baseenv()
   callr::r(
-    function(lines) {
+    function(lines, keep) {
+      names_now <- names(Sys.getenv())
+      Sys.unsetenv(names_now[!keep(names_now)])
+      no_config <- file.path(tempdir(), ".jinx-no-user-config")
+      Sys.setenv(R_ENVIRON_USER = no_config, R_PROFILE_USER = no_config)
       reprex::reprex(
         input = lines,
         render = TRUE,
@@ -270,9 +293,8 @@ r_challenge_reprex_runner <- function(code, timeout = 60) {
         html_preview = FALSE
       )
     },
-    args = list(lines = code),
-    timeout = timeout,
-    env = env
+    args = list(lines = code, keep = keep),
+    timeout = timeout
   )
 }
 
@@ -297,7 +319,7 @@ r_challenge_reprex_check <- function(
     return(list(ok = FALSE, output = "no tests supplied"))
   }
   solution_lines <- unlist(strsplit(solution, "\n", fixed = TRUE))
-  code <- c(solution_lines, "", paste0("stopifnot(", tests, ")"))
+  code <- c(solution_lines, "", paste0("base::stopifnot(", tests, ")"))
   out <- tryCatch(
     runner(code),
     error = function(e) {
@@ -312,15 +334,14 @@ r_challenge_reprex_check <- function(
 }
 
 challenge_parse_verdict <- function(raw) {
-  json <- challenge_extract_json(raw %||% "")
-  if (is.na(json)) {
+  parsed <- challenge_parse_json(raw)
+  if (is.null(parsed)) {
     return(list(
       ok = FALSE,
       verdict = "unparseable",
       issues = "no verdict returned"
     ))
   }
-  parsed <- tryCatch(jsonlite::fromJSON(json), error = function(e) NULL)
   verdict <- tolower(trimws(parsed$verdict %||% ""))
   issues <- parsed$issues %||% character()
   if (is.list(issues)) {
@@ -357,27 +378,21 @@ r_challenge_adversarial_check <- function(
   api_token = Sys.getenv("CLOUDFLARE_API_TOKEN"),
   model = workers_ai_chat_model()
 ) {
-  user <- paste0(
-    "Difficulty: ",
-    challenge$difficulty,
-    "\n",
-    "Title: ",
-    challenge$title,
-    "\n",
-    "Prompt: ",
-    challenge$prompt,
-    "\n",
-    "Sample: ",
-    challenge$sample,
-    "\n",
-    "Reference solution:\n",
-    challenge$solution,
-    "\n",
-    "Tests:\n",
-    paste(challenge$tests, collapse = "\n"),
-    "\n\n",
-    "Output of running the solution against the tests:\n",
-    paste(reprex_output, collapse = "\n")
+  user <- paste(
+    c(
+      glue::glue("Difficulty: {challenge$difficulty}"),
+      glue::glue("Title: {challenge$title}"),
+      glue::glue("Prompt: {challenge$prompt}"),
+      glue::glue("Sample: {challenge$sample}"),
+      "Reference solution:",
+      challenge$solution,
+      "Tests:",
+      challenge$tests,
+      "",
+      "Output of running the solution against the tests:",
+      reprex_output
+    ),
+    collapse = "\n"
   )
   raw <- tryCatch(
     cloudflare_generate(
@@ -471,6 +486,7 @@ r_challenge_draft_build <- function(
 }
 
 challenge_code_fence <- function(code, lang = "r") {
+  # Strip backticks so model/reprex content cannot break out of the code fence.
   clean <- gsub("`", "", code)
   paste0("```", lang, "\n", clean, "\n```")
 }
