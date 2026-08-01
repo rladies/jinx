@@ -10,7 +10,12 @@
 		"nodejs_compat"
 	],
 	"vars": {
-		"GITHUB_REPO": "rladies/jinx"
+		"GITHUB_REPO": "rladies/jinx",
+		// Organiser-workspace channel that invite-gateway alerts (held-for-review,
+		// budget warnings, join-email mismatches) post to. Lives in the organisers'
+		// Slack; the bot must be a member. Versioned here rather than a secret so
+		// the target is reviewable -- a channel id isn't sensitive.
+		"SLACK_ALERTS_CHANNEL": "C06ED2LEMU4"
 	},
 	"ai": {
 		"binding": "AI"
