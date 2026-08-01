@@ -29,6 +29,12 @@ const INVITE_TTL_SECONDS = 72 * 60 * 60;
 const INVITE_MAX_USES = 3;
 const BUDGET_ALERT_REMAINING = 50; // alert organisers when this many invites left
 
+// When a join can't be matched to a pipeline row by email, fall back to timing:
+// consider only invites whose link was clicked within this many days as the
+// person who just joined. Keeps a stale "Clicked" row from being matched to an
+// unrelated organic join weeks later.
+const JOIN_MATCH_WINDOW_DAYS = 2;
+
 const DEFAULT_DISPOSABLE_DOMAINS = new Set([
   "mailinator.com",
   "guerrillamail.com",
@@ -271,15 +277,54 @@ async function redeem_side_effects(env, entry, master) {
 
 // --- join detection (called from the team_join event handler) ------------
 
+// Flip an applicant's pipeline row to "Joined" when they land in the workspace.
+//
+// The email on the Slack `team_join` event is the address they *signed up to
+// Slack with*, which isn't always the one they requested the invite with -- so
+// an exact-email match alone silently misses those people. We therefore add a
+// timing fallback: whoever just clicked their invite link (Stage "Clicked",
+// within JOIN_MATCH_WINDOW_DAYS) is almost certainly the person who joined.
+//   - exact email match      -> flip, no alert (the confident, common path)
+//   - one recent clicker      -> flip + alert organisers to confirm the match
+//   - several recent clickers -> can't tell them apart; alert only, don't guess
+//   - none in flight          -> organic join with nothing to reconcile; silent
 export async function invite_mark_joined(env, email) {
-  if (!email) return false;
-  const record = await pipeline_find_by_email(env, email);
-  if (!record) return false;
-  await pipeline_update(env, record.id, {
-    "Joined on": today(),
-    Stage: "Joined",
-  });
-  return true;
+  if (email) {
+    const record = await pipeline_find_by_email(env, email);
+    if (record) {
+      await pipeline_update(env, record.id, {
+        "Joined on": today(),
+        Stage: "Joined",
+      });
+      return true;
+    }
+  }
+
+  const candidates = await pipeline_recent_clicked(env, JOIN_MATCH_WINDOW_DAYS);
+  if (candidates.length === 0) return false;
+
+  const joinedAs = email ? `\`${email}\`` : "an email we don't have on file";
+
+  if (candidates.length === 1) {
+    const rec = candidates[0];
+    await pipeline_update(env, rec.id, {
+      "Joined on": today(),
+      Stage: "Joined",
+    });
+    await alert(
+      env,
+      `:link: Marked \`${rec.fields.email}\` as *Joined* by timing — they clicked their invite on ${rec.fields["Link clicked on"] || "a recent day"} but signed up to Slack as ${joinedAs}. Undo it in the pipeline if that's not the same person.`,
+    );
+    return true;
+  }
+
+  await alert(
+    env,
+    `:mag: Someone joined as ${joinedAs} but I couldn't match them to one invite — ${candidates.length} people clicked their link in the last ${JOIN_MATCH_WINDOW_DAYS} days (${candidates
+      .map((c) => `\`${c.fields.email}\``)
+      .join(", ")}). Please mark the right one *Joined*.`,
+  );
+  return false;
 }
 
 // --- pipeline row creation (called from the Airtable webhook) ------------
@@ -448,6 +493,31 @@ async function pipeline_create(env, fields) {
   return res.json();
 }
 
+// Invites that clicked their link within `windowDays` and haven't been marked
+// joined yet (Stage still "Clicked"), most-recent click first. This is the
+// candidate pool for the timing fallback in invite_mark_joined. The window is
+// applied client-side; the query sorts by click date descending so the newest
+// clicks are always on the first page -- an email-mismatch joiner is never
+// flipped, so stale "Clicked" rows accumulate and must not crowd the recent
+// one out of a bounded page.
+async function pipeline_recent_clicked(env, windowDays) {
+  const params = new URLSearchParams({
+    filterByFormula: `{Stage}='Clicked'`,
+    maxRecords: "50",
+    "sort[0][field]": "Link clicked on",
+    "sort[0][direction]": "desc",
+  });
+  const res = await fetch(`${pipeline_url(env)}?${params}`, {
+    headers: airtable_headers(env),
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  const cutoff = date_days_ago(windowDays);
+  return (data.records || []).filter(
+    (r) => (r.fields?.["Link clicked on"] || "") >= cutoff,
+  );
+}
+
 async function pipeline_find_by_email(env, email) {
   const formula = encodeURIComponent(
     `LOWER({email})='${String(email).toLowerCase().replace(/'/g, "\\'")}'`,
@@ -463,10 +533,14 @@ async function pipeline_find_by_email(env, email) {
 
 // --- helpers -------------------------------------------------------------
 
+// Organiser-facing alerts (held-for-review, budget warnings, join mismatches)
+// go to the organisers' workspace, not the community one -- organisers are the
+// people who action them, and this keeps the noise out of member-facing spaces.
 async function alert(env, text) {
   const channel = env.SLACK_ALERTS_CHANNEL;
-  if (!channel) return;
-  await slack_message_post(env, env.SLACK_COMMUNITY_TEAM_ID, {
+  const teamId = env.SLACK_ORGANIZER_TEAM_ID;
+  if (!channel || !teamId) return;
+  await slack_message_post(env, teamId, {
     channel,
     text,
   }).catch((e) => console.error("alert post failed:", e));
@@ -478,6 +552,12 @@ function random_token() {
 
 function today() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function date_days_ago(days) {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - days);
+  return d.toISOString().slice(0, 10);
 }
 
 // Shared document shell for every gateway page, so the doctype and card CSS

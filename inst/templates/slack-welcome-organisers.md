@@ -8,6 +8,8 @@ _A few things to help you get oriented:_
 
 • :book: Our Code of Conduct applies here just as it does in every RLadies+ space: <COC_URL>. Please take a moment to read it.
 
+• :bust_in_silhouette: Set up your profile — tap your avatar (top-right) → _Profile_ → _Edit profile_. Add your full name, a photo, your pronouns, where you are based, and the chapter or team you organise for, so others know who they are working with.
+
 • :speech_balloon: Pop over to <#<WELCOME_CHANNEL>> and introduce yourself — tell us which chapter (or team) you are organising for, where you are based, and what you are hoping to get out of this space.
 
 • :compass: Browse channels via _Directories → Channels_ in the sidebar. A few good starting points:

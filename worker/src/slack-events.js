@@ -88,11 +88,15 @@ export async function slack_event_handle(env, ctx, body) {
         event: { user: event.user },
       }).catch((e) => console.error("team_join dispatch failed:", e)),
     );
-    ctx.waitUntil(
-      invite_mark_joined(env, event.user?.profile?.email).catch((e) =>
-        console.error("invite_mark_joined failed:", e),
-      ),
-    );
+    // The masked-invite pipeline only tracks the community workspace, so only
+    // reconcile joins there -- an organiser-workspace join has no pipeline row.
+    if (teamId === env.SLACK_COMMUNITY_TEAM_ID) {
+      ctx.waitUntil(
+        invite_mark_joined(env, event.user?.profile?.email).catch((e) =>
+          console.error("invite_mark_joined failed:", e),
+        ),
+      );
+    }
     return new Response("", { status: 200 });
   }
 

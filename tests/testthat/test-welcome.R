@@ -151,6 +151,7 @@ describe("welcome_message_render", {
     expect_match(text, "<#welcome>", fixed = TRUE)
     expect_match(text, "<#help-how_to_slack>", fixed = TRUE)
     expect_match(text, "help-r", fixed = TRUE)
+    expect_match(text, "Edit profile", fixed = TRUE)
   })
 
   it("loads the channel index once and reuses it for every channel mention", {
@@ -179,6 +180,7 @@ describe("welcome_message_render", {
     )
     text <- welcome_message_render("T_ORG", "U1", "organiser")
     expect_match(text, "Organisers Slack", fixed = TRUE)
+    expect_match(text, "Edit profile", fixed = TRUE)
   })
 
   it("appends the chapter sign-up sparkle line when a link is present", {

@@ -2,7 +2,11 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 vi.mock("../src/github-dispatch.js", () => ({
   github_dispatch_send: vi.fn(async () => undefined),
 }));
+vi.mock("../src/invite-gateway.js", () => ({
+  invite_mark_joined: vi.fn(async () => true),
+}));
 import { github_dispatch_send } from "../src/github-dispatch.js";
+import { invite_mark_joined } from "../src/invite-gateway.js";
 import {
   slack_event_handle,
   slack_event_strip_mention,
@@ -12,6 +16,7 @@ import { makeEnv, makeCtx, makeKv, makeD1, jsonResponse } from "./_helpers.js";
 afterEach(() => {
   vi.restoreAllMocks();
   github_dispatch_send.mockClear();
+  invite_mark_joined.mockClear();
 });
 
 function makeEventBody(event, { teamId = "T_ORG" } = {}) {
@@ -169,6 +174,27 @@ describe("slack_event_handle", () => {
         event: { user: { id: "U_NEW", profile: { email: "new@example.com" } } },
       })
     );
+    // organiser-workspace joins have no invite-pipeline row -- don't reconcile
+    expect(invite_mark_joined).not.toHaveBeenCalled();
+  });
+
+  it("reconciles the invite pipeline only for community-workspace joins", async () => {
+    const env = makeEnv();
+    const ctx = makeCtx();
+    const res = await slack_event_handle(
+      env,
+      ctx,
+      makeEventBody(
+        {
+          type: "team_join",
+          user: { id: "U_NEW", profile: { email: "joiner@example.com" } },
+        },
+        { teamId: "T_COM" }
+      )
+    );
+    expect(res.status).toBe(200);
+    await ctx.flush();
+    expect(invite_mark_joined).toHaveBeenCalledWith(env, "joiner@example.com");
   });
 
   it("dispatches a slack-event for a qualifying bot-message reaction", async () => {
