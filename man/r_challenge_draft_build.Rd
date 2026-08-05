@@ -27,13 +27,14 @@ choose.}
 \item{model}{Workers AI chat model.}
 }
 \value{
-A list with \code{challenge}, \code{reprex} (verification output),
-\code{critique}, and \code{attempts}, or \code{NULL} if no verified challenge was
-produced.
+A list with \code{challenge}, \code{statement} (rendered statement reprex),
+\code{reprex} (solution verification output), \code{critique}, and \code{attempts}, or
+\code{NULL} if no verified challenge was produced.
 }
 \description{
 Orchestrates the full generator: draft with Workers AI, parse, verify the
-reference solution with reprex, then adversarially review. Regenerates on
-any failed gate, up to \code{max_tries}, and returns \code{NULL} if none passes, so a
-scheduled run never emits unverified output.
+reference solution with reprex, render the statement as a reprex, then
+adversarially review. Regenerates on any failed gate, up to \code{max_tries}, and
+returns \code{NULL} if none passes, so a scheduled run never emits unverified
+output.
 }

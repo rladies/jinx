@@ -18,7 +18,7 @@ returning the rendered output. Defaults to the isolated reprex runner.}
 List with \code{ok} (logical) and \code{output} (character vector).
 }
 \description{
-Assembles the solution plus a \code{stopifnot()} for each test, runs it through
-\code{runner}, and treats an \verb{#> Error} line (a failed test or a broken
+Assembles the solution plus a \code{base::stopifnot()} for each test, runs it
+through \code{runner}, and treats an \verb{#> Error} line (a failed test or a broken
 solution) as verification failure.
 }

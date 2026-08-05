@@ -15,7 +15,7 @@ r_challenge_format_issue(build, source = "ai")
 Character scalar Markdown issue body.
 }
 \description{
-Builds the Markdown body an organiser reviews before approving: the prompt
-and sample in the open, with the reference solution, reprex verification
+Builds the Markdown body an organiser reviews before approving: the rendered
+statement in the open, with the reference solution, reprex verification
 output, and adversarial notes in collapsed sections.
 }

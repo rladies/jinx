@@ -10,8 +10,8 @@ r_challenge_parse(text)
 \item{text}{Raw model completion from \code{\link[=r_challenge_generate]{r_challenge_generate()}}.}
 }
 \value{
-A list with elements \code{title}, \code{difficulty}, \code{prompt}, \code{sample},
-\code{solution}, and \code{tests} (character vector), or \code{NULL} if invalid.
+A list with elements \code{title}, \code{difficulty}, \code{statement}, \code{solution},
+and \code{tests} (character vector), or \code{NULL} if invalid.
 }
 \description{
 Tolerates prose or code fences around the JSON. Returns \code{NULL} for any
