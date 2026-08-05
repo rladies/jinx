@@ -4,17 +4,22 @@
 \alias{r_challenge_format_slack}
 \title{Format a challenge as a Slack message}
 \usage{
-r_challenge_format_slack(challenge)
+r_challenge_format_slack(title, difficulty, statement)
 }
 \arguments{
-\item{challenge}{Parsed challenge from \code{\link[=r_challenge_parse]{r_challenge_parse()}}.}
+\item{title}{Challenge title.}
+
+\item{difficulty}{Difficulty level (see \code{\link[=r_challenge_difficulties]{r_challenge_difficulties()}}).}
+
+\item{statement}{Rendered reprex statement (character vector or scalar).}
 }
 \value{
 Character scalar Slack mrkdwn message.
 }
 \description{
-Renders the difficulty badge, title, prompt, and a sample call for posting
-to the community channel. Prose flows through \code{escape_markdown()} and the
-sample sits in a fenced code block, so model-generated text cannot inject
-links or \verb{<!channel>} mass-pings. The reference solution is never shown.
+Renders the difficulty badge, title, and the challenge's reprex statement
+for posting to the community channel. The title flows through
+\code{escape_markdown()} and the statement sits in a fenced code block (its
+backticks stripped), so model- or user-generated text cannot inject links or
+\verb{<!channel>} mass-pings. The reference solution is never shown.
 }

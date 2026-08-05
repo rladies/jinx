@@ -2,8 +2,8 @@ good_json <- function() {
   paste0(
     "Here's this week's challenge:\n```json\n",
     '{"title":"Double it","difficulty":"Beginner",',
-    '"prompt":"Write double(x) that returns x times two.",',
-    '"sample":"double(2)  # 4",',
+    '"statement":"# Write double(x): x times two.\\nx <- 2\\n',
+    '# double(x) should return:\\n4",',
     '"solution":"double <- function(x) x * 2",',
     '"tests":["identical(double(2), 4)","identical(double(0), 0)"]}',
     "\n```\nGood luck!"
@@ -14,8 +14,10 @@ sample_challenge <- function() {
   list(
     title = "Double it",
     difficulty = "beginner",
-    prompt = "Write double(x) that returns x times two.",
-    sample = "double(2)  # 4",
+    statement = paste0(
+      "# Write double(x): x times two.\n",
+      "x <- 2\n# double(x) should return:\n4"
+    ),
     solution = "double <- function(x) x * 2",
     tests = c("identical(double(2), 4)", "identical(double(0), 0)")
   )
@@ -24,9 +26,18 @@ sample_challenge <- function() {
 sample_build <- function() {
   list(
     challenge = sample_challenge(),
+    statement = c(
+      "``` r",
+      "# Write double(x): x times two.",
+      "x <- 2",
+      "# double(x) should return:",
+      "4",
+      "#> [1] 4",
+      "```"
+    ),
     reprex = c(
       "double <- function(x) x * 2",
-      "stopifnot(identical(double(2), 4))"
+      "base::stopifnot(identical(double(2), 4))"
     ),
     critique = list(ok = TRUE, verdict = "approve", issues = character()),
     attempts = 1L
@@ -65,20 +76,21 @@ describe("r_challenge_parse()", {
     expect_identical(ch$title, "Double it")
     expect_identical(ch$difficulty, "beginner")
     expect_identical(length(ch$tests), 2L)
+    expect_match(ch$statement, "double(x) should return", fixed = TRUE)
     expect_identical(ch$solution, "double <- function(x) x * 2")
   })
 
   it("returns NULL when a required field is missing", {
     text <- paste0(
-      '{"title":"x","difficulty":"beginner","prompt":"p",',
-      '"sample":"s","solution":"sol"}'
+      '{"title":"x","difficulty":"beginner",',
+      '"solution":"sol","tests":["TRUE"]}'
     )
     expect_null(r_challenge_parse(text))
   })
 
   it("returns NULL for an unknown difficulty", {
     text <- paste0(
-      '{"title":"x","difficulty":"wizard","prompt":"p","sample":"s",',
+      '{"title":"x","difficulty":"wizard","statement":"s","sample":"s",',
       '"solution":"sol","tests":["TRUE"]}'
     )
     expect_null(r_challenge_parse(text))
@@ -86,7 +98,7 @@ describe("r_challenge_parse()", {
 
   it("returns NULL when tests are empty", {
     text <- paste0(
-      '{"title":"x","difficulty":"beginner","prompt":"p","sample":"s",',
+      '{"title":"x","difficulty":"beginner","statement":"s",',
       '"solution":"sol","tests":[]}'
     )
     expect_null(r_challenge_parse(text))
@@ -104,9 +116,7 @@ describe("r_challenge_reprex_check()", {
     res <- r_challenge_reprex_check(
       "double <- function(x) x * 2",
       "identical(double(2), 4)",
-      runner = function(code) {
-        c("double <- function(x) x * 2", "identical(double(2), 4)")
-      }
+      runner = function(code) c("double <- function(x) x * 2", "identical(2)")
     )
     expect_true(res$ok)
   })
@@ -115,9 +125,7 @@ describe("r_challenge_reprex_check()", {
     res <- r_challenge_reprex_check(
       "double <- function(x) x * 3",
       "identical(double(2), 4)",
-      runner = function(code) {
-        c("double <- function(x) x * 3", "#> Error: not TRUE")
-      }
+      runner = function(code) c("double <- function(x) x * 3", "#> Error: no")
     )
     expect_false(res$ok)
   })
@@ -197,6 +205,45 @@ describe("r_challenge_reprex_check()", {
   })
 })
 
+describe("r_challenge_render_statement()", {
+  it("returns ok with the rendered lines when the statement runs", {
+    res <- r_challenge_render_statement(
+      "x <- 1\nx",
+      runner = function(code) c("``` r", "x <- 1", "x", "#> [1] 1", "```")
+    )
+    expect_true(res$ok)
+    expect_true(any(grepl("#>", res$rendered, fixed = TRUE)))
+  })
+
+  it("fails when the statement errors (e.g. calls the unwritten function)", {
+    res <- r_challenge_render_statement(
+      "square_evens(x)",
+      runner = function(code) {
+        c("``` r", "square_evens(x)", "#> Error: nope", "```")
+      }
+    )
+    expect_false(res$ok)
+  })
+
+  it("fails closed when the runner errors", {
+    res <- r_challenge_render_statement(
+      "x",
+      runner = function(code) stop("timeout")
+    )
+    expect_false(res$ok)
+  })
+
+  it("renders a real statement end to end with reprex", {
+    skip_if_not_installed("reprex")
+    skip_if_not_installed("callr")
+    ok <- r_challenge_render_statement("x <- c(1, 2, 3)\nrev(x)")
+    expect_true(ok$ok)
+    expect_true(any(grepl("#>", ok$rendered, fixed = TRUE)))
+    bad <- r_challenge_render_statement("no_such_function_here(1)")
+    expect_false(bad$ok)
+  })
+})
+
 describe("r_challenge_adversarial_check()", {
   it("approves when the reviewer returns approve", {
     local_mocked_bindings(
@@ -245,6 +292,9 @@ describe("r_challenge_draft_build()", {
       r_challenge_reprex_check = function(solution, tests, ...) {
         list(ok = TRUE, output = "ok")
       },
+      r_challenge_render_statement = function(statement, ...) {
+        list(ok = TRUE, rendered = c("``` r", "x <- 2", "```"))
+      },
       r_challenge_adversarial_check = function(...) {
         list(ok = TRUE, verdict = "approve", issues = character())
       }
@@ -252,6 +302,7 @@ describe("r_challenge_draft_build()", {
     build <- r_challenge_draft_build()
     expect_identical(build$attempts, 1L)
     expect_identical(build$challenge$title, "Double it")
+    expect_true(any(grepl("x <- 2", build$statement, fixed = TRUE)))
   })
 
   it("regenerates when the reference solution fails verification", {
@@ -261,6 +312,9 @@ describe("r_challenge_draft_build()", {
       r_challenge_reprex_check = function(solution, tests, ...) {
         calls <<- calls + 1L
         list(ok = calls > 1L, output = "out")
+      },
+      r_challenge_render_statement = function(...) {
+        list(ok = TRUE, rendered = "x")
       },
       r_challenge_adversarial_check = function(...) {
         list(ok = TRUE, verdict = "approve", issues = character())
@@ -273,11 +327,33 @@ describe("r_challenge_draft_build()", {
     expect_identical(build$attempts, 2L)
   })
 
+  it("regenerates when the statement does not render", {
+    local_mocked_bindings(
+      r_challenge_generate = function(...) good_json(),
+      r_challenge_reprex_check = function(...) list(ok = TRUE, output = "ok"),
+      r_challenge_render_statement = function(...) {
+        list(ok = FALSE, rendered = "boom")
+      },
+      r_challenge_adversarial_check = function(...) {
+        list(ok = TRUE, verdict = "approve", issues = character())
+      }
+    )
+    expect_warning(
+      expect_message(
+        build <- r_challenge_draft_build(max_tries = 1L),
+        "statement did not render"
+      ),
+      "No verified challenge"
+    )
+    expect_null(build)
+  })
+
   it("rejects a challenge the adversarial reviewer flags, then gives up", {
     local_mocked_bindings(
       r_challenge_generate = function(...) good_json(),
-      r_challenge_reprex_check = function(solution, tests, ...) {
-        list(ok = TRUE, output = "ok")
+      r_challenge_reprex_check = function(...) list(ok = TRUE, output = "ok"),
+      r_challenge_render_statement = function(...) {
+        list(ok = TRUE, rendered = "x")
       },
       r_challenge_adversarial_check = function(...) {
         list(ok = FALSE, verdict = "reject", issues = "ambiguous")
@@ -296,8 +372,9 @@ describe("r_challenge_draft_build()", {
   it("regenerates when the model output is not a valid challenge", {
     local_mocked_bindings(
       r_challenge_generate = function(...) "not json at all",
-      r_challenge_reprex_check = function(solution, tests, ...) {
-        list(ok = TRUE, output = "ok")
+      r_challenge_reprex_check = function(...) list(ok = TRUE, output = "ok"),
+      r_challenge_render_statement = function(...) {
+        list(ok = TRUE, rendered = "x")
       },
       r_challenge_adversarial_check = function(...) {
         list(ok = TRUE, verdict = "approve", issues = character())
@@ -315,27 +392,29 @@ describe("r_challenge_draft_build()", {
 })
 
 describe("r_challenge_format_slack()", {
-  it("includes the difficulty badge, tier label, title, and prompt", {
-    out <- r_challenge_format_slack(sample_challenge())
+  statement_lines <- function() {
+    c("``` r", "x <- 2", "# should return:", "4", "#> [1] 4", "```")
+  }
+
+  it("includes the difficulty badge, tier label, title, and statement", {
+    out <- r_challenge_format_slack("Double it", "beginner", statement_lines())
     expect_match(out, intToUtf8(0x1F7E2), fixed = TRUE)
     expect_match(out, "Novice", fixed = TRUE)
     expect_match(out, "brewing in the cauldron", fixed = TRUE)
     expect_match(out, "Double it", fixed = TRUE)
-    expect_match(out, "Write double", fixed = TRUE)
+    expect_match(out, "should return", fixed = TRUE)
+    expect_match(out, "#> [1] 4", fixed = TRUE)
   })
 
-  it("puts the sample in a fenced code block and never reveals the solution", {
-    out <- r_challenge_format_slack(sample_challenge())
-    expect_match(out, "```r", fixed = TRUE)
-    expect_false(grepl("double <- function(x) x * 2", out, fixed = TRUE))
+  it("strips the reprex language tag and never reveals a solution", {
+    out <- r_challenge_format_slack("t", "beginner", statement_lines())
+    expect_false(grepl("``` r", out, fixed = TRUE))
+    expect_false(grepl("function", out, fixed = TRUE))
   })
 
-  it("escapes injected Slack control sequences in model text", {
-    challenge <- sample_challenge()
-    challenge$prompt <- "Ping <!channel> and click <https://evil.test|here>"
-    out <- r_challenge_format_slack(challenge)
+  it("escapes injected Slack control sequences in the title", {
+    out <- r_challenge_format_slack("Ping <!channel>", "beginner", "x")
     expect_false(grepl("<!channel>", out, fixed = TRUE))
-    expect_false(grepl("<https://evil.test|here>", out, fixed = TRUE))
   })
 })
 
@@ -346,9 +425,9 @@ describe("r_challenge_format_issue() and r_challenge_issue_title()", {
     expect_match(title, "beginner", fixed = TRUE)
   })
 
-  it("shows the prompt and hides the solution and verification in details", {
+  it("shows the statement and hides the solution and verification in details", {
     body <- r_challenge_format_issue(sample_build())
-    expect_match(body, "Write double", fixed = TRUE)
+    expect_match(body, "should return", fixed = TRUE)
     expect_match(body, "Reference solution", fixed = TRUE)
     expect_match(body, "double <- function(x) x * 2", fixed = TRUE)
     expect_match(body, "Adversarial review", fixed = TRUE)
