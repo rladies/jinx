@@ -1,0 +1,50 @@
+name: Bot · R Challenge Draft
+
+# Weekly: draft an R challenge, verify it (run the solution + adversarial
+# review), and open it as a `status: proposed` issue in rladies/cauldron for an
+# organiser to review. Mid-week so there's time to review before it's posted.
+
+on:
+  schedule:
+    - cron: "0 10 * * 4"
+  workflow_dispatch: {}
+
+concurrency:
+  group: bot-r-challenge-draft
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: ghcr.io/rladies/jinx-bot:latest
+
+    steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+          owner: rladies
+
+      - name: Draft and propose a challenge
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          GITHUB_PAT: ${{ steps.app-token.outputs.token }}
+        run: Rscript -e 'jinx::r_challenge_draft_post()'
+
+  notify-failure:
+    needs: draft
+    if: failure()
+    uses: ./.github/workflows/reusable-slack-fail-notify.yml
+    with:
+      message: "😿 Jinx weekly R challenge draft failed — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run logs>"
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
+      SLACK_CHANNEL: ${{ secrets.SLACK_HEALTHCHECK_CHANNEL }}
