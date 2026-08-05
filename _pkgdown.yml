@@ -194,6 +194,11 @@ reference:
       - question_digest_build
       - question_digest_post
 
+  - title: Weekly R challenge
+    desc: AI-drafted, reprex- and adversarially-verified weekly R challenge
+    contents:
+      - starts_with("r_challenge_")
+
   - title: Conference coordination
     desc: CFP tracking and speaker recommendations
     contents:
