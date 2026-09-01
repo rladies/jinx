@@ -466,3 +466,307 @@ describe("directory_photo_change", {
     expect_identical(res$meta$url, "directory/jane.jpg")
   })
 })
+
+describe("airtable_mark_batches", {
+  it("splits ids into batches of at most 10", {
+    ids <- sprintf("rec%02d", 1:23)
+    batches <- airtable_mark_batches(ids, "synced")
+    expect_length(batches, 3)
+    expect_length(batches[[1]]$records, 10)
+    expect_length(batches[[3]]$records, 3)
+  })
+
+  it("sets the field to TRUE on each record", {
+    payload <- airtable_mark_batches(c("recA", "recB"), "synced")[[1]]
+    expect_identical(payload$records[[1]]$id, "recA")
+    expect_true(payload$records[[1]]$fields$synced)
+    expect_identical(payload$records[[2]]$id, "recB")
+  })
+})
+
+describe("airtable_mark_processed", {
+  it("performs one request per batch of 10", {
+    calls <- 0L
+    local_mocked_bindings(
+      req_perform = function(req) {
+        calls <<- calls + 1L
+        req
+      },
+      .package = "httr2"
+    )
+    airtable_mark_processed(
+      "base",
+      "submissions",
+      sprintf("rec%02d", 1:15),
+      "k"
+    )
+    expect_identical(calls, 2L)
+  })
+
+  it("is a no-op for empty or blank ids", {
+    local_mocked_bindings(
+      req_perform = function(req) stop("should not be called"),
+      .package = "httr2"
+    )
+    expect_identical(
+      airtable_mark_processed("base", "submissions", character(0), "k"),
+      character(0)
+    )
+    expect_identical(
+      airtable_mark_processed("base", "submissions", c("", ""), "k"),
+      character(0)
+    )
+  })
+
+  it("de-duplicates ids before sending", {
+    seen <- NULL
+    local_mocked_bindings(
+      req_perform = function(req) req,
+      .package = "httr2"
+    )
+    got <- airtable_mark_processed(
+      "base",
+      "submissions",
+      c("recA", "recA", "recB"),
+      "k"
+    )
+    expect_identical(got, c("recA", "recB"))
+  })
+})
+
+describe("airtable_delete_records", {
+  it("issues one DELETE per unique, non-blank id", {
+    seen <- character(0)
+    local_mocked_bindings(
+      req_perform = function(req) {
+        seen[[length(seen) + 1]] <<- req$url
+        req
+      },
+      .package = "httr2"
+    )
+    got <- airtable_delete_records(
+      "base",
+      "submissions",
+      c("recA", "recA", NA, "", "recB"),
+      "k"
+    )
+    expect_identical(got, c("recA", "recB"))
+    expect_length(seen, 2)
+    expect_true(all(grepl("/submissions/rec[AB]$", seen)))
+  })
+
+  it("is a no-op for no ids", {
+    local_mocked_bindings(
+      req_perform = function(req) stop("should not be called"),
+      .package = "httr2"
+    )
+    expect_identical(
+      airtable_delete_records("base", "submissions", character(0), "k"),
+      character(0)
+    )
+  })
+})
+
+describe("directory_purge_submissions", {
+  subs <- list(
+    list(id = "rec1", fields = list(directory_id = "jane-doe")),
+    list(id = "rec2", fields = list(identifier = "Jane-Doe")),
+    list(id = "rec3", fields = list(directory_id = "someone-else")),
+    list(id = "rec4", fields = list(first_name = "no slug here"))
+  )
+
+  it("deletes every row resolving to a purged slug, and only those", {
+    deleted <- NULL
+    local_mocked_bindings(
+      airtable_list_records = function(...) subs,
+      airtable_delete_records = function(base_id, table, record_ids, api_key) {
+        deleted <<- record_ids
+        invisible(record_ids)
+      }
+    )
+    got <- directory_purge_submissions("jane-doe", api_key = "k")
+    expect_setequal(got, c("rec1", "rec2"))
+    expect_setequal(deleted, c("rec1", "rec2"))
+  })
+
+  it("is a no-op for empty slugs and aborts without an API key", {
+    local_mocked_bindings(
+      airtable_list_records = function(...) stop("should not list"),
+      airtable_delete_records = function(...) stop("should not delete")
+    )
+    expect_identical(
+      directory_purge_submissions(character(0), api_key = "k"),
+      character(0)
+    )
+    expect_error(
+      directory_purge_submissions("jane-doe", api_key = ""),
+      "AIRTABLE_API_KEY"
+    )
+  })
+})
+
+describe("directory_drop_synced", {
+  it("keeps submissions without the synced flag", {
+    subs <- list(
+      list(id = "recA", fields = list(first_name = "A")),
+      list(id = "recB", fields = list(first_name = "B", synced = FALSE))
+    )
+    expect_length(directory_drop_synced(subs), 2)
+  })
+
+  it("drops submissions already flagged synced", {
+    subs <- list(
+      list(id = "recA", fields = list(synced = TRUE)),
+      list(id = "recB", fields = list(first_name = "B"))
+    )
+    kept <- directory_drop_synced(subs)
+    expect_length(kept, 1)
+    expect_identical(kept[[1]]$id, "recB")
+  })
+})
+
+describe("directory_transform_record carries the record id", {
+  it("keeps the Airtable id on updates and deletes", {
+    rec <- list(
+      id = "recABC",
+      createdTime = "2026-01-15T10:00:00.000Z",
+      fields = list(minority_gender = "yes", directory_id = "jane")
+    )
+    expect_identical(
+      directory_transform_record(rec, list())$record_id,
+      "recABC"
+    )
+
+    del <- rec
+    del$fields$request_type <- "Delete directory entry"
+    got <- directory_transform_record(del, list())
+    expect_true(got$delete)
+    expect_identical(got$record_id, "recABC")
+  })
+})
+
+describe("directory_entry_incorporated", {
+  entry <- list(slug = "jane", data = list(name = "Jane"))
+
+  it("is FALSE when the submission would change the entry file", {
+    local_mocked_bindings(
+      directory_entry_changes = function(...) list(list(kind = "entry"))
+    )
+    expect_false(directory_entry_incorporated(entry, "rladies", "directory"))
+  })
+
+  it("is TRUE only when nothing at all would change", {
+    local_mocked_bindings(
+      directory_entry_changes = function(...) list()
+    )
+    expect_true(directory_entry_incorporated(entry, "rladies", "directory"))
+  })
+
+  it("is FALSE when only the contact or photo would change", {
+    local_mocked_bindings(
+      directory_entry_changes = function(...) list(list(kind = "contact"))
+    )
+    expect_false(directory_entry_incorporated(entry, "rladies", "directory"))
+
+    local_mocked_bindings(
+      directory_entry_changes = function(...) list(list(kind = "image"))
+    )
+    expect_false(directory_entry_incorporated(entry, "rladies", "directory"))
+  })
+})
+
+describe("directory_entry_absent", {
+  it("is TRUE on a 404, FALSE when the file exists", {
+    local_mocked_bindings(
+      gh = function(...) {
+        stop(structure(
+          class = c("http_error_404", "error", "condition"),
+          list(message = "Not Found")
+        ))
+      },
+      .package = "gh"
+    )
+    expect_true(directory_entry_absent("gone", "rladies", "directory"))
+
+    local_mocked_bindings(gh = function(...) list(sha = "s"), .package = "gh")
+    expect_false(directory_entry_absent("here", "rladies", "directory"))
+  })
+
+  it("propagates non-404 errors instead of reading them as absent", {
+    local_mocked_bindings(
+      gh = function(...) stop("API rate limit exceeded"),
+      .package = "gh"
+    )
+    expect_error(
+      directory_entry_absent("x", "rladies", "directory"),
+      "rate limit"
+    )
+  })
+})
+
+describe("directory_mark_synced", {
+  it("marks incorporated updates and purged deletes, not the rest", {
+    subs <- list(
+      list(
+        id = "recA",
+        createdTime = "2026-01-01T00:00:00.000Z",
+        fields = list(minority_gender = "yes", directory_id = "a")
+      ),
+      list(
+        id = "recB",
+        createdTime = "2026-01-01T00:00:00.000Z",
+        fields = list(minority_gender = "yes", directory_id = "b")
+      ),
+      list(
+        id = "recDel",
+        createdTime = "2026-01-01T00:00:00.000Z",
+        fields = list(
+          minority_gender = "yes",
+          directory_id = "gone",
+          request_type = "Delete directory entry"
+        )
+      ),
+      list(
+        id = "recKeep",
+        createdTime = "2026-01-01T00:00:00.000Z",
+        fields = list(
+          minority_gender = "yes",
+          directory_id = "still-here",
+          request_type = "Delete directory entry"
+        )
+      )
+    )
+    marked <- NULL
+    local_mocked_bindings(
+      airtable_list_records = function(...) subs,
+      directory_build_lookups = function(...) {
+        list(
+          languages = character(0),
+          countries = character(0),
+          interests = character(0)
+        )
+      },
+      directory_entry_changes = function(entry, ...) {
+        if (identical(entry$slug, "a")) list() else list(list(kind = "entry"))
+      },
+      directory_entry_absent = function(slug, ...) identical(slug, "gone"),
+      airtable_mark_processed = function(
+        base_id,
+        table,
+        record_ids,
+        api_key,
+        ...
+      ) {
+        marked <<- record_ids
+        invisible(record_ids)
+      }
+    )
+    got <- directory_mark_synced(api_key = "k")
+    expect_setequal(got, c("recA", "recDel"))
+    expect_setequal(marked, c("recA", "recDel"))
+  })
+
+  it("aborts when no API key is set", {
+    expect_error(directory_mark_synced(api_key = ""), "AIRTABLE_API_KEY")
+  })
+})
