@@ -66,6 +66,14 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="channel-renames-via-an-owner-grant-development-version">Channel renames via an owner grant<a class="anchor" aria-label="anchor" href="#channel-renames-via-an-owner-grant-development-version"></a></h3>
+<ul><li>
+<strong><code>/slack/install?user_scope=rename</code> requests a <code>channels:write</code> user grant.</strong> Slack refuses <code>conversations.rename</code> from a bot token for a channel the bot did not create, which failed all 25 community renames with <code>not_authorized</code>; a grant from a workspace owner passes that check. A routine install is unchanged and never asks for it.</li>
+<li>The grant is <strong>shown once to the authorising owner and not stored</strong> - it acts as them and is wanted only for a one-off pass, so it belongs in 1Password with the other operator credentials rather than in the KV the Worker reads on every request. Revoke it with <code>auth.revoke</code> afterwards.</li>
+<li>
+<strong><code>channel_copy_apply(user_token =)</code></strong> uses it for <code>name</code> rows only. Topics, descriptions and the channel join still go through the bot token.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="channel-copy-fidelity-fixes-development-version">Channel copy fidelity fixes<a class="anchor" aria-label="anchor" href="#channel-copy-fidelity-fixes-development-version"></a></h3>
 <ul><li>
 <strong>The reviewed copy now keeps its em-dashes.</strong> The extraction that produced <code>inst/extdata/channel-copy.csv</code> replaced every em-dash with a hyphen, so 22 values were applied in a form nobody reviewed. The package’s ASCII convention governs R source, not Slack copy.</li>

@@ -82,7 +82,8 @@ skipped and why.</p>
 <span>  dry_run <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  skip <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  join <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  include_drift <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  include_drift <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  user_token <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -118,6 +119,13 @@ refuses <code>conversations.setTopic</code>, <code>setPurpose</code> and <code>r
 since the review. Off by default: drift means someone edited the
 channel after the copy was written, so applying overwrites the newer
 text with older reviewed text.</p></dd>
+
+
+<dt id="arg-user-token">user_token<a class="anchor" aria-label="anchor" href="#arg-user-token"></a></dt>
+<dd><p>Optional Slack user token used for <code>rename</code> rows
+only. Slack refuses <code>conversations.rename</code> from a bot token for a
+channel the bot did not create; a grant from a workspace owner
+passes that check. Topics and descriptions always use <code>token</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

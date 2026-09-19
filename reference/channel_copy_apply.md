@@ -13,7 +13,8 @@ channel_copy_apply(
   dry_run = TRUE,
   skip = character(),
   join = TRUE,
-  include_drift = FALSE
+  include_drift = FALSE,
+  user_token = NULL
 )
 ```
 
@@ -49,6 +50,13 @@ channel_copy_apply(
   default: drift means someone edited the channel after the copy was
   written, so applying overwrites the newer text with older reviewed
   text.
+
+- user_token:
+
+  Optional Slack user token used for `rename` rows only. Slack refuses
+  `conversations.rename` from a bot token for a channel the bot did not
+  create; a grant from a workspace owner passes that check. Topics and
+  descriptions always use `token`.
 
 ## Value
 

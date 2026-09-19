@@ -2,6 +2,22 @@
 
 ## jinx (development version)
 
+### Channel renames via an owner grant
+
+- **`/slack/install?user_scope=rename` requests a `channels:write` user
+  grant.** Slack refuses `conversations.rename` from a bot token for a
+  channel the bot did not create, which failed all 25 community renames
+  with `not_authorized`; a grant from a workspace owner passes that
+  check. A routine install is unchanged and never asks for it.
+- The grant is **shown once to the authorising owner and not stored** -
+  it acts as them and is wanted only for a one-off pass, so it belongs
+  in 1Password with the other operator credentials rather than in the KV
+  the Worker reads on every request. Revoke it with `auth.revoke`
+  afterwards.
+- **`channel_copy_apply(user_token =)`** uses it for `name` rows only.
+  Topics, descriptions and the channel join still go through the bot
+  token.
+
 ### Channel copy fidelity fixes
 
 - **The reviewed copy now keeps its em-dashes.** The extraction that
