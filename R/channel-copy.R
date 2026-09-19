@@ -133,7 +133,30 @@ plan_row <- function(
   )
 }
 
-copy_plan_rows <- function(props, index) {
+channel_lookup <- function(index, name, renames) {
+  hit <- index[index$name == name, ]
+  if (nrow(hit) > 0) {
+    return(hit)
+  }
+  # Applying a rename makes the reviewed copy, which is keyed by the old
+  # name, point at a channel that no longer answers to it. Follow the
+  # rename so a second pass still sees the channel instead of reporting it
+  # missing and silently skipping it forever.
+  renamed <- renames$new[renames$old == name]
+  if (length(renamed) == 0) {
+    return(index[0, ])
+  }
+  index[index$name %in% renamed, ]
+}
+
+copy_plan_rows <- function(props, index, renames = NULL) {
+  if (is.null(renames)) {
+    renames <- data.frame(
+      old = character(),
+      new = character(),
+      stringsAsFactors = FALSE
+    )
+  }
   fields <- list(
     list(field = "topic", method = "conversations.setTopic", live = "topic"),
     list(
@@ -146,7 +169,7 @@ copy_plan_rows <- function(props, index) {
 
   for (i in seq_len(nrow(props))) {
     prop <- props[i, ]
-    hit <- index[index$name == prop$channel, ]
+    hit <- channel_lookup(index, prop$channel, renames)
     if (nrow(hit) == 0) {
       rows[[length(rows) + 1]] <- data.frame(
         channel = prop$channel,
@@ -234,7 +257,7 @@ channel_copy_plan <- function(
   renames <- renames %||% channel_rename_proposals(workspace)
 
   rbind(
-    copy_plan_rows(proposals, index),
+    copy_plan_rows(proposals, index, renames),
     rename_plan_rows(renames, index)
   )
 }

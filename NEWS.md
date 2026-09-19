@@ -1,5 +1,15 @@
 # jinx (development version)
 
+## The plan follows channels that have been renamed
+
+- **`channel_copy_plan()` now resolves a proposal through the rename
+  map** when the channel no longer answers to its reviewed name.
+  Applying the renames made 25 of the community workspace's 43 channels
+  report as `missing`, because the copy is keyed by the old name - so a
+  later pass would have skipped them silently rather than maintaining
+  them. A channel that is absent for any other reason still reports
+  `missing`.
+
 ## Channel renames via an owner grant
 
 - **`/slack/install?user_scope=rename` requests a `channels:write` user

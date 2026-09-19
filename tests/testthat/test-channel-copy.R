@@ -172,6 +172,41 @@ describe("channel_copy_plan", {
     expect_equal(row$status, "drift")
   })
 
+  it("follows a rename that has already been applied", {
+    index <- fake_index()
+    index$name[index$name == "jobs"] <- "career-jobs"
+    renames <- data.frame(
+      workspace = "community",
+      tier = "t",
+      old = "jobs",
+      new = "career-jobs",
+      why = "scope",
+      stringsAsFactors = FALSE
+    )
+    plan <- channel_copy_plan(
+      "community",
+      index = index,
+      proposals = channel_copy_proposals("community", path = copy_fixture()),
+      renames = renames
+    )
+    row <- plan[plan$channel == "jobs" & plan$field == "topic", ]
+    expect_equal(nrow(row), 1)
+    expect_false(row$status == "missing")
+    expect_equal(row$id, "C2")
+  })
+
+  it("still reports missing when no rename explains the absence", {
+    index <- fake_index()
+    index <- index[index$name != "jobs", ]
+    plan <- channel_copy_plan(
+      "community",
+      index = index,
+      proposals = channel_copy_proposals("community", path = copy_fixture()),
+      renames = channel_rename_proposals("community", path = rename_fixture())
+    )
+    expect_equal(plan$status[plan$channel == "jobs"], "missing")
+  })
+
   it("marks an absent channel as missing", {
     plan <- fixture_plan("community")
     expect_equal(plan$status[plan$channel == "ghost"], "missing")
