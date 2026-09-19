@@ -10,7 +10,8 @@ channel_copy_apply(
   dry_run = TRUE,
   skip = character(),
   join = TRUE,
-  include_drift = FALSE
+  include_drift = FALSE,
+  user_token = NULL
 )
 }
 \arguments{
@@ -31,6 +32,11 @@ refuses \code{conversations.setTopic}, \code{setPurpose} and \code{rename} with
 since the review. Off by default: drift means someone edited the
 channel after the copy was written, so applying overwrites the newer
 text with older reviewed text.}
+
+\item{user_token}{Optional Slack user token used for \code{rename} rows
+only. Slack refuses \code{conversations.rename} from a bot token for a
+channel the bot did not create; a grant from a workspace owner
+passes that check. Topics and descriptions always use \code{token}.}
 }
 \value{
 \code{plan} with \code{applied} and \code{error} columns added.

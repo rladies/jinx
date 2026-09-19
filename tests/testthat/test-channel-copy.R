@@ -495,6 +495,91 @@ describe("channel_copy_apply", {
     expect_equal(out$status, "skipped")
   })
 
+  it("uses the user token for renames and the bot token for copy", {
+    seen <- list()
+    local_mocked_bindings(
+      slack_api_call = function(token, method, body = list()) {
+        seen[[length(seen) + 1]] <<- list(token = token, method = method)
+        list(ok = TRUE)
+      }
+    )
+    plan <- data.frame(
+      channel = c("a", "b"),
+      id = c("C1", "C2"),
+      field = c("topic", "name"),
+      method = c("conversations.setTopic", "conversations.rename"),
+      from = "old",
+      to = "new",
+      status = "apply",
+      is_member = TRUE,
+      stringsAsFactors = FALSE
+    )
+    suppressMessages(channel_copy_apply(
+      plan,
+      "xoxb-bot",
+      dry_run = FALSE,
+      user_token = "xoxp-user"
+    ))
+    bym <- stats::setNames(
+      vapply(seen, function(x) x$token, character(1)),
+      vapply(seen, function(x) x$method, character(1))
+    )
+    expect_equal(bym[["conversations.setTopic"]], "xoxb-bot")
+    expect_equal(bym[["conversations.rename"]], "xoxp-user")
+  })
+
+  it("falls back to the bot token for renames when no user token is given", {
+    seen <- character()
+    local_mocked_bindings(
+      slack_api_call = function(token, method, body = list()) {
+        seen <<- c(seen, token)
+        list(ok = TRUE)
+      }
+    )
+    plan <- data.frame(
+      channel = "b",
+      id = "C2",
+      field = "name",
+      method = "conversations.rename",
+      from = "old",
+      to = "new",
+      status = "apply",
+      is_member = TRUE,
+      stringsAsFactors = FALSE
+    )
+    suppressMessages(channel_copy_apply(plan, "xoxb-bot", dry_run = FALSE))
+    expect_equal(seen, "xoxb-bot")
+  })
+
+  it("joins with the bot token even when renaming as a user", {
+    seen <- list()
+    local_mocked_bindings(
+      slack_api_call = function(token, method, body = list()) {
+        seen[[length(seen) + 1]] <<- list(token = token, method = method)
+        list(ok = TRUE)
+      }
+    )
+    plan <- data.frame(
+      channel = "b",
+      id = "C2",
+      field = "name",
+      method = "conversations.rename",
+      from = "old",
+      to = "new",
+      status = "apply",
+      is_member = FALSE,
+      stringsAsFactors = FALSE
+    )
+    suppressMessages(channel_copy_apply(
+      plan,
+      "xoxb-bot",
+      dry_run = FALSE,
+      user_token = "xoxp-user"
+    ))
+    expect_equal(seen[[1]]$method, "conversations.join")
+    expect_equal(seen[[1]]$token, "xoxb-bot")
+  })
+
   it("leaves skipped channels alone", {
     called <- FALSE
     local_mocked_bindings(
