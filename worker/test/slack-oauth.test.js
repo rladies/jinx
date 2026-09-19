@@ -56,6 +56,8 @@ describe("slack_oauth_install_handle", () => {
       "bookmarks:read",
       "bookmarks:write",
       "channels:join",
+      "channels:manage",
+      "channels:write.topic",
     ]) {
       expect(scopes.split(",")).toContain(expected);
     }
