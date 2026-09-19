@@ -91,8 +91,13 @@ slack_channel_index <- function(
 
 copy_normalise <- function(x) {
   x <- as.character(x %||% "")
+  # Slack rewrites what it is given: a bare URL becomes <url>, and a bare
+  # domain becomes <url|label>. Normalise a labelled link to its LABEL,
+  # which is the text that was actually written - resolving it to the URL
+  # instead makes "meetup.com" compare unequal to Slack's rendering of it
+  # forever.
+  x <- gsub("<(https?://[^>|]*)\\|([^>]*)>", "\\2", x)
   x <- gsub("<(https?://[^>|]*)>", "\\1", x)
-  x <- gsub("<(https?://[^>|]*)\\|[^>]*>", "\\1", x)
   x <- gsub("&amp;", "&", x, fixed = TRUE)
   x <- gsub("&lt;", "<", x, fixed = TRUE)
   x <- gsub("&gt;", ">", x, fixed = TRUE)
