@@ -189,6 +189,32 @@ describe("slack_api_call", {
   it("aborts when no token is set", {
     expect_error(slack_api_call("", "conversations.open"), "token")
   })
+
+  it("waits as long as Slack asks, up to a minute", {
+    expect_equal(
+      slack_retry_after(response(429, headers = list(`Retry-After` = "30"))),
+      30
+    )
+    expect_equal(
+      slack_retry_after(response(429, headers = list(`Retry-After` = "45"))),
+      45
+    )
+  })
+
+  it("caps an absurd Retry-After at 60s", {
+    expect_equal(
+      slack_retry_after(response(429, headers = list(`Retry-After` = "600"))),
+      60
+    )
+  })
+
+  it("falls back to 1s when Retry-After is absent or unparseable", {
+    expect_equal(slack_retry_after(response(429)), 1)
+    expect_equal(
+      slack_retry_after(response(429, headers = list(`Retry-After` = "soon"))),
+      1
+    )
+  })
 })
 
 describe("slack_bot_token", {

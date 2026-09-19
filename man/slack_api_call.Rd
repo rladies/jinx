@@ -2,7 +2,14 @@
 % Please edit documentation in R/slack-manage.R
 \name{slack_api_call}
 \alias{slack_api_call}
-\title{Call a Slack Web API method}
+\title{Generic low-level Slack API caller shared by the event/command
+handlers that need more than \code{\link[=slack_post_message]{slack_post_message()}}'s single
+\code{chat.postMessage} call - DM opening, channel lookup, bookmarks, and
+so on. Retries on a 429 or 5xx response, honouring the \code{Retry-After}
+header up to 60s. Slack's \code{Retry-After} for a Tier 2 method is
+routinely 30-60s, so a shorter cap guarantees failure under sustained
+rate limiting - which a bulk pass over a workspace's channels hits
+readily.}
 \usage{
 slack_api_call(token, method, body = list())
 }
@@ -20,7 +27,9 @@ The parsed JSON response (a list).
 Generic low-level Slack API caller shared by the event/command
 handlers that need more than \code{\link[=slack_post_message]{slack_post_message()}}'s single
 \code{chat.postMessage} call - DM opening, channel lookup, bookmarks, and
-so on. Retries once on a 429 or 5xx response, honouring the
-\code{Retry-After} header (capped at 5s), mirroring
-\code{worker/src/slack-api.js}'s \code{slack_api_call()}.
+so on. Retries on a 429 or 5xx response, honouring the \code{Retry-After}
+header up to 60s. Slack's \code{Retry-After} for a Tier 2 method is
+routinely 30-60s, so a shorter cap guarantees failure under sustained
+rate limiting - which a bulk pass over a workspace's channels hits
+readily.
 }
