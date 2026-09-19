@@ -251,11 +251,17 @@ describe("copy_normalise", {
     )
   })
 
-  it("undoes a labelled Slack link", {
+  it("resolves a labelled Slack link to the text that was written", {
     expect_equal(
       copy_normalise("<https://example.com|example>"),
-      "https://example.com"
+      "example"
     )
+  })
+
+  it("matches a bare domain against Slack's auto-linked rendering of it", {
+    written <- "an interface to the meetup.com API."
+    stored <- "an interface to the <http://meetup.com|meetup.com> API."
+    expect_equal(copy_normalise(stored), copy_normalise(written))
   })
 
   it("leaves a plain angle-bracketed non-URL alone", {
