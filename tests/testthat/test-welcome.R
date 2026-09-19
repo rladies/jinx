@@ -1,3 +1,63 @@
+describe("slack_conversations_list", {
+  it("pages until the cursor is empty", {
+    calls <- 0L
+    local_mocked_bindings(
+      slack_bot_token = function(...) "xoxb-test",
+      slack_api_call = function(token, method, body = list(), ...) {
+        calls <<- calls + 1L
+        if (calls == 1L) {
+          list(
+            channels = list(list(id = "C1")),
+            response_metadata = list(next_cursor = "page2")
+          )
+        } else {
+          list(
+            channels = list(list(id = "C2")),
+            response_metadata = list(next_cursor = "")
+          )
+        }
+      }
+    )
+    out <- slack_conversations_list(NULL, "community")
+    expect_length(out, 2)
+    expect_equal(calls, 2L)
+  })
+
+  it("sends the cursor form-encoded, which Slack requires to advance", {
+    bodies <- list()
+    encodes <- character()
+    local_mocked_bindings(
+      slack_bot_token = function(...) "xoxb-test",
+      slack_api_call = function(token, method, body = list(), encode = "json") {
+        bodies[[length(bodies) + 1]] <<- body
+        encodes <<- c(encodes, encode)
+        cur <- if (length(bodies) == 1L) "page2" else ""
+        list(channels = list(), response_metadata = list(next_cursor = cur))
+      }
+    )
+    slack_conversations_list(NULL, "community")
+    expect_setequal(encodes, "form")
+    expect_null(bodies[[1]]$cursor)
+    expect_equal(bodies[[2]]$cursor, "page2")
+  })
+
+  it("aborts rather than looping when the cursor never advances", {
+    local_mocked_bindings(
+      slack_bot_token = function(...) "xoxb-test",
+      slack_api_call = function(token, method, body = list(), ...) {
+        list(
+          channels = list(list(id = "C1")),
+          response_metadata = list(next_cursor = "stuck")
+        )
+      }
+    )
+    expect_error(
+      slack_conversations_list(NULL, "community"),
+      "never advanced"
+    )
+  })
+})
+
 describe("slack_channel_id_lookup", {
   it("returns NULL for an empty name", {
     expect_null(slack_channel_id_lookup("T_ORG", "", "community"))

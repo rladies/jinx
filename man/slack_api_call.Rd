@@ -11,7 +11,7 @@ routinely 30-60s, so a shorter cap guarantees failure under sustained
 rate limiting - which a bulk pass over a workspace's channels hits
 readily.}
 \usage{
-slack_api_call(token, method, body = list())
+slack_api_call(token, method, body = list(), encode = c("json", "form"))
 }
 \arguments{
 \item{token}{Slack bot token.}
@@ -19,6 +19,12 @@ slack_api_call(token, method, body = list())
 \item{method}{Slack Web API method name, e.g. \code{"conversations.open"}.}
 
 \item{body}{Named list of request parameters.}
+
+\item{encode}{How to send \code{body}. \code{"json"} suits the \verb{chat.*} methods
+that take structured blocks. \code{"form"} is required by the paginated
+read methods such as \code{conversations.list}, which ignore a JSON body
+outright - including \code{limit} and \code{cursor}, so a JSON-bodied call
+silently returns page one forever.}
 }
 \value{
 The parsed JSON response (a list).

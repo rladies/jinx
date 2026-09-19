@@ -190,6 +190,48 @@ describe("slack_api_call", {
     expect_error(slack_api_call("", "conversations.open"), "token")
   })
 
+  it("sends a JSON body by default", {
+    sent <- NULL
+    local_mocked_responses(function(req) {
+      sent <<- req
+      response_json(body = list(ok = TRUE))
+    })
+    slack_api_call("xoxb-test", "chat.postMessage", list(channel = "C1"))
+    expect_equal(sent$body$type, "json")
+  })
+
+  it("form-encodes when asked, which the paginated read methods require", {
+    sent <- NULL
+    local_mocked_responses(function(req) {
+      sent <<- req
+      response_json(body = list(ok = TRUE))
+    })
+    slack_api_call(
+      "xoxb-test",
+      "conversations.list",
+      list(types = "public_channel", limit = 200, exclude_archived = TRUE),
+      encode = "form"
+    )
+    expect_equal(sent$body$type, "form")
+    expect_equal(as.character(sent$body$data$types), "public_channel")
+    expect_equal(as.character(sent$body$data$limit), "200")
+    expect_equal(as.character(sent$body$data$exclude_archived), "true")
+  })
+
+  it("renders logicals the way Slack reads them", {
+    expect_equal(
+      slack_form_values(list(exclude_archived = TRUE, x = FALSE)),
+      list(exclude_archived = "true", x = "false")
+    )
+  })
+
+  it("leaves non-logical values alone", {
+    expect_equal(
+      slack_form_values(list(types = "public_channel", limit = 200)),
+      list(types = "public_channel", limit = 200)
+    )
+  })
+
   it("waits as long as Slack asks, up to a minute", {
     expect_equal(
       slack_retry_after(response(429, headers = list(`Retry-After` = "30"))),
