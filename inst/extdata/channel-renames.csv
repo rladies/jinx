@@ -6,16 +6,16 @@ community,Fix the scope separator on the events family,events_europe,events-euro
 community,Fix the scope separator on the events family,events_latam,events-latin_america,"separator, plus abbreviation spelled out"
 community,Fix the scope separator on the events family,events_northam,events-north_america,"separator, plus abbreviation spelled out"
 community,Fix the scope separator on the events family,events_oceania,events-oceania,scope separator: underscore → hyphen
-community,Apply the convention - spaces become underscores,shameless-promo,shameless_promo,hyphen used as space → underscore
-community,Apply the convention - spaces become underscores,gender-equality,gender_equality,hyphen used as space → underscore
-community,Apply the convention - spaces become underscores,social-justice,social_justice,hyphen used as space → underscore
-community,Apply the convention - spaces become underscores,whereintheworld,where_in_the_world,run-together → underscores
-community,Apply the convention - spaces become underscores,r-project-inclusion,r-project_inclusion,second hyphen → underscore; stays out of the network scope (see below)
+community,Apply the convention — spaces become underscores,shameless-promo,shameless_promo,hyphen used as space → underscore
+community,Apply the convention — spaces become underscores,gender-equality,gender_equality,hyphen used as space → underscore
+community,Apply the convention — spaces become underscores,social-justice,social_justice,hyphen used as space → underscore
+community,Apply the convention — spaces become underscores,whereintheworld,where_in_the_world,run-together → underscores
+community,Apply the convention — spaces become underscores,r-project-inclusion,r-project_inclusion,second hyphen → underscore; stays out of the network scope (see below)
 community,A career- scope,jobs,career-jobs,joins the career- scope alongside #career-advice
 community,Interest networks under network-,rspatial,network-spatial,joins the network- scope
 community,Interest networks under network-,shiny,network-shiny,joins the network- scope
 community,Interest networks under network-,r4bio,network-bio,joins the network- scope; '4' was standing in for 'for'
-community,Interest networks under network-,tidy-tuesday,network-tidy_tuesday,"joins the network- scope - the loosest fit here, it is an activity as much as a group"
+community,Interest networks under network-,tidy-tuesday,network-tidy_tuesday,"joins the network- scope — the loosest fit here, it is an activity as much as a group"
 community,Interest networks under network-,journalism,network-journalism,joins the network- scope
 community,Language networks under network- too,rladies_es,network-español,matches the existing organiser handle exactly (or network-spanish)
 community,Language networks under network- too,rladies_por,network-português,the language's own name (or network-portuguese)
@@ -24,38 +24,38 @@ community,Affinity networks under network-,bipoc,network-bipoc,joins the network
 community,Drop the redundant brand prefix,rladies_announcements,announcements,brand prefix redundant inside the workspace
 community,Drop the redundant brand prefix,iwd_rladies,iwd_campaign,brand prefix redundant; says what the channel is for
 community,A fun- scope for the off-topic channels,ranimals,fun-ranimals,joins the fun- scope; pun intact (or fun-animals)
-organiser,Apply the convention - spaces become underscores,new-chapters,new_chapters,hyphen used as space → underscore
-organiser,Apply the convention - spaces become underscores,online-meetups,online_meetups,hyphen used as space → underscore
-organiser,Apply the convention - spaces become underscores,social-justice,social_justice,hyphen used as space → underscore
-organiser,Apply the convention - spaces become underscores,self-promotion,self_promotion,hyphen used as space → underscore
-organiser,Apply the convention - spaces become underscores,finance-fundraising,finance_fundraising,hyphen used as space → underscore
-organiser,Apply the convention - spaces become underscores,blogs-by-rladies,blogs_by_rladies,hyphens used as spaces → underscores
-organiser,Apply the convention - spaces become underscores,posit-cloud,posit_cloud,hyphen used as space → underscore
-organiser,Apply the convention - spaces become underscores,project-rladies-metrics,project-rladies_metrics,keep 'project-' scope; second hyphen → underscore (or simply project-metrics)
-organiser,Apply the convention - spaces become underscores,rladies-san-francisco,rladies-san_francisco,city space → underscore
-organiser,Apply the convention - spaces become underscores,rladies-los-angeles,rladies-los_angeles,city space → underscore
-organiser,Apply the convention - spaces become underscores,rladies-buenos-aires,rladies-buenos_aires,city space → underscore
-organiser,Apply the convention - spaces become underscores,rladies-twin-cities,rladies-twin_cities,city space → underscore
-organiser,Apply the convention - spaces become underscores,rladies-sao-paulo,rladies-sao_paulo,city space → underscore
-organiser,Apply the convention - spaces become underscores,rladies-eastlansing,rladies-east_lansing,run-together → underscore
-organiser,Apply the convention - spaces become underscores,rladies-santabarbara,rladies-santa_barbara,run-together → underscore
-organiser,Apply the convention - spaces become underscores,rladies-santarosa,rladies-santa_rosa,run-together → underscore
-organiser,Apply the convention - spaces become underscores,rladies-capetown,rladies-cape_town,run-together → underscore
+organiser,Apply the convention — spaces become underscores,new-chapters,new_chapters,hyphen used as space → underscore
+organiser,Apply the convention — spaces become underscores,online-meetups,online_meetups,hyphen used as space → underscore
+organiser,Apply the convention — spaces become underscores,social-justice,social_justice,hyphen used as space → underscore
+organiser,Apply the convention — spaces become underscores,self-promotion,self_promotion,hyphen used as space → underscore
+organiser,Apply the convention — spaces become underscores,finance-fundraising,finance_fundraising,hyphen used as space → underscore
+organiser,Apply the convention — spaces become underscores,blogs-by-rladies,blogs_by_rladies,hyphens used as spaces → underscores
+organiser,Apply the convention — spaces become underscores,posit-cloud,posit_cloud,hyphen used as space → underscore
+organiser,Apply the convention — spaces become underscores,project-rladies-metrics,project-rladies_metrics,keep 'project-' scope; second hyphen → underscore (or simply project-metrics)
+organiser,Apply the convention — spaces become underscores,rladies-san-francisco,rladies-san_francisco,city space → underscore
+organiser,Apply the convention — spaces become underscores,rladies-los-angeles,rladies-los_angeles,city space → underscore
+organiser,Apply the convention — spaces become underscores,rladies-buenos-aires,rladies-buenos_aires,city space → underscore
+organiser,Apply the convention — spaces become underscores,rladies-twin-cities,rladies-twin_cities,city space → underscore
+organiser,Apply the convention — spaces become underscores,rladies-sao-paulo,rladies-sao_paulo,city space → underscore
+organiser,Apply the convention — spaces become underscores,rladies-eastlansing,rladies-east_lansing,run-together → underscore
+organiser,Apply the convention — spaces become underscores,rladies-santabarbara,rladies-santa_barbara,run-together → underscore
+organiser,Apply the convention — spaces become underscores,rladies-santarosa,rladies-santa_rosa,run-together → underscore
+organiser,Apply the convention — spaces become underscores,rladies-capetown,rladies-cape_town,run-together → underscore
 organiser,Consistent network naming,network-brasil,network-brazil,English descriptor
 organiser,Consistent network naming,network-español,network-spanish,English descriptor
 organiser,Consistent network naming,network-français,network-french,English descriptor
 organiser,Consistent network naming,network-turkce,network-turkish,English descriptor
 organiser,Consistent network naming,network-netherlands,network-dutch,language descriptor (or keep as a region name)
-organiser,Abbreviations & a name collision,rladies-pdx,rladies-portland_or,"clashes with Portland, Maine - disambiguate (Oregon)"
-organiser,Abbreviations & a name collision,rladies-portland,rladies-portland_me,"clashes with Portland, Oregon - disambiguate (Maine)"
+organiser,Abbreviations & a name collision,rladies-pdx,rladies-portland_or,"clashes with Portland, Maine — disambiguate (Oregon)"
+organiser,Abbreviations & a name collision,rladies-portland,rladies-portland_me,"clashes with Portland, Oregon — disambiguate (Maine)"
 organiser,Abbreviations & a name collision,rladies-sjo,rladies-san_jose,"airport code → city (San José, Costa Rica)"
 organiser,Abbreviations & a name collision,rladies-ct,rladies-connecticut,abbreviation → full name (optional)
 organiser,Abbreviations & a name collision,rladies-rtp,rladies-research_triangle,abbreviation → full name (optional; RTP is locally common)
-organiser,Abbreviations & a name collision,rladies-nyc,rladies-new_york,optional - nyc is widely understood
-organiser,Abbreviations & a name collision,rladies-dc,rladies-washington_dc,optional - dc is widely understood
+organiser,Abbreviations & a name collision,rladies-nyc,rladies-new_york,optional — nyc is widely understood
+organiser,Abbreviations & a name collision,rladies-dc,rladies-washington_dc,optional — dc is widely understood
 organiser,A fun- scope for the off-topic channels,food,fun-food,joins the fun- scope
 organiser,A fun- scope for the off-topic channels,musicr,fun-music,joins the fun- scope (or fun-musicr to keep the pun)
 organiser,A fun- scope for the off-topic channels,r-cats,fun-cats,frees the r- prefix for actual R topics
 organiser,A fun- scope for the off-topic channels,r-dogs,fun-dogs,frees the r- prefix for actual R topics
 organiser,A fun- scope for the off-topic channels,r-babies,fun-babies,frees the r- prefix for actual R topics
-organiser,A fun- scope for the off-topic channels,polyanna,fun-polyanna,"scope only - spelling deliberately untouched, see ‘Leave as-is’ below"
+organiser,A fun- scope for the off-topic channels,polyanna,fun-polyanna,"scope only — spelling deliberately untouched, see ‘Leave as-is’ below"

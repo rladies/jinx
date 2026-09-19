@@ -209,6 +209,24 @@ describe("copy_normalise", {
     expect_equal(copy_normalise("a   b  "), "a b")
   })
 
+  it("undoes Slack's rewriting of a bare URL", {
+    expect_equal(
+      copy_normalise("see <https://example.com/x> ok"),
+      "see https://example.com/x ok"
+    )
+  })
+
+  it("undoes a labelled Slack link", {
+    expect_equal(
+      copy_normalise("<https://example.com|example>"),
+      "https://example.com"
+    )
+  })
+
+  it("leaves a plain angle-bracketed non-URL alone", {
+    expect_equal(copy_normalise("a <thing> b"), "a <thing> b")
+  })
+
   it("treats NULL and empty as empty", {
     expect_equal(copy_normalise(NULL), "")
     expect_equal(copy_normalise(""), "")
