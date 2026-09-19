@@ -2,6 +2,17 @@
 
 ## jinx (development version)
 
+### Install flow requests channel-management scopes
+
+- **`/slack/install` now requests `channels:manage` and
+  `channels:write.topic`** alongside the existing scopes
+  (`worker/src/slack-oauth.js`). Slack grants exactly the scopes named
+  in the OAuth `scope` parameter, so without these an install could read
+  public channels but never set a channel’s topic, set its description
+  (purpose), or rename it — regardless of what the Slack app config
+  allowed. Existing installs keep their old grant until the install flow
+  is re-run for that workspace.
+
 ### Question digest and retention purge move to R
 
 - **The weekly question-gap digest and the daily question-log retention
