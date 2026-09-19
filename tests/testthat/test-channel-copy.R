@@ -151,6 +151,21 @@ describe("channel_copy_plan", {
     expect_equal(row$status, "unchanged")
   })
 
+  it("does not call an escaping or whitespace difference drift", {
+    index <- fake_index()
+    index$purpose[index$name == "jobs"] <- "post jobs &amp;\nstuff"
+    props <- channel_copy_proposals("community", path = copy_fixture())
+    props$description_now[props$channel == "jobs"] <- "post jobs & stuff"
+    plan <- channel_copy_plan(
+      "community",
+      index = index,
+      proposals = props,
+      renames = channel_rename_proposals("community", path = rename_fixture())
+    )
+    row <- plan[plan$channel == "jobs" & plan$field == "description", ]
+    expect_equal(row$status, "apply")
+  })
+
   it("marks a value edited since the review as drift", {
     plan <- fixture_plan("community")
     row <- plan[plan$channel == "jobs" & plan$field == "description", ]
@@ -179,6 +194,24 @@ describe("channel_copy_plan", {
     expect_equal(row$status, "apply")
     expect_equal(row$to, "events-global")
     expect_equal(row$method, "conversations.rename")
+  })
+})
+
+describe("copy_normalise", {
+  it("unescapes the entities Slack stores topics and purposes with", {
+    expect_equal(copy_normalise("Q &amp; A"), "Q & A")
+    expect_equal(copy_normalise("&lt;tag&gt;"), "<tag>")
+    expect_equal(copy_normalise("it&#39;s"), "it's")
+  })
+
+  it("collapses newlines and runs of whitespace", {
+    expect_equal(copy_normalise("a\nb"), "a b")
+    expect_equal(copy_normalise("a   b  "), "a b")
+  })
+
+  it("treats NULL and empty as empty", {
+    expect_equal(copy_normalise(NULL), "")
+    expect_equal(copy_normalise(""), "")
   })
 })
 
@@ -353,6 +386,95 @@ describe("channel_copy_apply", {
       join = FALSE
     ))
     expect_false("conversations.join" %in% methods)
+  })
+
+  it("leaves drift alone by default", {
+    methods <- character()
+    local_mocked_bindings(
+      slack_api_call = function(token, method, body = list()) {
+        methods <<- c(methods, method)
+        list(ok = TRUE)
+      }
+    )
+    plan <- data.frame(
+      channel = c("a", "b"),
+      id = c("C1", "C2"),
+      field = "description",
+      method = "conversations.setPurpose",
+      from = "live text",
+      to = "new text",
+      status = c("apply", "drift"),
+      is_member = TRUE,
+      stringsAsFactors = FALSE
+    )
+    out <- suppressMessages(
+      channel_copy_apply(plan, "xoxb-test", dry_run = FALSE)
+    )
+    expect_length(methods, 1)
+    expect_equal(out$applied, c(TRUE, FALSE))
+  })
+
+  it("applies drift when include_drift is TRUE", {
+    methods <- character()
+    local_mocked_bindings(
+      slack_api_call = function(token, method, body = list()) {
+        methods <<- c(methods, method)
+        list(ok = TRUE)
+      }
+    )
+    plan <- data.frame(
+      channel = c("a", "b"),
+      id = c("C1", "C2"),
+      field = "description",
+      method = "conversations.setPurpose",
+      from = "live text",
+      to = "new text",
+      status = c("apply", "drift"),
+      is_member = TRUE,
+      stringsAsFactors = FALSE
+    )
+    out <- suppressMessages(
+      channel_copy_apply(
+        plan,
+        "xoxb-test",
+        dry_run = FALSE,
+        include_drift = TRUE
+      )
+    )
+    expect_length(methods, 2)
+    expect_equal(out$applied, c(TRUE, TRUE))
+  })
+
+  it("still honours skip when include_drift is TRUE", {
+    called <- FALSE
+    local_mocked_bindings(
+      slack_api_call = function(...) {
+        called <<- TRUE
+        list(ok = TRUE)
+      }
+    )
+    plan <- data.frame(
+      channel = "a",
+      id = "C1",
+      field = "description",
+      method = "conversations.setPurpose",
+      from = "live text",
+      to = "new text",
+      status = "drift",
+      is_member = TRUE,
+      stringsAsFactors = FALSE
+    )
+    out <- suppressMessages(
+      channel_copy_apply(
+        plan,
+        "xoxb-test",
+        dry_run = FALSE,
+        skip = "a",
+        include_drift = TRUE
+      )
+    )
+    expect_false(called)
+    expect_equal(out$status, "skipped")
   })
 
   it("leaves skipped channels alone", {

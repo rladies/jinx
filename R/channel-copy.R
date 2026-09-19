@@ -75,6 +75,16 @@ slack_channel_index <- function(
   )
 }
 
+copy_normalise <- function(x) {
+  x <- as.character(x %||% "")
+  x <- gsub("&amp;", "&", x, fixed = TRUE)
+  x <- gsub("&lt;", "<", x, fixed = TRUE)
+  x <- gsub("&gt;", ">", x, fixed = TRUE)
+  x <- gsub("&quot;", "\"", x, fixed = TRUE)
+  x <- gsub("&#39;", "'", x, fixed = TRUE)
+  trimws(gsub("[[:space:]]+", " ", x))
+}
+
 plan_row <- function(
   channel,
   id,
@@ -85,9 +95,11 @@ plan_row <- function(
   recorded,
   is_member = TRUE
 ) {
-  status <- if (!nzchar(to) || identical(to, from)) {
+  status <- if (
+    !nzchar(to) || identical(copy_normalise(to), copy_normalise(from))
+  ) {
     "unchanged"
-  } else if (!identical(trimws(recorded), trimws(from))) {
+  } else if (!identical(copy_normalise(recorded), copy_normalise(from))) {
     "drift"
   } else {
     "apply"
@@ -235,6 +247,10 @@ apply_body <- function(row) {
 #' @param join Join channels the bot is not a member of first. Slack
 #'   refuses `conversations.setTopic`, `setPurpose` and `rename` with
 #'   `not_in_channel` otherwise.
+#' @param include_drift Also apply rows whose live value has changed
+#'   since the review. Off by default: drift means someone edited the
+#'   channel after the copy was written, so applying overwrites the newer
+#'   text with older reviewed text.
 #' @return `plan` with `applied` and `error` columns added.
 #' @export
 channel_copy_apply <- function(
@@ -242,12 +258,14 @@ channel_copy_apply <- function(
   token,
   dry_run = TRUE,
   skip = character(),
-  join = TRUE
+  join = TRUE,
+  include_drift = FALSE
 ) {
   plan$applied <- FALSE
   plan$error <- NA_character_
   plan$status[plan$channel %in% skip] <- "skipped"
-  todo <- which(plan$status == "apply")
+  wanted <- if (include_drift) c("apply", "drift") else "apply"
+  todo <- which(plan$status %in% wanted)
 
   if (dry_run) {
     cli::cli_alert_info(

@@ -9,7 +9,8 @@ channel_copy_apply(
   token,
   dry_run = TRUE,
   skip = character(),
-  join = TRUE
+  join = TRUE,
+  include_drift = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,11 @@ without calling Slack.}
 \item{join}{Join channels the bot is not a member of first. Slack
 refuses \code{conversations.setTopic}, \code{setPurpose} and \code{rename} with
 \code{not_in_channel} otherwise.}
+
+\item{include_drift}{Also apply rows whose live value has changed
+since the review. Off by default: drift means someone edited the
+channel after the copy was written, so applying overwrites the newer
+text with older reviewed text.}
 }
 \value{
 \code{plan} with \code{applied} and \code{error} columns added.
