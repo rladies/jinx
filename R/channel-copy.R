@@ -263,6 +263,10 @@ apply_body <- function(row) {
 #' @param join Join channels the bot is not a member of first. Slack
 #'   refuses `conversations.setTopic`, `setPurpose` and `rename` with
 #'   `not_in_channel` otherwise.
+#' @param user_token Optional Slack user token used for `rename` rows
+#'   only. Slack refuses `conversations.rename` from a bot token for a
+#'   channel the bot did not create; a grant from a workspace owner
+#'   passes that check. Topics and descriptions always use `token`.
 #' @param include_drift Also apply rows whose live value has changed
 #'   since the review. Off by default: drift means someone edited the
 #'   channel after the copy was written, so applying overwrites the newer
@@ -275,7 +279,8 @@ channel_copy_apply <- function(
   dry_run = TRUE,
   skip = character(),
   join = TRUE,
-  include_drift = FALSE
+  include_drift = FALSE,
+  user_token = NULL
 ) {
   plan$applied <- FALSE
   plan$error <- NA_character_
@@ -301,9 +306,14 @@ channel_copy_apply <- function(
   }
 
   for (i in todo) {
+    use <- if (identical(plan$field[i], "name") && !is.null(user_token)) {
+      user_token
+    } else {
+      token
+    }
     outcome <- tryCatch(
       {
-        slack_api_call(token, plan$method[i], apply_body(plan[i, ]))
+        slack_api_call(use, plan$method[i], apply_body(plan[i, ]))
         NA_character_
       },
       error = function(e) conditionMessage(e)

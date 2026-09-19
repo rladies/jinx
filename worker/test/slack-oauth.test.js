@@ -39,6 +39,34 @@ describe("slack_oauth_install_handle", () => {
     expect(cookie).toContain("Secure");
   });
 
+  it("does not request a user scope on a routine install", async () => {
+    const env = makeEnv();
+    const url = new URL("https://jinx.example.com/slack/install");
+    const res = await slack_oauth_install_handle(env, url);
+    const location = new URL(res.headers.get("Location"));
+    expect(location.searchParams.get("user_scope")).toBeNull();
+  });
+
+  it("requests channels:write only when explicitly asked for renames", async () => {
+    const env = makeEnv();
+    const url = new URL(
+      "https://jinx.example.com/slack/install?user_scope=rename"
+    );
+    const res = await slack_oauth_install_handle(env, url);
+    const location = new URL(res.headers.get("Location"));
+    expect(location.searchParams.get("user_scope")).toBe("channels:write");
+  });
+
+  it("ignores an unrecognised user_scope value", async () => {
+    const env = makeEnv();
+    const url = new URL(
+      "https://jinx.example.com/slack/install?user_scope=admin"
+    );
+    const res = await slack_oauth_install_handle(env, url);
+    const location = new URL(res.headers.get("Location"));
+    expect(location.searchParams.get("user_scope")).toBeNull();
+  });
+
   it("emits scopes Slack needs for the Assistant + welcome flows", async () => {
     const env = makeEnv();
     const url = new URL("https://jinx.example.com/slack/install");
