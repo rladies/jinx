@@ -66,6 +66,11 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="a-bare-domain-no-longer-reads-as-permanent-drift-development-version">A bare domain no longer reads as permanent drift<a class="anchor" aria-label="anchor" href="#a-bare-domain-no-longer-reads-as-permanent-drift-development-version"></a></h3>
+<ul><li>
+<strong><code>copy_normalise()</code> resolves a labelled Slack link to its label</strong>, not its URL. Slack auto-links a bare domain, so a description written as <code>meetup.com</code> comes back as <code>&lt;http://meetup.com|meetup.com&gt;</code>; resolving that to the URL made it compare unequal to the text that was written, on every pass, forever. The label is what the author typed, so that is what the comparison should see.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="paginated-slack-reads-were-stuck-on-page-one-development-version">Paginated Slack reads were stuck on page one<a class="anchor" aria-label="anchor" href="#paginated-slack-reads-were-stuck-on-page-one-development-version"></a></h3>
 <ul><li>
 <strong><code><a href="../reference/slack_api_call.html">slack_api_call()</a></code> gained <code>encode = "form"</code>, and <code>slack_conversations_list()</code> now uses it.</strong> <code>conversations.list</code> ignores a JSON body outright - including <code>limit</code> and <code>cursor</code> - so every page request returned the same first 100 channels with the same cursor. The loop never terminated: on any workspace with more than 100 public channels it paged forever, in silence, using no CPU and raising no error. Workspaces under 100 channels were unaffected, which is why this went unnoticed.</li>

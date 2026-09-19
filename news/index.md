@@ -2,6 +2,15 @@
 
 ## jinx (development version)
 
+### A bare domain no longer reads as permanent drift
+
+- **`copy_normalise()` resolves a labelled Slack link to its label**,
+  not its URL. Slack auto-links a bare domain, so a description written
+  as `meetup.com` comes back as `<http://meetup.com|meetup.com>`;
+  resolving that to the URL made it compare unequal to the text that was
+  written, on every pass, forever. The label is what the author typed,
+  so that is what the comparison should see.
+
 ### Paginated Slack reads were stuck on page one
 
 - **[`slack_api_call()`](https://rladies.github.io/jinx/reference/slack_api_call.md)
