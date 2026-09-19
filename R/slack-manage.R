@@ -270,12 +270,34 @@ slack_post_message <- function(
 
 #' Call a Slack Web API method
 #'
+#' How long to wait before retrying a rate-limited Slack call
+#'
+#' Slack's `Retry-After` for a Tier 2 method is routinely 30-60s. Capping
+#' the wait below that guarantees failure under sustained rate limiting,
+#' which a bulk pass over a workspace's channels hits readily.
+#'
+#' @param resp An httr2 response.
+#' @return Seconds to wait, at most 60.
+#' @keywords internal
+#' @noRd
+slack_retry_after <- function(resp) {
+  after <- suppressWarnings(
+    as.numeric(httr2::resp_header(resp, "Retry-After") %||% 1)
+  )
+  if (is.na(after)) {
+    after <- 1
+  }
+  min(after, 60)
+}
+
 #' Generic low-level Slack API caller shared by the event/command
 #' handlers that need more than [slack_post_message()]'s single
 #' `chat.postMessage` call - DM opening, channel lookup, bookmarks, and
-#' so on. Retries once on a 429 or 5xx response, honouring the
-#' `Retry-After` header (capped at 5s), mirroring
-#' `worker/src/slack-api.js`'s `slack_api_call()`.
+#' so on. Retries on a 429 or 5xx response, honouring the `Retry-After`
+#' header up to 60s. Slack's `Retry-After` for a Tier 2 method is
+#' routinely 30-60s, so a shorter cap guarantees failure under sustained
+#' rate limiting - which a bulk pass over a workspace's channels hits
+#' readily.
 #'
 #' @param token Slack bot token.
 #' @param method Slack Web API method name, e.g. `"conversations.open"`.
@@ -291,13 +313,11 @@ slack_api_call <- function(token, method, body = list()) {
     httr2::req_headers(Authorization = paste("Bearer", token)) |>
     httr2::req_body_json(body) |>
     httr2::req_retry(
-      max_tries = 2,
+      max_tries = 5,
       is_transient = function(resp) {
         httr2::resp_status(resp) == 429 || httr2::resp_status(resp) >= 500
       },
-      after = function(resp) {
-        min(as.numeric(httr2::resp_header(resp, "Retry-After") %||% 1), 5)
-      }
+      after = slack_retry_after
     ) |>
     httr2::req_perform() |>
     httr2::resp_body_json()

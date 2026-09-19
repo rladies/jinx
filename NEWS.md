@@ -1,5 +1,20 @@
 # jinx (development version)
 
+## Channel copy and renaming pass
+
+- **New `channel_copy_plan()` and `channel_copy_apply()`** apply reviewed
+  topic, description and name changes to a workspace's public channels.
+  The reviewed copy ships as data (`inst/extdata/channel-copy.csv` and
+  `channel-renames.csv`) so it is diffable in review rather than buried
+  in code.
+- The plan is computed against live Slack state and classifies every
+  intended change before anything is sent: `unchanged` when Slack already
+  holds the value, `drift` when the live value no longer matches what the
+  review recorded (so the proposal may be stale), `missing` when the
+  channel is absent, and `apply` otherwise. `channel_copy_apply()` is
+  `dry_run = TRUE` by default, sends only `apply` rows, takes a `skip`
+  list, and records per-row failures instead of aborting the pass.
+
 ## Install flow requests channel-management scopes
 
 - **`/slack/install` now requests `channels:manage` and

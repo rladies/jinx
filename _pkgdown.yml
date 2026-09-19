@@ -106,6 +106,14 @@ reference:
     contents:
       - starts_with("slack_")
 
+  - title: Channel copy
+    desc: Reviewed topic, description and name changes for public channels
+    contents:
+      - channel_copy_proposals
+      - channel_rename_proposals
+      - channel_copy_plan
+      - channel_copy_apply
+
   - title: Event dispatch
     desc: R-side handling of the slack-event repository_dispatch contract
     contents:
