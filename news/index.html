@@ -66,6 +66,12 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="channel-copy-and-renaming-pass-development-version">Channel copy and renaming pass<a class="anchor" aria-label="anchor" href="#channel-copy-and-renaming-pass-development-version"></a></h3>
+<ul><li>
+<strong>New <code><a href="../reference/channel_copy_plan.html">channel_copy_plan()</a></code> and <code><a href="../reference/channel_copy_apply.html">channel_copy_apply()</a></code></strong> apply reviewed topic, description and name changes to a workspace’s public channels. The reviewed copy ships as data (<code>inst/extdata/channel-copy.csv</code> and <code>channel-renames.csv</code>) so it is diffable in review rather than buried in code.</li>
+<li>The plan is computed against live Slack state and classifies every intended change before anything is sent: <code>unchanged</code> when Slack already holds the value, <code>drift</code> when the live value no longer matches what the review recorded (so the proposal may be stale), <code>missing</code> when the channel is absent, and <code>apply</code> otherwise. <code><a href="../reference/channel_copy_apply.html">channel_copy_apply()</a></code> is <code>dry_run = TRUE</code> by default, sends only <code>apply</code> rows, takes a <code>skip</code> list, and records per-row failures instead of aborting the pass.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="install-flow-requests-channel-management-scopes-development-version">Install flow requests channel-management scopes<a class="anchor" aria-label="anchor" href="#install-flow-requests-channel-management-scopes-development-version"></a></h3>
 <ul><li>
 <strong><code>/slack/install</code> now requests <code>channels:manage</code> and <code>channels:write.topic</code></strong> alongside the existing scopes (<code>worker/src/slack-oauth.js</code>). Slack grants exactly the scopes named in the OAuth <code>scope</code> parameter, so without these an install could read public channels but never set a channel’s topic, set its description (purpose), or rename it — regardless of what the Slack app config allowed. Existing installs keep their old grant until the install flow is re-run for that workspace.</li>

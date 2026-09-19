@@ -554,7 +554,7 @@ document.addEventListener("DOMContentLoaded", function() {
           <code><a href="slack_api_call.html">slack_api_call()</a></code>
 
         </dt>
-        <dd>Call a Slack Web API method</dd>
+        <dd>Generic low-level Slack API caller shared by the event/command handlers that need more than <code><a href="../reference/slack_post_message.html">slack_post_message()</a></code>'s single <code>chat.postMessage</code> call - DM opening, channel lookup, bookmarks, and so on. Retries on a 429 or 5xx response, honouring the <code>Retry-After</code> header up to 60s. Slack's <code>Retry-After</code> for a Tier 2 method is routinely 30-60s, so a shorter cap guarantees failure under sustained rate limiting - which a bulk pass over a workspace's channels hits readily.</dd>
 
         <dt>
 
@@ -569,6 +569,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
         </dt>
         <dd>Look up a Slack channel's ID by name</dd>
+
+        <dt>
+
+          <code><a href="slack_channel_index.html">slack_channel_index()</a></code>
+
+        </dt>
+        <dd>Index a workspace's public channels</dd>
 
         <dt>
 
@@ -646,6 +653,43 @@ document.addEventListener("DOMContentLoaded", function() {
 
         </dt>
         <dd>Map a Slack team id to its workspace name</dd>
+      </dl></div><div class="section level2">
+      <h2 id="channel-copy">Channel copy<a class="anchor" aria-label="anchor" href="#channel-copy"></a></h2>
+
+      <div class="section-desc"><p>Reviewed topic, description and name changes for public channels</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="channel_copy_proposals.html">channel_copy_proposals()</a></code>
+
+        </dt>
+        <dd>Read the reviewed channel copy proposals</dd>
+
+        <dt>
+
+          <code><a href="channel_rename_proposals.html">channel_rename_proposals()</a></code>
+
+        </dt>
+        <dd>Read the reviewed channel rename proposals</dd>
+
+        <dt>
+
+          <code><a href="channel_copy_plan.html">channel_copy_plan()</a></code>
+
+        </dt>
+        <dd>Plan the channel copy and rename pass for a workspace</dd>
+
+        <dt>
+
+          <code><a href="channel_copy_apply.html">channel_copy_apply()</a></code>
+
+        </dt>
+        <dd>Apply a channel copy plan</dd>
       </dl></div><div class="section level2">
       <h2 id="event-dispatch">Event dispatch<a class="anchor" aria-label="anchor" href="#event-dispatch"></a></h2>
 
