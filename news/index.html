@@ -66,6 +66,13 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="channel-copy-fidelity-fixes-development-version">Channel copy fidelity fixes<a class="anchor" aria-label="anchor" href="#channel-copy-fidelity-fixes-development-version"></a></h3>
+<ul><li>
+<strong>The reviewed copy now keeps its em-dashes.</strong> The extraction that produced <code>inst/extdata/channel-copy.csv</code> replaced every em-dash with a hyphen, so 22 values were applied in a form nobody reviewed. The package’s ASCII convention governs R source, not Slack copy.</li>
+<li>
+<strong><code>copy_normalise()</code> now undoes Slack’s URL rewriting.</strong> Slack stores a bare URL as <code>&lt;https://...&gt;</code>, so a description containing one compared unequal on every pass and was reported as drift forever. Labelled links (<code>&lt;url|label&gt;</code>) normalise to the URL too.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="channel-copy-and-renaming-pass-development-version">Channel copy and renaming pass<a class="anchor" aria-label="anchor" href="#channel-copy-and-renaming-pass-development-version"></a></h3>
 <ul><li>
 <strong>New <code><a href="../reference/channel_copy_plan.html">channel_copy_plan()</a></code> and <code><a href="../reference/channel_copy_apply.html">channel_copy_apply()</a></code></strong> apply reviewed topic, description and name changes to a workspace’s public channels. The reviewed copy ships as data (<code>inst/extdata/channel-copy.csv</code> and <code>channel-renames.csv</code>) so it is diffable in review rather than buried in code.</li>
