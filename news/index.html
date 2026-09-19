@@ -66,6 +66,11 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="the-plan-follows-channels-that-have-been-renamed-development-version">The plan follows channels that have been renamed<a class="anchor" aria-label="anchor" href="#the-plan-follows-channels-that-have-been-renamed-development-version"></a></h3>
+<ul><li>
+<strong><code><a href="../reference/channel_copy_plan.html">channel_copy_plan()</a></code> now resolves a proposal through the rename map</strong> when the channel no longer answers to its reviewed name. Applying the renames made 25 of the community workspace’s 43 channels report as <code>missing</code>, because the copy is keyed by the old name - so a later pass would have skipped them silently rather than maintaining them. A channel that is absent for any other reason still reports <code>missing</code>.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="channel-renames-via-an-owner-grant-development-version">Channel renames via an owner grant<a class="anchor" aria-label="anchor" href="#channel-renames-via-an-owner-grant-development-version"></a></h3>
 <ul><li>
 <strong><code>/slack/install?user_scope=rename</code> requests a <code>channels:write</code> user grant.</strong> Slack refuses <code>conversations.rename</code> from a bot token for a channel the bot did not create, which failed all 25 community renames with <code>not_authorized</code>; a grant from a workspace owner passes that check. A routine install is unchanged and never asks for it.</li>
