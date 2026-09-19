@@ -30,6 +30,8 @@ export async function slack_oauth_install_handle(env, url) {
     "users:read",
     "users:read.email",
   ].join(",");
+  const userScopes =
+    url.searchParams.get("user_scope") === "rename" ? "channels:write" : "";
   const redirectUri = `${url.origin}/slack/oauth`;
 
   const ts = Date.now().toString();
@@ -42,6 +44,9 @@ export async function slack_oauth_install_handle(env, url) {
   const authUrl = new URL("https://slack.com/oauth/v2/authorize");
   authUrl.searchParams.set("client_id", env.SLACK_CLIENT_ID);
   authUrl.searchParams.set("scope", scopes);
+  if (userScopes) {
+    authUrl.searchParams.set("user_scope", userScopes);
+  }
   authUrl.searchParams.set("redirect_uri", redirectUri);
   authUrl.searchParams.set("state", `${ts}:${nonce}:${hmac}`);
 
@@ -138,6 +143,32 @@ export async function slack_oauth_callback_handle(request, env) {
 
   await env.SLACK_TOKENS.put(`team:${teamId}`, JSON.stringify(tokenData));
   console.log(`Slack app installed in ${teamName} (${teamId})`);
+
+  // Shown once to the authorising owner and deliberately not persisted:
+  // this grant acts as them, is wanted only for a one-off rename pass, and
+  // belongs in 1Password alongside the other operator credentials rather
+  // than in the store the Worker reads on every request.
+  if (data.authed_user?.access_token) {
+    return new Response(
+      [
+        `🔮 Jinx installed in ${teamName}.`,
+        ``,
+        `A user grant (${data.authed_user.scope}) was issued. It is NOT stored.`,
+        `Copy it into 1Password now - it cannot be shown again:`,
+        ``,
+        data.authed_user.access_token,
+        ``,
+        `Revoke it with auth.revoke when the rename pass is done.`,
+      ].join("\n"),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "text/plain",
+          "Cache-Control": "no-store",
+        },
+      }
+    );
+  }
 
   return new Response(
     `🔮 Jinx installed successfully in ${teamName}! You can close this tab.`,
