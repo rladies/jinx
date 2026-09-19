@@ -2,6 +2,23 @@
 
 ## jinx (development version)
 
+### Paginated Slack reads were stuck on page one
+
+- **[`slack_api_call()`](https://rladies.github.io/jinx/reference/slack_api_call.md)
+  gained `encode = "form"`, and `slack_conversations_list()` now uses
+  it.** `conversations.list` ignores a JSON body outright - including
+  `limit` and `cursor` - so every page request returned the same first
+  100 channels with the same cursor. The loop never terminated: on any
+  workspace with more than 100 public channels it paged forever, in
+  silence, using no CPU and raising no error. Workspaces under 100
+  channels were unaffected, which is why this went unnoticed.
+- This also affected
+  [`channel_index_load()`](https://rladies.github.io/jinx/reference/channel_index_load.md)
+  and the welcome flow, not just the channel copy pass.
+- **The pagination loop now aborts if a cursor repeats**, so a
+  non-advancing page fails loudly instead of hanging, and the default
+  page size is 200 rather than 1000.
+
 ### The plan follows channels that have been renamed
 
 - **[`channel_copy_plan()`](https://rladies.github.io/jinx/reference/channel_copy_plan.md)

@@ -66,6 +66,14 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="paginated-slack-reads-were-stuck-on-page-one-development-version">Paginated Slack reads were stuck on page one<a class="anchor" aria-label="anchor" href="#paginated-slack-reads-were-stuck-on-page-one-development-version"></a></h3>
+<ul><li>
+<strong><code><a href="../reference/slack_api_call.html">slack_api_call()</a></code> gained <code>encode = "form"</code>, and <code>slack_conversations_list()</code> now uses it.</strong> <code>conversations.list</code> ignores a JSON body outright - including <code>limit</code> and <code>cursor</code> - so every page request returned the same first 100 channels with the same cursor. The loop never terminated: on any workspace with more than 100 public channels it paged forever, in silence, using no CPU and raising no error. Workspaces under 100 channels were unaffected, which is why this went unnoticed.</li>
+<li>This also affected <code><a href="../reference/channel_index_load.html">channel_index_load()</a></code> and the welcome flow, not just the channel copy pass.</li>
+<li>
+<strong>The pagination loop now aborts if a cursor repeats</strong>, so a non-advancing page fails loudly instead of hanging, and the default page size is 200 rather than 1000.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="the-plan-follows-channels-that-have-been-renamed-development-version">The plan follows channels that have been renamed<a class="anchor" aria-label="anchor" href="#the-plan-follows-channels-that-have-been-renamed-development-version"></a></h3>
 <ul><li>
 <strong><code><a href="../reference/channel_copy_plan.html">channel_copy_plan()</a></code> now resolves a proposal through the rename map</strong> when the channel no longer answers to its reviewed name. Applying the renames made 25 of the community workspace’s 43 channels report as <code>missing</code>, because the copy is keyed by the old name - so a later pass would have skipped them silently rather than maintaining them. A channel that is absent for any other reason still reports <code>missing</code>.</li>

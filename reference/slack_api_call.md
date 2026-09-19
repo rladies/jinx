@@ -12,7 +12,7 @@ limiting - which a bulk pass over a workspace's channels hits readily.
 ## Usage
 
 ``` r
-slack_api_call(token, method, body = list())
+slack_api_call(token, method, body = list(), encode = c("json", "form"))
 ```
 
 ## Arguments
@@ -28,6 +28,14 @@ slack_api_call(token, method, body = list())
 - body:
 
   Named list of request parameters.
+
+- encode:
+
+  How to send `body`. `"json"` suits the `chat.*` methods that take
+  structured blocks. `"form"` is required by the paginated read methods
+  such as `conversations.list`, which ignore a JSON body outright -
+  including `limit` and `cursor`, so a JSON-bodied call silently returns
+  page one forever.
 
 ## Value
 

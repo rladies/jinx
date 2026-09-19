@@ -91,7 +91,7 @@ readily.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">slack_api_call</span><span class="op">(</span><span class="va">token</span>, <span class="va">method</span>, body <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">slack_api_call</span><span class="op">(</span><span class="va">token</span>, <span class="va">method</span>, body <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, encode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"json"</span>, <span class="st">"form"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -108,6 +108,14 @@ readily.</p>
 
 <dt id="arg-body">body<a class="anchor" aria-label="anchor" href="#arg-body"></a></dt>
 <dd><p>Named list of request parameters.</p></dd>
+
+
+<dt id="arg-encode">encode<a class="anchor" aria-label="anchor" href="#arg-encode"></a></dt>
+<dd><p>How to send <code>body</code>. <code>"json"</code> suits the <code>chat.*</code> methods
+that take structured blocks. <code>"form"</code> is required by the paginated
+read methods such as <code>conversations.list</code>, which ignore a JSON body
+outright - including <code>limit</code> and <code>cursor</code>, so a JSON-bodied call
+silently returns page one forever.</p></dd>
 
 </dl></div>
     <div class="section level2">
