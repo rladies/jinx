@@ -30,22 +30,32 @@ slack_conversations_list <- function(
   team_id,
   workspace,
   types = "public_channel",
-  limit = 1000
+  limit = 200
 ) {
   token <- slack_bot_token(workspace)
   channels <- list()
   cursor <- NULL
+  seen <- character()
   repeat {
     body <- list(types = types, limit = limit, exclude_archived = TRUE)
     if (!is.null(cursor)) {
       body$cursor <- cursor
     }
-    res <- slack_api_call(token, "conversations.list", body)
+    res <- slack_api_call(token, "conversations.list", body, encode = "form")
     channels <- c(channels, res$channels)
     cursor <- res$response_metadata$next_cursor
     if (is.null(cursor) || !nzchar(cursor)) {
       break
     }
+    # A cursor that repeats means the page never advanced. Slack keeps
+    # answering, so this loops forever in silence rather than failing -
+    # stop instead of paging the same channels until something times out.
+    if (cursor %in% seen) {
+      cli::cli_abort(
+        "conversations.list returned a cursor that never advanced."
+      )
+    }
+    seen <- c(seen, cursor)
   }
   channels
 }
