@@ -16,6 +16,6 @@ A data frame with \code{id}, \code{name}, \code{topic}, \code{purpose} and
 \code{is_member}.
 }
 \description{
-Shapes \code{\link[=slack_conversations_list]{slack_conversations_list()}}'s paginated output into the frame
-the copy plan compares against.
+Shapes the paginated output of the internal \code{slack_conversations_list()}
+helper into the frame the copy plan compares against.
 }

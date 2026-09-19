@@ -45,8 +45,8 @@ channel_rename_proposals <- function(
 
 #' Index a workspace's public channels
 #'
-#' Shapes [slack_conversations_list()]'s paginated output into the frame
-#' the copy plan compares against.
+#' Shapes the paginated output of the internal `slack_conversations_list()`
+#' helper into the frame the copy plan compares against.
 #'
 #' @inheritParams channel_copy_proposals
 #' @param channels Optional pre-fetched channel list, for testing.
