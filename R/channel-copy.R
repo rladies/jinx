@@ -1,3 +1,17 @@
+#' Normalise channel copy for comparison
+#'
+#' Slack does not hand back what you send: `&`, `<` and `>` come back
+#' HTML-escaped, and a bare URL is rewritten as `<https://...>`. Comparing
+#' raw text would therefore report a change that was never made, and
+#' would keep reporting it on every pass.
+#'
+#' @param x A topic or purpose string.
+#' @return The string with Slack's own rewriting undone and whitespace
+#'   collapsed.
+#' @keywords internal
+#' @noRd
+NULL
+
 #' Read the reviewed channel copy proposals
 #'
 #' @param workspace Either `"organiser"` or `"community"`.
@@ -77,6 +91,8 @@ slack_channel_index <- function(
 
 copy_normalise <- function(x) {
   x <- as.character(x %||% "")
+  x <- gsub("<(https?://[^>|]*)>", "\\1", x)
+  x <- gsub("<(https?://[^>|]*)\\|[^>]*>", "\\1", x)
   x <- gsub("&amp;", "&", x, fixed = TRUE)
   x <- gsub("&lt;", "<", x, fixed = TRUE)
   x <- gsub("&gt;", ">", x, fixed = TRUE)

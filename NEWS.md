@@ -1,5 +1,16 @@
 # jinx (development version)
 
+## Channel copy fidelity fixes
+
+- **The reviewed copy now keeps its em-dashes.** The extraction that
+  produced `inst/extdata/channel-copy.csv` replaced every em-dash with a
+  hyphen, so 22 values were applied in a form nobody reviewed. The
+  package's ASCII convention governs R source, not Slack copy.
+- **`copy_normalise()` now undoes Slack's URL rewriting.** Slack stores a
+  bare URL as `<https://...>`, so a description containing one compared
+  unequal on every pass and was reported as drift forever. Labelled links
+  (`<url|label>`) normalise to the URL too.
+
 ## Channel copy and renaming pass
 
 - **New `channel_copy_plan()` and `channel_copy_apply()`** apply reviewed
