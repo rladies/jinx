@@ -92,7 +92,8 @@
 - **Jinx now posts a weekly "channel spotlight" to the community
   workspace**, promoting one public channel at a time so members discover
   the quieter channels beyond the busy few. A GitHub Actions cron
-  (`bot-channel-promo.yml`) calls `jinx::channel_promo_post()`, which lists
+  (`bot-channel-promo.yml`, Mondays 15:00 UTC) calls
+  `jinx::channel_promo_post()`, which lists
   the community's public channels, keeps those that have a description,
   picks the next one round-robin (state stored in KV, so every channel
   gets a turn before any repeats), and drafts a short invitation in Jinx's
