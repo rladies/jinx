@@ -168,6 +168,17 @@ jinx_commands <- function() {
       downvoted <- question_downvoted_rank(rows)
       question_log_format(rows, gaps, downvoted, days = command$days)
     }),
+    feedback = command_spec("jinx_gated", function(command) {
+      summary <- question_feedback_summary(command$team_id, command$days)
+      question_feedback_format(summary)
+    }),
+    "setup-channel" = command_spec("jinx_safe", function(command) {
+      setup_channel_process(
+        command$team_id,
+        command$channel_id,
+        command$channel_name
+      )
+    }),
     "cf-analytics" = command_spec("jinx_safe", function(command) {
       data <- rum_generate_report(
         since = Sys.Date() - command$days,
