@@ -215,6 +215,11 @@ reference:
       - promo_pick_channel
       - promo_blurb
 
+  - title: Weekly R challenge
+    desc: AI-drafted, reprex- and adversarially-verified weekly R challenge
+    contents:
+      - starts_with("r_challenge_")
+
   - title: Conference coordination
     desc: CFP tracking and speaker recommendations
     contents:
