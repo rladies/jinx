@@ -3,7 +3,10 @@ draft_build_fixture <- function(difficulty = "beginner") {
     challenge = list(
       title = "Double it",
       difficulty = difficulty,
-      statement = "# Write double(x): x times two.\nx <- 2\n# should return:\n4",
+      statement = paste0(
+        "# Write double(x): x times two.\nx <- 2\n",
+        "# should return:\n4"
+      ),
       solution = "double <- function(x) x * 2",
       tests = c("identical(double(2), 4)")
     ),
