@@ -130,7 +130,46 @@
   [`promo_blurb()`](https://rladies.github.io/jinx/reference/promo_blurb.md)
   in `R/channel-promo.R`. Configurable via `SLACK_PROMO_CHANNEL`
   (target, default `general`) and `SLACK_PROMO_SKIP` (comma-separated
-  names to never feature).
+  names to never feature). \## Slash commands move to R; remind-me and
+  pair removed
+
+- **`/jinx remind-me` and `/jinx pair` are removed entirely** — both
+  duplicated native Slack features (`/remind` and native group-DM
+  creation) not worth a bespoke command.
+
+- **`/jinx setup-channel`, `/jinx feedback`, and `/jinx questions` now
+  run through the same `slack-command` dispatch pipeline as every other
+  command**, instead of the Worker’s `LOCAL_COMMANDS` fast path. New R:
+  [`setup_channel_process()`](https://rladies.github.io/jinx/reference/setup_channel_process.md)
+  (joins the channel and pins bookmarks from
+  `inst/config/bookmarks.json`, reading it directly instead of the
+  Worker’s redundant GitHub-raw fetch) in `R/welcome.R`;
+  [`question_feedback_summary()`](https://rladies.github.io/jinx/reference/question_feedback_summary.md)/
+  [`question_feedback_format()`](https://rladies.github.io/jinx/reference/question_feedback_format.md)
+  (aggregates the `reaction_log:*` KV counters
+  [`reaction_log_increment()`](https://rladies.github.io/jinx/reference/reaction_log_increment.md)
+  writes) in `R/question-log.R`. `questions` already had a working R
+  handler - it was just unreachable from Slack.
+
+- `worker/src/slash-local.js` now only handles `/jinx shorten`
+  (organiser workspace, low-latency link creation - the one command that
+  still needs an instant reply). `worker/src/authorize.js` shrank to
+  just the organiser-workspace check `shorten` still needs; the
+  Airtable-backed global-team lookup it used to do for
+  `feedback`/`questions` is now handled by
+  [`cmd_authorize()`](https://rladies.github.io/jinx/reference/cmd_authorize.md)
+  on the R side, the same as every other gated command.
+
+- New
+  [`cmd_attach_slack_context()`](https://rladies.github.io/jinx/reference/cmd_attach_slack_context.md)
+  merges `team_id`/`channel_id`/`channel_name` onto a parsed command for
+  the two new Slack-context-aware commands, mirroring how
+  [`event_parse()`](https://rladies.github.io/jinx/reference/event_parse.md)
+  already owns shaping the `slack-event` payload - so `bot-commands.yml`
+  stays thin, untested plumbing rather than the place this logic lives.
+  It also now sets both `SLACK_ORGANISER_TOKEN`/ `SLACK_COMMUNITY_TOKEN`
+  and `SLACK_ORGANIZER_TEAM_ID`/ `SLACK_COMMUNITY_TEAM_ID` so
+  `setup-channel` can run from either workspace.
 
 ### Question digest and retention purge move to R
 

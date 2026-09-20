@@ -191,6 +191,8 @@ audience:
 
 Issue comment command interface
 
+- [`cmd_attach_slack_context()`](https://rladies.github.io/jinx/reference/cmd_attach_slack_context.md)
+  : Attach Slack context fields to a parsed command
 - [`cmd_authorize()`](https://rladies.github.io/jinx/reference/cmd_authorize.md)
   : Authorize a parsed command before execution
 - [`cmd_execute()`](https://rladies.github.io/jinx/reference/cmd_execute.md)
@@ -454,6 +456,8 @@ Welcome DMs for newly joined Slack members
   : Consume a pending chapter sign-up link for a newly joined email
 - [`channel_index_load()`](https://rladies.github.io/jinx/reference/channel_index_load.md)
   : Load (and cache) a workspace's full channel name-to-id index
+- [`setup_channel_process()`](https://rladies.github.io/jinx/reference/setup_channel_process.md)
+  : Set up a Slack channel with RLadies+ bookmarks
 
 ## GHA dashboard
 
@@ -617,6 +621,10 @@ Anonymous question-improvement log gap reporting
   : Classify a Slack reaction as an up- or down-vote
 - [`reaction_event_apply()`](https://rladies.github.io/jinx/reference/reaction_event_apply.md)
   : Apply an incoming Slack reaction event
+- [`question_feedback_summary()`](https://rladies.github.io/jinx/reference/question_feedback_summary.md)
+  : Summarize reaction-feedback tallies for a Slack workspace
+- [`question_feedback_format()`](https://rladies.github.io/jinx/reference/question_feedback_format.md)
+  : Format a reaction-feedback summary as a reply
 
 ## Question digest
 
