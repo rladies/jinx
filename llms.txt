@@ -635,6 +635,24 @@ Weekly question-gap digest posted to Slack
 - [`question_digest_post()`](https://rladies.github.io/jinx/reference/question_digest_post.md)
   : Build and post the weekly question-gap digest to Slack
 
+## Channel promotion
+
+Weekly community channel spotlight posted to Slack
+
+- [`channel_promo_post()`](https://rladies.github.io/jinx/reference/channel_promo_post.md)
+  : Build and post the weekly channel spotlight to the community
+  workspace
+- [`channel_promo_build()`](https://rladies.github.io/jinx/reference/channel_promo_build.md)
+  : Build the weekly channel-spotlight message
+- [`channel_promo_format()`](https://rladies.github.io/jinx/reference/channel_promo_format.md)
+  : Format a channel spotlight as a Slack mrkdwn message
+- [`promo_eligible_channels()`](https://rladies.github.io/jinx/reference/promo_eligible_channels.md)
+  : Select the community public channels eligible for promotion
+- [`promo_pick_channel()`](https://rladies.github.io/jinx/reference/promo_pick_channel.md)
+  : Pick the next channel to spotlight, round-robin
+- [`promo_blurb()`](https://rladies.github.io/jinx/reference/promo_blurb.md)
+  : Draft a spotlight invitation for a channel in Jinx's voice
+
 ## Conference coordination
 
 CFP tracking and speaker recommendations

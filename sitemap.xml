@@ -53,6 +53,9 @@
 <url><loc>https://rladies.github.io/jinx/reference/channel_copy_plan.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/channel_copy_proposals.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/channel_index_load.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/channel_promo_build.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/channel_promo_format.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/channel_promo_post.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/channel_rename_proposals.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_check_health.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_create.html</loc></url>
@@ -217,6 +220,9 @@
 <url><loc>https://rladies.github.io/jinx/reference/pending_link_consume.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/pkgdown_llms_chunks.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/prepare_inactivity_emails.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/promo_blurb.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/promo_eligible_channels.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/promo_pick_channel.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/punct_name.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/question_coding_declined_count.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/question_content_gaps.html</loc></url>
