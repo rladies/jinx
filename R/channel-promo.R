@@ -227,6 +227,26 @@ promo_blurb <- function(
   if (nzchar(blurb)) blurb else NULL
 }
 
+#' Keep a channel mention delimited by spaces
+#'
+#' Slack reads a `#name` mention up to the next space, so `#help-r.`
+#' resolves as a channel literally called `help-r.` and renders as dead
+#' plain text. The blurb is model-written, and the prompt asking it not to
+#' mention channels is a request rather than a guarantee - so pad any that
+#' appear instead of hoping.
+#'
+#' @param x A blurb.
+#' @return The blurb with every `#channel` mention surrounded by spaces.
+#' @keywords internal
+#' @noRd
+promo_space_channel_mentions <- function(x) {
+  x <- gsub("(\\S)(#[A-Za-z0-9_-]+)", "\\1 \\2", x)
+  # The trailing class must exclude name characters, or the name part
+  # backtracks to let it match and "#shiny" is split into "#shin y".
+  x <- gsub("(#[A-Za-z0-9_-]+)([^A-Za-z0-9_[:space:]-])", "\\1 \\2", x)
+  x
+}
+
 #' Format a channel spotlight as a Slack mrkdwn message
 #'
 #' Links the featured channel in the header and appends the invitation. The
@@ -242,8 +262,9 @@ promo_blurb <- function(
 #' @return Character scalar Slack mrkdwn message.
 #' @export
 channel_promo_format <- function(id, name, blurb) {
+  blurb <- promo_space_channel_mentions(escape_markdown(blurb))
   glue::glue(
-    "\U0001F52E *Channel spotlight:* <#{id}|{name}>\n\n{escape_markdown(blurb)}"
+    "\U0001F52E *Channel spotlight:* <#{id}|{name}>\n\n{blurb}"
   )
 }
 

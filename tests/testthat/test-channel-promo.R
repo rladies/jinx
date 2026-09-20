@@ -165,6 +165,28 @@ describe("channel_promo_format", {
     expect_match(md, "Come say hi!", fixed = TRUE)
   })
 
+  it("keeps a trailing full stop out of a channel mention", {
+    md <- channel_promo_format("C1", "help-r", "Ask away in #help-r.")
+    expect_match(md, "#help-r .", fixed = TRUE)
+    expect_false(grepl("#help-r.", md, fixed = TRUE))
+  })
+
+  it("spaces a mention away from any adjacent character", {
+    md <- channel_promo_format("C1", "shiny", "Try (#shiny), or #r4bio!")
+    expect_match(md, "( #shiny )", fixed = TRUE)
+    expect_match(md, "#r4bio !", fixed = TRUE)
+  })
+
+  it("leaves an already-spaced mention alone", {
+    md <- channel_promo_format("C1", "shiny", "See #shiny for more")
+    expect_match(md, "See #shiny for more", fixed = TRUE)
+  })
+
+  it("does not pad the channel link in the header", {
+    md <- channel_promo_format("C1", "career-advice", "Come say hi!")
+    expect_match(md, "<#C1|career-advice>", fixed = TRUE)
+  })
+
   it("escapes injected mentions and links in the blurb", {
     md <- channel_promo_format(
       "C1",
