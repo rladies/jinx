@@ -1,3 +1,16 @@
+#' Default Workers AI chat/instruct model
+#'
+#' Single source of truth for the model id, since Workers AI model
+#' retirements have previously broken callers that hardcoded it in
+#' multiple places.
+#'
+#' @return Character scalar model id.
+#' @keywords internal
+#' @noRd
+workers_ai_chat_model <- function() {
+  "@cf/meta/llama-3.1-8b-instruct-fast"
+}
+
 #' Embed texts with a Cloudflare Workers AI model
 #'
 #' Calls the Cloudflare REST endpoint
@@ -27,6 +40,39 @@ cloudflare_embed <- function(
     httr2::req_perform() |>
     cloudflarer::cf_resp()
   lapply(body$data, as.numeric)
+}
+
+#' Generate chat-completion text with a Cloudflare Workers AI model
+#'
+#' Calls the Cloudflare REST endpoint `accounts/{id}/ai/run/{model}` with a
+#' chat-style `messages` array and returns the generated text. Sibling of
+#' [cloudflare_embed()] - same auth/retry/error-handling idiom, built on
+#' [cloudflarer::cf_request()] and [cloudflarer::cf_resp()] because
+#' cloudflarer does not wrap Workers AI inference.
+#'
+#' @param messages List of chat messages, each `list(role = , content = )`.
+#' @param account_id Cloudflare account ID.
+#' @param api_token Cloudflare API token.
+#' @param model Workers AI chat/instruct model.
+#' @param max_tokens Maximum tokens to generate.
+#' @return Character scalar with the model's response text.
+#' @export
+cloudflare_generate <- function(
+  messages,
+  account_id,
+  api_token,
+  model = workers_ai_chat_model(),
+  max_tokens = 256
+) {
+  body <- cloudflarer::cf_request(
+    c("accounts", account_id, "ai", "run", model),
+    token = api_token
+  ) |>
+    httr2::req_retry(max_tries = 3) |>
+    httr2::req_body_json(list(messages = messages, max_tokens = max_tokens)) |>
+    httr2::req_perform() |>
+    cloudflarer::cf_resp()
+  body$response
 }
 
 #' Upsert vectors into a Cloudflare Vectorize index

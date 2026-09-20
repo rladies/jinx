@@ -82,6 +82,54 @@ describe("cf_ops_get_kv_value", {
   })
 })
 
+describe("cf_ops_kv_put", {
+  it("writes a value without erroring on success", {
+    local_mocked_responses(list(response_json(body = list(success = TRUE))))
+    expect_no_error(
+      cf_ops_kv_put(
+        account_id = "acc123",
+        namespace_id = "ns1",
+        key_name = "greeting",
+        value = "hello",
+        ttl_seconds = 3600,
+        token = "tok"
+      )
+    )
+  })
+
+  it("surfaces a classed cloudflarer_error on API failure", {
+    body <- list(
+      success = FALSE,
+      errors = list(list(code = 1000, message = "bad thing"))
+    )
+    local_mocked_responses(list(response_json(status_code = 400, body = body)))
+    expect_error(
+      cf_ops_kv_put(
+        account_id = "acc123",
+        namespace_id = "ns1",
+        key_name = "greeting",
+        value = "hello",
+        token = "tok"
+      ),
+      class = "cloudflarer_error"
+    )
+  })
+})
+
+describe("cf_ops_kv_delete", {
+  it("deletes a value without erroring on success", {
+    local_mocked_responses(list(response_json(body = list(success = TRUE))))
+    expect_no_error(
+      cf_ops_kv_delete(
+        account_id = "acc123",
+        namespace_id = "ns1",
+        key_name = "greeting",
+        token = "tok"
+      )
+    )
+  })
+})
+
 describe("parse_cache_purge_command", {
   it("parses one or more domain-like prefixes", {
     cmd <- cmd_parse("/jinx cache-purge rladies.org/blog")

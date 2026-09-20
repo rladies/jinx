@@ -34,11 +34,10 @@
 | `/jinx review brand\|blog\|social\|translation <pr>` | Summon Copilot to run a grimoire review gate on a PR                                       |
 | `/jinx copilot-sync <owner/repo>`                    | Sync grimoire review gates into a repo's Copilot instructions                              |
 | `/jinx setup-channel`                                | Pin RLadies+ resource bookmarks in the current channel                                     |
-| `/jinx pair @alice @bob [message]`                   | Open a group DM with mentioned users (up to 7)                                             |
-| `/jinx remind-me <when> \| <what>`                   | Set a personal Slack reminder for yourself                                                 |
 | `/jinx shorten <url> [slug]`                         | _(Organisers)_ Create a `l.rladies.org` short link                                         |
 | `/jinx feedback [days]`                              | _(Global Team)_ Reaction signal on Jinx's recent answers                                   |
 | `/jinx questions [days]`                             | _(Global Team)_ What folks asked, the gaps Jinx couldn't answer, and 👎'd replies          |
+| `/jinx invite-link [url] [cap]`                      | _(Leadership)_ Show, or rotate, the Community Slack invite link                            |
 | `/jinx help`                                         | Show this help message                                                                     |
 
 **Teams:** abstract-review, blog, campaigns, chapter-activity, chapter-onboarding, coc, communications, community-slack, conference-liaison, directory, meetup-pro, mentoring, rocur, translation, website

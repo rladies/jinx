@@ -120,9 +120,13 @@ export function makeEnv(overrides = {}) {
     GITHUB_REPO: "rladies/jinx",
     GITHUB_TOKEN: "test-gh-token",
     JINX_API_KEY: "test-jinx-api-key",
+    SLACK_ALERTS_CHANNEL: "C_ALERTS",
+    AIRTABLE_INVITE_BASE: "appTEST",
+    AIRTABLE_INVITE_TABLE: "tblTEST",
     SLACK_TOKENS: makeKv(),
     AIRTABLE_BASES: makeKv(),
     SHORT_LINKS: makeKv(),
+    INVITE_TOKENS: makeKv(),
     ...overrides,
   };
 }

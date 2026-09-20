@@ -1,5 +1,242 @@
 # jinx (development version)
 
+## An unset CI variable no longer defeats an env default
+
+- **`env_default()` treats an empty environment variable as unset.**
+  GitHub Actions passes an unset repository variable through as an empty
+  string, and `Sys.getenv()` only falls back to its default when a
+  variable is genuinely absent - so `SLACK_PROMO_CHANNEL` resolved to
+  `""` in CI and the spotlight tried to post to `#`, failing with
+  `channel_not_found`. Applied to `SLACK_PROMO_CHANNEL` and
+  `SLACK_DIGEST_CHANNEL`, which had the same latent trap.
+
+## A bare domain no longer reads as permanent drift
+
+- **`copy_normalise()` resolves a labelled Slack link to its label**, not
+  its URL. Slack auto-links a bare domain, so a description written as
+  `meetup.com` comes back as `<http://meetup.com|meetup.com>`; resolving
+  that to the URL made it compare unequal to the text that was written,
+  on every pass, forever. The label is what the author typed, so that is
+  what the comparison should see.
+
+## Paginated Slack reads were stuck on page one
+
+- **`slack_api_call()` gained `encode = "form"`, and
+  `slack_conversations_list()` now uses it.** `conversations.list`
+  ignores a JSON body outright - including `limit` and `cursor` - so
+  every page request returned the same first 100 channels with the same
+  cursor. The loop never terminated: on any workspace with more than 100
+  public channels it paged forever, in silence, using no CPU and raising
+  no error. Workspaces under 100 channels were unaffected, which is why
+  this went unnoticed.
+- This also affected `channel_index_load()` and the welcome flow, not
+  just the channel copy pass.
+- **The pagination loop now aborts if a cursor repeats**, so a
+  non-advancing page fails loudly instead of hanging, and the default
+  page size is 200 rather than 1000.
+
+## The plan follows channels that have been renamed
+
+- **`channel_copy_plan()` now resolves a proposal through the rename
+  map** when the channel no longer answers to its reviewed name.
+  Applying the renames made 25 of the community workspace's 43 channels
+  report as `missing`, because the copy is keyed by the old name - so a
+  later pass would have skipped them silently rather than maintaining
+  them. A channel that is absent for any other reason still reports
+  `missing`.
+
+## Channel renames via an owner grant
+
+- **`/slack/install?user_scope=rename` requests a `channels:write` user
+  grant.** Slack refuses `conversations.rename` from a bot token for a
+  channel the bot did not create, which failed all 25 community renames
+  with `not_authorized`; a grant from a workspace owner passes that
+  check. A routine install is unchanged and never asks for it.
+- The grant is **shown once to the authorising owner and not stored** -
+  it acts as them and is wanted only for a one-off pass, so it belongs in
+  1Password with the other operator credentials rather than in the KV the
+  Worker reads on every request. Revoke it with `auth.revoke` afterwards.
+- **`channel_copy_apply(user_token =)`** uses it for `name` rows only.
+  Topics, descriptions and the channel join still go through the bot
+  token.
+
+## Channel copy fidelity fixes
+
+- **The reviewed copy now keeps its em-dashes.** The extraction that
+  produced `inst/extdata/channel-copy.csv` replaced every em-dash with a
+  hyphen, so 22 values were applied in a form nobody reviewed. The
+  package's ASCII convention governs R source, not Slack copy.
+- **`copy_normalise()` now undoes Slack's URL rewriting.** Slack stores a
+  bare URL as `<https://...>`, so a description containing one compared
+  unequal on every pass and was reported as drift forever. Labelled links
+  (`<url|label>`) normalise to the URL too.
+
+## Channel copy and renaming pass
+
+- **New `channel_copy_plan()` and `channel_copy_apply()`** apply reviewed
+  topic, description and name changes to a workspace's public channels.
+  The reviewed copy ships as data (`inst/extdata/channel-copy.csv` and
+  `channel-renames.csv`) so it is diffable in review rather than buried
+  in code.
+- The plan is computed against live Slack state and classifies every
+  intended change before anything is sent: `unchanged` when Slack already
+  holds the value, `drift` when the live value no longer matches what the
+  review recorded (so the proposal may be stale), `missing` when the
+  channel is absent, and `apply` otherwise. `channel_copy_apply()` is
+  `dry_run = TRUE` by default, sends only `apply` rows, takes a `skip`
+  list, and records per-row failures instead of aborting the pass.
+
+## Install flow requests channel-management scopes
+
+- **`/slack/install` now requests `channels:manage` and
+  `channels:write.topic`** alongside the existing scopes
+  (`worker/src/slack-oauth.js`). Slack grants exactly the scopes named in
+  the OAuth `scope` parameter, so without these an install could read
+  public channels but never set a channel's topic, set its description
+  (purpose), or rename it — regardless of what the Slack app config
+  allowed. Existing installs keep their old grant until the install flow
+  is re-run for that workspace.
+
+## Weekly community channel spotlight
+
+- **Jinx now posts a weekly "channel spotlight" to the community
+  workspace**, promoting one public channel at a time so members discover
+  the quieter channels beyond the busy few. A GitHub Actions cron
+  (`bot-channel-promo.yml`, Mondays 15:00 UTC) calls
+  `jinx::channel_promo_post()`, which lists
+  the community's public channels, keeps those that have a description,
+  picks the next one round-robin (state stored in KV, so every channel
+  gets a turn before any repeats), and drafts a short invitation in Jinx's
+  voice via Workers AI — falling back to the channel's own description if
+  the model call fails. The generated blurb is escaped before posting, so
+  a channel's user-controlled description can't inject links or
+  `<!channel>` mass-pings into the broadcast. New: `channel_promo_post()`,
+  `channel_promo_build()`, `channel_promo_format()`,
+  `promo_eligible_channels()`, `promo_pick_channel()`, and `promo_blurb()`
+  in `R/channel-promo.R`. Configurable via `SLACK_PROMO_CHANNEL` (target,
+  default `general`) and `SLACK_PROMO_SKIP` (comma-separated names to never
+  feature).
+## Slash commands move to R; remind-me and pair removed
+
+- **`/jinx remind-me` and `/jinx pair` are removed entirely** — both duplicated
+  native Slack features (`/remind` and native group-DM creation) not worth a
+  bespoke command.
+- **`/jinx setup-channel`, `/jinx feedback`, and `/jinx questions` now run
+  through the same `slack-command` dispatch pipeline as every other command**,
+  instead of the Worker's `LOCAL_COMMANDS` fast path. New R:
+  `setup_channel_process()` (joins the channel and pins bookmarks from
+  `inst/config/bookmarks.json`, reading it directly instead of the Worker's
+  redundant GitHub-raw fetch) in `R/welcome.R`; `question_feedback_summary()`/
+  `question_feedback_format()` (aggregates the `reaction_log:*` KV counters
+  `reaction_log_increment()` writes) in `R/question-log.R`. `questions`
+  already had a working R handler - it was just unreachable from Slack.
+- `worker/src/slash-local.js` now only handles `/jinx shorten` (organiser
+  workspace, low-latency link creation - the one command that still needs an
+  instant reply). `worker/src/authorize.js` shrank to just the
+  organiser-workspace check `shorten` still needs; the Airtable-backed
+  global-team lookup it used to do for `feedback`/`questions` is now handled
+  by `cmd_authorize()` on the R side, the same as every other gated command.
+- New `cmd_attach_slack_context()` merges `team_id`/`channel_id`/`channel_name`
+  onto a parsed command for the two new Slack-context-aware commands, mirroring
+  how `event_parse()` already owns shaping the `slack-event` payload - so
+  `bot-commands.yml` stays thin, untested plumbing rather than the place this
+  logic lives. It also now sets both `SLACK_ORGANISER_TOKEN`/
+  `SLACK_COMMUNITY_TOKEN` and `SLACK_ORGANIZER_TEAM_ID`/
+  `SLACK_COMMUNITY_TEAM_ID` so `setup-channel` can run from either workspace.
+
+## Question digest and retention purge move to R
+
+- **The weekly question-gap digest and the daily question-log retention
+  purge are now GitHub Actions calling `jinx::question_digest_post()` and
+  `jinx::question_log_purge()` directly**, not Cloudflare Cron Triggers
+  running `worker/src/question-digest.js` (deleted) and
+  `question_log_purge()` in `worker/src/question-log.js` (removed). Both
+  were cron-triggered batch jobs with no live caller waiting on a
+  response, so there was nothing requiring them to run at the edge — this
+  removes a JS/R duplicate-implementation risk in favour of a single R
+  implementation. New: `cloudflare_generate()` (Workers AI chat
+  completion, sibling of `cloudflare_embed()`), `question_log_purge()`,
+  and six `question_digest_*`/`question_content_gaps()` functions in
+  `R/question-digest.R`. The worker-local `/jinx questions`/`/jinx
+feedback` Slack commands stay JS — moving those to the GitHub Actions
+  dispatch path would trade their current sub-second response for a
+  measured ~2–2.5 minute round-trip, an unacceptable regression for an
+  interactive command.
+
+## Airtable invite-approval flow moves to R
+
+- **The Airtable invite-approval flow (approve/deny/mark-sent, and the
+  incoming Airtable webhook) now runs in R**, using the `airtable_webhook`
+  and `slack_interaction` `slack-event` kinds added to `jinx_events()`.
+  New `R/airtable-invite.R`: `airtable_record_update()` (R's first
+  Airtable _write_ primitive - everything in `R/airtable-sync.R` is
+  read-only), `airtable_base_allowed()` (KV-cached Meta API scope check),
+  `slack_invite_request_blocks()`/`slack_invite_approval_checklist_blocks()`
+  (Block Kit builders), `airtable_webhook_process()`, and
+  `slack_interaction_process()`.
+- The Worker keeps only what must stay at the edge: the shared-secret
+  check on `/airtable/webhook`, and Slack signature/team-allowlist
+  verification plus an immediate "Processing…" placeholder ack on
+  `/slack/interact` (`worker/src/airtable-invite.js` shrank from 344 to
+  ~135 lines). The two-step message replacement (JS ack → R final state)
+  means an approval card can take up to a couple of minutes to reach its
+  final state - acceptable for an admin-only approval flow with no
+  user-facing latency requirement.
+- Fixes from review: `airtable_record_update()`'s URL is now built with
+  `httr2::req_url_path_append()` instead of unescaped `glue::glue()`
+  interpolation, restoring the `encodeURIComponent()` escaping the
+  deleted JS had; `slack_interaction_mark_sent()`'s pending-link KV write
+  now has its own error handling (matching the deleted JS), so a KV
+  failure no longer gets misreported as an Airtable failure when the
+  actual Airtable update succeeded.
+
+## Event dispatch contract + welcome/reaction handling move to R
+
+- **A new `slack-event` `repository_dispatch` type carries passive Slack
+  events (`team_join`, `reaction_added`, and — once the Airtable invite
+  flow migrates — `airtable_webhook`/`slack_interaction`) from the
+  Cloudflare Worker to a new `bot-events.yml` workflow**, mirroring the
+  existing `slack-command` dispatch that already relays slash commands.
+  New `R/event-registry.R` (`event_parse()`, `event_authorize()`,
+  `event_execute()`) is the event-side companion to
+  `command-registry.R`'s command pipeline.
+- **Welcome DMs for new Slack members and reaction-based feedback
+  tallying/voting are now rendered and applied entirely in R**, not the
+  Worker. New `R/welcome.R` (`welcome_send()`, `welcome_message_render()`,
+  channel lookup/mention, DM-open, pending-link consume) reads the
+  welcome config and templates directly from this package's `inst/`
+  instead of the Worker's redundant GitHub-raw fetch of the same files.
+  The two welcome templates' placeholder syntax changed from
+  `{{lowercase}}` to `<UPPERCASE>` to match this package's existing
+  `render_template()` convention. New `question_vote_apply()` and
+  `reaction_log_increment()` in `R/question-log.R` replace the
+  equivalent JS functions (deleted from `worker/src/slack-events.js`
+  and `worker/src/question-log.js`).
+- New shared Slack Web API primitives in `R/slack-manage.R`
+  (`slack_api_call()`, `slack_bot_token()`, `slack_workspace_for_team()`,
+  `slack_response_url_post()`) and KV write primitives in `R/cf-ops.R`
+  (`cf_ops_kv_put()`, `cf_ops_kv_delete()`) underpin the above and are
+  reused by the still-to-come Airtable invite-flow migration.
+- The Worker's JS keeps only cheap, fail-fast pre-filters before
+  dispatching (team allowlist, message-type/bot-message-match checks,
+  event dedup) — spinning up a GitHub Actions container only for
+  reactions that are actually on the bot's own messages, not every
+  reaction in a workspace.
+- **Requires a new `SLACK_COMMUNITY_TOKEN` GitHub secret** (alongside the
+  existing `SLACK_ORGANISER_TOKEN`) so welcome DMs work in the community
+  workspace, not just the organiser one.
+- Failure isolation between independent side effects now matches the
+  deleted JS's per-operation `.catch()` behaviour: a KV cleanup failure in
+  `pending_link_consume()` no longer blocks sending the welcome DM, and a
+  reaction-tally write failure in `reaction_event_apply()` no longer
+  blocks applying the actual 👍/👎 vote (or vice versa). `bot-events.yml`
+  also gained a `notify-failure` job (posting to the existing Slack
+  healthcheck channel via `reusable-slack-fail-notify.yml`) so a failed
+  event run is visible instead of silent, and its Slack-metadata masking
+  no longer attempts (incorrectly) to mask the multi-line nested `event`
+  JSON payload — only the single-line `team_id`/`response_url` fields,
+  which is all `::add-mask::` can actually mask.
+
 ## URL shortener
 
 - **Jinx runs a URL shortener at `l.rladies.org`**, backed by

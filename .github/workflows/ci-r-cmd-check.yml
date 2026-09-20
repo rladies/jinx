@@ -4,27 +4,27 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'R/**'
-      - 'src/**'
-      - 'tests/**'
-      - 'man/**'
-      - 'vignettes/**'
-      - 'inst/**'
-      - 'DESCRIPTION'
-      - 'NAMESPACE'
-      - '.Rbuildignore'
+      - "R/**"
+      - "src/**"
+      - "tests/**"
+      - "man/**"
+      - "vignettes/**"
+      - "inst/**"
+      - "DESCRIPTION"
+      - "NAMESPACE"
+      - ".Rbuildignore"
   push:
     branches: [main]
     paths:
-      - 'R/**'
-      - 'src/**'
-      - 'tests/**'
-      - 'man/**'
-      - 'vignettes/**'
-      - 'inst/**'
-      - 'DESCRIPTION'
-      - 'NAMESPACE'
-      - '.Rbuildignore'
+      - "R/**"
+      - "src/**"
+      - "tests/**"
+      - "man/**"
+      - "vignettes/**"
+      - "inst/**"
+      - "DESCRIPTION"
+      - "NAMESPACE"
+      - ".Rbuildignore"
 
 permissions:
   contents: read
@@ -33,6 +33,8 @@ jobs:
   R-CMD-check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - uses: actions/checkout@v6
