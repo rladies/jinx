@@ -38,4 +38,9 @@ RUN for attempt in 1 2 3; do \
       sleep 10; \
     done
 
+# Runtime for weekly-challenge verification: reprex/callr run candidate
+# solutions in an isolated session; the allowlist is what generated challenges
+# may use. Sourced from the package so the image tracks the allowlist.
+RUN Rscript -e 'install.packages(c("reprex", "callr", setdiff(jinx::r_challenge_allowed_packages(), c("base", "stats", "utils"))))'
+
 WORKDIR /work
