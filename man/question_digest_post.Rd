@@ -6,7 +6,7 @@
 \usage{
 question_digest_post(
   days = 7,
-  channel = Sys.getenv("SLACK_DIGEST_CHANNEL", "team-jinx"),
+  channel = env_default("SLACK_DIGEST_CHANNEL", "team-jinx"),
   slack_token = Sys.getenv("SLACK_TOKEN"),
   account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
   database_id = "4500d886-2593-44f9-9a01-d38cfa26e8dc",
