@@ -681,6 +681,8 @@ AI-drafted, reprex- and adversarially-verified weekly R challenge
   : Human-readable label for a difficulty level
 - [`r_challenge_draft_build()`](https://rladies.github.io/jinx/reference/r_challenge_draft_build.md)
   : Draft a fully verified weekly R challenge
+- [`r_challenge_draft_post()`](https://rladies.github.io/jinx/reference/r_challenge_draft_post.md)
+  : Draft, verify, and propose a weekly R challenge
 - [`r_challenge_format_issue()`](https://rladies.github.io/jinx/reference/r_challenge_format_issue.md)
   : Format a drafted challenge as a GitHub review issue
 - [`r_challenge_format_slack()`](https://rladies.github.io/jinx/reference/r_challenge_format_slack.md)
@@ -689,6 +691,8 @@ AI-drafted, reprex- and adversarially-verified weekly R challenge
   : Ask Workers AI to draft a weekly R challenge
 - [`r_challenge_issue_title()`](https://rladies.github.io/jinx/reference/r_challenge_issue_title.md)
   : GitHub issue title for a drafted challenge
+- [`r_challenge_open_issue()`](https://rladies.github.io/jinx/reference/r_challenge_open_issue.md)
+  : Open a proposed challenge issue in the review repo
 - [`r_challenge_parse()`](https://rladies.github.io/jinx/reference/r_challenge_parse.md)
   : Parse a model completion into a structured challenge
 - [`r_challenge_render_statement()`](https://rladies.github.io/jinx/reference/r_challenge_render_statement.md)
