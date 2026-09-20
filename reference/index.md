@@ -73,8 +73,12 @@ Directory entry management and validation
 
 - [`directory_crop_image()`](https://rladies.github.io/jinx/reference/directory_crop_image.md)
   : Crop and resize a directory profile image
+- [`directory_mark_synced()`](https://rladies.github.io/jinx/reference/directory_mark_synced.md)
+  : Flag handled submissions as synced.
 - [`directory_optimize_image()`](https://rladies.github.io/jinx/reference/directory_optimize_image.md)
   : Optimize an image for web display
+- [`directory_purge_submissions()`](https://rladies.github.io/jinx/reference/directory_purge_submissions.md)
+  : Erase every Airtable submission for the given directory slugs.
 - [`directory_sync_airtable()`](https://rladies.github.io/jinx/reference/directory_sync_airtable.md)
   : Sync directory entries from Airtable
 - [`directory_validate_filename()`](https://rladies.github.io/jinx/reference/directory_validate_filename.md)
@@ -473,6 +477,37 @@ Weekly community channel spotlight posted to Slack
   : Pick the next channel to spotlight, round-robin
 - [`promo_blurb()`](https://rladies.github.io/jinx/reference/promo_blurb.md)
   : Draft a spotlight invitation for a channel in Jinx's voice
+
+## Weekly R challenge
+
+AI-drafted, reprex- and adversarially-verified weekly R challenge
+
+- [`r_challenge_adversarial_check()`](https://rladies.github.io/jinx/reference/r_challenge_adversarial_check.md)
+  : Adversarially review a candidate challenge
+- [`r_challenge_allowed_packages()`](https://rladies.github.io/jinx/reference/r_challenge_allowed_packages.md)
+  : Packages a generated challenge may rely on
+- [`r_challenge_difficulties()`](https://rladies.github.io/jinx/reference/r_challenge_difficulties.md)
+  : Difficulty levels for the weekly R challenge
+- [`r_challenge_difficulty_badge()`](https://rladies.github.io/jinx/reference/r_challenge_difficulty_badge.md)
+  : Slack emoji badge for a difficulty level
+- [`r_challenge_difficulty_label()`](https://rladies.github.io/jinx/reference/r_challenge_difficulty_label.md)
+  : Human-readable label for a difficulty level
+- [`r_challenge_draft_build()`](https://rladies.github.io/jinx/reference/r_challenge_draft_build.md)
+  : Draft a fully verified weekly R challenge
+- [`r_challenge_format_issue()`](https://rladies.github.io/jinx/reference/r_challenge_format_issue.md)
+  : Format a drafted challenge as a GitHub review issue
+- [`r_challenge_format_slack()`](https://rladies.github.io/jinx/reference/r_challenge_format_slack.md)
+  : Format a challenge as a Slack message
+- [`r_challenge_generate()`](https://rladies.github.io/jinx/reference/r_challenge_generate.md)
+  : Ask Workers AI to draft a weekly R challenge
+- [`r_challenge_issue_title()`](https://rladies.github.io/jinx/reference/r_challenge_issue_title.md)
+  : GitHub issue title for a drafted challenge
+- [`r_challenge_parse()`](https://rladies.github.io/jinx/reference/r_challenge_parse.md)
+  : Parse a model completion into a structured challenge
+- [`r_challenge_render_statement()`](https://rladies.github.io/jinx/reference/r_challenge_render_statement.md)
+  : Render a challenge statement as a reprex
+- [`r_challenge_reprex_check()`](https://rladies.github.io/jinx/reference/r_challenge_reprex_check.md)
+  : Verify a reference solution against its own tests
 
 ## Conference coordination
 
