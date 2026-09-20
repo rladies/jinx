@@ -66,6 +66,11 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="an-unset-ci-variable-no-longer-defeats-an-env-default-development-version">An unset CI variable no longer defeats an env default<a class="anchor" aria-label="anchor" href="#an-unset-ci-variable-no-longer-defeats-an-env-default-development-version"></a></h3>
+<ul><li>
+<strong><code>env_default()</code> treats an empty environment variable as unset.</strong> GitHub Actions passes an unset repository variable through as an empty string, and <code><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv()</a></code> only falls back to its default when a variable is genuinely absent - so <code>SLACK_PROMO_CHANNEL</code> resolved to <code>""</code> in CI and the spotlight tried to post to <code>#</code>, failing with <code>channel_not_found</code>. Applied to <code>SLACK_PROMO_CHANNEL</code> and <code>SLACK_DIGEST_CHANNEL</code>, which had the same latent trap.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="a-bare-domain-no-longer-reads-as-permanent-drift-development-version">A bare domain no longer reads as permanent drift<a class="anchor" aria-label="anchor" href="#a-bare-domain-no-longer-reads-as-permanent-drift-development-version"></a></h3>
 <ul><li>
 <strong><code>copy_normalise()</code> resolves a labelled Slack link to its label</strong>, not its URL. Slack auto-links a bare domain, so a description written as <code>meetup.com</code> comes back as <code>&lt;http://meetup.com|meetup.com&gt;</code>; resolving that to the URL made it compare unequal to the text that was written, on every pass, forever. The label is what the author typed, so that is what the comparison should see.</li>
