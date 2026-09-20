@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", function() {
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">question_digest_post</span><span class="op">(</span></span>
 <span>  days <span class="op">=</span> <span class="fl">7</span>,</span>
-<span>  channel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"SLACK_DIGEST_CHANNEL"</span>, <span class="st">"team-jinx"</span><span class="op">)</span>,</span>
+<span>  channel <span class="op">=</span> <span class="fu">env_default</span><span class="op">(</span><span class="st">"SLACK_DIGEST_CHANNEL"</span>, <span class="st">"team-jinx"</span><span class="op">)</span>,</span>
 <span>  slack_token <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"SLACK_TOKEN"</span><span class="op">)</span>,</span>
 <span>  account_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"CLOUDFLARE_ACCOUNT_ID"</span><span class="op">)</span>,</span>
 <span>  database_id <span class="op">=</span> <span class="st">"4500d886-2593-44f9-9a01-d38cfa26e8dc"</span>,</span>

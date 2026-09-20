@@ -81,7 +81,7 @@ the model call fails.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">channel_promo_build</span><span class="op">(</span></span>
 <span>  team_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"SLACK_COMMUNITY_TEAM_ID"</span><span class="op">)</span>,</span>
-<span>  target_channel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"SLACK_PROMO_CHANNEL"</span>, <span class="st">"general"</span><span class="op">)</span>,</span>
+<span>  target_channel <span class="op">=</span> <span class="fu">env_default</span><span class="op">(</span><span class="st">"SLACK_PROMO_CHANNEL"</span>, <span class="st">"general"</span><span class="op">)</span>,</span>
 <span>  skip <span class="op">=</span> <span class="fu">promo_skip_channels</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  namespace_id <span class="op">=</span> <span class="fu">slack_tokens_namespace_id</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  account_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"CLOUDFLARE_ACCOUNT_ID"</span><span class="op">)</span>,</span>
