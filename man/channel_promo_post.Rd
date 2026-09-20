@@ -6,7 +6,7 @@
 \usage{
 channel_promo_post(
   team_id = Sys.getenv("SLACK_COMMUNITY_TEAM_ID"),
-  target_channel = Sys.getenv("SLACK_PROMO_CHANNEL", "general"),
+  target_channel = env_default("SLACK_PROMO_CHANNEL", "general"),
   slack_token = slack_bot_token("community"),
   skip = promo_skip_channels(),
   namespace_id = slack_tokens_namespace_id(),
