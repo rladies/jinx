@@ -21,7 +21,7 @@
 | `/jinx events <chapter>`                             | List recent events for a chapter                                                           |
 | `/jinx events sync`                                  | Sync and publish event summary                                                             |
 | `/jinx analytics`                                    | Generate analytics dashboard                                                               |
-| `/jinx generate website analytics [period]`          | Generate Plausible website report (7d/30d/month/6mo/12mo)                                  |
+| `/jinx generate website analytics [period]`          | Generate Cloudflare website report (not yet implemented)                                   |
 | `/jinx cfp list`                                     | List open calls for proposals                                                              |
 | `/jinx cfp add <conf> <deadline> <url>`              | Track a new CFP                                                                            |
 | `/jinx cfp recommend <conf> @speaker`                | Recommend a speaker                                                                        |
@@ -34,9 +34,10 @@
 | `/jinx review brand\|blog\|social\|translation <pr>` | Summon Copilot to run a grimoire review gate on a PR                                       |
 | `/jinx copilot-sync <owner/repo>`                    | Sync grimoire review gates into a repo's Copilot instructions                              |
 | `/jinx setup-channel`                                | Pin RLadies+ resource bookmarks in the current channel                                     |
-| `/jinx pair @alice @bob [message]`                   | Open a group DM with mentioned users (up to 7)                                             |
-| `/jinx remind-me <when> \| <what>`                   | Set a personal Slack reminder for yourself                                                 |
-| `/jinx feedback [days]`                              | Show reaction signal on Jinx's recent answers                                              |
+| `/jinx shorten <url> [slug]`                         | _(Organisers)_ Create a `l.rladies.org` short link                                         |
+| `/jinx feedback [days]`                              | _(Global Team)_ Reaction signal on Jinx's recent answers                                   |
+| `/jinx questions [days]`                             | _(Global Team)_ What folks asked, the gaps Jinx couldn't answer, and 👎'd replies          |
+| `/jinx invite-link [url] [cap]`                      | _(Leadership)_ Show, or rotate, the Community Slack invite link                            |
 | `/jinx help`                                         | Show this help message                                                                     |
 
 **Teams:** abstract-review, blog, campaigns, chapter-activity, chapter-onboarding, coc, communications, community-slack, conference-liaison, directory, meetup-pro, mentoring, rocur, translation, website

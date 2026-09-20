@@ -63,7 +63,7 @@ gather_all_chunks <- function(sources) {
     cli::cli_alert_info("Gathering {.field {src$source_type}} ({src$type})")
     src_chunks <- gather_rag_source(src)
     lapply(src_chunks, function(chunk) {
-      chunk$source_type <- src$source_type
+      chunk$source_type <- chunk$source_type %or% src$source_type
       chunk
     })
   })

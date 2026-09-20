@@ -1,33 +1,23 @@
-#' Build a base authenticated Cloudflare API request
+#' Default Workers AI chat/instruct model
 #'
-#' Returns an [httr2::request] pointed at the v4 API root, with the
-#' bearer token attached. Callers append path segments per endpoint:
+#' Single source of truth for the model id, since Workers AI model
+#' retirements have previously broken callers that hardcoded it in
+#' multiple places.
 #'
-#' ```r
-#' cloudflare_request(token) |>
-#'   httr2::req_url_path_append("accounts", id, "ai", "run", model)
-#' ```
-#'
-#' @param api_token Cloudflare API token.
-#' @param user_agent User-Agent header to attach.
-#' @param base_url Cloudflare API base URL.
-#' @return [httr2::request] object.
+#' @return Character scalar model id.
 #' @keywords internal
-cloudflare_request <- function(
-  api_token,
-  user_agent = rag_user_agent(),
-  base_url = "https://api.cloudflare.com/client/v4"
-) {
-  httr2::request(base_url) |>
-    httr2::req_auth_bearer_token(api_token) |>
-    httr2::req_user_agent(user_agent) |>
-    httr2::req_retry(max_tries = 3)
+#' @noRd
+workers_ai_chat_model <- function() {
+  "@cf/meta/llama-3.1-8b-instruct-fast"
 }
 
 #' Embed texts with a Cloudflare Workers AI model
 #'
 #' Calls the Cloudflare REST endpoint
 #' `accounts/{id}/ai/run/{model}` and returns the embedding vectors.
+#' Custom because [cloudflarer](https://drmowinckels.r-universe.dev/cloudflarer)
+#' does not wrap Workers AI inference; built on its [cloudflarer::cf_request()]
+#' and [cloudflarer::cf_resp()] for consistent auth and error handling.
 #'
 #' @param texts Character vector of texts.
 #' @param account_id Cloudflare account ID.
@@ -41,21 +31,61 @@ cloudflare_embed <- function(
   api_token,
   model = "@cf/baai/bge-base-en-v1.5"
 ) {
-  resp <- cloudflare_request(api_token) |>
-    httr2::req_url_path_append("accounts", account_id, "ai", "run", model) |>
+  body <- cloudflarer::cf_request(
+    c("accounts", account_id, "ai", "run", model),
+    token = api_token
+  ) |>
+    httr2::req_retry(max_tries = 3) |>
     httr2::req_body_json(list(text = as.list(texts))) |>
-    httr2::req_perform()
-  body <- httr2::resp_body_json(resp)
-  lapply(body$result$data, as.numeric)
+    httr2::req_perform() |>
+    cloudflarer::cf_resp()
+  lapply(body$data, as.numeric)
+}
+
+#' Generate chat-completion text with a Cloudflare Workers AI model
+#'
+#' Calls the Cloudflare REST endpoint `accounts/{id}/ai/run/{model}` with a
+#' chat-style `messages` array and returns the generated text. Sibling of
+#' [cloudflare_embed()] - same auth/retry/error-handling idiom, built on
+#' [cloudflarer::cf_request()] and [cloudflarer::cf_resp()] because
+#' cloudflarer does not wrap Workers AI inference.
+#'
+#' @param messages List of chat messages, each `list(role = , content = )`.
+#' @param account_id Cloudflare account ID.
+#' @param api_token Cloudflare API token.
+#' @param model Workers AI chat/instruct model.
+#' @param max_tokens Maximum tokens to generate.
+#' @return Character scalar with the model's response text.
+#' @export
+cloudflare_generate <- function(
+  messages,
+  account_id,
+  api_token,
+  model = workers_ai_chat_model(),
+  max_tokens = 256
+) {
+  body <- cloudflarer::cf_request(
+    c("accounts", account_id, "ai", "run", model),
+    token = api_token
+  ) |>
+    httr2::req_retry(max_tries = 3) |>
+    httr2::req_body_json(list(messages = messages, max_tokens = max_tokens)) |>
+    httr2::req_perform() |>
+    cloudflarer::cf_resp()
+  body$response
 }
 
 #' Upsert vectors into a Cloudflare Vectorize index
+#'
+#' Custom because [cloudflarer](https://drmowinckels.r-universe.dev/cloudflarer)
+#' does not wrap Vectorize v2; built on its [cloudflarer::cf_request()] and
+#' [cloudflarer::cf_resp()] for consistent auth and error handling.
 #'
 #' @param vectors List of vector records, each with `id`, `values`, `metadata`.
 #' @param account_id Cloudflare account ID.
 #' @param api_token Cloudflare API token.
 #' @param index_name Vectorize index name.
-#' @return Parsed JSON response body.
+#' @return The unwrapped `result` payload from the Cloudflare response.
 #' @export
 cloudflare_vectorize_upsert <- function(
   vectors,
@@ -73,8 +103,8 @@ cloudflare_vectorize_upsert <- function(
     ),
     collapse = "\n"
   )
-  resp <- cloudflare_request(api_token) |>
-    httr2::req_url_path_append(
+  cloudflarer::cf_request(
+    c(
       "accounts",
       account_id,
       "vectorize",
@@ -82,10 +112,13 @@ cloudflare_vectorize_upsert <- function(
       "indexes",
       index_name,
       "upsert"
-    ) |>
+    ),
+    token = api_token
+  ) |>
+    httr2::req_retry(max_tries = 3) |>
     httr2::req_body_raw(ndjson, type = "application/x-ndjson") |>
-    httr2::req_perform()
-  httr2::resp_body_json(resp)
+    httr2::req_perform() |>
+    cloudflarer::cf_resp()
 }
 
 #' Discover the Cloudflare account ID for a token
@@ -96,10 +129,7 @@ cloudflare_vectorize_upsert <- function(
 #' @return Account ID string.
 #' @export
 cloudflare_account_id <- function(api_token) {
-  resp <- cloudflare_request(api_token) |>
-    httr2::req_url_path_append("accounts") |>
-    httr2::req_perform()
-  accounts <- httr2::resp_body_json(resp)$result %or% list()
+  accounts <- cloudflarer::cf_list_accounts(token = api_token, as_df = FALSE)
   if (length(accounts) == 0L) {
     cli::cli_abort("Cloudflare token has no accessible accounts.")
   }

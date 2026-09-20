@@ -4,10 +4,12 @@ import {
   merge_matches,
   rag_build_messages,
   rag_history_normalize,
+  rag_match_sources,
   rag_question_answer,
   rag_repair_links,
   rag_source_urls,
   rerank_matches,
+  select_event_matches,
 } from "../src/rag.js";
 
 const NOW = 1_715_000_000;
@@ -439,6 +441,103 @@ describe("rag_source_urls", () => {
     ]);
     expect(urls).toEqual(["https://a.example", "https://b.example"]);
   });
+
+  it("mines per-event links embedded in digest text", () => {
+    const urls = rag_source_urls([
+      {
+        metadata: {
+          url: "https://rladies.org/events/",
+          source_type: "events-digest",
+          text:
+            "- 2026-07-01 - <https://meetup.com/a|R-Ladies A: Sooner>\n" +
+            "- 2026-09-01 - <https://meetup.com/b|R-Ladies B: Later>",
+        },
+      },
+    ]);
+    expect(urls).toContain("https://rladies.org/events/");
+    expect(urls).toContain("https://meetup.com/a");
+    expect(urls).toContain("https://meetup.com/b");
+  });
+
+  it("does not mine text for non-digest chunks", () => {
+    const urls = rag_source_urls([
+      {
+        metadata: {
+          url: "https://x",
+          source_type: "events",
+          text: "see https://sneaky.example",
+        },
+      },
+    ]);
+    expect(urls).toEqual(["https://x"]);
+  });
+
+  it("harvests only link-position URLs, not bare URLs in an untrusted label", () => {
+    const urls = rag_source_urls([
+      {
+        metadata: {
+          url: "https://rladies.org/events/",
+          source_type: "events-digest",
+          text: "- 2026-07-01 - <https://meetup.com/legit|R-Ladies X: visit http://evil.example>",
+        },
+      },
+    ]);
+    expect(urls).toContain("https://meetup.com/legit");
+    expect(urls).not.toContain("http://evil.example");
+  });
+
+  it("tolerates null and metadata-less entries", () => {
+    const urls = rag_source_urls([null, undefined, {}, { metadata: null }]);
+    expect(urls).toEqual([]);
+  });
+});
+
+describe("select_event_matches", () => {
+  const digest = (score, date) => ({
+    id: "digest",
+    score,
+    metadata: {
+      source_type: "events-digest",
+      date,
+      lastmod: 0,
+      url: "https://rladies.org/events/",
+      text: "d",
+    },
+  });
+
+  it("pins the digest ahead of higher-cosine events and keeps it in TOP_K", () => {
+    const events = Array.from({ length: 6 }, (_, i) => ({
+      id: `e${i}`,
+      score: 0.99,
+      metadata: {
+        source_type: "events",
+        date: NOW - ONE_YEAR,
+        lastmod: 0,
+        url: `https://m/${i}`,
+        text: "past",
+      },
+    }));
+    const out = select_event_matches([...events, digest(0.41, NOW + 86400)], NOW);
+    expect(out).toHaveLength(5);
+    expect(out[0].id).toBe("digest");
+  });
+
+  it("returns the top reranked events unchanged when no digest is present", () => {
+    const events = Array.from({ length: 7 }, (_, i) => ({
+      id: `e${i}`,
+      score: 0.9 - i * 0.05,
+      metadata: {
+        source_type: "events",
+        date: 0,
+        lastmod: 0,
+        url: `https://m/${i}`,
+        text: "t",
+      },
+    }));
+    const out = select_event_matches(events, NOW);
+    expect(out).toHaveLength(5);
+    expect(out.every((m) => m.metadata.source_type === "events")).toBe(true);
+  });
 });
 
 describe("is_event_question", () => {
@@ -616,6 +715,51 @@ describe("rag_question_answer dual retrieval", () => {
     expect(userMsg).toContain("RLadies+ London — June workshop");
   });
 
+  it("pins the cross-chapter digest into context past higher-cosine events", async () => {
+    const llmInputs = [];
+    const now = Date.now() / 1000;
+    const { env } = makeMockEnv({
+      primaryMatches: [],
+      eventMatches: [
+        {
+          id: "digest",
+          score: 0.45,
+          metadata: {
+            url: "https://rladies.org/events/",
+            title: "Upcoming RLadies+ events",
+            text:
+              "Upcoming RLadies+ events across all chapters, soonest first.\n" +
+              "- 2026-07-28 - <https://meetup.com/ottawa|R-Ladies Ottawa: Summertime>",
+            source_type: "events-digest",
+            date: now + 20 * 86400,
+          },
+        },
+        ...Array.from({ length: 6 }, (_, i) => ({
+          id: `p${i}`,
+          score: 0.85,
+          metadata: {
+            url: `https://meetup.com/p${i}`,
+            title: `Past ${i}`,
+            text: "Status: past",
+            source_type: "events",
+            date: now - 100 * 86400,
+          },
+        })),
+      ],
+    });
+    env.AI.run = vi.fn(async (model, body) => {
+      if (model === "@cf/baai/bge-base-en-v1.5") return { data: [[0.1]] };
+      llmInputs.push(body);
+      return { response: "OK" };
+    });
+    await rag_question_answer(env, "when is the next rladies event?");
+    const userMsg = llmInputs[0].messages.find(
+      (m) => m.role === "user",
+    ).content;
+    expect(userMsg).toContain("Upcoming RLadies+ events across all chapters");
+    expect(userMsg).toContain("R-Ladies Ottawa: Summertime");
+  });
+
   it("caches the event-pool embedding in KV after the first call", async () => {
     const kv = makeKv();
     const { env, aiCalls } = makeMockEnv({
@@ -762,5 +906,91 @@ describe("merge_matches", () => {
     ];
     const merged = merge_matches(primary, []);
     expect(merged.map((m) => m.id)).toEqual(["x", "y"]);
+  });
+});
+
+describe("rag_match_sources", () => {
+  it("lists distinct source types in order", () => {
+    const matches = [
+      { metadata: { source_type: "guide" } },
+      { metadata: { source_type: "site" } },
+      { metadata: { source_type: "guide" } },
+    ];
+    expect(rag_match_sources(matches)).toBe("guide,site");
+  });
+
+  it("returns null when nothing carries a source type", () => {
+    expect(rag_match_sources([{ metadata: {} }])).toBeNull();
+    expect(rag_match_sources([])).toBeNull();
+  });
+});
+
+describe("rag_question_answer outcome tagging", () => {
+  function makeEnv({ matches, llmResponse = "OK" } = {}) {
+    return {
+      AI: {
+        run: vi.fn(async (model) =>
+          model === "@cf/baai/bge-base-en-v1.5"
+            ? { data: [[0.1, 0.2, 0.3]] }
+            : { response: llmResponse },
+        ),
+      },
+      RAG_INDEX: { query: vi.fn(async () => ({ matches })) },
+    };
+  }
+
+  it("tags coding questions as coding_declined without retrieving", async () => {
+    const env = makeEnv({ matches: [] });
+    const res = await rag_question_answer(env, "write me a function to sort a list");
+    expect(res.outcome).toBe("coding_declined");
+    expect(res.top_score).toBeNull();
+    expect(env.RAG_INDEX.query).not.toHaveBeenCalled();
+  });
+
+  it("tags a no-retrieval question as no_match", async () => {
+    const env = makeEnv({ matches: [] });
+    const res = await rag_question_answer(env, "what colour is the moon?");
+    expect(res.outcome).toBe("no_match");
+  });
+
+  it("tags a strong match as answered with a top score and sources", async () => {
+    const env = makeEnv({
+      matches: [
+        {
+          id: "g1",
+          score: 0.9,
+          metadata: {
+            url: "https://x",
+            title: "T",
+            text: "t",
+            source_type: "guide",
+          },
+        },
+      ],
+    });
+    const res = await rag_question_answer(env, "how do I start a chapter?");
+    expect(res.outcome).toBe("answered");
+    expect(res.top_score).toBeGreaterThan(0.5);
+    expect(res.sources).toBe("guide");
+  });
+
+  it("tags a weak-but-present match as low_confidence", async () => {
+    const env = makeEnv({
+      matches: [
+        {
+          id: "w1",
+          score: 0.42,
+          metadata: {
+            url: "https://x",
+            title: "T",
+            text: "t",
+            source_type: "github-org",
+          },
+        },
+      ],
+    });
+    const res = await rag_question_answer(env, "what is the swag budget?");
+    expect(res.outcome).toBe("low_confidence");
+    expect(res.top_score).toBeLessThan(0.5);
   });
 });

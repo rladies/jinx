@@ -153,13 +153,23 @@ parse_unix_date <- function(raw) {
   if (!is.character(raw)) {
     return(NULL)
   }
-  parsed <- suppressWarnings(as.POSIXct(raw, tz = "UTC"))
+  # as.POSIXct() with the default format *errors* (not warns) on an
+  # unparseable string, and suppressWarnings() does not catch that. A single
+  # malformed date in the feed would otherwise crash the whole indexer, so
+  # degrade any parse failure to NA and fall through to NULL.
+  parsed <- tryCatch(
+    suppressWarnings(as.POSIXct(raw, tz = "UTC")),
+    error = function(e) NA
+  )
   if (is.na(parsed)) {
-    parsed <- suppressWarnings(as.POSIXct(
-      raw,
-      format = "%Y-%m-%dT%H:%M:%S",
-      tz = "UTC"
-    ))
+    parsed <- tryCatch(
+      suppressWarnings(as.POSIXct(
+        raw,
+        format = "%Y-%m-%dT%H:%M:%S",
+        tz = "UTC"
+      )),
+      error = function(e) NA
+    )
   }
   if (is.na(parsed)) {
     return(NULL)

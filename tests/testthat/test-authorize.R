@@ -5,19 +5,26 @@ describe("normalize_handle", {
   })
 })
 
+describe("normalize_id", {
+  it("upper-cases and trims a Slack member id", {
+    expect_identical(normalize_id("  u012abc "), "U012ABC")
+    expect_identical(normalize_id("U012ABC"), "U012ABC")
+  })
+})
+
 describe("gt_actor_is_authorized", {
   directory <- function() {
     list(
       list(
         fields = list(
           `GitHub handle` = "DrMowinckels",
-          organiser_slack = "amowinckel"
+          organiser_slack_id = "U111"
         )
       ),
       list(
-        fields = list(`GitHub handle` = "octocat", organiser_slack = "octo")
+        fields = list(`GitHub handle` = "octocat", organiser_slack_id = "U222")
       ),
-      list(fields = list(organiser_slack = "slackonly"))
+      list(fields = list(organiser_slack_id = "U333"))
     )
   }
 
@@ -29,12 +36,12 @@ describe("gt_actor_is_authorized", {
     expect_true(gt_actor_is_authorized("github", "@Octocat", api_key = "k"))
   })
 
-  it("matches a Slack username", {
+  it("matches a Slack user id, case- and space-insensitively", {
     local_mocked_bindings(
       airtable_list_records = function(base_id, table, api_key) directory()
     )
-    expect_true(gt_actor_is_authorized("slack", "amowinckel", api_key = "k"))
-    expect_true(gt_actor_is_authorized("slack", "slackonly", api_key = "k"))
+    expect_true(gt_actor_is_authorized("slack", "U111", api_key = "k"))
+    expect_true(gt_actor_is_authorized("slack", " u333 ", api_key = "k"))
   })
 
   it("rejects an actor absent from the directory", {
@@ -42,14 +49,14 @@ describe("gt_actor_is_authorized", {
       airtable_list_records = function(base_id, table, api_key) directory()
     )
     expect_false(gt_actor_is_authorized("github", "stranger", api_key = "k"))
-    expect_false(gt_actor_is_authorized("slack", "nobody", api_key = "k"))
+    expect_false(gt_actor_is_authorized("slack", "U999", api_key = "k"))
   })
 
-  it("does not match a Slack handle against the GitHub column", {
+  it("does not match a Slack id against the GitHub column", {
     local_mocked_bindings(
       airtable_list_records = function(base_id, table, api_key) directory()
     )
-    expect_false(gt_actor_is_authorized("github", "amowinckel", api_key = "k"))
+    expect_false(gt_actor_is_authorized("github", "U111", api_key = "k"))
   })
 
   it("rejects an empty actor without hitting Airtable", {
@@ -109,13 +116,13 @@ describe("cmd_authorize", {
     )
     res <- cmd_authorize(
       list(action = "invite"),
-      actor = "stranger",
+      actor = "U999",
       source = "slack",
       workspace = "organiser"
     )
     expect_false(res$ok)
     expect_match(res$message, "global team")
-    expect_match(res$message, "Slack username")
+    expect_match(res$message, "Slack member ID")
   })
 
   it("allows a privileged Slack command from the organiser workspace", {
@@ -124,7 +131,7 @@ describe("cmd_authorize", {
     )
     res <- cmd_authorize(
       list(action = "invite"),
-      actor = "amowinckel",
+      actor = "U111",
       source = "slack",
       workspace = "organiser"
     )
@@ -141,7 +148,7 @@ describe("cmd_authorize", {
     )
     res <- cmd_authorize(
       list(action = "invite"),
-      actor = "amowinckel",
+      actor = "U111",
       source = "slack",
       workspace = "community"
     )
@@ -153,7 +160,7 @@ describe("cmd_authorize", {
   it("denies privileged Slack commands when the workspace is unknown", {
     res <- cmd_authorize(
       list(action = "invite"),
-      actor = "amowinckel",
+      actor = "U111",
       source = "slack",
       workspace = NULL
     )

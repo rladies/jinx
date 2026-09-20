@@ -73,6 +73,11 @@ describe("parse_unix_date", {
     expect_null(parse_unix_date(NA_character_))
   })
 
+  it("returns NULL for a malformed date string without erroring", {
+    expect_null(parse_unix_date("not-a-date"))
+    expect_null(parse_unix_date("2026-13-99T99:99"))
+  })
+
   it("parses ISO 8601 to unix seconds", {
     expect_identical(parse_unix_date("2024-01-02T00:00:00Z"), 1704153600L)
   })

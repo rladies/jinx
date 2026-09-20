@@ -5,24 +5,18 @@
 \title{Generate a website analytics report}
 \usage{
 website_generate_report(
-  site_id = Sys.getenv("PLAUSIBLE_SITE_ID"),
-  api_key = Sys.getenv("PLAUSIBLE_API_KEY"),
-  base_url = Sys.getenv("PLAUSIBLE_URL", "https://plausible.io"),
-  period = c("30d", "7d", "month", "6mo", "12mo"),
+  from = NULL,
+  to = NULL,
+  period = NULL,
   output_path = NULL
 )
 }
 \arguments{
-\item{site_id}{Plausible site ID (domain). Defaults to
-\code{Sys.getenv("PLAUSIBLE_SITE_ID")}.}
+\item{from, to}{Date window (a \code{Date} or \code{"YYYY-MM-DD"} string). When both are
+\code{NULL}, defaults to the last 30 days.}
 
-\item{api_key}{Plausible API key. Defaults to
-\code{Sys.getenv("PLAUSIBLE_API_KEY")}.}
-
-\item{base_url}{Plausible instance URL. Defaults to
-\code{Sys.getenv("PLAUSIBLE_URL", "https://plausible.io")}.}
-
-\item{period}{Time period: \code{"30d"}, \code{"7d"}, \code{"month"}, \code{"6mo"}, \code{"12mo"}.}
+\item{period}{Deprecated Plausible period string, accepted for backward
+compatibility with the command registry and ignored.}
 
 \item{output_path}{Optional path to write JSON data.}
 }
@@ -30,5 +24,5 @@ website_generate_report(
 Named list with \code{analytics} and \code{markdown} (invisibly).
 }
 \description{
-Collects Plausible analytics and formats as markdown.
+Collects website analytics and formats as markdown.
 }

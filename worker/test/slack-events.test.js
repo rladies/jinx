@@ -1,12 +1,17 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
+vi.mock("../src/github-dispatch.js", () => ({
+  github_dispatch_send: vi.fn(async () => undefined),
+}));
+import { github_dispatch_send } from "../src/github-dispatch.js";
 import {
   slack_event_handle,
   slack_event_strip_mention,
 } from "../src/slack-events.js";
-import { makeEnv, makeCtx, makeKv, jsonResponse } from "./_helpers.js";
+import { makeEnv, makeCtx, makeKv, makeD1, jsonResponse } from "./_helpers.js";
 
 afterEach(() => {
   vi.restoreAllMocks();
+  github_dispatch_send.mockClear();
 });
 
 function makeEventBody(event, { teamId = "T_ORG" } = {}) {
@@ -142,27 +147,31 @@ describe("slack_event_handle", () => {
     expect(calls.filter((u) => u.includes("chat.postMessage"))).toHaveLength(0);
   });
 
-  it("acks team_join events from allowlisted workspaces with 200", async () => {
-    const env = makeEnv({
-      SLACK_TOKENS: makeKv({
-        "team:T_ORG": JSON.stringify({ bot_token: "xoxb", bot_user_id: "B1" }),
-      }),
-    });
-    vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
-      jsonResponse({ ok: true, channel: { id: "D1" } })
-    );
+  it("dispatches a slack-event for team_join from an allowlisted workspace", async () => {
+    const env = makeEnv();
+    const ctx = makeCtx();
     const res = await slack_event_handle(
       env,
-      makeCtx(),
+      ctx,
       makeEventBody({
         type: "team_join",
         user: { id: "U_NEW", profile: { email: "new@example.com" } },
       })
     );
     expect(res.status).toBe(200);
+    await ctx.flush();
+    expect(github_dispatch_send).toHaveBeenCalledWith(
+      env,
+      "slack-event",
+      expect.objectContaining({
+        kind: "team_join",
+        team_id: "T_ORG",
+        event: { user: { id: "U_NEW", profile: { email: "new@example.com" } } },
+      })
+    );
   });
 
-  it("acks reaction_added events with 200 (and increments KV counters)", async () => {
+  it("dispatches a slack-event for a qualifying bot-message reaction", async () => {
     const env = makeEnv({
       SLACK_TOKENS: makeKv({
         "team:T_ORG": JSON.stringify({ bot_token: "xoxb", bot_user_id: "B1" }),
@@ -181,15 +190,21 @@ describe("slack_event_handle", () => {
     );
     expect(res.status).toBe(200);
     await ctx.flush();
-    const day = new Date().toISOString().slice(0, 10);
-    const entry = await env.SLACK_TOKENS.get(
-      `reaction_log:T_ORG:${day}:thumbsup`,
-      "json"
+    expect(github_dispatch_send).toHaveBeenCalledWith(
+      env,
+      "slack-event",
+      expect.objectContaining({
+        kind: "reaction_added",
+        team_id: "T_ORG",
+        event: {
+          reaction: "thumbsup",
+          item: { type: "message", channel: "C1", ts: "1.0" },
+        },
+      })
     );
-    expect(entry?.count).toBe(1);
   });
 
-  it("does not count reactions on non-bot messages", async () => {
+  it("does not dispatch for reactions on non-bot messages", async () => {
     const env = makeEnv({
       SLACK_TOKENS: makeKv({
         "team:T_ORG": JSON.stringify({ bot_token: "xoxb", bot_user_id: "B1" }),
@@ -207,13 +222,71 @@ describe("slack_event_handle", () => {
       })
     );
     await ctx.flush();
-    const day = new Date().toISOString().slice(0, 10);
-    const entry = await env.SLACK_TOKENS.get(
-      `reaction_log:T_ORG:${day}:thumbsup`,
-      "json"
-    );
-    expect(entry).toBeNull();
+    expect(github_dispatch_send).not.toHaveBeenCalled();
   });
+
+  it("captures an anonymous question row and links the answer on a mention", async () => {
+    const env = makeEnv({
+      SLACK_TOKENS: makeKv({
+        "team:T_ORG": JSON.stringify({ bot_token: "xoxb", bot_user_id: "B1" }),
+      }),
+      QUESTION_LOG: makeD1(),
+      AI: {
+        run: async (model) =>
+          model === "@cf/baai/bge-base-en-v1.5"
+            ? { data: [[0.1, 0.2, 0.3]] }
+            : { response: "Chapters start with a form. 🐈‍⬛" },
+      },
+      RAG_INDEX: {
+        query: async () => ({
+          matches: [
+            {
+              id: "g1",
+              score: 0.9,
+              metadata: {
+                url: "https://guide.rladies.org",
+                title: "Guide",
+                text: "t",
+                source_type: "guide",
+              },
+            },
+          ],
+        }),
+      },
+    });
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = typeof input === "string" ? input : input.url;
+      if (url.includes("conversations.replies"))
+        return jsonResponse({ ok: true, messages: [] });
+      if (url.includes("chat.postMessage"))
+        return jsonResponse({ ok: true, ts: "222.333" });
+      return jsonResponse({ ok: true });
+    });
+
+    const ctx = makeCtx();
+    await slack_event_handle(
+      env,
+      ctx,
+      makeEventBody({
+        type: "app_mention",
+        channel: "C1",
+        ts: "1.0",
+        thread_ts: "1.0",
+        text: "<@UBOT> how do I start a chapter?",
+        user: "U1",
+      })
+    );
+    await ctx.flush();
+
+    expect(env.QUESTION_LOG._rows).toHaveLength(1);
+    const row = env.QUESTION_LOG._rows[0];
+    expect(row.question).toBe("how do I start a chapter?");
+    expect(row.outcome).toBe("answered");
+    expect(await env.SLACK_TOKENS.get("answer_link:T_ORG:C1:222.333")).toBe(
+      String(row.id)
+    );
+  });
+
 });
 
 describe("slack_event_strip_mention", () => {

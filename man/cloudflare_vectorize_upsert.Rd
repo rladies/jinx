@@ -16,8 +16,10 @@ cloudflare_vectorize_upsert(vectors, account_id, api_token, index_name)
 \item{index_name}{Vectorize index name.}
 }
 \value{
-Parsed JSON response body.
+The unwrapped \code{result} payload from the Cloudflare response.
 }
 \description{
-Upsert vectors into a Cloudflare Vectorize index
+Custom because \href{https://drmowinckels.r-universe.dev/cloudflarer}{cloudflarer}
+does not wrap Vectorize v2; built on its \code{\link[cloudflarer:cf_request]{cloudflarer::cf_request()}} and
+\code{\link[cloudflarer:cf_resp]{cloudflarer::cf_resp()}} for consistent auth and error handling.
 }

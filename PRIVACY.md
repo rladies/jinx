@@ -1,6 +1,6 @@
 # Privacy Policy
 
-_Last updated: 2026-05-13_
+_Last updated: 2026-07-05_
 
 Jinx is a Slack app and GitHub bot maintained by volunteers for the **RLadies+** organization. It exists to help RLadies+ run its community operations — answering questions about the RLadies+ Guide, and running organization commands such as inviting members, generating reports, and reminding maintainers about stale issues.
 
@@ -46,11 +46,14 @@ The command and the Slack user who ran it are recorded in the GitHub Actions run
 
 ### `@Jinx` questions
 
-1. The Cloudflare Worker receives the mention.
+1. The Cloudflare Worker receives the mention (or your direct message to Jinx).
 2. Your question text is sent to [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) for embedding and to a large language model to generate an answer grounded in the RLadies+ Guide and website.
 3. The answer (with source links) is posted back to the Slack thread.
+4. The **text of your question** and a coarse note of how well Jinx answered it (answered, came up empty, coding question declined, or thin retrieval) are recorded in an anonymous question-improvement log, so maintainers can see where the Guide is thin and fill the gaps.
 
-The Worker does not store the question or the answer outside of Cloudflare's standard observability logs.
+The question-improvement log is **anonymous by construction**: no Slack user ID, username, channel, or thread timestamp is stored alongside the question, so a logged question cannot be traced back to who asked it. Because a free-text question can still contain identifying details someone chooses to type, identifiers are deliberately never recorded with it, the stored question text is truncated, and rows are automatically deleted after 180 days. The log is readable only by the Global Team (via a restricted `/jinx questions` command), not by every workspace member.
+
+If you react to one of Jinx's answers with 👍 or 👎, that reaction is counted against the logged question as an anonymous quality signal — the identity of the reacting person is never read or stored.
 
 ## Where data is stored
 
@@ -63,9 +66,10 @@ The Worker does not store the question or the answer outside of Cloudflare's sta
 | RAG content index                   | Cloudflare Vectorize (`rladies-content`)    | Contains only public RLadies+ Guide and website text, no user data                                                                   |
 | Pending Slack-invite email          | Cloudflare KV (`SLACK_TOKENS`)              | 90 days after an organiser marks the invite sent, or consumed (and deleted) the moment the member joins the workspace                |
 | Reaction feedback (per-emoji count) | Cloudflare KV (`SLACK_TOKENS`)              | 180 days — counts only, no message text or user identifiers                                                                          |
+| Question-improvement log            | Cloudflare D1 (`jinx-question-log`)         | Question text + outcome + anonymous 👍/👎 counts, no identifiers; rows auto-deleted after 180 days                                   |
 | Workspace install metadata          | Cloudflare KV (`SLACK_TOKENS`)              | Until the app is uninstalled from the workspace                                                                                      |
 
-Jinx maintains a small Cloudflare KV store described in the table above. It does **not** store the content of your messages, the questions you ask, or the answers it gives, beyond the standard observability logs above.
+Jinx maintains a small Cloudflare KV store and D1 database described in the table above. Apart from the anonymous question-improvement log — question text and outcome, with no identifiers — it does **not** store the content of your messages or the answers it gives, beyond the standard observability logs above.
 
 ## Who Jinx shares data with
 

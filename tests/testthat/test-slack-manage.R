@@ -1,3 +1,5 @@
+library(httr2)
+
 describe("is_valid_email", {
   it("accepts a normal email", {
     expect_true(is_valid_email("ada@example.com"))
@@ -156,6 +158,191 @@ describe("slack_invite_request", {
           "channel_not_found"
         )
       }
+    )
+  })
+})
+
+describe("slack_api_call", {
+  it("returns the parsed response on success", {
+    local_mocked_responses(list(
+      response_json(body = list(ok = TRUE, channel = list(id = "D1")))
+    ))
+    resp <- slack_api_call(
+      "xoxb-test",
+      "conversations.open",
+      list(users = "U1")
+    )
+    expect_true(resp$ok)
+    expect_identical(resp$channel$id, "D1")
+  })
+
+  it("aborts when ok is FALSE", {
+    local_mocked_responses(list(
+      response_json(body = list(ok = FALSE, error = "channel_not_found"))
+    ))
+    expect_error(
+      slack_api_call("xoxb-test", "conversations.open", list(users = "U1")),
+      "channel_not_found"
+    )
+  })
+
+  it("aborts when no token is set", {
+    expect_error(slack_api_call("", "conversations.open"), "token")
+  })
+
+  it("sends a JSON body by default", {
+    sent <- NULL
+    local_mocked_responses(function(req) {
+      sent <<- req
+      response_json(body = list(ok = TRUE))
+    })
+    slack_api_call("xoxb-test", "chat.postMessage", list(channel = "C1"))
+    expect_equal(sent$body$type, "json")
+  })
+
+  it("form-encodes when asked, which the paginated read methods require", {
+    sent <- NULL
+    local_mocked_responses(function(req) {
+      sent <<- req
+      response_json(body = list(ok = TRUE))
+    })
+    slack_api_call(
+      "xoxb-test",
+      "conversations.list",
+      list(types = "public_channel", limit = 200, exclude_archived = TRUE),
+      encode = "form"
+    )
+    expect_equal(sent$body$type, "form")
+    expect_equal(as.character(sent$body$data$types), "public_channel")
+    expect_equal(as.character(sent$body$data$limit), "200")
+    expect_equal(as.character(sent$body$data$exclude_archived), "true")
+  })
+
+  it("renders logicals the way Slack reads them", {
+    expect_equal(
+      slack_form_values(list(exclude_archived = TRUE, x = FALSE)),
+      list(exclude_archived = "true", x = "false")
+    )
+  })
+
+  it("leaves non-logical values alone", {
+    expect_equal(
+      slack_form_values(list(types = "public_channel", limit = 200)),
+      list(types = "public_channel", limit = 200)
+    )
+  })
+
+  it("waits as long as Slack asks, up to a minute", {
+    expect_equal(
+      slack_retry_after(response(429, headers = list(`Retry-After` = "30"))),
+      30
+    )
+    expect_equal(
+      slack_retry_after(response(429, headers = list(`Retry-After` = "45"))),
+      45
+    )
+  })
+
+  it("caps an absurd Retry-After at 60s", {
+    expect_equal(
+      slack_retry_after(response(429, headers = list(`Retry-After` = "600"))),
+      60
+    )
+  })
+
+  it("falls back to 1s when Retry-After is absent or unparseable", {
+    expect_equal(slack_retry_after(response(429)), 1)
+    expect_equal(
+      slack_retry_after(response(429, headers = list(`Retry-After` = "soon"))),
+      1
+    )
+  })
+})
+
+describe("slack_bot_token", {
+  it("resolves the organiser token", {
+    withr::with_envvar(
+      c(SLACK_ORGANISER_TOKEN = "xoxb-org", SLACK_COMMUNITY_TOKEN = "xoxb-com"),
+      expect_identical(slack_bot_token("organiser"), "xoxb-org")
+    )
+  })
+
+  it("resolves the community token", {
+    withr::with_envvar(
+      c(SLACK_ORGANISER_TOKEN = "xoxb-org", SLACK_COMMUNITY_TOKEN = "xoxb-com"),
+      expect_identical(slack_bot_token("community"), "xoxb-com")
+    )
+  })
+
+  it("aborts when the token for the workspace is unset", {
+    withr::with_envvar(
+      c(SLACK_COMMUNITY_TOKEN = ""),
+      expect_error(slack_bot_token("community"), "community")
+    )
+  })
+})
+
+describe("slack_workspace_for_team", {
+  it("maps the organiser team id", {
+    expect_identical(
+      slack_workspace_for_team(
+        "T_ORG",
+        organiser_id = "T_ORG",
+        community_id = "T_COM"
+      ),
+      "organiser"
+    )
+  })
+
+  it("maps the community team id", {
+    expect_identical(
+      slack_workspace_for_team(
+        "T_COM",
+        organiser_id = "T_ORG",
+        community_id = "T_COM"
+      ),
+      "community"
+    )
+  })
+
+  it("aborts for an unrecognised team id", {
+    expect_error(
+      slack_workspace_for_team(
+        "T_OTHER",
+        organiser_id = "T_ORG",
+        community_id = "T_COM"
+      ),
+      "not a recognised workspace"
+    )
+  })
+})
+
+describe("slack_response_url_post", {
+  it("posts the replacement body", {
+    captured <- NULL
+    local_mocked_bindings(
+      req_perform = function(req) {
+        captured <<- req
+        httr2::response(body = charToRaw("ok"))
+      },
+      .package = "httr2"
+    )
+    slack_response_url_post(
+      "https://hooks.slack.com/actions/T1/1/abc",
+      text = "Approved",
+      replace_original = TRUE
+    )
+    expect_identical(captured$body$data$text, "Approved")
+    expect_true(captured$body$data$replace_original)
+  })
+
+  it("refuses to post to a URL that isn't a hooks.slack.com response_url", {
+    expect_error(
+      slack_response_url_post(
+        "https://attacker.example/collect",
+        text = "Approved"
+      ),
+      "hooks\\.slack\\.com"
     )
   })
 })

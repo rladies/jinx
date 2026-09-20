@@ -106,10 +106,39 @@ reference:
     contents:
       - starts_with("slack_")
 
+  - title: Channel copy
+    desc: Reviewed topic, description and name changes for public channels
+    contents:
+      - channel_copy_proposals
+      - channel_rename_proposals
+      - channel_copy_plan
+      - channel_copy_apply
+
+  - title: Event dispatch
+    desc: R-side handling of the slack-event repository_dispatch contract
+    contents:
+      - event_parse
+      - event_authorize
+      - event_execute
+
+  - title: Welcome messages
+    desc: Welcome DMs for newly joined Slack members
+    contents:
+      - welcome_send
+      - welcome_message_render
+      - pending_link_consume
+      - channel_index_load
+      - setup_channel_process
+
   - title: GHA dashboard
     desc: GitHub Actions workflow status
     contents:
       - starts_with("gha_")
+
+  - title: Worker/cache ops
+    desc: Cloudflare Workers status and cache-purge tooling
+    contents:
+      - starts_with("cf_ops_")
 
   - title: Contributors
     desc: Contributor tracking and recognition
@@ -137,12 +166,54 @@ reference:
       - starts_with("analytics_")
 
   - title: Website analytics
-    desc: Plausible website performance reports
+    desc: Cloudflare Web Analytics website performance reports
     contents:
       - website_collect_analytics
       - website_format_analytics
       - website_generate_report
       - website_publish_report
+
+  - title: Cloudflare Web Analytics (RUM)
+    desc: Real-user monitoring beacon reports
+    contents:
+      - rum_collect_analytics
+      - rum_format_analytics
+      - rum_generate_report
+
+  - title: Question log
+    desc: Anonymous question-improvement log gap reporting
+    contents:
+      - question_log_query
+      - question_log_purge
+      - question_gaps_rank
+      - question_downvoted_rank
+      - question_log_format
+      - question_vote_apply
+      - reaction_log_increment
+      - reaction_direction
+      - reaction_event_apply
+      - question_feedback_summary
+      - question_feedback_format
+
+  - title: Question digest
+    desc: Weekly question-gap digest posted to Slack
+    contents:
+      - question_content_gaps
+      - question_coding_declined_count
+      - question_draft_guide_snippet
+      - question_digest_format
+      - question_digest_build
+      - question_digest_post
+
+  - title: Channel promotion
+    desc: Weekly community channel spotlight posted to Slack
+    contents:
+      - channel_promo_post
+      - channel_promo_build
+      - channel_promo_format
+      - promo_eligible_channels
+      - promo_pick_channel
+      - promo_blurb
 
   - title: Conference coordination
     desc: CFP tracking and speaker recommendations
@@ -173,5 +244,6 @@ reference:
       - chunk_markdown
       - rag_chunk_id
       - cloudflare_embed
+      - cloudflare_generate
       - cloudflare_vectorize_upsert
       - cloudflare_account_id

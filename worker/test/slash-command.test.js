@@ -100,6 +100,7 @@ describe("slack_command_handle", () => {
     await ctx.flush();
     expect(github_dispatch_send).toHaveBeenCalledWith(
       expect.anything(),
+      "slack-command",
       expect.objectContaining({ team_id: "T_COM", command: "report-weekly" })
     );
   });

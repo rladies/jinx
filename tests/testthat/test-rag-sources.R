@@ -76,6 +76,169 @@ describe("strip_html", {
   })
 })
 
+describe("format_event_digest_line", {
+  it("renders a Slack link when the event has a link", {
+    line <- format_event_digest_line(list(
+      group_name = "R-Ladies Oslo",
+      title = "Tidy stats",
+      datetime = "2026-06-01T18:00:00Z",
+      link = "https://meetup.com/oslo/1"
+    ))
+    expect_match(
+      line,
+      "<https://meetup.com/oslo/1|R-Ladies Oslo: Tidy stats>",
+      fixed = TRUE
+    )
+  })
+
+  it("falls back to a plain label when no link is present", {
+    line <- format_event_digest_line(list(
+      group_name = "R-Ladies Oslo",
+      title = "Tidy stats",
+      datetime = "2026-06-01T18:00:00Z"
+    ))
+    expect_false(grepl("<", line, fixed = TRUE))
+    expect_match(line, "R-Ladies Oslo: Tidy stats", fixed = TRUE)
+  })
+
+  it("appends the venue in parentheses when present", {
+    line <- format_event_digest_line(list(
+      group_name = "G",
+      title = "T",
+      datetime = "2026-06-01T18:00:00Z",
+      venue_name = "Forskningsparken",
+      venue_city = "Oslo"
+    ))
+    expect_match(line, "(Forskningsparken, Oslo)", fixed = TRUE)
+  })
+
+  it("neutralises Slack link metacharacters in an untrusted title", {
+    line <- format_event_digest_line(list(
+      group_name = "R-Ladies C",
+      title = "A > B | C",
+      datetime = "2026-07-10T18:00:00Z",
+      link = "https://meetup.com/c/1"
+    ))
+    expect_match(
+      line,
+      "<https://meetup.com/c/1|R-Ladies C: A B C>",
+      fixed = TRUE
+    )
+  })
+})
+
+describe("slack_link_label", {
+  it("strips <, >, and | and collapses whitespace", {
+    expect_identical(slack_link_label("A > B | C"), "A B C")
+    expect_identical(slack_link_label("<script>"), "script")
+  })
+})
+
+describe("events_digest_chunk", {
+  it("returns NULL when no events are upcoming", {
+    events <- list(
+      list(status = "past", title = "Old", group_name = "G"),
+      list(status = "cancelled", title = "X", group_name = "G")
+    )
+    expect_null(events_digest_chunk(events, list(repo = "r")))
+  })
+
+  it("emits one events-digest chunk ordered soonest first", {
+    events <- list(
+      list(
+        status = "active",
+        title = "Later",
+        group_name = "R-Ladies B",
+        datetime = "2026-09-01T18:00:00Z",
+        datetime_utc = "2026-09-01T18:00:00Z",
+        link = "https://meetup.com/b"
+      ),
+      list(
+        status = "active",
+        title = "Sooner",
+        group_name = "R-Ladies A",
+        datetime = "2026-07-01T18:00:00Z",
+        datetime_utc = "2026-07-01T18:00:00Z",
+        link = "https://meetup.com/a"
+      )
+    )
+    chunk <- events_digest_chunk(events, list(repo = "rladies/meetup_archive"))
+    expect_identical(chunk$source_type, "events-digest")
+    expect_identical(chunk$path, "digest/upcoming-events")
+    expect_identical(chunk$title, "Upcoming RLadies+ events")
+    expect_lt(
+      regexpr("Sooner", chunk$text, fixed = TRUE),
+      regexpr("Later", chunk$text, fixed = TRUE)
+    )
+    expect_match(
+      chunk$text,
+      "<https://meetup.com/a|R-Ladies A: Sooner>",
+      fixed = TRUE
+    )
+    expect_identical(chunk$date, rag_parse_date("2026-07-01T18:00:00Z"))
+  })
+
+  it("sorts events with a missing date last, not first", {
+    events <- list(
+      list(
+        status = "active",
+        title = "Date MISSING",
+        group_name = "R-Ladies B",
+        link = "https://meetup.com/b"
+      ),
+      list(
+        status = "active",
+        title = "Real July event",
+        group_name = "R-Ladies A",
+        datetime = "2026-07-10T18:00:00Z",
+        datetime_utc = "2026-07-10T18:00:00Z",
+        link = "https://meetup.com/a"
+      )
+    )
+    chunk <- events_digest_chunk(events, list(repo = "r"))
+    expect_lt(
+      regexpr("Real July event", chunk$text, fixed = TRUE),
+      regexpr("Date MISSING", chunk$text, fixed = TRUE)
+    )
+    expect_identical(chunk$date, rag_parse_date("2026-07-10T18:00:00Z"))
+  })
+
+  it("caps at max_events and notes the overflow with the landing url", {
+    events <- lapply(1:3, function(i) {
+      list(
+        status = "active",
+        title = paste0("E", i),
+        group_name = "G",
+        datetime = sprintf("2026-0%d-01T00:00:00Z", i),
+        datetime_utc = sprintf("2026-0%d-01T00:00:00Z", i),
+        link = paste0("https://m/", i)
+      )
+    })
+    chunk <- events_digest_chunk(
+      events,
+      list(repo = "r", digest_url = "https://rladies.org/events/"),
+      max_events = 2L
+    )
+    expect_match(chunk$text, "...and 1 more upcoming events", fixed = TRUE)
+    expect_match(chunk$text, "https://rladies.org/events/", fixed = TRUE)
+  })
+
+  it("uses the configured digest_url as the chunk url", {
+    events <- list(list(
+      status = "active",
+      title = "E",
+      group_name = "G",
+      datetime = "2026-07-01T00:00:00Z",
+      link = "https://m/1"
+    ))
+    chunk <- events_digest_chunk(
+      events,
+      list(repo = "r", digest_url = "https://example.org/ev/")
+    )
+    expect_identical(chunk$url, "https://example.org/ev/")
+  })
+})
+
 describe("format_awesome_package", {
   it("returns NULL when name is missing", {
     expect_null(format_awesome_package(list(name = ""), list(repo = "r")))

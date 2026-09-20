@@ -1,4 +1,4 @@
-export async function github_dispatch_send(env, payload) {
+export async function github_dispatch_send(env, eventType, payload) {
   const token = await github_token_mint_installation(env);
 
   const response = await fetch(
@@ -12,7 +12,7 @@ export async function github_dispatch_send(env, payload) {
         "X-GitHub-Api-Version": "2022-11-28",
       },
       body: JSON.stringify({
-        event_type: "slack-command",
+        event_type: eventType,
         client_payload: payload,
       }),
     }

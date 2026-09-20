@@ -6,11 +6,31 @@ import {
 } from "./airtable-invite.js";
 import { slack_command_handle } from "./slash-command.js";
 import { slack_signature_verify } from "./slack-api.js";
+import { bearer_token_extract, api_key_verify } from "./api-auth.js";
+import { ai_generate_handle } from "./ai-api.js";
+import {
+  links_shorten_handle,
+  short_link_redirect_handle,
+  SHORT_LINK_HOST,
+} from "./short-links.js";
+import {
+  invite_gateway_handle,
+  invite_start_handle,
+  JOIN_HOST,
+} from "./invite-gateway.js";
 
 const SLACK_ROUTES = {
   "/slack/command": slack_command_handle,
   "/slack/events": slack_event_handle,
   "/slack/interact": slack_interaction_handle,
+};
+
+// Authenticated HTTP API for other RLadies+ repos -- see docs/AGENTS.md's
+// "HTTP API for other repos" section. Gated by JINX_API_KEY rather than
+// Slack's per-route signature scheme, since these callers aren't Slack.
+const API_ROUTES = {
+  "/ai/generate": ai_generate_handle,
+  "/links/shorten": links_shorten_handle,
 };
 
 export default {
@@ -30,6 +50,14 @@ export default {
 async function route(request, env, ctx) {
   const url = new URL(request.url);
 
+  if (request.method === "GET" && url.hostname === SHORT_LINK_HOST) {
+    return short_link_redirect_handle(env, url.pathname.slice(1));
+  }
+
+  if (url.hostname === JOIN_HOST) {
+    return invite_gateway_handle(env, ctx, request);
+  }
+
   if (request.method === "GET" && url.pathname === "/slack/install") {
     return slack_oauth_install_handle(env, url);
   }
@@ -44,7 +72,21 @@ async function route(request, env, ctx) {
   }
 
   if (url.pathname === "/airtable/webhook") {
-    return airtable_webhook_handle(request, env);
+    return airtable_webhook_handle(request, env, ctx);
+  }
+
+  if (url.pathname === "/invite/start") {
+    return invite_start_handle(request, env);
+  }
+
+  const apiHandler = API_ROUTES[url.pathname];
+  if (apiHandler) {
+    const provided = bearer_token_extract(request);
+    if (!(await api_key_verify(env.JINX_API_KEY, provided))) {
+      console.warn(`Rejected API request to ${url.pathname}: bad or missing key`);
+      return new Response("Unauthorized", { status: 401 });
+    }
+    return apiHandler(request, env);
   }
 
   const slackHandler = SLACK_ROUTES[url.pathname];

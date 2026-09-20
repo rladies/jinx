@@ -12,6 +12,6 @@ Character scalar.
 \description{
 Exposed as a function (rather than a hidden package constant) so
 every helper that needs a User-Agent default can list it in its
-signature, e.g. \code{cloudflare_request(token, user_agent = rag_user_agent())}.
+signature, e.g. \code{rag_request(url, user_agent = rag_user_agent())}.
 }
 \keyword{internal}

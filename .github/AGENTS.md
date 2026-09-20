@@ -43,9 +43,34 @@ The Slack bridge runs as a Cloudflare Worker at `https://jinx.rladies.workers.de
 /slack/install      GET    Start OAuth install flow
 /slack/oauth        GET    OAuth callback
 /airtable/webhook   POST   Form submissions from Airtable
+/ai/generate        POST   Workers AI passthrough for other RLadies+ repos
+/links/shorten      POST   Create (or reuse) a l.rladies.org short link
 ```
 
-Routes follow `/<service>/<action>` — never flat paths like `/slack-interact` or `/airtable-webhook`. Slack-side endpoints all run through `verifySlackSignature()` in the router; `/airtable/webhook` uses its own `x-airtable-secret` header.
+Routes follow `/<service>/<action>` — never flat paths like `/slack-interact` or `/airtable-webhook`. Slack-side endpoints all run through `verifySlackSignature()` in the router; `/airtable/webhook` uses its own `x-airtable-secret` header; `/ai/generate` and `/links/shorten` are gated by a shared `JINX_API_KEY` bearer token (constant-time compared, `worker/src/api-auth.js`) — see the README's "HTTP API for other repos" section for the request/response contract of each.
+
+(An earlier `/analytics/rum` route proxying Cloudflare Web Analytics was removed — `rum_collect_analytics()`, already exported from the `jinx` R package, covers that need directly as an R dependency instead.)
+
+The same worker also answers `GET <code>` on a second hostname, `l.rladies.org`
+(routed via the `routes` entry in `wrangler.jsonc`, not the `/<service>/<action>`
+API above), 301-redirecting to the short link's target or `404` if the code is
+unknown. See "URL shortener" below.
+
+### URL shortener
+
+`worker/src/short-links.js` backs both `/links/shorten` and the
+`l.rladies.org` redirect, plus `/jinx shorten <url> [slug]` in
+`worker/src/slash-local.js`. Storage is the `SHORT_LINKS` KV namespace, keyed
+two ways: `code:<code>` → `{url, created_by, created_at}`, and `url:<url>` →
+`<code>`, a reverse index so re-shortening the same destination always
+returns the existing code — the reverse index is the source of truth even
+when a custom slug is requested, so a slug for an already-shortened
+destination is rejected with a pointer to the existing code rather than
+creating a duplicate. Slack-side creation is restricted to the organiser
+workspace (`slack_is_organizer_workspace()` in `worker/src/authorize.js`,
+shared with the Global Team gate, checked in `slash-local.js` before
+dispatch) since an open shortener reachable from the community workspace
+would be an open-redirect/phishing risk.
 
 ### Airtable invite-approval flow
 
@@ -118,6 +143,7 @@ To add a workspace: set its team ID as a worker secret, redeploy, run `/slack/in
 | `SLACK_COMMUNITY_INVITE_CHANNEL` | Channel ID in the community workspace where invite cards are posted     |
 | `AIRTABLE_WEBHOOK_SECRET`        | Verify Airtable webhook requests                                        |
 | `AIRTABLE_API_KEY`               | Airtable PAT — scope defines the base allowlist (see below)             |
+| `JINX_API_KEY`                   | Bearer key gating `/ai/generate` for other repos                        |
 
 ### Worker vars (in `wrangler.jsonc`)
 
