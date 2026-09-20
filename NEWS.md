@@ -1,5 +1,15 @@
 # jinx (development version)
 
+## An unset CI variable no longer defeats an env default
+
+- **`env_default()` treats an empty environment variable as unset.**
+  GitHub Actions passes an unset repository variable through as an empty
+  string, and `Sys.getenv()` only falls back to its default when a
+  variable is genuinely absent - so `SLACK_PROMO_CHANNEL` resolved to
+  `""` in CI and the spotlight tried to post to `#`, failing with
+  `channel_not_found`. Applied to `SLACK_PROMO_CHANNEL` and
+  `SLACK_DIGEST_CHANNEL`, which had the same latent trap.
+
 ## A bare domain no longer reads as permanent drift
 
 - **`copy_normalise()` resolves a labelled Slack link to its label**, not

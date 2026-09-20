@@ -22,6 +22,24 @@ promo_system_prompt <- paste0(
   "- Speak in the first person (\"I\", \"me\")."
 )
 
+#' Read an environment variable, treating empty as unset
+#'
+#' `Sys.getenv()` only falls back to its default when a variable is
+#' absent. GitHub Actions passes an unset repository variable through as
+#' an empty string, so the default never applies in CI and the caller
+#' silently gets `""` - which, for a channel name, means posting to `#`
+#' and a `channel_not_found`.
+#'
+#' @param name Environment variable name.
+#' @param default Value to use when the variable is unset or empty.
+#' @return The variable's value, or `default`.
+#' @keywords internal
+#' @noRd
+env_default <- function(name, default) {
+  value <- Sys.getenv(name, "")
+  if (nzchar(value)) value else default
+}
+
 promo_recent_key <- function(team_id) {
   glue::glue("promo_recent:{team_id}")
 }
@@ -294,7 +312,7 @@ channel_promo_format <- function(id, name, blurb) {
 #' @export
 channel_promo_build <- function(
   team_id = Sys.getenv("SLACK_COMMUNITY_TEAM_ID"),
-  target_channel = Sys.getenv("SLACK_PROMO_CHANNEL", "general"),
+  target_channel = env_default("SLACK_PROMO_CHANNEL", "general"),
   skip = promo_skip_channels(),
   namespace_id = slack_tokens_namespace_id(),
   account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
@@ -348,7 +366,7 @@ channel_promo_build <- function(
 #' @export
 channel_promo_post <- function(
   team_id = Sys.getenv("SLACK_COMMUNITY_TEAM_ID"),
-  target_channel = Sys.getenv("SLACK_PROMO_CHANNEL", "general"),
+  target_channel = env_default("SLACK_PROMO_CHANNEL", "general"),
   slack_token = slack_bot_token("community"),
   skip = promo_skip_channels(),
   namespace_id = slack_tokens_namespace_id(),

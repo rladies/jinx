@@ -1,3 +1,40 @@
+describe("env_default", {
+  it("uses the default when the variable is unset", {
+    withr::with_envvar(c(JINX_TEST_ENV = NA), {
+      expect_equal(env_default("JINX_TEST_ENV", "fallback"), "fallback")
+    })
+  })
+
+  it("uses the default when the variable is empty", {
+    withr::with_envvar(c(JINX_TEST_ENV = ""), {
+      expect_equal(env_default("JINX_TEST_ENV", "fallback"), "fallback")
+    })
+  })
+
+  it("uses the value when one is set", {
+    withr::with_envvar(c(JINX_TEST_ENV = "actual"), {
+      expect_equal(env_default("JINX_TEST_ENV", "fallback"), "actual")
+    })
+  })
+})
+
+describe("channel_promo_post target", {
+  it("falls back to general when the CI variable is empty", {
+    withr::with_envvar(c(SLACK_PROMO_CHANNEL = ""), {
+      expect_equal(eval(formals(channel_promo_post)$target_channel), "general")
+    })
+  })
+
+  it("honours an explicitly set target", {
+    withr::with_envvar(c(SLACK_PROMO_CHANNEL = "promo-test"), {
+      expect_equal(
+        eval(formals(channel_promo_post)$target_channel),
+        "promo-test"
+      )
+    })
+  })
+})
+
 describe("promo_clean_description", {
   it("keeps a link's label and drops the URL", {
     expect_identical(
