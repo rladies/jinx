@@ -8,6 +8,7 @@ chapter_create_setup(
   city,
   country,
   organizers,
+  region = NULL,
   org = "rladies",
   onboarding_repo = "new-chapters-onboarding"
 )
@@ -18,6 +19,9 @@ chapter_create_setup(
 \item{country}{Chapter country.}
 
 \item{organizers}{Character vector of organizer names.}
+
+\item{region}{State/region/province, or \code{NULL}. Used to narrow the
+duplicate check's proximity search.}
 
 \item{org}{GitHub organization. Defaults to \code{"rladies"}.}
 

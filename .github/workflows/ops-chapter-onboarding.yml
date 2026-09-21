@@ -16,6 +16,9 @@ on:
       country:
         description: Chapter country
         required: true
+      region:
+        description: State/region/province (optional)
+        required: false
 
 concurrency:
   group: ops-chapter-onboarding-${{ inputs.city }}-${{ inputs.country }}
@@ -57,16 +60,20 @@ jobs:
           ACTION: ${{ inputs.action }}
           CITY: ${{ inputs.city }}
           COUNTRY: ${{ inputs.country }}
+          REGION: ${{ inputs.region }}
         run: |
           Rscript -e '
             action  <- Sys.getenv("ACTION")
             city    <- Sys.getenv("CITY")
             country <- Sys.getenv("COUNTRY")
+            region  <- Sys.getenv("REGION")
+            if (!nzchar(region)) region <- NULL
             if (action == "setup") {
               jinx::chapter_create_setup(
                 city = city,
                 country = country,
-                organizers = character(0)
+                organizers = character(0),
+                region = region
               )
             } else {
               jinx::chapter_create_update(city = city, country = country)
