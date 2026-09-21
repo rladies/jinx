@@ -16,18 +16,22 @@ import { makeEnv, makeKv, makeCtx, mockFetch, jsonResponse } from "./_helpers.js
 
 afterEach(() => vi.restoreAllMocks());
 
-// A KV seeded with the community bot token so slack_message_post / lookups work.
+// A KV seeded with both bot tokens: community for member lookups, organiser for
+// the alert channel (alerts post to the organisers' workspace).
 function seededEnv(overrides = {}) {
   return makeEnv({
     SLACK_TOKENS: makeKv({
       "team:T_COM": JSON.stringify({ bot_token: "xoxb-test", bot_user_id: "U1" }),
+      "team:T_ORG": JSON.stringify({ bot_token: "xoxb-org", bot_user_id: "U2" }),
     }),
     ...overrides,
   });
 }
 
-// Records fetch traffic and returns configurable responses.
-function fakeFetch({ member = null, records = [] } = {}) {
+// Records fetch traffic and returns configurable responses. `records` answers
+// the by-email lookup; `clicked` answers the Stage='Clicked' timing query
+// (the two share an endpoint but differ by filterByFormula).
+function fakeFetch({ member = null, records = [], clicked = [] } = {}) {
   const calls = { patches: [], creates: [], posts: [], gets: [] };
   mockFetch(async (url, init) => {
     const method = init.method || "GET";
@@ -37,7 +41,10 @@ function fakeFetch({ member = null, records = [] } = {}) {
         : jsonResponse({ ok: false, error: "users_not_found" });
     }
     if (url.includes("chat.postMessage")) {
-      calls.posts.push(JSON.parse(init.body));
+      calls.posts.push({
+        ...JSON.parse(init.body),
+        auth: init.headers?.Authorization,
+      });
       return jsonResponse({ ok: true, ts: "1.0" });
     }
     if (url.includes("api.airtable.com")) {
@@ -50,7 +57,7 @@ function fakeFetch({ member = null, records = [] } = {}) {
         return jsonResponse({ id: "recNEW", fields: {} });
       }
       calls.gets.push(url);
-      return jsonResponse({ records });
+      return jsonResponse({ records: url.includes("Clicked") ? clicked : records });
     }
     return jsonResponse({ ok: true });
   });
@@ -120,7 +127,10 @@ describe("invite_verify_handle", () => {
 
     expect(calls.patches.some((p) => p.fields.Stage === "Held")).toBe(true);
     expect(calls.patches.some((p) => p.fields["Invite link"])).toBe(false);
-    expect(calls.posts.length).toBeGreaterThan(0); // alert posted
+    // alert posted to the organisers' workspace channel, using the org token
+    const held = calls.posts.find((p) => p.text.includes("Held for review"));
+    expect(held.channel).toBe("C_ALERTS");
+    expect(held.auth).toBe("Bearer xoxb-org");
   });
 
   it("keeps the token for retry if the Airtable stamp fails", async () => {
@@ -298,20 +308,81 @@ describe("turnstile gate", () => {
 });
 
 describe("invite_mark_joined", () => {
-  it("stamps Joined on when an email matches a pipeline row", async () => {
+  const clickedOn = (daysAgo) => {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - daysAgo);
+    return d.toISOString().slice(0, 10);
+  };
+
+  it("stamps Joined on when an email matches a pipeline row (no alert)", async () => {
     const env = seededEnv();
     const calls = fakeFetch({ records: [{ id: "recP", fields: { email: "a@e.com" } }] });
     const ok = await invite_mark_joined(env, "a@e.com");
     expect(ok).toBe(true);
     expect(calls.patches[0].fields["Joined on"]).toBeTruthy();
     expect(calls.patches[0].fields.Stage).toBe("Joined");
+    expect(calls.posts.length).toBe(0); // confident match, no organiser alert
   });
 
-  it("returns false when there is no matching row", async () => {
+  it("auto-flips the sole recent clicker when the join email doesn't match, and alerts", async () => {
     const env = seededEnv();
-    fakeFetch({ records: [] });
+    // no by-email match (records: []); one recent clicker under a different address
+    const calls = fakeFetch({
+      records: [],
+      clicked: [
+        { id: "recC", fields: { email: "requested@e.com", Stage: "Clicked", "Link clicked on": clickedOn(0) } },
+      ],
+    });
+    const ok = await invite_mark_joined(env, "joined-with@other.com");
+    expect(ok).toBe(true);
+    // the clicked row got flipped to Joined
+    expect(calls.patches[0].url).toContain("recC");
+    expect(calls.patches[0].fields.Stage).toBe("Joined");
+    // organisers get a heads-up naming both addresses, on the org channel
+    expect(calls.posts.length).toBe(1);
+    expect(calls.posts[0].channel).toBe("C_ALERTS");
+    expect(calls.posts[0].auth).toBe("Bearer xoxb-org");
+    expect(calls.posts[0].text).toContain("requested@e.com");
+    expect(calls.posts[0].text).toContain("joined-with@other.com");
+  });
+
+  it("won't guess between several recent clickers -- alerts only, no flip", async () => {
+    const env = seededEnv();
+    const calls = fakeFetch({
+      records: [],
+      clicked: [
+        { id: "recA", fields: { email: "a@e.com", Stage: "Clicked", "Link clicked on": clickedOn(0) } },
+        { id: "recB", fields: { email: "b@e.com", Stage: "Clicked", "Link clicked on": clickedOn(1) } },
+      ],
+    });
+    const ok = await invite_mark_joined(env, "mystery@e.com");
+    expect(ok).toBe(false);
+    expect(calls.patches.length).toBe(0); // nothing flipped
+    expect(calls.posts.length).toBe(1);
+    expect(calls.posts[0].text).toContain("a@e.com");
+    expect(calls.posts[0].text).toContain("b@e.com");
+  });
+
+  it("ignores clicks older than the match window", async () => {
+    const env = seededEnv();
+    const calls = fakeFetch({
+      records: [],
+      clicked: [
+        { id: "recOld", fields: { email: "old@e.com", Stage: "Clicked", "Link clicked on": clickedOn(30) } },
+      ],
+    });
+    const ok = await invite_mark_joined(env, "someone@e.com");
+    expect(ok).toBe(false);
+    expect(calls.patches.length).toBe(0);
+    expect(calls.posts.length).toBe(0); // nothing in flight -> stay quiet
+  });
+
+  it("returns false and stays quiet when nothing is in flight", async () => {
+    const env = seededEnv();
+    const calls = fakeFetch({ records: [] });
     expect(await invite_mark_joined(env, "ghost@e.com")).toBe(false);
     expect(await invite_mark_joined(env, "")).toBe(false);
+    expect(calls.posts.length).toBe(0);
   });
 });
 
