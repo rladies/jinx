@@ -15,7 +15,7 @@
 		// budget warnings, join-email mismatches) post to. Lives in the organisers'
 		// Slack; the bot must be a member. Versioned here rather than a secret so
 		// the target is reviewable -- a channel id isn't sensitive.
-		"SLACK_ALERTS_CHANNEL": "C06ED2LEMU4"
+		"SLACK_ALERTS_CHANNEL": "C0B3HHH7DM3"
 	},
 	"ai": {
 		"binding": "AI"
