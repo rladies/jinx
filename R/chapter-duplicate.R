@@ -149,6 +149,9 @@ chapter_match_kind <- function(
   city_slug,
   country_slug
 ) {
+  if (!nzchar(entry_city) || !nzchar(city_slug)) {
+    return(NA_character_)
+  }
   same_country <- identical(entry_country, country_slug)
   if (identical(entry_city, city_slug)) {
     return(if (same_country) "exact" else "similar")
@@ -398,6 +401,9 @@ chapter_report_bullet <- function(row) {
       glue::glue("{round(row$distance_km)} km away")
     }
   )
+  if (length(details) == 0) {
+    return(glue::glue("- **{row$city}, {row$country}**"))
+  }
   glue::glue(
     "- **{row$city}, {row$country}** - {paste(details, collapse = ', ')}"
   )

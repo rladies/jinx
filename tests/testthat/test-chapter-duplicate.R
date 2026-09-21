@@ -83,6 +83,11 @@ describe("chapter_match_kind", {
     )
   })
 
+  it("never matches an entry with no city recorded", {
+    expect_true(is.na(chapter_match_kind("", "norway", "yi", "norway")))
+    expect_true(is.na(chapter_match_kind("oslo", "norway", "", "norway")))
+  })
+
   it("leaves an unrelated chapter unclassified", {
     expect_true(is.na(
       chapter_match_kind("zurich", "switzerland", "cordoba", "argentina")
@@ -235,6 +240,21 @@ describe("haversine_km", {
   it("is zero for a point against itself", {
     oslo <- c(lat = 59.91, lon = 10.75)
     expect_equal(haversine_km(oslo, oslo), 0)
+  })
+})
+
+describe("chapter_report_bullet", {
+  it("omits the separator when there are no details to show", {
+    row <- data.frame(
+      city = "Oslo",
+      country = "Norway",
+      status = NA_character_,
+      email = NA_character_,
+      meetup = NA_character_,
+      distance_km = NA_real_,
+      stringsAsFactors = FALSE
+    )
+    expect_identical(chapter_report_bullet(row), "- **Oslo, Norway**")
   })
 })
 
