@@ -76,6 +76,12 @@ reference:
       - chapter_duplicate_check
       - chapter_duplicate_report
       - chapter_duplicate_comment
+      - chapter_onboard_state
+      - chapter_onboard_blocker
+      - chapter_onboard_summary
+      - chapter_status_report
+      - chapter_find_issue
+      - chapter_remind_stale
 
   - title: Reports
     desc: Activity and health reporting
