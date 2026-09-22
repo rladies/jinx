@@ -28,8 +28,10 @@ Imports:
     rmarkdown,
     rtoot,
     rvest,
+    stats,
     stringi,
     stringr,
+    utils,
     xml2,
     yaml
 Suggests:
@@ -44,7 +46,7 @@ VignetteBuilder: knitr
 Config/testthat/edition: 3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Config/Needs/website: rladies/cloak, rprojroot
 Remotes:
     drmowinckels/cloudflarer
+Config/roxygen2/version: 8.1.0

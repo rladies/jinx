@@ -6,6 +6,8 @@
 #' @param city Chapter city name.
 #' @param country Chapter country.
 #' @param organizers Character vector of organizer names.
+#' @param region State/region/province, or `NULL`. Used to narrow the
+#'   duplicate check's proximity search.
 #' @param org GitHub organization. Defaults to `"rladies"`.
 #' @param onboarding_repo Repository for chapter onboarding issues.
 #' @return Issue URL (invisibly).
@@ -14,6 +16,7 @@ chapter_create_setup <- function(
   city,
   country,
   organizers,
+  region = NULL,
   org = "rladies",
   onboarding_repo = "new-chapters-onboarding"
 ) {
@@ -36,6 +39,14 @@ chapter_create_setup <- function(
   )
 
   review_assign_onboarding(org, onboarding_repo, issue$number)
+  chapter_duplicate_comment(
+    issue_number = issue$number,
+    city = city,
+    country = country,
+    region = region,
+    org = org,
+    onboarding_repo = onboarding_repo
+  )
 
   cli::cli_alert_success("Chapter setup issue created: {issue$html_url}")
   invisible(issue$html_url)
@@ -105,25 +116,8 @@ chapter_create_pr <- function(
   org = "rladies",
   website_repo = "rladies.github.io"
 ) {
-  slug <- tolower(gsub("[^a-z0-9]+", "-", tolower(city), perl = TRUE))
-  country_slug <- tolower(gsub(
-    "[^a-z0-9]+",
-    "-",
-    tolower(country),
-    perl = TRUE
-  ))
-
-  filename <- if (!is.null(region)) {
-    region_slug <- tolower(gsub(
-      "[^a-z0-9]+",
-      "-",
-      tolower(region),
-      perl = TRUE
-    ))
-    glue::glue("{country_slug}-{region_slug}-{slug}.json")
-  } else {
-    glue::glue("{country_slug}-{slug}.json")
-  }
+  slug <- chapter_slug(city)
+  filename <- chapter_filename(city, country, region)
 
   socials <- c(
     list(meetup = meetup_urlname, email = email),

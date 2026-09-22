@@ -19,13 +19,7 @@ chapter_create <- function(
   status = "prospective",
   output_dir = "."
 ) {
-  slug <- tolower(gsub(
-    "[^a-z0-9]+",
-    "-",
-    paste(country, city),
-    ignore.case = TRUE
-  ))
-  slug <- gsub("^-|-$", "", slug)
+  slug <- chapter_slug(country, city)
 
   chapter <- list(
     urlname = paste0("rladies-", tolower(gsub(" ", "-", city, fixed = TRUE))),

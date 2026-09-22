@@ -73,6 +73,9 @@ reference:
       - chapter_create_update
       - chapter_create_pr
       - chapter_check_health
+      - chapter_duplicate_check
+      - chapter_duplicate_report
+      - chapter_duplicate_comment
 
   - title: Reports
     desc: Activity and health reporting
