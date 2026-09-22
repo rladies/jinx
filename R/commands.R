@@ -34,6 +34,7 @@ cmd_parse <- function(body) {
     "chapter-health" = list(action = "chapter-health"),
     "chapter-setup" = parse_chapter_setup_command(parts),
     "chapter-update" = parse_chapter_update_command(parts),
+    "chapter-status" = parse_chapter_status_command(parts),
     "slack-invite" = parse_slack_invite_command(parts),
     "blog-add" = parse_blog_add_command(parts),
     "blog-check-links" = list(action = "blog-check-links"),
@@ -222,6 +223,19 @@ parse_chapter_setup_command <- function(parts) {
     action = "chapter-setup",
     city = parts[2],
     country = paste(parts[3:length(parts)], collapse = " ")
+  )
+}
+
+parse_chapter_status_command <- function(parts) {
+  if (length(parts) < 2) {
+    return(list(
+      action = "error",
+      message = "Usage: `/jinx chapter-status <city|issue number>`"
+    ))
+  }
+  list(
+    action = "chapter-status",
+    ref = paste(parts[2:length(parts)], collapse = " ")
   )
 }
 
@@ -553,6 +567,7 @@ normalize_command <- function(parts) {
     list(c("check", "chapter", "health"), "chapter-health"),
     list(c("setup", "chapter"), "chapter-setup"),
     list(c("update", "chapter"), "chapter-update"),
+    list(c("chapter", "status"), "chapter-status"),
     list(c("add", "blog"), "blog-add"),
     list(c("check", "links"), "blog-check-links"),
     list(c("remind", "stale"), "remind"),

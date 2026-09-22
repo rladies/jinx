@@ -31,6 +31,9 @@ command_spec <- function(keyword = c("jinx_gated", "jinx_safe"), handler) {
 jinx_commands <- function() {
   list(
     help = command_spec("jinx_safe", function(command) read_help_text()),
+    "chapter-status" = command_spec("jinx_safe", function(command) {
+      chapter_status_report(command$ref)
+    }),
     invite = command_spec("jinx_gated", function(command) {
       config <- load_teams_config()
       if (command$team %in% team_list_slugs(config)) {

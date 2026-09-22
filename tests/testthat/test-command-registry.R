@@ -35,6 +35,7 @@ describe("jinx_commands registry", {
         "events",
         "cfp-list",
         "chapter-health",
+        "chapter-status",
         "blog-check-links",
         "translate-status",
         "translate-validate",

@@ -1,0 +1,48 @@
+name: Ops · Chapter Onboarding · Remind Stale
+
+on:
+  schedule:
+    - cron: "25 9 * * 1"
+  workflow_dispatch:
+    inputs:
+      days:
+        description: Days without activity before nudging
+        required: false
+        default: "14"
+
+concurrency:
+  group: ops-chapter-remind-stale
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ secrets.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+          owner: rladies
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: local::.
+
+      - name: Nudge stale chapter onboardings
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          STALE_DAYS: ${{ inputs.days || '14' }}
+        run: Rscript -e 'jinx::chapter_remind_stale(days = as.integer(Sys.getenv("STALE_DAYS", "14")))'
