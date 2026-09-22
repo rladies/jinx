@@ -286,7 +286,8 @@ gh_open_or_update_pr <- function(
   branch,
   base = "main",
   title,
-  body
+  body,
+  team_reviewers = NULL
 ) {
   existing <- tryCatch(
     gh::gh(
@@ -312,7 +313,45 @@ gh_open_or_update_pr <- function(
     base = base,
     body = body
   )
+  gh_request_team_review(org, repo, pr$number, team_reviewers)
   pr$html_url
+}
+
+#' Ask one or more org teams to review a pull request
+#'
+#' A failed review request is reported but never fails the PR: the PR
+#' itself is the deliverable, and a missing reviewer can be added by
+#' hand.
+#'
+#' @param org GitHub organization.
+#' @param repo Repository name.
+#' @param number Pull request number.
+#' @param team_reviewers Character vector of team slugs, or `NULL`.
+#' @return Invisibly, `TRUE` when a request was made.
+#' @keywords internal
+#' @noRd
+gh_request_team_review <- function(org, repo, number, team_reviewers) {
+  if (is.null(team_reviewers) || length(team_reviewers) == 0) {
+    return(invisible(FALSE))
+  }
+  tryCatch(
+    {
+      gh::gh(
+        "POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers",
+        owner = org,
+        repo = repo,
+        pull_number = number,
+        team_reviewers = as.list(team_reviewers)
+      )
+      invisible(TRUE)
+    },
+    error = function(e) {
+      cli::cli_alert_warning(
+        "Could not request review from {toString(team_reviewers)}: {e$message}"
+      )
+      invisible(FALSE)
+    }
+  )
 }
 
 is_first_time_contributor <- function(owner, repo, author, is_pr = TRUE) {

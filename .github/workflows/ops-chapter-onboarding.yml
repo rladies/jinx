@@ -10,6 +10,7 @@ on:
         options:
           - setup
           - update
+          - website
       city:
         description: Chapter city
         required: true
@@ -18,6 +19,12 @@ on:
         required: true
       region:
         description: State/region/province (optional)
+        required: false
+      organizers:
+        description: Organizer names, comma separated (website action)
+        required: false
+      issue:
+        description: Onboarding issue number (website action)
         required: false
 
 concurrency:
@@ -61,6 +68,8 @@ jobs:
           CITY: ${{ inputs.city }}
           COUNTRY: ${{ inputs.country }}
           REGION: ${{ inputs.region }}
+          ORGANIZERS: ${{ inputs.organizers }}
+          ISSUE: ${{ inputs.issue }}
         run: |
           Rscript -e '
             action  <- Sys.getenv("ACTION")
@@ -68,12 +77,28 @@ jobs:
             country <- Sys.getenv("COUNTRY")
             region  <- Sys.getenv("REGION")
             if (!nzchar(region)) region <- NULL
+            organizers <- Sys.getenv("ORGANIZERS")
+            organizers <- if (nzchar(organizers)) {
+              trimws(strsplit(organizers, ",")[[1]])
+            } else {
+              character(0)
+            }
             if (action == "setup") {
               jinx::chapter_create_setup(
                 city = city,
                 country = country,
-                organizers = character(0),
+                organizers = organizers,
                 region = region
+              )
+            } else if (action == "website") {
+              issue <- Sys.getenv("ISSUE")
+              if (!nzchar(issue)) stop("the website action needs an issue number")
+              jinx::chapter_onboard_website(
+                issue_number = as.integer(issue),
+                city = city,
+                country = country,
+                region = region,
+                organizers = organizers
               )
             } else {
               jinx::chapter_create_update(city = city, country = country)
