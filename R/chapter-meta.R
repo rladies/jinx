@@ -89,12 +89,23 @@ chapter_meta_fetch <- function(
   org = "rladies",
   onboarding_repo = "new-chapters-onboarding"
 ) {
-  issue <- gh::gh(
-    "GET /repos/{owner}/{repo}/issues/{issue_number}",
-    owner = org,
-    repo = onboarding_repo,
-    issue_number = issue_number
+  issue <- tryCatch(
+    gh::gh(
+      "GET /repos/{owner}/{repo}/issues/{issue_number}",
+      owner = org,
+      repo = onboarding_repo,
+      issue_number = issue_number
+    ),
+    error = function(e) {
+      cli::cli_alert_warning(
+        "Could not read issue #{issue_number}: {e$message}"
+      )
+      NULL
+    }
   )
+  if (is.null(issue)) {
+    return(NULL)
+  }
   chapter_meta_parse(issue$body)
 }
 
@@ -103,10 +114,16 @@ chapter_meta_fetch <- function(
 #' Arguments passed explicitly always win; anything left `NULL` is taken
 #' from the issue's machine-readable block.
 #'
+#' Only `needed` fields being absent justifies reading the issue.
+#' `region` is left out of that set on purpose: most chapters have no
+#' region, so a `NULL` there is an answer rather than a gap, and
+#' treating it as a gap would put a network call behind every call.
+#'
 #' @param supplied Named list of explicitly supplied values.
 #' @param issue_number Onboarding issue number.
 #' @param org GitHub organization.
 #' @param onboarding_repo Repository holding onboarding issues.
+#' @param needed Fields whose absence is worth a lookup.
 #' @return The completed named list.
 #' @keywords internal
 #' @noRd
@@ -114,10 +131,11 @@ chapter_meta_complete <- function(
   supplied,
   issue_number,
   org,
-  onboarding_repo
+  onboarding_repo,
+  needed = c("city", "country", "organizers")
 ) {
   missing <- names(supplied)[vapply(supplied, is.null, logical(1))]
-  if (length(missing) == 0) {
+  if (!any(needed %in% missing)) {
     return(supplied)
   }
 

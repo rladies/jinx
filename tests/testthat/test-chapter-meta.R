@@ -92,6 +92,29 @@ describe("chapter_meta_complete", {
     expect_false(called)
   })
 
+  it("does not look the issue up just because there is no region", {
+    called <- FALSE
+    local_mocked_bindings(
+      chapter_meta_fetch = function(...) {
+        called <<- TRUE
+        NULL
+      }
+    )
+    result <- chapter_meta_complete(
+      list(
+        city = "Oslo",
+        country = "Norway",
+        region = NULL,
+        organizers = "A"
+      ),
+      5,
+      "rladies",
+      "repo"
+    )
+    expect_false(called)
+    expect_null(result$region)
+  })
+
   it("leaves fields NULL when the issue has no block", {
     local_mocked_bindings(chapter_meta_fetch = function(...) NULL)
     result <- chapter_meta_complete(list(city = NULL), 5, "o", "r")
@@ -166,5 +189,25 @@ describe("chapter_create_setup metadata", {
     meta <- chapter_meta_parse(posted)
     expect_identical(meta$city, "Oslo")
     expect_identical(meta$organizers, "A")
+  })
+})
+
+describe("chapter_meta_fetch", {
+  it("warns and returns NULL when the issue cannot be read", {
+    local_mocked_bindings(
+      gh = function(...) stop("404 Not Found"),
+      .package = "gh"
+    )
+    expect_message(meta <- chapter_meta_fetch(5))
+    expect_null(meta)
+  })
+
+  it("parses the block off an issue it can read", {
+    body <- chapter_meta_render("Oslo", "Norway", organizers = "A")
+    local_mocked_bindings(
+      gh = function(...) list(body = body),
+      .package = "gh"
+    )
+    expect_identical(chapter_meta_fetch(5)$city, "Oslo")
   })
 })

@@ -148,6 +148,7 @@ describe("chapter_onboard_website", {
     comment <- NULL
     ticked <- NULL
     local_mocked_bindings(
+      chapter_meta_fetch = function(...) NULL,
       chapter_create_pr = function(...) "https://github.com/rladies/w/pull/1",
       announce_post_reply = function(org, repo, number, body) comment <<- body,
       chapter_checklist_tick = function(number, pattern, ...) {
@@ -165,6 +166,7 @@ describe("chapter_onboard_website", {
   it("asks for a prospective entry with no email or meetup", {
     args <- NULL
     local_mocked_bindings(
+      chapter_meta_fetch = function(...) NULL,
       chapter_create_pr = function(...) {
         args <<- list(...)
         "https://github.com/rladies/w/pull/1"
