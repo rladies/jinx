@@ -12,23 +12,23 @@ on:
           - update
           - website
       city:
-        description: Chapter city
-        required: true
+        description: Chapter city (optional for the website action)
+        required: false
       country:
-        description: Chapter country
-        required: true
+        description: Chapter country (optional for the website action)
+        required: false
       region:
         description: State/region/province (optional)
         required: false
       organizers:
-        description: Organizer names, comma separated (website action)
+        description: Organizer names, comma separated (optional for the website action)
         required: false
       issue:
         description: Onboarding issue number (website action)
         required: false
 
 concurrency:
-  group: ops-chapter-onboarding-${{ inputs.city }}-${{ inputs.country }}
+  group: ops-chapter-onboarding-${{ inputs.city }}-${{ inputs.country }}-${{ inputs.issue }}
   cancel-in-progress: false
 
 permissions:
@@ -83,6 +83,9 @@ jobs:
             } else {
               character(0)
             }
+            if (action != "website" && !(nzchar(city) && nzchar(country))) {
+              stop("the ", action, " action needs both a city and a country")
+            }
             if (action == "setup") {
               jinx::chapter_create_setup(
                 city = city,
@@ -95,10 +98,10 @@ jobs:
               if (!nzchar(issue)) stop("the website action needs an issue number")
               jinx::chapter_onboard_website(
                 issue_number = as.integer(issue),
-                city = city,
-                country = country,
+                city = if (nzchar(city)) city,
+                country = if (nzchar(country)) country,
                 region = region,
-                organizers = organizers
+                organizers = if (length(organizers)) organizers
               )
             } else {
               jinx::chapter_create_update(city = city, country = country)

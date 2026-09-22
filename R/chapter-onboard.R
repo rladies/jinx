@@ -28,6 +28,11 @@ chapter_create_setup <- function(
       ORGANIZERS = toString(organizers)
     )
   )
+  body <- paste0(
+    body,
+    "\n\n",
+    chapter_meta_render(city, country, region, organizers)
+  )
 
   issue <- gh::gh(
     "POST /repos/{owner}/{repo}/issues",
