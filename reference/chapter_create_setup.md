@@ -10,6 +10,7 @@ chapter_create_setup(
   city,
   country,
   organizers,
+  region = NULL,
   org = "rladies",
   onboarding_repo = "new-chapters-onboarding"
 )
@@ -28,6 +29,11 @@ chapter_create_setup(
 - organizers:
 
   Character vector of organizer names.
+
+- region:
+
+  State/region/province, or `NULL`. Used to narrow the duplicate check's
+  proximity search.
 
 - org:
 
