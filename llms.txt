@@ -324,6 +324,10 @@ Chapter lifecycle management
   : Find the open onboarding issue for a chapter
 - [`chapter_remind_stale()`](https://rladies.github.io/jinx/reference/chapter_remind_stale.md)
   : Nudge the team holding up a stale chapter onboarding
+- [`chapter_onboard_website()`](https://rladies.github.io/jinx/reference/chapter_onboard_website.md)
+  : Add a prospective chapter to the website from its onboarding issue
+- [`chapter_checklist_tick()`](https://rladies.github.io/jinx/reference/chapter_checklist_tick.md)
+  : Tick a checklist item on an onboarding issue
 
 ## Reports
 

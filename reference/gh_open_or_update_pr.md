@@ -6,7 +6,15 @@ otherwise opens a new PR with the given title and body.
 ## Usage
 
 ``` r
-gh_open_or_update_pr(org, repo, branch, base = "main", title, body)
+gh_open_or_update_pr(
+  org,
+  repo,
+  branch,
+  base = "main",
+  title,
+  body,
+  team_reviewers = NULL
+)
 ```
 
 ## Arguments
@@ -34,6 +42,11 @@ gh_open_or_update_pr(org, repo, branch, base = "main", title, body)
 - body:
 
   PR body.
+
+- team_reviewers:
+
+  Character vector of org team slugs to request review from, or `NULL`
+  for none.
 
 ## Value
 

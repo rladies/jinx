@@ -1,7 +1,9 @@
 # Create a chapter JSON PR on the website repo
 
-Generates the chapter JSON file and creates a PR to add it to the
-website.
+Generates the chapter JSON entry, validates it against the bundled
+schema, and opens a PR adding it to the website. A prospective chapter
+has no Meetup group or chapter email yet, so both are optional and are
+simply left out of the entry.
 
 ## Usage
 
@@ -10,13 +12,14 @@ chapter_create_pr(
   city,
   country,
   region = NULL,
-  meetup_urlname,
-  email,
-  organizers,
+  meetup_urlname = NULL,
+  email = NULL,
+  organizers = character(0),
   status = "prospective",
   social_media = list(),
   org = "rladies",
-  website_repo = "rladies.github.io"
+  website_repo = "rladies.github.io",
+  team_reviewers = "leadership"
 )
 ```
 
@@ -36,11 +39,11 @@ chapter_create_pr(
 
 - meetup_urlname:
 
-  Meetup group URL name.
+  Meetup group URL name, or `NULL` when the group does not exist yet.
 
 - email:
 
-  Chapter email address.
+  Chapter email address, or `NULL` when it does not exist yet.
 
 - organizers:
 
@@ -61,6 +64,11 @@ chapter_create_pr(
 - website_repo:
 
   Website repository name.
+
+- team_reviewers:
+
+  Teams to request review from. Defaults to `"leadership"`, which the
+  onboarding process requires.
 
 ## Value
 
