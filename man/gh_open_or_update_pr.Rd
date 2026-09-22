@@ -26,6 +26,9 @@ gh_open_or_update_pr(
 \item{title}{PR title.}
 
 \item{body}{PR body.}
+
+\item{team_reviewers}{Character vector of org team slugs to request
+review from, or \code{NULL} for none.}
 }
 \value{
 PR URL.

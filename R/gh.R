@@ -278,6 +278,8 @@ gh_branch_upsert <- function(org, repo, branch, base = "main", force = TRUE) {
 #' @param base Base branch. Defaults to `"main"`.
 #' @param title PR title.
 #' @param body PR body.
+#' @param team_reviewers Character vector of org team slugs to request
+#'   review from, or `NULL` for none.
 #' @return PR URL.
 #' @export
 gh_open_or_update_pr <- function(
