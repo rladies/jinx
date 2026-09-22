@@ -8,13 +8,14 @@ chapter_create_pr(
   city,
   country,
   region = NULL,
-  meetup_urlname,
-  email,
-  organizers,
+  meetup_urlname = NULL,
+  email = NULL,
+  organizers = character(0),
   status = "prospective",
   social_media = list(),
   org = "rladies",
-  website_repo = "rladies.github.io"
+  website_repo = "rladies.github.io",
+  team_reviewers = "leadership"
 )
 }
 \arguments{
@@ -24,9 +25,11 @@ chapter_create_pr(
 
 \item{region}{State/region/province (optional).}
 
-\item{meetup_urlname}{Meetup group URL name.}
+\item{meetup_urlname}{Meetup group URL name, or \code{NULL} when the group
+does not exist yet.}
 
-\item{email}{Chapter email address.}
+\item{email}{Chapter email address, or \code{NULL} when it does not exist
+yet.}
 
 \item{organizers}{Character vector of organizer names.}
 
@@ -37,10 +40,16 @@ chapter_create_pr(
 \item{org}{GitHub organization. Defaults to \code{"rladies"}.}
 
 \item{website_repo}{Website repository name.}
+
+\item{team_reviewers}{Teams to request review from. Defaults to
+\code{"leadership"}, which the onboarding process requires.}
 }
 \value{
 PR URL (invisibly).
 }
 \description{
-Generates the chapter JSON file and creates a PR to add it to the website.
+Generates the chapter JSON entry, validates it against the bundled
+schema, and opens a PR adding it to the website. A prospective
+chapter has no Meetup group or chapter email yet, so both are
+optional and are simply left out of the entry.
 }

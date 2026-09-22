@@ -88,61 +88,129 @@ chapter_create_update <- function(
   invisible(issue$html_url)
 }
 
+#' Build the website JSON for a chapter
+#'
+#' Matches the shape of the entries already in `data/chapters`: a
+#' prospective chapter carries no `urlname` and an empty `social_media`
+#' object, because it has neither a Meetup group nor a chapter email
+#' yet.
+#'
+#' @inheritParams chapter_create_pr
+#' @return A JSON string.
+#' @keywords internal
+#' @noRd
+chapter_entry_json <- function(
+  city,
+  country,
+  region = NULL,
+  meetup_urlname = NULL,
+  email = NULL,
+  organizers = character(0),
+  status = "prospective",
+  social_media = list()
+) {
+  socials <- c(
+    if (!is.null(meetup_urlname)) list(meetup = meetup_urlname),
+    if (!is.null(email)) list(email = email),
+    social_media
+  )
+  socials <- lapply(socials, jsonlite::unbox)
+  if (length(socials) == 0) {
+    socials <- structure(list(), names = character(0))
+  }
+
+  entry <- c(
+    if (!is.null(meetup_urlname)) {
+      list(urlname = jsonlite::unbox(meetup_urlname))
+    },
+    list(
+      status = jsonlite::unbox(status),
+      country = jsonlite::unbox(country)
+    ),
+    if (!is.null(region)) list("state.region" = jsonlite::unbox(region)),
+    list(
+      city = jsonlite::unbox(city),
+      social_media = socials,
+      organizers = list(current = as.character(organizers), former = list())
+    )
+  )
+
+  as.character(jsonlite::toJSON(entry, pretty = TRUE, auto_unbox = FALSE))
+}
+
+#' Check a chapter entry against the bundled schema
+#'
+#' @param json A JSON string.
+#' @return `TRUE`, invisibly; aborts with the schema errors otherwise.
+#' @keywords internal
+#' @noRd
+chapter_entry_validate <- function(json) {
+  schema <- system.file("schemas", "chapter.json", package = "jinx")
+  if (!nzchar(schema)) {
+    cli::cli_abort("Chapter schema not found in jinx package")
+  }
+  valid <- jsonvalidate::json_validate(json, schema, verbose = TRUE)
+  if (!isTRUE(valid)) {
+    cli::cli_abort(c(
+      "Generated chapter entry does not match the schema:",
+      "x" = paste(attr(valid, "errors")$message, collapse = "; ")
+    ))
+  }
+  invisible(TRUE)
+}
+
 #' Create a chapter JSON PR on the website repo
 #'
-#' Generates the chapter JSON file and creates a PR to add it to the website.
+#' Generates the chapter JSON entry, validates it against the bundled
+#' schema, and opens a PR adding it to the website. A prospective
+#' chapter has no Meetup group or chapter email yet, so both are
+#' optional and are simply left out of the entry.
 #'
 #' @param city Chapter city.
 #' @param country Chapter country.
 #' @param region State/region/province (optional).
-#' @param meetup_urlname Meetup group URL name.
-#' @param email Chapter email address.
+#' @param meetup_urlname Meetup group URL name, or `NULL` when the group
+#'   does not exist yet.
+#' @param email Chapter email address, or `NULL` when it does not exist
+#'   yet.
 #' @param organizers Character vector of organizer names.
 #' @param status Chapter status. Defaults to `"prospective"`.
 #' @param social_media Named list of social media handles (optional).
 #' @param org GitHub organization. Defaults to `"rladies"`.
 #' @param website_repo Website repository name.
+#' @param team_reviewers Teams to request review from. Defaults to
+#'   `"leadership"`, which the onboarding process requires.
 #' @return PR URL (invisibly).
 #' @export
 chapter_create_pr <- function(
   city,
   country,
   region = NULL,
-  meetup_urlname,
-  email,
-  organizers,
+  meetup_urlname = NULL,
+  email = NULL,
+  organizers = character(0),
   status = "prospective",
   social_media = list(),
   org = "rladies",
-  website_repo = "rladies.github.io"
+  website_repo = "rladies.github.io",
+  team_reviewers = "leadership"
 ) {
   slug <- chapter_slug(city)
   filename <- chapter_filename(city, country, region)
 
-  socials <- c(
-    list(meetup = meetup_urlname, email = email),
-    social_media
+  json_content <- chapter_entry_json(
+    city = city,
+    country = country,
+    region = region,
+    meetup_urlname = meetup_urlname,
+    email = email,
+    organizers = organizers,
+    status = status,
+    social_media = social_media
   )
+  chapter_entry_validate(json_content)
 
-  chapter_data <- list(
-    urlname = meetup_urlname,
-    status = jsonlite::unbox(status),
-    country = jsonlite::unbox(country),
-    city = jsonlite::unbox(city),
-    social_media = socials,
-    organizers = list(current = organizers)
-  )
-
-  if (!is.null(region)) {
-    chapter_data[["state.region"]] <- jsonlite::unbox(region)
-  }
-
-  json_content <- jsonlite::toJSON(
-    chapter_data,
-    pretty = TRUE,
-    auto_unbox = FALSE
-  )
-  content_b64 <- jsonlite::base64_enc(charToRaw(as.character(json_content)))
+  content_b64 <- jsonlite::base64_enc(charToRaw(json_content))
 
   branch <- glue::glue("chapter/{slug}")
   gh_branch_upsert(org, website_repo, branch, force = FALSE)
@@ -162,17 +230,36 @@ chapter_create_pr <- function(
     website_repo,
     branch,
     title = glue::glue("Add chapter: {city}, {country}"),
-    body = glue::glue(
-      "Adding new chapter entry for **{city}, {country}**.\n\n",
-      "- Status: {status}\n",
-      "- Meetup: {meetup_urlname}\n",
-      "- Organizers: {paste(organizers, collapse = ', ')}\n\n",
-      "_Created by jinx_"
-    )
+    body = chapter_pr_body(city, country, status, meetup_urlname, organizers),
+    team_reviewers = team_reviewers
   )
 
   cli::cli_alert_success("Chapter PR created: {url}")
   invisible(url)
+}
+
+#' Body text for a chapter entry PR
+#' @keywords internal
+#' @noRd
+chapter_pr_body <- function(city, country, status, meetup_urlname, organizers) {
+  organiser_line <- if (length(organizers) == 0) {
+    "- Organizers: to be confirmed\n"
+  } else {
+    glue::glue("- Organizers: {paste(organizers, collapse = ', ')}\n")
+  }
+  meetup_line <- if (is.null(meetup_urlname)) {
+    "- Meetup: not created yet\n"
+  } else {
+    glue::glue("- Meetup: {meetup_urlname}\n")
+  }
+
+  glue::glue(
+    "Adding new chapter entry for **{city}, {country}**.\n\n",
+    "- Status: {status}\n",
+    meetup_line,
+    organiser_line,
+    "\n_Created by jinx_"
+  )
 }
 
 review_assign_onboarding <- function(org, repo, issue_number) {
