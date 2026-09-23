@@ -121,11 +121,22 @@ document.addEventListener("DOMContentLoaded", function() {
 /slack/oauth        GET    OAuth callback
 /airtable/webhook   POST   Form submissions from Airtable
 /ai/generate        POST   Workers AI passthrough for other RLadies+ repos
-/links/shorten      POST   Create (or reuse) a l.rladies.org short link</code></pre>
-<p>Routes follow <code>/&lt;service&gt;/&lt;action&gt;</code> — never flat paths like <code>/slack-interact</code> or <code>/airtable-webhook</code>. Slack-side endpoints all run through <code>verifySlackSignature()</code> in the router; <code>/airtable/webhook</code> uses its own <code>x-airtable-secret</code> header; <code>/ai/generate</code> and <code>/links/shorten</code> are gated by a shared <code>JINX_API_KEY</code> bearer token (constant-time compared, <code>worker/src/api-auth.js</code>) — see the README’s “HTTP API for other repos” section for the request/response contract of each.</p>
+/links/shorten      POST   Create (or reuse) a l.rladies.org short link
+/workspace/mailbox  POST   Create a chapter mailbox in Google Workspace</code></pre>
+<p>Routes follow <code>/&lt;service&gt;/&lt;action&gt;</code> — never flat paths like <code>/slack-interact</code> or <code>/airtable-webhook</code>. Slack-side endpoints all run through <code>verifySlackSignature()</code> in the router; <code>/airtable/webhook</code> uses its own <code>x-airtable-secret</code> header; <code>/ai/generate</code>, <code>/links/shorten</code> and <code>/workspace/mailbox</code> are gated by a shared <code>JINX_API_KEY</code> bearer token (constant-time compared, <code>worker/src/api-auth.js</code>) — see the README’s “HTTP API for other repos” section for the request/response contract of each.</p>
 <p>(An earlier <code>/analytics/rum</code> route proxying Cloudflare Web Analytics was removed — <code><a href="reference/rum_collect_analytics.html">rum_collect_analytics()</a></code>, already exported from the <code>jinx</code> R package, covers that need directly as an R dependency instead.)</p>
 <p>The same worker also answers <code>GET &lt;code&gt;</code> on a second hostname, <code>l.rladies.org</code> (routed via the <code>routes</code> entry in <code>wrangler.jsonc</code>, not the <code>/&lt;service&gt;/&lt;action&gt;</code> API above), 301-redirecting to the short link’s target or <code>404</code> if the code is unknown. See “URL shortener” below.</p>
 </div>
+<div class="section level3">
+<h3 id="chapter-mailbox-provisioning--stays-in-javascript">Chapter mailbox provisioning — stays in JavaScript<a class="anchor" aria-label="anchor" href="#chapter-mailbox-provisioning--stays-in-javascript"></a></h3>
+<p><code>POST /workspace/mailbox</code> creates <code>&lt;city&gt;@rladies.org</code> in the <code>/Chapters</code> organisational unit via the Admin SDK Directory API. Body: <code>{city, givenName?, familyName?}</code>. Returns <code>{email, orgUnitPath}</code> on 201.</p>
+<p><strong>Do not port this module to R.</strong> Worker logic is otherwise being migrated into the R package — the removed <code>/analytics/rum</code> route is the pattern, where <code><a href="reference/rum_collect_analytics.html">rum_collect_analytics()</a></code> replaced a worker endpoint outright. <code>workspace.js</code> is the documented exception, and the reason is the credential rather than the code.</p>
+<p>R could do all of it: <code>openssl::signature_create(data, sha256, key)</code> produces exactly the RSASSA-PKCS1-v1_5 signature RS256 needs, so the flow is about forty lines of httr2. But porting it moves <code>WORKSPACE_SA_PRIVATE_KEY</code> to where the R code runs — a GitHub Actions runner. That key impersonates a Workspace admin and can create accounts in the domain. As a Cloudflare secret it is unreachable from a leaked GitHub token; the most a caller holding <code>JINX_API_KEY</code> can do is ask for a mailbox whose name survives validation.</p>
+<p>Code location follows key location. If the key ever moves into a protected GitHub environment as a deliberate decision, the module can follow it — <code><a href="reference/chapter_mailbox_create.html">chapter_mailbox_create()</a></code> is already the only caller and its signature would not change.</p>
+<p>Two properties worth preserving if you touch it:</p>
+<ul><li>Names are validated <strong>after</strong> transliteration, so <code>Admin!</code>, <code>ADMIN</code> and <code>" jinx "</code> all normalise to a reserved address and are refused before a token exchange is spent.</li>
+<li>The generated password is <strong>never returned to the caller</strong>. The Directory API requires one at creation, but returning it would put a live credential into CI logs and issue comments. The account is created with <code>changePasswordAtNextLogin</code> and handover happens from the Admin console.</li>
+</ul></div>
 <div class="section level3">
 <h3 id="url-shortener">URL shortener<a class="anchor" aria-label="anchor" href="#url-shortener"></a></h3>
 <p><code>worker/src/short-links.js</code> backs both <code>/links/shorten</code> and the <code>l.rladies.org</code> redirect, plus <code>/jinx shorten &lt;url&gt; [slug]</code> in <code>worker/src/slash-local.js</code>. Storage is the <code>SHORT_LINKS</code> KV namespace, keyed two ways: <code>code:&lt;code&gt;</code> → <code>{url, created_by, created_at}</code>, and <code>url:&lt;url&gt;</code> → <code>&lt;code&gt;</code>, a reverse index so re-shortening the same destination always returns the existing code — the reverse index is the source of truth even when a custom slug is requested, so a slug for an already-shortened destination is rejected with a pointer to the existing code rather than creating a duplicate. Slack-side creation is restricted to the organiser workspace (<code>slack_is_organizer_workspace()</code> in <code>worker/src/authorize.js</code>, shared with the Global Team gate, checked in <code>slash-local.js</code> before dispatch) since an open shortener reachable from the community workspace would be an open-redirect/phishing risk.</p>
@@ -199,13 +210,23 @@ document.addEventListener("DOMContentLoaded", function() {
 <td>Airtable PAT — scope defines the base allowlist (see below)</td>
 </tr><tr><td><code>JINX_API_KEY</code></td>
 <td>Bearer key gating <code>/ai/generate</code> for other repos</td>
+</tr><tr><td><code>WORKSPACE_SA_PRIVATE_KEY</code></td>
+<td>Google service account PKCS8 key — provisions chapter mailboxes</td>
+</tr><tr><td><code>WORKSPACE_SA_EMAIL</code></td>
+<td>Service account address; the JWT <code>iss</code> claim</td>
 </tr></tbody></table></div>
 <div class="section level3">
 <h3 id="worker-vars-in-wranglerjsonc">Worker vars (in <code>wrangler.jsonc</code>)<a class="anchor" aria-label="anchor" href="#worker-vars-in-wranglerjsonc"></a></h3>
-<table class="table"><thead><tr><th>Var</th>
+<table class="table"><colgroup><col width="28%"><col width="71%"></colgroup><thead><tr><th>Var</th>
 <th>Purpose</th>
 </tr></thead><tbody><tr><td><code>GITHUB_REPO</code></td>
 <td>Target repo for GitHub dispatches</td>
+</tr><tr><td><code>WORKSPACE_SUBJECT</code></td>
+<td>Delegated admin impersonated for mailbox creation; its <code>/Chapters</code>-scoped role bounds what the impersonation can do</td>
+</tr><tr><td><code>WORKSPACE_DOMAIN</code></td>
+<td>Mail domain for chapter mailboxes</td>
+</tr><tr><td><code>WORKSPACE_OU</code></td>
+<td>Organisational unit chapter mailboxes are created in</td>
 </tr></tbody></table></div>
 </div>
 <div class="section level2">

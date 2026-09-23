@@ -74,6 +74,13 @@ Sending mail as <jinx@rladies.org>
 - [`mail_send()`](https://rladies.github.io/jinx/reference/mail_send.md)
   : Send an email as jinx
 
+## Google Workspace
+
+Chapter mailbox provisioning
+
+- [`chapter_mailbox_create()`](https://rladies.github.io/jinx/reference/chapter_mailbox_create.md)
+  : Create a chapter mailbox in Google Workspace
+
 ## Directory
 
 Directory entry management and validation

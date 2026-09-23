@@ -219,6 +219,10 @@ document.addEventListener("DOMContentLoaded", function() {
 <td><code>POST /links/shorten</code></td>
 <td>Creates (or reuses) a <code>l.rladies.org</code> short link. Body: <code>{url, slug?}</code>. Returns <code>{code, url, short_url}</code>. Re-shortening a URL that already has a short link returns the existing one instead of minting a duplicate.</td>
 </tr>
+<tr>
+<td><code>POST /workspace/mailbox</code></td>
+<td>Creates a chapter mailbox <code>&lt;city&gt;@rladies.org</code> in the <code>/Chapters</code> OU. Body: <code>{city, givenName?, familyName?}</code>. Returns <code>{email, orgUnitPath}</code>. Names are validated after transliteration so reserved addresses cannot be smuggled through; the generated password is never returned.</td>
+</tr>
 </tbody>
 </table>
 <p>Both routes require <code>Authorization: Bearer &lt;JINX_API_KEY&gt;</code> — ask a Jinx admin for the key rather than requesting a Cloudflare token of your own. A missing or wrong key gets a <code>401</code>. See <code>.github/AGENTS.md</code>’s “Endpoint conventions” and “Worker secrets” sections for the underlying implementation and secret names.</p>
