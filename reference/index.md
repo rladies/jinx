@@ -67,6 +67,13 @@ Cross-platform blog post announcements
 - [`random_emoji()`](https://rladies.github.io/jinx/reference/random_emoji.md)
   : Select a random emoji
 
+## Email
+
+Sending mail as <jinx@rladies.org>
+
+- [`mail_send()`](https://rladies.github.io/jinx/reference/mail_send.md)
+  : Send an email as jinx
+
 ## Directory
 
 Directory entry management and validation
@@ -141,6 +148,8 @@ Chapter lifecycle management
   : Add a prospective chapter to the website from its onboarding issue
 - [`chapter_checklist_tick()`](https://rladies.github.io/jinx/reference/chapter_checklist_tick.md)
   : Tick a checklist item on an onboarding issue
+- [`chapter_meta_fetch()`](https://rladies.github.io/jinx/reference/chapter_meta_fetch.md)
+  : Read the machine-readable block off an onboarding issue
 
 ## Reports
 

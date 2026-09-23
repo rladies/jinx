@@ -70,6 +70,7 @@
 <url><loc>https://rladies.github.io/jinx/reference/chapter_duplicate_comment.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_duplicate_report.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_find_issue.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/chapter_meta_fetch.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_monitor_status.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_onboard_blocker.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_onboard_state.html</loc></url>
@@ -222,6 +223,7 @@
 <url><loc>https://rladies.github.io/jinx/reference/load_review_rules.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/load_teams_config.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/local_file_chunks.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/mail_send.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/meeting_poll_best.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/meeting_poll_create.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/meeting_poll_format_best.html</loc></url>

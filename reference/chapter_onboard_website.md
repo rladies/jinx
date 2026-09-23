@@ -9,10 +9,10 @@ and ticks the website step of the checklist.
 ``` r
 chapter_onboard_website(
   issue_number,
-  city,
-  country,
+  city = NULL,
+  country = NULL,
   region = NULL,
-  organizers = character(0),
+  organizers = NULL,
   org = "rladies",
   onboarding_repo = "new-chapters-onboarding",
   website_repo = "rladies.github.io"
@@ -27,19 +27,19 @@ chapter_onboard_website(
 
 - city:
 
-  Chapter city.
+  Chapter city. Read from the issue when `NULL`.
 
 - country:
 
-  Chapter country.
+  Chapter country. Read from the issue when `NULL`.
 
 - region:
 
-  State/region/province, or `NULL`.
+  State/region/province. Read from the issue when `NULL`.
 
 - organizers:
 
-  Character vector of organizer names.
+  Character vector of organizer names. Read from the issue when `NULL`.
 
 - org:
 
@@ -62,3 +62,6 @@ The website PR URL (invisibly).
 A prospective entry deliberately carries no chapter email and no Meetup
 group: neither exists at this point in onboarding, and the entry is
 filled in as those steps complete.
+
+Anything left `NULL` is read from the issue's own machine-readable
+block, so in the usual case only the issue number is needed.
