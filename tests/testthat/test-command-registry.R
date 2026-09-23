@@ -1,3 +1,9 @@
+describe("chapter-email privilege", {
+  it("is gated, since it creates an account in the domain", {
+    expect_identical(jinx_commands()[["chapter-email"]]$keyword, "jinx_gated")
+  })
+})
+
 describe("jinx_commands registry", {
   it("labels every command with exactly one valid keyword", {
     keywords <- vapply(jinx_commands(), function(s) s$keyword, character(1))

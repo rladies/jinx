@@ -61,6 +61,8 @@ reference:
     desc: Chapter mailbox provisioning
     contents:
       - chapter_mailbox_create
+      - chapter_email_provision
+      - chapter_email_approvals
 
   - title: Directory
     desc: Directory entry management and validation
