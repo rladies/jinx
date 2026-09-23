@@ -15,7 +15,14 @@
 		// budget warnings, join-email mismatches) post to. Lives in the organisers'
 		// Slack; the bot must be a member. Versioned here rather than a secret so
 		// the target is reviewable -- a channel id isn't sensitive.
-		"SLACK_ALERTS_CHANNEL": "C0B3HHH7DM3"
+		"SLACK_ALERTS_CHANNEL": "C0B3HHH7DM3",
+		// Google Workspace chapter-mailbox provisioning. The service account
+		// key is a secret (wrangler secret put WORKSPACE_SA_PRIVATE_KEY), not a
+		// var. WORKSPACE_SUBJECT is the delegated admin whose /Chapters-scoped
+		// role bounds what the impersonation can do.
+		"WORKSPACE_DOMAIN": "rladies.org",
+		"WORKSPACE_OU": "/Chapters",
+		"WORKSPACE_SUBJECT": "jinx-provisioner@rladies.org"
 	},
 	"ai": {
 		"binding": "AI"
