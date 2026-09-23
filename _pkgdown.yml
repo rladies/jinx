@@ -52,6 +52,11 @@ reference:
       - tags2hash
       - random_emoji
 
+  - title: Email
+    desc: Sending mail as jinx@rladies.org
+    contents:
+      - mail_send
+
   - title: Directory
     desc: Directory entry management and validation
     contents:
