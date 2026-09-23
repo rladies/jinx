@@ -127,6 +127,7 @@ report prose.
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `POST /ai/generate`   | Thin passthrough to the Workers AI binding. Body: `{model, messages, response_format?, max_tokens?}` — `model` must be on a Worker-side allowlist. Returns `{result}` (Workers AI's native response shape).          |
 | `POST /links/shorten` | Creates (or reuses) a `l.rladies.org` short link. Body: `{url, slug?}`. Returns `{code, url, short_url}`. Re-shortening a URL that already has a short link returns the existing one instead of minting a duplicate. |
+| `POST /workspace/mailbox` | Creates a chapter mailbox `<city>@rladies.org` in the `/Chapters` OU. Body: `{city, givenName?, familyName?}`. Returns `{email, orgUnitPath}`. Names are validated after transliteration so reserved addresses cannot be smuggled through; the generated password is never returned. |
 
 Both routes require `Authorization: Bearer <JINX_API_KEY>` — ask a Jinx admin
 for the key rather than requesting a Cloudflare token of your own. A missing

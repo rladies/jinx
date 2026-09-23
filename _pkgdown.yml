@@ -57,6 +57,11 @@ reference:
     contents:
       - mail_send
 
+  - title: Google Workspace
+    desc: Chapter mailbox provisioning
+    contents:
+      - chapter_mailbox_create
+
   - title: Directory
     desc: Directory entry management and validation
     contents:
