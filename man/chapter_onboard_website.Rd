@@ -6,10 +6,10 @@
 \usage{
 chapter_onboard_website(
   issue_number,
-  city,
-  country,
+  city = NULL,
+  country = NULL,
   region = NULL,
-  organizers = character(0),
+  organizers = NULL,
   org = "rladies",
   onboarding_repo = "new-chapters-onboarding",
   website_repo = "rladies.github.io"
@@ -18,13 +18,14 @@ chapter_onboard_website(
 \arguments{
 \item{issue_number}{Onboarding issue number.}
 
-\item{city}{Chapter city.}
+\item{city}{Chapter city. Read from the issue when \code{NULL}.}
 
-\item{country}{Chapter country.}
+\item{country}{Chapter country. Read from the issue when \code{NULL}.}
 
-\item{region}{State/region/province, or \code{NULL}.}
+\item{region}{State/region/province. Read from the issue when \code{NULL}.}
 
-\item{organizers}{Character vector of organizer names.}
+\item{organizers}{Character vector of organizer names. Read from the
+issue when \code{NULL}.}
 
 \item{org}{GitHub organization. Defaults to \code{"rladies"}.}
 
@@ -44,4 +45,7 @@ issue, and ticks the website step of the checklist.
 A prospective entry deliberately carries no chapter email and no
 Meetup group: neither exists at this point in onboarding, and the
 entry is filled in as those steps complete.
+
+Anything left \code{NULL} is read from the issue's own machine-readable
+block, so in the usual case only the issue number is needed.
 }

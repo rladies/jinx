@@ -84,6 +84,7 @@ reference:
       - chapter_remind_stale
       - chapter_onboard_website
       - chapter_checklist_tick
+      - chapter_meta_fetch
 
   - title: Reports
     desc: Activity and health reporting

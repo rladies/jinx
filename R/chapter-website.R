@@ -69,11 +69,15 @@ chapter_checklist_tick <- function(
 #' Meetup group: neither exists at this point in onboarding, and the
 #' entry is filled in as those steps complete.
 #'
+#' Anything left `NULL` is read from the issue's own machine-readable
+#' block, so in the usual case only the issue number is needed.
+#'
 #' @param issue_number Onboarding issue number.
-#' @param city Chapter city.
-#' @param country Chapter country.
-#' @param region State/region/province, or `NULL`.
-#' @param organizers Character vector of organizer names.
+#' @param city Chapter city. Read from the issue when `NULL`.
+#' @param country Chapter country. Read from the issue when `NULL`.
+#' @param region State/region/province. Read from the issue when `NULL`.
+#' @param organizers Character vector of organizer names. Read from the
+#'   issue when `NULL`.
 #' @param org GitHub organization. Defaults to `"rladies"`.
 #' @param onboarding_repo Repository holding onboarding issues.
 #' @param website_repo Website repository name.
@@ -81,19 +85,39 @@ chapter_checklist_tick <- function(
 #' @export
 chapter_onboard_website <- function(
   issue_number,
-  city,
-  country,
+  city = NULL,
+  country = NULL,
   region = NULL,
-  organizers = character(0),
+  organizers = NULL,
   org = "rladies",
   onboarding_repo = "new-chapters-onboarding",
   website_repo = "rladies.github.io"
 ) {
+  details <- chapter_meta_complete(
+    list(
+      city = city,
+      country = country,
+      region = region,
+      organizers = organizers
+    ),
+    issue_number,
+    org,
+    onboarding_repo
+  )
+  if (is.null(details$city) || is.null(details$country)) {
+    cli::cli_abort(c(
+      "Cannot add a chapter to the website without a city and country.",
+      "i" = "Issue #{issue_number} carries no jinx block; pass them explicitly."
+    ))
+  }
+  city <- details$city
+  country <- details$country
+
   url <- chapter_create_pr(
     city = city,
     country = country,
-    region = region,
-    organizers = organizers,
+    region = details$region,
+    organizers = details$organizers %or% character(0),
     status = "prospective",
     org = org,
     website_repo = website_repo
