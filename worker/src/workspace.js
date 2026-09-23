@@ -1,8 +1,29 @@
 // Creates chapter mailboxes in Google Workspace via the Admin SDK Directory
-// API. The service account key lives here rather than in GitHub Actions
-// secrets so that a leaked CI token cannot reach it: the worst a caller with
-// the worker API key can do is ask for a mailbox whose name passes the
-// validation below.
+// API.
+//
+// WHY THIS IS JAVASCRIPT AND MUST STAY THAT WAY
+//
+// jinx is deliberately migrating worker logic into the R package - the
+// removed /analytics/rum route is the pattern: an R function replaced a
+// worker endpoint outright. This module is the documented exception, and the
+// reason is the credential, not the code.
+//
+// R could do all of this. openssl::signature_create(data, sha256, key)
+// produces exactly the RSASSA-PKCS1-v1_5 signature RS256 needs, so the whole
+// flow is roughly forty lines of httr2. Nothing here is hard in R.
+//
+// But porting it moves WORKSPACE_SA_PRIVATE_KEY to where the R code runs,
+// which is a GitHub Actions runner. That key impersonates a Workspace admin
+// and can create accounts in the rladies.org domain. Keeping it as a
+// Cloudflare secret means a leaked GitHub token reaches nothing: the most a
+// caller holding JINX_API_KEY can do is ask for a mailbox whose name
+// survives the validation below.
+//
+// So: code location follows key location. If you are porting worker modules
+// to R, skip this one. If the key ever moves into a protected GitHub
+// environment as a deliberate decision, this module can follow it - the R
+// interface, chapter_mailbox_create(), is already the only caller and its
+// signature would not change.
 //
 // The generated password is deliberately never returned to the caller. The
 // Directory API requires one at creation, but handing it back would put a

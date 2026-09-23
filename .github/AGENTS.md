@@ -45,9 +45,10 @@ The Slack bridge runs as a Cloudflare Worker at `https://jinx.rladies.workers.de
 /airtable/webhook   POST   Form submissions from Airtable
 /ai/generate        POST   Workers AI passthrough for other RLadies+ repos
 /links/shorten      POST   Create (or reuse) a l.rladies.org short link
+/workspace/mailbox  POST   Create a chapter mailbox in Google Workspace
 ```
 
-Routes follow `/<service>/<action>` — never flat paths like `/slack-interact` or `/airtable-webhook`. Slack-side endpoints all run through `verifySlackSignature()` in the router; `/airtable/webhook` uses its own `x-airtable-secret` header; `/ai/generate` and `/links/shorten` are gated by a shared `JINX_API_KEY` bearer token (constant-time compared, `worker/src/api-auth.js`) — see the README's "HTTP API for other repos" section for the request/response contract of each.
+Routes follow `/<service>/<action>` — never flat paths like `/slack-interact` or `/airtable-webhook`. Slack-side endpoints all run through `verifySlackSignature()` in the router; `/airtable/webhook` uses its own `x-airtable-secret` header; `/ai/generate`, `/links/shorten` and `/workspace/mailbox` are gated by a shared `JINX_API_KEY` bearer token (constant-time compared, `worker/src/api-auth.js`) — see the README's "HTTP API for other repos" section for the request/response contract of each.
 
 (An earlier `/analytics/rum` route proxying Cloudflare Web Analytics was removed — `rum_collect_analytics()`, already exported from the `jinx` R package, covers that need directly as an R dependency instead.)
 
@@ -55,6 +56,40 @@ The same worker also answers `GET <code>` on a second hostname, `l.rladies.org`
 (routed via the `routes` entry in `wrangler.jsonc`, not the `/<service>/<action>`
 API above), 301-redirecting to the short link's target or `404` if the code is
 unknown. See "URL shortener" below.
+
+### Chapter mailbox provisioning — stays in JavaScript
+
+`POST /workspace/mailbox` creates `<city>@rladies.org` in the `/Chapters`
+organisational unit via the Admin SDK Directory API. Body: `{city, givenName?,
+familyName?}`. Returns `{email, orgUnitPath}` on 201.
+
+**Do not port this module to R.** Worker logic is otherwise being migrated into
+the R package — the removed `/analytics/rum` route is the pattern, where
+`rum_collect_analytics()` replaced a worker endpoint outright. `workspace.js` is
+the documented exception, and the reason is the credential rather than the code.
+
+R could do all of it: `openssl::signature_create(data, sha256, key)` produces
+exactly the RSASSA-PKCS1-v1_5 signature RS256 needs, so the flow is about forty
+lines of httr2. But porting it moves `WORKSPACE_SA_PRIVATE_KEY` to where the R
+code runs — a GitHub Actions runner. That key impersonates a Workspace admin and
+can create accounts in the domain. As a Cloudflare secret it is unreachable from
+a leaked GitHub token; the most a caller holding `JINX_API_KEY` can do is ask for
+a mailbox whose name survives validation.
+
+Code location follows key location. If the key ever moves into a protected
+GitHub environment as a deliberate decision, the module can follow it —
+`chapter_mailbox_create()` is already the only caller and its signature would not
+change.
+
+Two properties worth preserving if you touch it:
+
+- Names are validated **after** transliteration, so `Admin!`, `ADMIN` and
+  `" jinx "` all normalise to a reserved address and are refused before a token
+  exchange is spent.
+- The generated password is **never returned to the caller**. The Directory API
+  requires one at creation, but returning it would put a live credential into CI
+  logs and issue comments. The account is created with
+  `changePasswordAtNextLogin` and handover happens from the Admin console.
 
 ### URL shortener
 
@@ -144,12 +179,17 @@ To add a workspace: set its team ID as a worker secret, redeploy, run `/slack/in
 | `AIRTABLE_WEBHOOK_SECRET`        | Verify Airtable webhook requests                                        |
 | `AIRTABLE_API_KEY`               | Airtable PAT — scope defines the base allowlist (see below)             |
 | `JINX_API_KEY`                   | Bearer key gating `/ai/generate` for other repos                        |
+| `WORKSPACE_SA_PRIVATE_KEY`       | Google service account PKCS8 key — provisions chapter mailboxes         |
+| `WORKSPACE_SA_EMAIL`             | Service account address; the JWT `iss` claim                            |
 
 ### Worker vars (in `wrangler.jsonc`)
 
 | Var           | Purpose                           |
 | ------------- | --------------------------------- |
 | `GITHUB_REPO` | Target repo for GitHub dispatches |
+| `WORKSPACE_SUBJECT` | Delegated admin impersonated for mailbox creation; its `/Chapters`-scoped role bounds what the impersonation can do |
+| `WORKSPACE_DOMAIN` | Mail domain for chapter mailboxes |
+| `WORKSPACE_OU` | Organisational unit chapter mailboxes are created in |
 
 ## Code style
 

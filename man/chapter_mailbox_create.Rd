@@ -36,6 +36,13 @@ worker API key: the most a stolen CI token can do is ask for a
 mailbox whose name passes the worker's validation.
 }
 \details{
+The signing and Directory API calls could be done here in R - \code{openssl}
+signs RS256 perfectly well - but that would require the service account
+key on the Actions runner that runs this function, which is the thing
+the current arrangement avoids. \code{worker/src/workspace.js} carries the
+full reasoning; it is a deliberate exception to moving worker logic
+into this package.
+
 The generated password is never returned. The account is created with
 change-password-at-next-login set, and the onboarding team issues the
 handover from the Admin console.
