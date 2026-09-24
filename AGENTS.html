@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", function() {
 /ai/generate        POST   Workers AI passthrough for other RLadies+ repos
 /links/shorten      POST   Create (or reuse) a l.rladies.org short link
 /workspace/mailbox  POST   Create a chapter mailbox in Google Workspace</code></pre>
-<p>Routes follow <code>/&lt;service&gt;/&lt;action&gt;</code> — never flat paths like <code>/slack-interact</code> or <code>/airtable-webhook</code>. Slack-side endpoints all run through <code>verifySlackSignature()</code> in the router; <code>/airtable/webhook</code> uses its own <code>x-airtable-secret</code> header; <code>/ai/generate</code>, <code>/links/shorten</code> and <code>/workspace/mailbox</code> are gated by a shared <code>JINX_API_KEY</code> bearer token (constant-time compared, <code>worker/src/api-auth.js</code>) — see the README’s “HTTP API for other repos” section for the request/response contract of each.</p>
+<p>Routes follow <code>/&lt;service&gt;/&lt;action&gt;</code> — never flat paths like <code>/slack-interact</code> or <code>/airtable-webhook</code>. Slack-side endpoints all run through <code>verifySlackSignature()</code> in the router; <code>/airtable/webhook</code> uses its own <code>x-airtable-secret</code> header; <code>/ai/generate</code>, <code>/links/shorten</code> and <code>/workspace/mailbox</code> are gated by a shared <code>JINX_WORKER_API_KEY</code> bearer token (constant-time compared, <code>worker/src/api-auth.js</code>) — see the README’s “HTTP API for other repos” section for the request/response contract of each.</p>
 <p>(An earlier <code>/analytics/rum</code> route proxying Cloudflare Web Analytics was removed — <code><a href="reference/rum_collect_analytics.html">rum_collect_analytics()</a></code>, already exported from the <code>jinx</code> R package, covers that need directly as an R dependency instead.)</p>
 <p>The same worker also answers <code>GET &lt;code&gt;</code> on a second hostname, <code>l.rladies.org</code> (routed via the <code>routes</code> entry in <code>wrangler.jsonc</code>, not the <code>/&lt;service&gt;/&lt;action&gt;</code> API above), 301-redirecting to the short link’s target or <code>404</code> if the code is unknown. See “URL shortener” below.</p>
 </div>
@@ -131,7 +131,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <h3 id="chapter-mailbox-provisioning--stays-in-javascript">Chapter mailbox provisioning — stays in JavaScript<a class="anchor" aria-label="anchor" href="#chapter-mailbox-provisioning--stays-in-javascript"></a></h3>
 <p><code>POST /workspace/mailbox</code> creates <code>&lt;city&gt;@rladies.org</code> in the <code>/Chapters</code> organisational unit via the Admin SDK Directory API. Body: <code>{city, givenName?, familyName?}</code>. Returns <code>{email, orgUnitPath}</code> on 201.</p>
 <p><strong>Do not port this module to R.</strong> Worker logic is otherwise being migrated into the R package — the removed <code>/analytics/rum</code> route is the pattern, where <code><a href="reference/rum_collect_analytics.html">rum_collect_analytics()</a></code> replaced a worker endpoint outright. <code>workspace.js</code> is the documented exception, and the reason is the credential rather than the code.</p>
-<p>R could do all of it: <code>openssl::signature_create(data, sha256, key)</code> produces exactly the RSASSA-PKCS1-v1_5 signature RS256 needs, so the flow is about forty lines of httr2. But porting it moves <code>WORKSPACE_SA_PRIVATE_KEY</code> to where the R code runs — a GitHub Actions runner. That key impersonates a Workspace admin and can create accounts in the domain. As a Cloudflare secret it is unreachable from a leaked GitHub token; the most a caller holding <code>JINX_API_KEY</code> can do is ask for a mailbox whose name survives validation.</p>
+<p>R could do all of it: <code>openssl::signature_create(data, sha256, key)</code> produces exactly the RSASSA-PKCS1-v1_5 signature RS256 needs, so the flow is about forty lines of httr2. But porting it moves <code>WORKSPACE_SA_PRIVATE_KEY</code> to where the R code runs — a GitHub Actions runner. That key impersonates a Workspace admin and can create accounts in the domain. As a Cloudflare secret it is unreachable from a leaked GitHub token; the most a caller holding <code>JINX_WORKER_API_KEY</code> can do is ask for a mailbox whose name survives validation.</p>
 <p>Code location follows key location. If the key ever moves into a protected GitHub environment as a deliberate decision, the module can follow it — <code><a href="reference/chapter_mailbox_create.html">chapter_mailbox_create()</a></code> is already the only caller and its signature would not change.</p>
 <p>Two properties worth preserving if you touch it:</p>
 <ul><li>Names are validated <strong>after</strong> transliteration, so <code>Admin!</code>, <code>ADMIN</code> and <code>" jinx "</code> all normalise to a reserved address and are refused before a token exchange is spent.</li>
@@ -189,7 +189,13 @@ document.addEventListener("DOMContentLoaded", function() {
 <p>To add a workspace: set its team ID as a worker secret, redeploy, run <code>/slack/install</code> from that workspace.</p>
 </div>
 <div class="section level3">
-<h3 id="worker-secrets-via-wrangler-secret-put">Worker secrets (via <code>wrangler secret put</code>)<a class="anchor" aria-label="anchor" href="#worker-secrets-via-wrangler-secret-put"></a></h3>
+<h3 id="worker-secrets">Worker secrets<a class="anchor" aria-label="anchor" href="#worker-secrets"></a></h3>
+<p><strong>Use <code>wrangler versions secret put</code>, not <code>wrangler secret put</code>.</strong> The worker uses Worker versions, and <code>infra-wrangler-canary.yml</code> uploads canary versions without deploying them — so the latest version is almost never the deployed one, and plain <code>secret put</code> refuses with “the latest version of your Worker isn’t currently deployed”.</p>
+<p><code>versions secret put</code> writes the secret into a new, undeployed version; live traffic is untouched until a deploy inherits it. Do <strong>not</strong> run <code>wrangler versions deploy</code> to make it live: the new version descends from whatever the latest version was, which is usually a canary build. Deploy main instead, via <code>Infra · Deploy Worker</code> (it has a <code>workflow_dispatch</code>).</p>
+<p>Check the account before writing anything:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="bu">export</span> <span class="va">CLOUDFLARE_API_TOKEN</span><span class="op">=</span><span class="st">"</span><span class="va">$(</span><span class="ex">op</span> item get <span class="st">'CLOUDFLARE API'</span> <span class="at">--account</span> r-ladiesglobal.1password.com <span class="at">--fields</span> label=<span class="st">'API TOKEN'</span> <span class="at">--reveal</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="ex">npx</span> wrangler whoami   <span class="co"># must say RLadies+, not a personal account</span></span></code></pre></div>
+<p>Wrangler’s non-interactive fallback answers <strong>yes</strong> to “no Worker called jinx, create one?”, so running these against the wrong account silently creates a stray Worker and uploads the secret to it.</p>
 <table class="table"><colgroup><col width="31%"><col width="68%"></colgroup><thead><tr><th>Secret</th>
 <th>Purpose</th>
 </tr></thead><tbody><tr><td><code>SLACK_SIGNING_SECRET</code></td>
@@ -208,12 +214,58 @@ document.addEventListener("DOMContentLoaded", function() {
 <td>Verify Airtable webhook requests</td>
 </tr><tr><td><code>AIRTABLE_API_KEY</code></td>
 <td>Airtable PAT — scope defines the base allowlist (see below)</td>
-</tr><tr><td><code>JINX_API_KEY</code></td>
-<td>Bearer key gating <code>/ai/generate</code> for other repos</td>
+</tr><tr><td><code>JINX_WORKER_API_KEY</code></td>
+<td>Bearer key gating the worker’s HTTP API for other repos</td>
 </tr><tr><td><code>WORKSPACE_SA_PRIVATE_KEY</code></td>
 <td>Google service account PKCS8 key — provisions chapter mailboxes</td>
 </tr><tr><td><code>WORKSPACE_SA_EMAIL</code></td>
 <td>Service account address; the JWT <code>iss</code> claim</td>
+</tr></tbody></table></div>
+<div class="section level3">
+<h3 id="where-each-credential-lives">Where each credential lives<a class="anchor" aria-label="anchor" href="#where-each-credential-lives"></a></h3>
+<p>1Password (<code>r-ladiesglobal.1password.com</code>). Go by this table, not by what a field is called - the labels and the env var names do not all line up:</p>
+<table class="table"><colgroup><col width="26%"><col width="53%"><col width="19%"></colgroup><thead><tr><th>Env var</th>
+<th>1Password item</th>
+<th>Field</th>
+</tr></thead><tbody><tr><td><code>JINX_API_KEY</code></td>
+<td>Jinx</td>
+<td><code>CF_WORKER_KEY</code></td>
+</tr><tr><td><code>AIRTABLE_WEBHOOK_SECRET</code></td>
+<td>Jinx</td>
+<td><code>AIRTABLE_WEBHOOK_SECRET</code></td>
+</tr><tr><td>
+<code>CLOUDFLARE_API_TOKEN</code> (local wrangler)</td>
+<td>CLOUDFLARE API</td>
+<td><code>API TOKEN</code></td>
+</tr><tr><td>
+<code>CLOUDFLARE_API_TOKEN</code> (CI deploy)</td>
+<td>CLOUDFLARE API</td>
+<td><code>JINX API TOKEN</code></td>
+</tr></tbody></table><p>Two traps:</p>
+<ul><li>
+<strong><code>JINX API TOKEN</code> is a Cloudflare account token, not the worker bearer key.</strong> Despite the name it authenticates wrangler to the RLadies+ account and returns 401 against the worker’s own API.</li>
+<li>
+<strong>The worker bearer key is <code>CF_WORKER_KEY</code></strong>, which is the reverse naming: a Cloudflare-sounding label for the key the <em>worker code</em> checks, set as <code>JINX_API_KEY</code> in both the worker and the GitHub repo secrets.</li>
+</ul><p>Check a candidate worker key without creating anything - a reserved name is refused before any Google credential is touched:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-X</span> POST https://jinx.rladies.org/workspace/mailbox <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">"Authorization: Bearer </span><span class="va">$TOK</span><span class="st">"</span> <span class="at">-H</span> <span class="st">"Content-Type: application/json"</span> <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">'{"city":"admin"}'</span> <span class="at">-w</span> <span class="st">"\nHTTP %{http_code}\n"</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co"># 401 = wrong key; 400 {"error":"admin is a reserved address"} = correct key</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="github-repo-secrets-on-rladiesjinx">GitHub repo secrets (on <code>rladies/jinx</code>)<a class="anchor" aria-label="anchor" href="#github-repo-secrets-on-rladiesjinx"></a></h3>
+<table class="table"><colgroup><col width="46%"><col width="53%"></colgroup><thead><tr><th>Secret</th>
+<th>Purpose</th>
+</tr></thead><tbody><tr><td><code>JINX_API_KEY</code></td>
+<td>Lets R call the worker’s authenticated API from Actions</td>
+</tr><tr><td>
+<code>GOOGLE_CLIENT_ID</code> / <code>GOOGLE_CLIENT_SECRET</code>
+</td>
+<td>OAuth client for <code>jinx@rladies.org</code>
+</td>
+</tr><tr><td><code>GMAIL_REFRESH_TOKEN</code></td>
+<td>
+<code>gmail.send</code> refresh token for <code>jinx@rladies.org</code> - that account only, no domain-wide delegation</td>
 </tr></tbody></table></div>
 <div class="section level3">
 <h3 id="worker-vars-in-wranglerjsonc">Worker vars (in <code>wrangler.jsonc</code>)<a class="anchor" aria-label="anchor" href="#worker-vars-in-wranglerjsonc"></a></h3>
@@ -322,22 +374,22 @@ vignettes/            # jinx.Rmd, workflows.Rmd, slack-app.Rmd, articles/archite
 </div>
 <div class="section level2">
 <h2 id="testing">Testing<a class="anchor" aria-label="anchor" href="#testing"></a></h2>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">test</span><span class="op">(</span><span class="op">)</span>    <span class="co"># 330+ tests</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">check</span><span class="op">(</span><span class="op">)</span>   <span class="co"># must pass with 0 errors, 0 warnings</span></span></code></pre></div>
 <p>Run via zsh to ensure PATH includes <code>/opt/homebrew/bin</code> (pandoc, gh).</p>
 <div class="section level3">
 <h3 id="worker-tests">Worker tests<a class="anchor" aria-label="anchor" href="#worker-tests"></a></h3>
 <p>Worker JS has its own vitest suite (no R involved):</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="bu">cd</span> worker <span class="kw">&amp;&amp;</span> <span class="ex">npm</span> ci <span class="kw">&amp;&amp;</span> <span class="ex">npm</span> test     <span class="co"># unit tests, no network</span></span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="bu">cd</span> worker <span class="kw">&amp;&amp;</span> <span class="ex">npm</span> run smoke           <span class="co"># hits real Slack + deployed worker</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="bu">cd</span> worker <span class="kw">&amp;&amp;</span> <span class="ex">npm</span> ci <span class="kw">&amp;&amp;</span> <span class="ex">npm</span> test     <span class="co"># unit tests, no network</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="bu">cd</span> worker <span class="kw">&amp;&amp;</span> <span class="ex">npm</span> run smoke           <span class="co"># hits real Slack + deployed worker</span></span></code></pre></div>
 <p>The vitest suite runs as a prereq of <code>infra-deploy-worker.yml</code>, so a failing test blocks deploy. The smoke test runs daily and after every successful deploy via <code>infra-slack-smoke.yml</code>, and posts to <code>SLACK_HEALTHCHECK_CHANNEL</code> on failure.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="pkgdown">pkgdown<a class="anchor" aria-label="anchor" href="#pkgdown"></a></h2>
 <p><code>_pkgdown.yml</code> defines reference sections grouped by module. Build with:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>Deployed to GitHub Pages via <code>.github/workflows/infra-pkgdown.yml</code>.</p>
 </div>

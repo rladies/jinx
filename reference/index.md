@@ -80,6 +80,10 @@ Chapter mailbox provisioning
 
 - [`chapter_mailbox_create()`](https://rladies.github.io/jinx/reference/chapter_mailbox_create.md)
   : Create a chapter mailbox in Google Workspace
+- [`chapter_email_provision()`](https://rladies.github.io/jinx/reference/chapter_email_provision.md)
+  : Provision a chapter mailbox once a human has approved it
+- [`chapter_email_approvals()`](https://rladies.github.io/jinx/reference/chapter_email_approvals.md)
+  : Find the approvals on a chapter onboarding issue
 
 ## Directory
 

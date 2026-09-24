@@ -56,10 +56,10 @@ Routes follow `/<service>/<action>` — never flat paths like
 `/slack-interact` or `/airtable-webhook`. Slack-side endpoints all run
 through `verifySlackSignature()` in the router; `/airtable/webhook` uses
 its own `x-airtable-secret` header; `/ai/generate`, `/links/shorten` and
-`/workspace/mailbox` are gated by a shared `JINX_API_KEY` bearer token
-(constant-time compared, `worker/src/api-auth.js`) — see the README’s
-“HTTP API for other repos” section for the request/response contract of
-each.
+`/workspace/mailbox` are gated by a shared `JINX_WORKER_API_KEY` bearer
+token (constant-time compared, `worker/src/api-auth.js`) — see the
+README’s “HTTP API for other repos” section for the request/response
+contract of each.
 
 (An earlier `/analytics/rum` route proxying Cloudflare Web Analytics was
 removed —
@@ -93,8 +93,8 @@ flow is about forty lines of httr2. But porting it moves
 `WORKSPACE_SA_PRIVATE_KEY` to where the R code runs — a GitHub Actions
 runner. That key impersonates a Workspace admin and can create accounts
 in the domain. As a Cloudflare secret it is unreachable from a leaked
-GitHub token; the most a caller holding `JINX_API_KEY` can do is ask for
-a mailbox whose name survives validation.
+GitHub token; the most a caller holding `JINX_WORKER_API_KEY` can do is
+ask for a mailbox whose name survives validation.
 
 Code location follows key location. If the key ever moves into a
 protected GitHub environment as a deliberate decision, the module can
@@ -224,7 +224,31 @@ team’s install attempt is rejected with HTTP 403 and never reaches KV.
 To add a workspace: set its team ID as a worker secret, redeploy, run
 `/slack/install` from that workspace.
 
-### Worker secrets (via `wrangler secret put`)
+### Worker secrets
+
+**Use `wrangler versions secret put`, not `wrangler secret put`.** The
+worker uses Worker versions, and `infra-wrangler-canary.yml` uploads
+canary versions without deploying them — so the latest version is almost
+never the deployed one, and plain `secret put` refuses with “the latest
+version of your Worker isn’t currently deployed”.
+
+`versions secret put` writes the secret into a new, undeployed version;
+live traffic is untouched until a deploy inherits it. Do **not** run
+`wrangler versions deploy` to make it live: the new version descends
+from whatever the latest version was, which is usually a canary build.
+Deploy main instead, via `Infra · Deploy Worker` (it has a
+`workflow_dispatch`).
+
+Check the account before writing anything:
+
+``` bash
+export CLOUDFLARE_API_TOKEN="$(op item get 'CLOUDFLARE API' --account r-ladiesglobal.1password.com --fields label='API TOKEN' --reveal)"
+npx wrangler whoami   # must say RLadies+, not a personal account
+```
+
+Wrangler’s non-interactive fallback answers **yes** to “no Worker called
+jinx, create one?”, so running these against the wrong account silently
+creates a stray Worker and uploads the secret to it.
 
 | Secret | Purpose |
 |----|----|
@@ -236,9 +260,50 @@ To add a workspace: set its team ID as a worker secret, redeploy, run
 | `SLACK_COMMUNITY_INVITE_CHANNEL` | Channel ID in the community workspace where invite cards are posted |
 | `AIRTABLE_WEBHOOK_SECRET` | Verify Airtable webhook requests |
 | `AIRTABLE_API_KEY` | Airtable PAT — scope defines the base allowlist (see below) |
-| `JINX_API_KEY` | Bearer key gating `/ai/generate` for other repos |
+| `JINX_WORKER_API_KEY` | Bearer key gating the worker’s HTTP API for other repos |
 | `WORKSPACE_SA_PRIVATE_KEY` | Google service account PKCS8 key — provisions chapter mailboxes |
 | `WORKSPACE_SA_EMAIL` | Service account address; the JWT `iss` claim |
+
+### Where each credential lives
+
+1Password (`r-ladiesglobal.1password.com`). Go by this table, not by
+what a field is called - the labels and the env var names do not all
+line up:
+
+| Env var | 1Password item | Field |
+|----|----|----|
+| `JINX_API_KEY` | Jinx | `CF_WORKER_KEY` |
+| `AIRTABLE_WEBHOOK_SECRET` | Jinx | `AIRTABLE_WEBHOOK_SECRET` |
+| `CLOUDFLARE_API_TOKEN` (local wrangler) | CLOUDFLARE API | `API TOKEN` |
+| `CLOUDFLARE_API_TOKEN` (CI deploy) | CLOUDFLARE API | `JINX API TOKEN` |
+
+Two traps:
+
+- **`JINX API TOKEN` is a Cloudflare account token, not the worker
+  bearer key.** Despite the name it authenticates wrangler to the
+  RLadies+ account and returns 401 against the worker’s own API.
+- **The worker bearer key is `CF_WORKER_KEY`**, which is the reverse
+  naming: a Cloudflare-sounding label for the key the *worker code*
+  checks, set as `JINX_API_KEY` in both the worker and the GitHub repo
+  secrets.
+
+Check a candidate worker key without creating anything - a reserved name
+is refused before any Google credential is touched:
+
+``` bash
+curl -s -X POST https://jinx.rladies.org/workspace/mailbox \
+  -H "Authorization: Bearer $TOK" -H "Content-Type: application/json" \
+  -d '{"city":"admin"}' -w "\nHTTP %{http_code}\n"
+# 401 = wrong key; 400 {"error":"admin is a reserved address"} = correct key
+```
+
+### GitHub repo secrets (on `rladies/jinx`)
+
+| Secret | Purpose |
+|----|----|
+| `JINX_API_KEY` | Lets R call the worker’s authenticated API from Actions |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | OAuth client for `jinx@rladies.org` |
+| `GMAIL_REFRESH_TOKEN` | `gmail.send` refresh token for `jinx@rladies.org` - that account only, no domain-wide delegation |
 
 ### Worker vars (in `wrangler.jsonc`)
 

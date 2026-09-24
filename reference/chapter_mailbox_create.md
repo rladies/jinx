@@ -14,7 +14,7 @@ chapter_mailbox_create(
   given_name = NULL,
   family_name = NULL,
   base_url = "https://jinx.rladies.org",
-  api_key = Sys.getenv("JINX_API_KEY")
+  api_key = worker_api_key()
 )
 ```
 
@@ -39,7 +39,8 @@ chapter_mailbox_create(
 
 - api_key:
 
-  Worker API key. Defaults to the `JINX_API_KEY` environment variable.
+  Worker API key. Defaults to the `JINX_WORKER_API_KEY` environment
+  variable, falling back to the older `JINX_API_KEY`.
 
 ## Value
 

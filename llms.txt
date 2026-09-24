@@ -141,10 +141,10 @@ for AI-drafted report prose.
 | `POST /links/shorten` | Creates (or reuses) a `l.rladies.org` short link. Body: `{url, slug?}`. Returns `{code, url, short_url}`. Re-shortening a URL that already has a short link returns the existing one instead of minting a duplicate. |
 | `POST /workspace/mailbox` | Creates a chapter mailbox `<city>@rladies.org` in the `/Chapters` OU. Body: `{city, givenName?, familyName?}`. Returns `{email, orgUnitPath}`. Names are validated after transliteration so reserved addresses cannot be smuggled through; the generated password is never returned. |
 
-Both routes require `Authorization: Bearer <JINX_API_KEY>` — ask a Jinx
-admin for the key rather than requesting a Cloudflare token of your own.
-A missing or wrong key gets a `401`. See `.github/AGENTS.md`’s “Endpoint
-conventions” and “Worker secrets” sections for the underlying
+All routes require `Authorization: Bearer <JINX_WORKER_API_KEY>` — ask a
+Jinx admin for the key rather than requesting a Cloudflare token of your
+own. A missing or wrong key gets a `401`. See `.github/AGENTS.md`’s
+“Endpoint conventions” and “Worker secrets” sections for the underlying
 implementation and secret names.
 
 Cloudflare Web Analytics doesn’t need an HTTP route:
@@ -268,6 +268,10 @@ Chapter mailbox provisioning
 
 - [`chapter_mailbox_create()`](https://rladies.github.io/jinx/reference/chapter_mailbox_create.md)
   : Create a chapter mailbox in Google Workspace
+- [`chapter_email_provision()`](https://rladies.github.io/jinx/reference/chapter_email_provision.md)
+  : Provision a chapter mailbox once a human has approved it
+- [`chapter_email_approvals()`](https://rladies.github.io/jinx/reference/chapter_email_approvals.md)
+  : Find the approvals on a chapter onboarding issue
 
 ## Directory
 
