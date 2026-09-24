@@ -166,7 +166,30 @@ Jinx is distribution-enabled in Slack so it can OAuth into RLadies+'s two worksp
 
 To add a workspace: set its team ID as a worker secret, redeploy, run `/slack/install` from that workspace.
 
-### Worker secrets (via `wrangler secret put`)
+### Worker secrets
+
+**Use `wrangler versions secret put`, not `wrangler secret put`.** The worker uses
+Worker versions, and `infra-wrangler-canary.yml` uploads canary versions without
+deploying them — so the latest version is almost never the deployed one, and
+plain `secret put` refuses with "the latest version of your Worker isn't
+currently deployed".
+
+`versions secret put` writes the secret into a new, undeployed version; live
+traffic is untouched until a deploy inherits it. Do **not** run
+`wrangler versions deploy` to make it live: the new version descends from
+whatever the latest version was, which is usually a canary build. Deploy main
+instead, via `Infra · Deploy Worker` (it has a `workflow_dispatch`).
+
+Check the account before writing anything:
+
+```bash
+export CLOUDFLARE_API_TOKEN="$(op item get 'CLOUDFLARE API' --account r-ladiesglobal.1password.com --fields label='API TOKEN' --reveal)"
+npx wrangler whoami   # must say RLadies+, not a personal account
+```
+
+Wrangler's non-interactive fallback answers **yes** to "no Worker called jinx,
+create one?", so running these against the wrong account silently creates a
+stray Worker and uploads the secret to it.
 
 | Secret                           | Purpose                                                                 |
 | -------------------------------- | ----------------------------------------------------------------------- |
