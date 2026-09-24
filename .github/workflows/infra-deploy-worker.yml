@@ -13,6 +13,11 @@ on:
       - "worker/**"
       - "wrangler.jsonc"
       - ".github/workflows/infra-deploy-worker.yml"
+  # Deploying is otherwise only reachable by changing worker code. Secrets
+  # written with `wrangler versions secret put` sit in an undeployed version
+  # until the next deploy inherits them, so there has to be a way to deploy
+  # main on demand without inventing a commit.
+  workflow_dispatch: {}
 
 permissions:
   contents: read
