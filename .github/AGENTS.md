@@ -205,6 +205,40 @@ stray Worker and uploads the secret to it.
 | `WORKSPACE_SA_PRIVATE_KEY`       | Google service account PKCS8 key — provisions chapter mailboxes         |
 | `WORKSPACE_SA_EMAIL`             | Service account address; the JWT `iss` claim                            |
 
+### Where each credential lives
+
+1Password (`r-ladiesglobal.1password.com`). The field names are not
+self-explanatory, so go by this table rather than by what a field is called:
+
+| Env var | 1Password item | Field |
+| ------- | -------------- | ----- |
+| `JINX_API_KEY` | JINX Passwords | `API KEY` |
+| `CLOUDFLARE_API_TOKEN` (local wrangler) | CLOUDFLARE API | `API TOKEN` |
+| `CLOUDFLARE_API_TOKEN` (CI deploy) | CLOUDFLARE API | `JINX API TOKEN` |
+
+The trap: **`JINX API TOKEN` is a Cloudflare account token, not the worker
+bearer key.** Despite the name it authenticates wrangler to the RLadies+
+account and returns 401 against the worker's own API. The worker bearer key is
+`API KEY` on the *JINX Passwords* item.
+
+Check a candidate worker key without creating anything - a reserved name is
+refused before any Google credential is touched:
+
+```bash
+curl -s -X POST https://jinx.rladies.org/workspace/mailbox \
+  -H "Authorization: Bearer $TOK" -H "Content-Type: application/json" \
+  -d '{"city":"admin"}' -w "\nHTTP %{http_code}\n"
+# 401 = wrong key; 400 {"error":"admin is a reserved address"} = correct key
+```
+
+### GitHub repo secrets (on `rladies/jinx`)
+
+| Secret | Purpose |
+| ------ | ------- |
+| `JINX_API_KEY` | Lets R call the worker's authenticated API from Actions |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | OAuth client for `jinx@rladies.org` |
+| `GMAIL_REFRESH_TOKEN` | `gmail.send` refresh token for `jinx@rladies.org` - that account only, no domain-wide delegation |
+
 ### Worker vars (in `wrangler.jsonc`)
 
 | Var           | Purpose                           |
