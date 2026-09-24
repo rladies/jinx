@@ -4,7 +4,7 @@ describe("chapter_mailbox_create", {
   it("refuses to run without an API key", {
     expect_error(
       chapter_mailbox_create("Oslo", api_key = ""),
-      "JINX_API_KEY is not set"
+      "JINX_WORKER_API_KEY is not set"
     )
   })
 
@@ -50,5 +50,28 @@ describe("chapter_mailbox_create", {
       body = list()
     )))
     expect_error(chapter_mailbox_create("Oslo", api_key = "k"), "502")
+  })
+})
+
+describe("worker_api_key", {
+  it("prefers the current variable name", {
+    withr::with_envvar(
+      c(JINX_WORKER_API_KEY = "new", JINX_API_KEY = "old"),
+      expect_identical(worker_api_key(), "new")
+    )
+  })
+
+  it("still honours the old name during the rename", {
+    withr::with_envvar(
+      c(JINX_WORKER_API_KEY = "", JINX_API_KEY = "old"),
+      expect_identical(worker_api_key(), "old")
+    )
+  })
+
+  it("is empty when neither is set", {
+    withr::with_envvar(
+      c(JINX_WORKER_API_KEY = "", JINX_API_KEY = ""),
+      expect_identical(worker_api_key(), "")
+    )
   })
 })

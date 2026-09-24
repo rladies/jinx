@@ -48,7 +48,7 @@ The Slack bridge runs as a Cloudflare Worker at `https://jinx.rladies.workers.de
 /workspace/mailbox  POST   Create a chapter mailbox in Google Workspace
 ```
 
-Routes follow `/<service>/<action>` — never flat paths like `/slack-interact` or `/airtable-webhook`. Slack-side endpoints all run through `verifySlackSignature()` in the router; `/airtable/webhook` uses its own `x-airtable-secret` header; `/ai/generate`, `/links/shorten` and `/workspace/mailbox` are gated by a shared `JINX_API_KEY` bearer token (constant-time compared, `worker/src/api-auth.js`) — see the README's "HTTP API for other repos" section for the request/response contract of each.
+Routes follow `/<service>/<action>` — never flat paths like `/slack-interact` or `/airtable-webhook`. Slack-side endpoints all run through `verifySlackSignature()` in the router; `/airtable/webhook` uses its own `x-airtable-secret` header; `/ai/generate`, `/links/shorten` and `/workspace/mailbox` are gated by a shared `JINX_WORKER_API_KEY` bearer token (constant-time compared, `worker/src/api-auth.js`) — see the README's "HTTP API for other repos" section for the request/response contract of each.
 
 (An earlier `/analytics/rum` route proxying Cloudflare Web Analytics was removed — `rum_collect_analytics()`, already exported from the `jinx` R package, covers that need directly as an R dependency instead.)
 
@@ -73,7 +73,7 @@ exactly the RSASSA-PKCS1-v1_5 signature RS256 needs, so the flow is about forty
 lines of httr2. But porting it moves `WORKSPACE_SA_PRIVATE_KEY` to where the R
 code runs — a GitHub Actions runner. That key impersonates a Workspace admin and
 can create accounts in the domain. As a Cloudflare secret it is unreachable from
-a leaked GitHub token; the most a caller holding `JINX_API_KEY` can do is ask for
+a leaked GitHub token; the most a caller holding `JINX_WORKER_API_KEY` can do is ask for
 a mailbox whose name survives validation.
 
 Code location follows key location. If the key ever moves into a protected
@@ -201,7 +201,7 @@ stray Worker and uploads the secret to it.
 | `SLACK_COMMUNITY_INVITE_CHANNEL` | Channel ID in the community workspace where invite cards are posted     |
 | `AIRTABLE_WEBHOOK_SECRET`        | Verify Airtable webhook requests                                        |
 | `AIRTABLE_API_KEY`               | Airtable PAT — scope defines the base allowlist (see below)             |
-| `JINX_API_KEY`                   | Bearer key gating `/ai/generate` for other repos                        |
+| `JINX_WORKER_API_KEY`            | Bearer key gating the worker's HTTP API for other repos                 |
 | `WORKSPACE_SA_PRIVATE_KEY`       | Google service account PKCS8 key — provisions chapter mailboxes         |
 | `WORKSPACE_SA_EMAIL`             | Service account address; the JWT `iss` claim                            |
 

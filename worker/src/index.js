@@ -6,7 +6,11 @@ import {
 } from "./airtable-invite.js";
 import { slack_command_handle } from "./slash-command.js";
 import { slack_signature_verify } from "./slack-api.js";
-import { bearer_token_extract, api_key_verify } from "./api-auth.js";
+import {
+  bearer_token_extract,
+  api_key_verify,
+  worker_api_key,
+} from "./api-auth.js";
 import { ai_generate_handle } from "./ai-api.js";
 import {
   links_shorten_handle,
@@ -27,7 +31,7 @@ const SLACK_ROUTES = {
 };
 
 // Authenticated HTTP API for other RLadies+ repos -- see docs/AGENTS.md's
-// "HTTP API for other repos" section. Gated by JINX_API_KEY rather than
+// "HTTP API for other repos" section. Gated by JINX_WORKER_API_KEY rather than
 // Slack's per-route signature scheme, since these callers aren't Slack.
 const API_ROUTES = {
   "/ai/generate": ai_generate_handle,
@@ -84,7 +88,7 @@ async function route(request, env, ctx) {
   const apiHandler = API_ROUTES[url.pathname];
   if (apiHandler) {
     const provided = bearer_token_extract(request);
-    if (!(await api_key_verify(env.JINX_API_KEY, provided))) {
+    if (!(await api_key_verify(worker_api_key(env), provided))) {
       console.warn(`Rejected API request to ${url.pathname}: bad or missing key`);
       return new Response("Unauthorized", { status: 401 });
     }

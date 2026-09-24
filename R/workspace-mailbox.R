@@ -22,8 +22,8 @@
 #' @param given_name Given name on the account. Defaults to `"RLadies+"`.
 #' @param family_name Family name on the account. Defaults to the city.
 #' @param base_url Worker base URL.
-#' @param api_key Worker API key. Defaults to the `JINX_API_KEY`
-#'   environment variable.
+#' @param api_key Worker API key. Defaults to the `JINX_WORKER_API_KEY`
+#'   environment variable, falling back to the older `JINX_API_KEY`.
 #' @return The created address (invisibly).
 #' @export
 chapter_mailbox_create <- function(
@@ -31,10 +31,10 @@ chapter_mailbox_create <- function(
   given_name = NULL,
   family_name = NULL,
   base_url = "https://jinx.rladies.org",
-  api_key = Sys.getenv("JINX_API_KEY")
+  api_key = worker_api_key()
 ) {
   if (!nzchar(api_key)) {
-    cli::cli_abort("JINX_API_KEY is not set")
+    cli::cli_abort("JINX_WORKER_API_KEY is not set")
   }
 
   body <- list(city = city)
@@ -69,4 +69,22 @@ chapter_mailbox_create <- function(
 
   cli::cli_alert_success("Created mailbox {.val {parsed$email}}")
   invisible(parsed$email)
+}
+
+#' The worker API key from the environment
+#'
+#' `JINX_API_KEY` read as "some key belonging to jinx", of which there are
+#' several, rather than "the key that opens jinx's worker API". The older
+#' name is still honoured so that renaming the secret and deploying the
+#' rename need not happen in the same instant.
+#'
+#' @return The key, or `""` when neither variable is set.
+#' @keywords internal
+#' @noRd
+worker_api_key <- function() {
+  key <- Sys.getenv("JINX_WORKER_API_KEY")
+  if (nzchar(key)) {
+    return(key)
+  }
+  Sys.getenv("JINX_API_KEY")
 }

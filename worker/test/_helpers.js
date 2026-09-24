@@ -119,7 +119,7 @@ export function makeEnv(overrides = {}) {
     AIRTABLE_API_KEY: "test-airtable-key",
     GITHUB_REPO: "rladies/jinx",
     GITHUB_TOKEN: "test-gh-token",
-    JINX_API_KEY: "test-jinx-api-key",
+    JINX_WORKER_API_KEY: "test-jinx-api-key",
     SLACK_ALERTS_CHANNEL: "C_ALERTS",
     AIRTABLE_INVITE_BASE: "appTEST",
     AIRTABLE_INVITE_TABLE: "tblTEST",
