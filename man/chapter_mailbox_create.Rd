@@ -9,7 +9,7 @@ chapter_mailbox_create(
   given_name = NULL,
   family_name = NULL,
   base_url = "https://jinx.rladies.org",
-  api_key = Sys.getenv("JINX_API_KEY")
+  api_key = worker_api_key()
 )
 }
 \arguments{
@@ -22,8 +22,8 @@ and refuses reserved addresses.}
 
 \item{base_url}{Worker base URL.}
 
-\item{api_key}{Worker API key. Defaults to the \code{JINX_API_KEY}
-environment variable.}
+\item{api_key}{Worker API key. Defaults to the \code{JINX_WORKER_API_KEY}
+environment variable, falling back to the older \code{JINX_API_KEY}.}
 }
 \value{
 The created address (invisibly).

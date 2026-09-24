@@ -1,6 +1,6 @@
 // Thin, generic passthrough to the `AI` Workers AI binding (wrangler.jsonc).
 // Deliberately does no prompt- or schema-specific logic -- the caller (any
-// RLadies+ repo with a JINX_API_KEY) supplies the model, messages, and an
+// RLadies+ repo with a JINX_WORKER_API_KEY) supplies the model, messages, and an
 // optional JSON schema; this route only validates the model against an
 // allowlist and forwards the rest, so it stays reusable rather than
 // encoding any one caller's domain logic.

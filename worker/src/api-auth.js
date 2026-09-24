@@ -23,3 +23,17 @@ export async function api_key_verify(expectedKey, providedKey) {
   }
   return diff === 0;
 }
+
+// The bearer key gating the worker's HTTP API. `JINX_API_KEY` was ambiguous -
+// it read as "some key belonging to jinx", of which there are several, rather
+// than "the key that opens jinx's worker API". `JINX_WORKER_API_KEY` says
+// whose, what kind, and which surface.
+//
+// TODO(#146): drop the JINX_API_KEY fallback once the renamed
+// secret is set in Cloudflare and on rladies/jinx. It exists only so there is
+// no window where the API rejects everyone; the secret VALUE is unchanged, so
+// external callers such as rladies/quarto-rladies-report are unaffected either
+// way.
+export function worker_api_key(env) {
+  return env.JINX_WORKER_API_KEY || env.JINX_API_KEY;
+}

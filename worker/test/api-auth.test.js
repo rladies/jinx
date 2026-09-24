@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { bearer_token_extract, api_key_verify } from "../src/api-auth.js";
+import { bearer_token_extract, api_key_verify, worker_api_key } from "../src/api-auth.js";
 
 describe("bearer_token_extract", () => {
   it("extracts the token from a well-formed Authorization header", () => {
@@ -35,5 +35,21 @@ describe("api_key_verify", () => {
 
   it("returns false for keys of different lengths", async () => {
     expect(await api_key_verify("short", "a-much-longer-wrong-key")).toBe(false);
+  });
+});
+
+describe("worker_api_key", () => {
+  it("prefers the current variable name", () => {
+    expect(
+      worker_api_key({ JINX_WORKER_API_KEY: "new", JINX_API_KEY: "old" }),
+    ).toBe("new");
+  });
+
+  it("still honours the old name during the rename", () => {
+    expect(worker_api_key({ JINX_API_KEY: "old" })).toBe("old");
+  });
+
+  it("is undefined when neither is set", () => {
+    expect(worker_api_key({})).toBeUndefined();
   });
 });

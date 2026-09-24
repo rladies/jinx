@@ -16,7 +16,7 @@
 // which is a GitHub Actions runner. That key impersonates a Workspace admin
 // and can create accounts in the rladies.org domain. Keeping it as a
 // Cloudflare secret means a leaked GitHub token reaches nothing: the most a
-// caller holding JINX_API_KEY can do is ask for a mailbox whose name
+// caller holding JINX_WORKER_API_KEY can do is ask for a mailbox whose name
 // survives the validation below.
 //
 // So: code location follows key location. If you are porting worker modules
