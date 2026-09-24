@@ -207,19 +207,24 @@ stray Worker and uploads the secret to it.
 
 ### Where each credential lives
 
-1Password (`r-ladiesglobal.1password.com`). The field names are not
-self-explanatory, so go by this table rather than by what a field is called:
+1Password (`r-ladiesglobal.1password.com`). Go by this table, not by what a
+field is called - the labels and the env var names do not all line up:
 
 | Env var | 1Password item | Field |
 | ------- | -------------- | ----- |
-| `JINX_API_KEY` | JINX Passwords | `API KEY` |
+| `JINX_API_KEY` | Jinx | `CF_WORKER_KEY` |
+| `AIRTABLE_WEBHOOK_SECRET` | Jinx | `AIRTABLE_WEBHOOK_SECRET` |
 | `CLOUDFLARE_API_TOKEN` (local wrangler) | CLOUDFLARE API | `API TOKEN` |
 | `CLOUDFLARE_API_TOKEN` (CI deploy) | CLOUDFLARE API | `JINX API TOKEN` |
 
-The trap: **`JINX API TOKEN` is a Cloudflare account token, not the worker
-bearer key.** Despite the name it authenticates wrangler to the RLadies+
-account and returns 401 against the worker's own API. The worker bearer key is
-`API KEY` on the *JINX Passwords* item.
+Two traps:
+
+- **`JINX API TOKEN` is a Cloudflare account token, not the worker bearer key.**
+  Despite the name it authenticates wrangler to the RLadies+ account and returns
+  401 against the worker's own API.
+- **The worker bearer key is `CF_WORKER_KEY`**, which is the reverse naming: a
+  Cloudflare-sounding label for the key the *worker code* checks, set as
+  `JINX_API_KEY` in both the worker and the GitHub repo secrets.
 
 Check a candidate worker key without creating anything - a reserved name is
 refused before any Google credential is touched:
