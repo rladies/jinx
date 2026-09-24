@@ -34,6 +34,10 @@ jinx_commands <- function() {
     "chapter-status" = command_spec("jinx_safe", function(command) {
       chapter_status_report(command$ref)
     }),
+    "chapter-email" = command_spec("jinx_gated", function(command) {
+      email <- chapter_email_provision(command$issue)
+      glue::glue("Created the chapter mailbox **{email}**.")
+    }),
     invite = command_spec("jinx_gated", function(command) {
       config <- load_teams_config()
       if (command$team %in% team_list_slugs(config)) {
