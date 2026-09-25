@@ -89,12 +89,12 @@ document.addEventListener("DOMContentLoaded", function() {
 <td>GitHub App ID</td>
 </tr><tr><td><code>JINX_PRIVATE_KEY</code></td>
 <td>GitHub App private key (.pem)</td>
-</tr><tr><td><code>MEETUPR_JWT_TOKEN</code></td>
-<td>Meetup Pro JWT token for meetupr (event-sync.yml)</td>
-</tr><tr><td><code>MEETUPR_CLIENT_ID</code></td>
-<td>Meetup Pro OAuth client ID for meetupr (event-sync.yml)</td>
-</tr><tr><td><code>MEETUPR_JWT_ISSUER</code></td>
-<td>Meetup Pro JWT issuer for meetupr (event-sync.yml)</td>
+</tr><tr><td><code>MEETUP_PRIVATE_KEY</code></td>
+<td>Meetup OAuth signing key, PEM (ops-event-sync.yml)</td>
+</tr><tr><td><code>MEETUP_CLIENT_KEY</code></td>
+<td>Meetup OAuth client key (ops-event-sync.yml)</td>
+</tr><tr><td><code>MEETUP_MEMBER_ID</code></td>
+<td>Numeric member id of the OAuth client owner (ops-event-sync.yml)</td>
 </tr><tr><td><code>AIRTABLE_API_KEY</code></td>
 <td>Airtable API key (airtable-sync.yml)</td>
 </tr><tr><td><code>JINX_WORKER_URL</code></td>
@@ -221,6 +221,28 @@ document.addEventListener("DOMContentLoaded", function() {
 </tr><tr><td><code>WORKSPACE_SA_EMAIL</code></td>
 <td>Service account address; the JWT <code>iss</code> claim</td>
 </tr></tbody></table></div>
+<div class="section level3">
+<h3 id="meetup-credentials">Meetup credentials<a class="anchor" aria-label="anchor" href="#meetup-credentials"></a></h3>
+<p>jinx talks to Meetup through <a href="https://rladies.org/meetupr/" class="external-link">meetupr</a>, which owns the JWT exchange and targets the current <code>gql-ext</code> endpoint. jinx holds no Meetup auth code of its own.</p>
+<p>meetupr resolves credentials as <code>&lt;client_name&gt;_&lt;key&gt;</code> environment variables, with the prefix from <code>MEETUPR_CLIENT_NAME</code> — hence the <strong>lowercase</strong> names in <code>ops-event-sync.yml</code>:</p>
+<table class="table"><colgroup><col width="48%"><col width="51%"></colgroup><thead><tr><th>meetupr env var</th>
+<th>jinx repo secret</th>
+</tr></thead><tbody><tr><td><code>meetupr_client_key</code></td>
+<td><code>MEETUP_CLIENT_KEY</code></td>
+</tr><tr><td><code>meetupr_jwt_issuer</code></td>
+<td>
+<code>MEETUP_MEMBER_ID</code> (numeric member id, from the profile URL)</td>
+</tr><tr><td><code>meetupr_jwt_token</code></td>
+<td>
+<code>MEETUP_PRIVATE_KEY</code> (PEM string or path)</td>
+</tr></tbody></table><p>Two things that cost real time when this was set up:</p>
+<ul><li>
+<strong>Generating a new signing key retires the old one.</strong> A stale key fails with <code>invalid_grant: invalid assertion</code>, which reads like a code bug rather than a credential one.</li>
+<li>
+<strong><code>~/.Renviron</code> overrides the environment you pass on the command line.</strong> If a local <code>&lt;client_name&gt;_jwt_token</code> points at an old key, every local meetupr call uses it no matter what you set in the shell. Check with <code><a href="https://rdrr.io/pkg/meetupr/man/meetupr_auth_status.html" class="external-link">meetupr::meetupr_auth_status()</a></code>, which reports the resolved key path.</li>
+<li>
+<code>jose</code> is required for the JWT path and is in meetupr’s Suggests, so CI installs it explicitly via <code>extra-packages: any::jose</code>.</li>
+</ul></div>
 <div class="section level3">
 <h3 id="where-each-credential-lives">Where each credential lives<a class="anchor" aria-label="anchor" href="#where-each-credential-lives"></a></h3>
 <p>1Password (<code>r-ladiesglobal.1password.com</code>). Go by this table, not by what a field is called - the labels and the env var names do not all line up:</p>
