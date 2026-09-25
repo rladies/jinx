@@ -54,23 +54,16 @@ describe("chapter_mailbox_create", {
 })
 
 describe("worker_api_key", {
-  it("prefers the current variable name", {
+  it("reads the current variable", {
     withr::with_envvar(
-      c(JINX_WORKER_API_KEY = "new", JINX_API_KEY = "old"),
+      c(JINX_WORKER_API_KEY = "new"),
       expect_identical(worker_api_key(), "new")
     )
   })
 
-  it("still honours the old name during the rename", {
+  it("does not fall back to the retired name", {
     withr::with_envvar(
       c(JINX_WORKER_API_KEY = "", JINX_API_KEY = "old"),
-      expect_identical(worker_api_key(), "old")
-    )
-  })
-
-  it("is empty when neither is set", {
-    withr::with_envvar(
-      c(JINX_WORKER_API_KEY = "", JINX_API_KEY = ""),
       expect_identical(worker_api_key(), "")
     )
   })

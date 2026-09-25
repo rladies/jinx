@@ -23,7 +23,7 @@ and refuses reserved addresses.}
 \item{base_url}{Worker base URL.}
 
 \item{api_key}{Worker API key. Defaults to the \code{JINX_WORKER_API_KEY}
-environment variable, falling back to the older \code{JINX_API_KEY}.}
+environment variable.}
 }
 \value{
 The created address (invisibly).
