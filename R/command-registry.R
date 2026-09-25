@@ -34,6 +34,10 @@ jinx_commands <- function() {
     "chapter-status" = command_spec("jinx_safe", function(command) {
       chapter_status_report(command$ref)
     }),
+    "chapter-meetup" = command_spec("jinx_gated", function(command) {
+      chapter_meetup_request(command$issue)
+      glue::glue("Posted the Meetup setup brief on #{command$issue}.")
+    }),
     "chapter-email" = command_spec("jinx_gated", function(command) {
       email <- chapter_email_provision(command$issue)
       glue::glue("Created the chapter mailbox **{email}**.")

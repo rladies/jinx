@@ -36,6 +36,7 @@ cmd_parse <- function(body) {
     "chapter-update" = parse_chapter_update_command(parts),
     "chapter-status" = parse_chapter_status_command(parts),
     "chapter-email" = parse_chapter_email_command(parts),
+    "chapter-meetup" = parse_chapter_meetup_command(parts),
     "slack-invite" = parse_slack_invite_command(parts),
     "blog-add" = parse_blog_add_command(parts),
     "blog-check-links" = list(action = "blog-check-links"),
@@ -248,6 +249,16 @@ parse_chapter_email_command <- function(parts) {
     ))
   }
   list(action = "chapter-email", issue = as.integer(parts[2]))
+}
+
+parse_chapter_meetup_command <- function(parts) {
+  if (length(parts) < 2 || !grepl("^[0-9]+$", parts[2])) {
+    return(list(
+      action = "error",
+      message = "Usage: `/jinx chapter-meetup <issue number>`"
+    ))
+  }
+  list(action = "chapter-meetup", issue = as.integer(parts[2]))
 }
 
 parse_chapter_update_command <- function(parts) {
@@ -580,6 +591,7 @@ normalize_command <- function(parts) {
     list(c("update", "chapter"), "chapter-update"),
     list(c("chapter", "status"), "chapter-status"),
     list(c("chapter", "email"), "chapter-email"),
+    list(c("chapter", "meetup"), "chapter-meetup"),
     list(c("add", "blog"), "blog-add"),
     list(c("check", "links"), "blog-check-links"),
     list(c("remind", "stale"), "remind"),
