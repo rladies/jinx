@@ -73,6 +73,10 @@
 <url><loc>https://rladies.github.io/jinx/reference/chapter_email_provision.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_find_issue.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_mailbox_create.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/chapter_meetup_brief.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/chapter_meetup_name.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/chapter_meetup_request.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/chapter_meetup_urlname.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_meta_fetch.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_monitor_status.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/chapter_onboard_blocker.html</loc></url>
@@ -234,6 +238,7 @@
 <url><loc>https://rladies.github.io/jinx/reference/meeting_poll_get.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/meeting_poll_ics.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/meeting_poll_lock.html</loc></url>
+<url><loc>https://rladies.github.io/jinx/reference/meetup_urlname_status.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/normalise_awesome_url.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/normalise_hugo_url.html</loc></url>
 <url><loc>https://rladies.github.io/jinx/reference/normalize_bluesky.html</loc></url>

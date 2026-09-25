@@ -40,7 +40,7 @@ chapter_mailbox_create(
 - api_key:
 
   Worker API key. Defaults to the `JINX_WORKER_API_KEY` environment
-  variable, falling back to the older `JINX_API_KEY`.
+  variable.
 
 ## Value
 
