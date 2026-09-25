@@ -91,6 +91,7 @@ reference:
       - chapter_create_update
       - chapter_create_pr
       - chapter_check_health
+      - chapter_meetup_groups
       - chapter_duplicate_check
       - chapter_duplicate_report
       - chapter_duplicate_comment

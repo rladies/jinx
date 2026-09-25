@@ -8,7 +8,8 @@ event_sync_chapters(
   org = "rladies",
   target_repo = "event-archive",
   months = 3,
-  dry_run = TRUE
+  dry_run = TRUE,
+  chapters = NULL
 )
 }
 \arguments{
@@ -19,10 +20,19 @@ event_sync_chapters(
 \item{months}{Number of months of history.}
 
 \item{dry_run}{If \code{TRUE}, print what would be synced without acting.}
+
+\item{chapters}{Meetup urlnames to sync. Read from the website data
+when \code{NULL}.}
 }
 \value{
 Data frame of all events (invisibly).
 }
 \description{
 Fetches events from all configured sources and writes a summary.
+}
+\details{
+The chapter list comes from the website's \code{data/chapters} entries via
+\code{\link[=chapter_meetup_groups]{chapter_meetup_groups()}}, not from configuration: that data is
+already the source of truth for which chapters exist and which Meetup
+group each uses, and a hand-maintained list would drift immediately.
 }
