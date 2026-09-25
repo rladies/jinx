@@ -63,6 +63,7 @@ reference:
       - chapter_mailbox_create
       - chapter_email_provision
       - chapter_email_approvals
+      - chapter_confirm_send
       - chapter_meetup_request
       - chapter_meetup_brief
       - chapter_meetup_name

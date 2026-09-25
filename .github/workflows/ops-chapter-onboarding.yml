@@ -11,6 +11,7 @@ on:
           - setup
           - update
           - website
+          - confirm
       city:
         description: Chapter city (optional for the website action)
         required: false
@@ -24,8 +25,22 @@ on:
         description: Organizer names, comma separated (optional for the website action)
         required: false
       issue:
-        description: Onboarding issue number (website action)
+        description: Onboarding issue number (website and confirm actions)
         required: false
+      emails:
+        description: Organiser emails, comma separated (confirm action). Not written to the issue.
+        required: false
+      chapter_email:
+        description: Chapter email to quote in the confirmation (confirm action)
+        required: false
+      meetup_url:
+        description: Meetup URL to quote in the confirmation (confirm action)
+        required: false
+      force:
+        description: Confirm even with checklist steps outstanding
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: ops-chapter-onboarding-${{ inputs.city }}-${{ inputs.country }}-${{ inputs.issue }}
@@ -70,6 +85,13 @@ jobs:
           REGION: ${{ inputs.region }}
           ORGANIZERS: ${{ inputs.organizers }}
           ISSUE: ${{ inputs.issue }}
+          EMAILS: ${{ inputs.emails }}
+          CHAPTER_EMAIL: ${{ inputs.chapter_email }}
+          MEETUP_URL: ${{ inputs.meetup_url }}
+          FORCE: ${{ inputs.force }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
         run: |
           Rscript -e '
             action  <- Sys.getenv("ACTION")
@@ -82,6 +104,20 @@ jobs:
               trimws(strsplit(organizers, ",")[[1]])
             } else {
               character(0)
+            }
+            blank_to_null <- function(x) if (nzchar(x)) x else NULL
+            if (action == "confirm") {
+              issue <- Sys.getenv("ISSUE")
+              if (!nzchar(issue)) stop("the confirm action needs an issue number")
+              emails <- trimws(strsplit(Sys.getenv("EMAILS"), ",")[[1]])
+              jinx::chapter_confirm_send(
+                issue_number = as.integer(issue),
+                to = emails,
+                email = blank_to_null(Sys.getenv("CHAPTER_EMAIL")),
+                meetup_url = blank_to_null(Sys.getenv("MEETUP_URL")),
+                force = identical(Sys.getenv("FORCE"), "true")
+              )
+              quit(save = "no")
             }
             if (action != "website" && !(nzchar(city) && nzchar(country))) {
               stop("the ", action, " action needs both a city and a country")
