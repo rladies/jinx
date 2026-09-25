@@ -86,3 +86,62 @@ describe("event command parsing", {
     expect_identical(cmd$action, "error")
   })
 })
+
+describe("event_meetup_list via meetupr", {
+  meetup_response <- function(nodes) {
+    list(
+      data = list(
+        groupByUrlname = list(
+          pastEvents = list(edges = lapply(nodes, function(n) list(node = n)))
+        )
+      )
+    )
+  }
+
+  node <- function(title, when) {
+    list(title = title, dateTime = when, eventUrl = "https://m/e", going = 12)
+  }
+
+  it("asks meetupr for the group, passing the urlname as a variable", {
+    seen <- NULL
+    local_mocked_bindings(
+      meetupr_query = function(graphql, ...) {
+        seen <<- list(graphql = graphql, args = list(...))
+        meetup_response(list())
+      },
+      .package = "meetupr"
+    )
+    event_meetup_list("rladies-oslo")
+    expect_identical(seen$args$urlname, "rladies-oslo")
+    expect_match(seen$graphql, "groupByUrlname", fixed = TRUE)
+  })
+
+  it("returns an empty frame when the group has no past events", {
+    local_mocked_bindings(
+      meetupr_query = function(...) meetup_response(list()),
+      .package = "meetupr"
+    )
+    expect_identical(nrow(event_meetup_list("rladies-oslo")), 0L)
+  })
+
+  it("keeps events inside the requested window and drops older ones", {
+    recent <- format(Sys.Date() - 10, "%Y-%m-%dT10:00:00")
+    ancient <- format(Sys.Date() - 400, "%Y-%m-%dT10:00:00")
+    local_mocked_bindings(
+      meetupr_query = function(...) {
+        meetup_response(list(node("Recent", recent), node("Ancient", ancient)))
+      },
+      .package = "meetupr"
+    )
+    events <- event_meetup_list("rladies-oslo", months = 3)
+    expect_identical(events$title, "Recent")
+  })
+
+  it("survives a group that does not exist", {
+    local_mocked_bindings(
+      meetupr_query = function(...) list(data = list(groupByUrlname = NULL)),
+      .package = "meetupr"
+    )
+    expect_identical(nrow(event_meetup_list("rladies-nowhere")), 0L)
+  })
+})
