@@ -34,6 +34,10 @@ jinx_commands <- function() {
     "chapter-status" = command_spec("jinx_safe", function(command) {
       chapter_status_report(command$ref)
     }),
+    "chapter-meetup-logo" = command_spec("jinx_gated", function(command) {
+      chapter_meetup_logo_upload(command$urlname)
+      glue::glue("Set the RLadies+ logo on **{command$urlname}**.")
+    }),
     "chapter-meetup" = command_spec("jinx_gated", function(command) {
       chapter_meetup_request(command$issue)
       glue::glue("Posted the Meetup setup brief on #{command$issue}.")
