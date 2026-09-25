@@ -39,17 +39,11 @@ describe("api_key_verify", () => {
 });
 
 describe("worker_api_key", () => {
-  it("prefers the current variable name", () => {
-    expect(
-      worker_api_key({ JINX_WORKER_API_KEY: "new", JINX_API_KEY: "old" }),
-    ).toBe("new");
+  it("reads the current variable", () => {
+    expect(worker_api_key({ JINX_WORKER_API_KEY: "new" })).toBe("new");
   });
 
-  it("still honours the old name during the rename", () => {
-    expect(worker_api_key({ JINX_API_KEY: "old" })).toBe("old");
-  });
-
-  it("is undefined when neither is set", () => {
-    expect(worker_api_key({})).toBeUndefined();
+  it("does not fall back to the retired name", () => {
+    expect(worker_api_key({ JINX_API_KEY: "old" })).toBeUndefined();
   });
 });

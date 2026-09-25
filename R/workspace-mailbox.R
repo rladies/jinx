@@ -23,7 +23,7 @@
 #' @param family_name Family name on the account. Defaults to the city.
 #' @param base_url Worker base URL.
 #' @param api_key Worker API key. Defaults to the `JINX_WORKER_API_KEY`
-#'   environment variable, falling back to the older `JINX_API_KEY`.
+#'   environment variable.
 #' @return The created address (invisibly).
 #' @export
 chapter_mailbox_create <- function(
@@ -73,18 +73,12 @@ chapter_mailbox_create <- function(
 
 #' The worker API key from the environment
 #'
-#' `JINX_API_KEY` read as "some key belonging to jinx", of which there are
-#' several, rather than "the key that opens jinx's worker API". The older
-#' name is still honoured so that renaming the secret and deploying the
-#' rename need not happen in the same instant.
+#' Named for what it opens: the jinx worker's API. `JINX_API_KEY` read as
+#' "some key belonging to jinx", of which there are several.
 #'
-#' @return The key, or `""` when neither variable is set.
+#' @return The key, or `""` when it is not set.
 #' @keywords internal
 #' @noRd
 worker_api_key <- function() {
-  key <- Sys.getenv("JINX_WORKER_API_KEY")
-  if (nzchar(key)) {
-    return(key)
-  }
-  Sys.getenv("JINX_API_KEY")
+  Sys.getenv("JINX_WORKER_API_KEY")
 }
