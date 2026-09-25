@@ -272,6 +272,8 @@ Chapter mailbox provisioning
   : Provision a chapter mailbox once a human has approved it
 - [`chapter_email_approvals()`](https://rladies.github.io/jinx/reference/chapter_email_approvals.md)
   : Find the approvals on a chapter onboarding issue
+- [`chapter_confirm_send()`](https://rladies.github.io/jinx/reference/chapter_confirm_send.md)
+  : Confirm a completed onboarding to the chapter organisers
 - [`chapter_meetup_request()`](https://rladies.github.io/jinx/reference/chapter_meetup_request.md)
   : Post the Meetup setup brief on an onboarding issue
 - [`chapter_meetup_brief()`](https://rladies.github.io/jinx/reference/chapter_meetup_brief.md)
