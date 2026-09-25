@@ -69,6 +69,7 @@ reference:
       - chapter_meetup_name
       - chapter_meetup_urlname
       - meetup_urlname_status
+      - chapter_meetup_logo_upload
 
   - title: Directory
     desc: Directory entry management and validation
