@@ -72,7 +72,10 @@ jobs:
   deploy:
     name: Deploy worker
     needs: validate
-    if: github.event_name == 'push'
+    # Must include workflow_dispatch, or the dispatch trigger added for
+    # deploying secrets on demand runs the tests and silently skips the deploy,
+    # reporting success while changing nothing.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -89,7 +92,7 @@ jobs:
   notify-failure:
     name: Notify Slack on deploy failure
     needs: [test, validate, deploy]
-    if: failure() && github.event_name == 'push'
+    if: failure() && github.event_name != 'pull_request'
     uses: ./.github/workflows/reusable-slack-fail-notify.yml
     with:
       message: "🚨 Jinx worker deploy failed — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run logs> · <${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|commit>"
