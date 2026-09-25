@@ -13,21 +13,27 @@ describe("meetup_jwt_assertion", {
   key <- test_key()
 
   it("has three base64url segments and no padding", {
-    assertion <- meetup_jwt_assertion("ck", "123", "kid1", key)
+    assertion <- meetup_jwt_assertion("ck", "123", key, "kid1")
     parts <- strsplit(assertion, ".", fixed = TRUE)[[1]]
     expect_length(parts, 3)
     expect_false(grepl("[+/=]", assertion))
   })
 
+  it("omits kid when no signing key id is given", {
+    header <- decode_part(meetup_jwt_assertion("ck", "123", key), 1)
+    expect_null(header$kid)
+    expect_identical(header$alg, "RS256")
+  })
+
   it("carries the header Meetup's flow requires", {
-    header <- decode_part(meetup_jwt_assertion("ck", "123", "kid1", key), 1)
+    header <- decode_part(meetup_jwt_assertion("ck", "123", key, "kid1"), 1)
     expect_identical(header$alg, "RS256")
     expect_identical(header$typ, "JWT")
     expect_identical(header$kid, "kid1")
   })
 
   it("carries Meetup's claim shape, not a generic one", {
-    claims <- decode_part(meetup_jwt_assertion("ck", "123", "kid1", key), 2)
+    claims <- decode_part(meetup_jwt_assertion("ck", "123", key, "kid1"), 2)
     expect_identical(claims$iss, "ck")
     expect_identical(claims$sub, "123")
     expect_identical(claims$aud, "api.meetup.com")
@@ -36,14 +42,14 @@ describe("meetup_jwt_assertion", {
   it("expires shortly after it is issued", {
     now <- as.POSIXct("2026-01-01 00:00:00", tz = "UTC")
     claims <- decode_part(
-      meetup_jwt_assertion("ck", "123", "kid1", key, now = now),
+      meetup_jwt_assertion("ck", "123", key, "kid1", now = now),
       2
     )
     expect_equal(claims$exp, as.integer(as.numeric(now)) + 120)
   })
 
   it("is signed by the private key it was given", {
-    assertion <- meetup_jwt_assertion("ck", "123", "kid1", key)
+    assertion <- meetup_jwt_assertion("ck", "123", key, "kid1")
     parts <- strsplit(assertion, ".", fixed = TRUE)[[1]]
     signing_input <- paste0(parts[[1]], ".", parts[[2]])
     sig64 <- chartr("-_", "+/", parts[[3]])
@@ -59,7 +65,7 @@ describe("meetup_jwt_assertion", {
   it("accepts a PEM path as well as a key object", {
     path <- withr::local_tempfile(fileext = ".pem")
     openssl::write_pem(key, path)
-    expect_type(meetup_jwt_assertion("ck", "123", "kid1", path), "character")
+    expect_type(meetup_jwt_assertion("ck", "123", path, "kid1"), "character")
   })
 })
 
@@ -69,7 +75,6 @@ describe("meetup_access_token", {
       c(
         MEETUP_CLIENT_KEY = "",
         MEETUP_MEMBER_ID = "",
-        MEETUP_SIGNING_KEY_ID = "",
         MEETUP_PRIVATE_KEY = ""
       ),
       expect_error(meetup_access_token(), "MEETUP_CLIENT_KEY")
@@ -84,7 +89,7 @@ describe("meetup_access_token", {
       body = list(access_token = "at")
     )))
     expect_identical(
-      meetup_access_token("ck", "123", "kid1", path),
+      meetup_access_token("ck", "123", path),
       "at"
     )
   })
@@ -95,7 +100,7 @@ describe("meetup_access_token", {
     openssl::write_pem(key, path)
     local_mocked_responses(list(response_json(body = list(error = "bad"))))
     expect_error(
-      meetup_access_token("ck", "123", "kid1", path),
+      meetup_access_token("ck", "123", path),
       "no access token"
     )
   })

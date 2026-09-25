@@ -13,14 +13,19 @@ meetup_graphql_url <- function() "https://api.meetup.com/gql-ext"
 #' Meetup's server-to-server flow signs a short-lived RS256 JWT with the
 #' OAuth client's private key and exchanges it for an access token. The
 #' claim shape is Meetup's, not a convention: `sub` is the authorised
-#' member id (the client owner), `iss` is the client key, `aud` is
-#' literally `api.meetup.com`, and the header carries the signing key id
-#' as `kid`.
+#' member id (the client owner), `iss` is the client key, and `aud` is
+#' literally `api.meetup.com`.
+#'
+#' Meetup's documentation lists a `kid` header carrying the signing key
+#' id, but the exchange was verified to succeed without it, so it is
+#' optional here rather than a required input nobody can find.
 #'
 #' @param client_key OAuth client key (the `iss` claim).
 #' @param member_id Authorised member id (the `sub` claim).
-#' @param signing_key_id Signing key id (the `kid` header).
-#' @param private_key An `openssl` key, or a path to a PEM file.
+#' @param signing_key_id Signing key id for the `kid` header. Optional;
+#'   omitted from the header when empty.
+#' @param private_key An `openssl` key, a PEM string, or a path to a PEM
+#'   file.
 #' @param now Current time, for testing.
 #' @param lifetime_seconds How long the assertion is valid.
 #' @return The signed assertion.
@@ -29,8 +34,8 @@ meetup_graphql_url <- function() "https://api.meetup.com/gql-ext"
 meetup_jwt_assertion <- function(
   client_key,
   member_id,
-  signing_key_id,
   private_key,
+  signing_key_id = NULL,
   now = Sys.time(),
   lifetime_seconds = 120
 ) {
@@ -40,7 +45,10 @@ meetup_jwt_assertion <- function(
     openssl::read_key(private_key)
   }
 
-  header <- list(kid = signing_key_id, typ = "JWT", alg = "RS256")
+  header <- c(
+    if (nzchar(signing_key_id %or% "")) list(kid = signing_key_id),
+    list(typ = "JWT", alg = "RS256")
+  )
   claims <- list(
     sub = member_id,
     iss = client_key,
@@ -72,13 +80,12 @@ meetup_jwt_assertion <- function(
 meetup_access_token <- function(
   client_key = Sys.getenv("MEETUP_CLIENT_KEY"),
   member_id = Sys.getenv("MEETUP_MEMBER_ID"),
-  signing_key_id = Sys.getenv("MEETUP_SIGNING_KEY_ID"),
-  private_key = Sys.getenv("MEETUP_PRIVATE_KEY")
+  private_key = Sys.getenv("MEETUP_PRIVATE_KEY"),
+  signing_key_id = Sys.getenv("MEETUP_SIGNING_KEY_ID")
 ) {
   supplied <- list(
     MEETUP_CLIENT_KEY = client_key,
     MEETUP_MEMBER_ID = member_id,
-    MEETUP_SIGNING_KEY_ID = signing_key_id,
     MEETUP_PRIVATE_KEY = private_key
   )
   missing <- names(supplied)[!nzchar(unlist(supplied))]
@@ -89,8 +96,8 @@ meetup_access_token <- function(
   assertion <- meetup_jwt_assertion(
     client_key,
     member_id,
-    signing_key_id,
-    private_key
+    private_key,
+    signing_key_id
   )
 
   resp <- httr2::request("https://secure.meetup.com") |>
