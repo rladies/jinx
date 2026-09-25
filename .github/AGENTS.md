@@ -18,9 +18,9 @@ All workflows use `actions/create-github-app-token@v3` (input is `client-id`, ac
 | --------------------------- | --------------------------------------------------------------------- |
 | `JINX_APP_ID`               | GitHub App ID                                                         |
 | `JINX_PRIVATE_KEY`          | GitHub App private key (.pem)                                         |
-| `MEETUPR_JWT_TOKEN`         | Meetup Pro JWT token for meetupr (event-sync.yml)                     |
-| `MEETUPR_CLIENT_ID`         | Meetup Pro OAuth client ID for meetupr (event-sync.yml)               |
-| `MEETUPR_JWT_ISSUER`        | Meetup Pro JWT issuer for meetupr (event-sync.yml)                    |
+| `MEETUP_PRIVATE_KEY`        | Meetup OAuth signing key, PEM (ops-event-sync.yml)                    |
+| `MEETUP_CLIENT_KEY`         | Meetup OAuth client key (ops-event-sync.yml)                          |
+| `MEETUP_MEMBER_ID`          | Numeric member id of the OAuth client owner (ops-event-sync.yml)      |
 | `AIRTABLE_API_KEY`          | Airtable API key (airtable-sync.yml)                                  |
 | `JINX_WORKER_URL`           | Deployed worker URL (infra-slack-smoke.yml)                           |
 | `SLACK_ORGANISER_TOKEN`     | Bot token for the organisers workspace (infra-slack-smoke.yml)        |
@@ -204,6 +204,34 @@ stray Worker and uploads the secret to it.
 | `JINX_WORKER_API_KEY`            | Bearer key gating the worker's HTTP API for other repos                 |
 | `WORKSPACE_SA_PRIVATE_KEY`       | Google service account PKCS8 key — provisions chapter mailboxes         |
 | `WORKSPACE_SA_EMAIL`             | Service account address; the JWT `iss` claim                            |
+
+### Meetup credentials
+
+jinx talks to Meetup through [meetupr](https://rladies.org/meetupr/), which owns
+the JWT exchange and targets the current `gql-ext` endpoint. jinx holds no Meetup
+auth code of its own.
+
+meetupr resolves credentials as `<client_name>_<key>` environment variables, with
+the prefix from `MEETUPR_CLIENT_NAME` — hence the **lowercase** names in
+`ops-event-sync.yml`:
+
+| meetupr env var | jinx repo secret |
+| --------------- | ---------------- |
+| `meetupr_client_key` | `MEETUP_CLIENT_KEY` |
+| `meetupr_jwt_issuer` | `MEETUP_MEMBER_ID` (numeric member id, from the profile URL) |
+| `meetupr_jwt_token` | `MEETUP_PRIVATE_KEY` (PEM string or path) |
+
+Two things that cost real time when this was set up:
+
+- **Generating a new signing key retires the old one.** A stale key fails with
+  `invalid_grant: invalid assertion`, which reads like a code bug rather than a
+  credential one.
+- **`~/.Renviron` overrides the environment you pass on the command line.** If a
+  local `<client_name>_jwt_token` points at an old key, every local meetupr call
+  uses it no matter what you set in the shell. Check with
+  `meetupr::meetupr_auth_status()`, which reports the resolved key path.
+- `jose` is required for the JWT path and is in meetupr's Suggests, so CI
+  installs it explicitly via `extra-packages: any::jose`.
 
 ### Where each credential lives
 
