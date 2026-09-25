@@ -37,14 +37,21 @@ jobs:
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: local::.
+          # jose is what meetupr's JWT auth signs with. It is correctly in
+          # meetupr's Suggests - most users authenticate interactively - but
+          # this job always uses JWT, so it has to be installed explicitly.
+          extra-packages: local::., any::jose
 
       - name: Sync events
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          MEETUP_API_KEY: ${{ secrets.MEETUP_API_KEY }}
-          MEETUPR_JWT_TOKEN: ${{ secrets.MEETUPR_JWT_TOKEN }}
-          MEETUPR_CLIENT_ID: ${{ secrets.MEETUPR_CLIENT_ID }}
-          MEETUPR_JWT_ISSUER: ${{ secrets.MEETUPR_JWT_ISSUER }}
+          # meetupr resolves credentials as <client_name>_<key>, with the
+          # prefix from MEETUPR_CLIENT_NAME - hence the lowercase names.
+          # These point at the MEETUP_* secrets rather than the older
+          # MEETUPR_* ones, which still hold a revoked signing key.
+          MEETUPR_CLIENT_NAME: meetupr
+          meetupr_client_key: ${{ secrets.MEETUP_CLIENT_KEY }}
+          meetupr_jwt_issuer: ${{ secrets.MEETUP_MEMBER_ID }}
+          meetupr_jwt_token: ${{ secrets.MEETUP_PRIVATE_KEY }}
         run: |
           Rscript -e 'jinx::event_sync_chapters(dry_run = FALSE)'

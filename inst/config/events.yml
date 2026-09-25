@@ -1,8 +1,8 @@
-sources:
-  meetup:
-    base_url: "https://api.meetup.com/gql"
-    env_var: MEETUP_API_KEY
-
+# The Meetup endpoint and credentials are meetupr's concern, not
+# jinx's - it targets the current gql-ext endpoint and owns the JWT
+# exchange. The base_url and env_var keys that used to live here were
+# never read (the endpoint was hardcoded) and pointed at the retired
+# api.meetup.com/gql, so they have been removed rather than corrected.
 sync:
   archive_repo: event-archive
   frequency: weekly
