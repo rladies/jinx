@@ -35,6 +35,11 @@ cmd_parse <- function(body) {
     "chapter-setup" = parse_chapter_setup_command(parts),
     "chapter-update" = parse_chapter_update_command(parts),
     "chapter-status" = parse_chapter_status_command(parts),
+    "chapter-slack" = parse_chapter_issue_command(parts, "chapter-slack"),
+    "chapter-slack-sent" = parse_chapter_issue_command(
+      parts,
+      "chapter-slack-sent"
+    ),
     "chapter-email" = parse_chapter_email_command(parts),
     "chapter-meetup" = parse_chapter_meetup_command(parts),
     "slack-invite" = parse_slack_invite_command(parts),
@@ -259,6 +264,16 @@ parse_chapter_meetup_command <- function(parts) {
     ))
   }
   list(action = "chapter-meetup", issue = as.integer(parts[2]))
+}
+
+parse_chapter_issue_command <- function(parts, action) {
+  if (length(parts) < 2 || !grepl("^[0-9]+$", parts[2])) {
+    return(list(
+      action = "error",
+      message = glue::glue("Usage: `/jinx {action} <issue number>`")
+    ))
+  }
+  list(action = action, issue = as.integer(parts[2]))
 }
 
 parse_chapter_update_command <- function(parts) {
@@ -589,6 +604,8 @@ normalize_command <- function(parts) {
     list(c("check", "chapter", "health"), "chapter-health"),
     list(c("setup", "chapter"), "chapter-setup"),
     list(c("update", "chapter"), "chapter-update"),
+    list(c("chapter", "slack", "sent"), "chapter-slack-sent"),
+    list(c("chapter", "slack"), "chapter-slack"),
     list(c("chapter", "status"), "chapter-status"),
     list(c("chapter", "email"), "chapter-email"),
     list(c("chapter", "meetup"), "chapter-meetup"),

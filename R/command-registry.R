@@ -31,6 +31,17 @@ command_spec <- function(keyword = c("jinx_gated", "jinx_safe"), handler) {
 jinx_commands <- function() {
   list(
     help = command_spec("jinx_safe", function(command) read_help_text()),
+    "chapter-slack" = command_spec("jinx_gated", function(command) {
+      chapter_slack_prompt(command$issue)
+      glue::glue("Posted the organiser Slack prompt on #{command$issue}.")
+    }),
+    "chapter-slack-sent" = command_spec("jinx_gated", function(command) {
+      if (chapter_slack_sent(command$issue)) {
+        glue::glue("Ticked the Organizers Slack step on #{command$issue}.")
+      } else {
+        glue::glue("No unticked Organizers Slack step on #{command$issue}.")
+      }
+    }),
     "chapter-status" = command_spec("jinx_safe", function(command) {
       chapter_status_report(command$ref)
     }),

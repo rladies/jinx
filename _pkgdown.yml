@@ -91,6 +91,9 @@ reference:
       - chapter_create_update
       - chapter_create_pr
       - chapter_check_health
+      - chapter_organiser_submissions
+      - chapter_slack_prompt
+      - chapter_slack_sent
       - chapter_duplicate_check
       - chapter_duplicate_report
       - chapter_duplicate_comment
