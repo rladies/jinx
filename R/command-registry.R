@@ -39,6 +39,17 @@ jinx_commands <- function() {
     "chapter-team-audit" = command_spec("jinx_safe", function(command) {
       chapter_team_audit_report(chapter_team_audit())
     }),
+    "chapter-slack" = command_spec("jinx_gated", function(command) {
+      chapter_slack_prompt(command$issue)
+      glue::glue("Posted the organiser Slack prompt on #{command$issue}.")
+    }),
+    "chapter-slack-sent" = command_spec("jinx_gated", function(command) {
+      if (chapter_slack_sent(command$issue)) {
+        glue::glue("Ticked the Organizers Slack step on #{command$issue}.")
+      } else {
+        glue::glue("No unticked Organizers Slack step on #{command$issue}.")
+      }
+    }),
     "chapter-status" = command_spec("jinx_safe", function(command) {
       chapter_status_report(command$ref)
     }),
