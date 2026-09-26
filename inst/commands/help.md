@@ -15,6 +15,7 @@
 | `/jinx chapter-setup <city> <country>`               | Create chapter setup issue                                                                 |
 | `/jinx chapter-update <city> <country>`              | Create chapter update issue                                                                |
 | `/jinx chapter-status <city|issue>`                  | Show onboarding checklist progress                                                         |
+| `/jinx chapter-team-audit`                           | Compare chapter GitHub teams against the website data                                      |
 | `/jinx chapter-email <issue>`                        | Create the chapter mailbox (needs an approval comment)                                      |
 | `/jinx chapter-meetup <issue>`                       | Post the Meetup setup brief on an onboarding issue                                         |
 | `/jinx gha-dashboard`                                | Generate GitHub Actions status report                                                      |
