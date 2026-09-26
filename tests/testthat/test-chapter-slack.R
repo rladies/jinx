@@ -117,7 +117,10 @@ describe("chapter_slack_sent", {
   it("ticks the Organizers Slack step, not the Community one", {
     body <- paste(
       "-  [ ] invite prospective organizers to the RLadies+ Community Slack",
-      "-  [ ] if everything looks good in the form, invite organizers to the RLadies+ Organizers Slack",
+      paste(
+        "-  [ ] if everything looks good in the form, invite organizers",
+        "to the RLadies+ Organizers Slack"
+      ),
       sep = "\n"
     )
     patched <- NULL
