@@ -31,6 +31,9 @@ command_spec <- function(keyword = c("jinx_gated", "jinx_safe"), handler) {
 jinx_commands <- function() {
   list(
     help = command_spec("jinx_safe", function(command) read_help_text()),
+    "chapter-team-audit" = command_spec("jinx_safe", function(command) {
+      chapter_team_audit_report(chapter_team_audit())
+    }),
     "chapter-status" = command_spec("jinx_safe", function(command) {
       chapter_status_report(command$ref)
     }),
