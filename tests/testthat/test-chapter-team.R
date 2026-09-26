@@ -311,3 +311,87 @@ describe("/jinx chapter-team-audit", {
     )
   })
 })
+
+describe("chapter_repo_name", {
+  it("matches the convention the org already uses", {
+    expect_identical(chapter_repo_name("london"), "meetup-presentations_london")
+  })
+
+  it("keeps hyphens, as san-diego and sao-paulo do", {
+    expect_identical(
+      chapter_repo_name("san-diego"),
+      "meetup-presentations_san-diego"
+    )
+  })
+
+  it("refuses without a slug", {
+    expect_error(chapter_repo_name(NA_character_), "without a team slug")
+  })
+})
+
+describe("chapter_repo_description", {
+  it("says what the repository is for", {
+    expect_identical(
+      chapter_repo_description("Oslo", "Norway"),
+      "Presentations and materials from RLadies+ Oslo, Norway meetups"
+    )
+  })
+
+  it("includes the region when there is one", {
+    expect_match(
+      chapter_repo_description("Portland", "USA", "Oregon"),
+      "Portland, Oregon, USA"
+    )
+  })
+})
+
+describe("chapter_repo_create", {
+  it("creates a public repo and gives the team admin", {
+    calls <- list()
+    local_mocked_bindings(
+      gh = function(endpoint, ...) {
+        args <- list(...)
+        calls[[length(calls) + 1]] <<- c(list(endpoint = endpoint), args)
+        if (startsWith(endpoint, "GET")) {
+          stop("404 not found")
+        }
+        list()
+      },
+      .package = "gh"
+    )
+    expect_message(repo <- chapter_repo_create("oslo", "Oslo", "Norway"))
+    expect_identical(repo, "meetup-presentations_oslo")
+
+    created <- Filter(function(c) startsWith(c$endpoint, "POST"), calls)[[1]]
+    expect_false(created$private)
+    expect_true(created$auto_init)
+    expect_match(created$description, "RLadies\\+ Oslo, Norway")
+
+    granted <- Filter(function(c) startsWith(c$endpoint, "PUT"), calls)[[1]]
+    expect_identical(granted$permission, "admin")
+    expect_identical(granted$team_slug, "oslo")
+  })
+
+  it("does not recreate an existing repo but still grants access", {
+    posted <- FALSE
+    granted <- FALSE
+    local_mocked_bindings(
+      gh = function(endpoint, ...) {
+        if (startsWith(endpoint, "GET")) {
+          return(list(name = "x"))
+        }
+        if (startsWith(endpoint, "POST")) {
+          posted <<- TRUE
+        }
+        if (startsWith(endpoint, "PUT")) {
+          granted <<- TRUE
+        }
+        list()
+      },
+      .package = "gh"
+    )
+    expect_message(chapter_repo_create("oslo", "Oslo", "Norway"))
+    expect_false(posted)
+    expect_true(granted)
+  })
+})

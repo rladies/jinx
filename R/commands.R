@@ -36,6 +36,7 @@ cmd_parse <- function(body) {
     "chapter-update" = parse_chapter_update_command(parts),
     "chapter-status" = parse_chapter_status_command(parts),
     "chapter-team-audit" = list(action = "chapter-team-audit"),
+    "chapter-repo" = parse_chapter_repo_command(parts),
     "chapter-email" = parse_chapter_email_command(parts),
     "chapter-meetup" = parse_chapter_meetup_command(parts),
     "chapter-meetup-logo" = parse_chapter_meetup_logo_command(parts),
@@ -271,6 +272,21 @@ parse_chapter_meetup_logo_command <- function(parts) {
     ))
   }
   list(action = "chapter-meetup-logo", urlname = parts[2])
+}
+
+parse_chapter_repo_command <- function(parts) {
+  if (length(parts) < 3) {
+    return(list(
+      action = "error",
+      message = "Usage: `/jinx chapter-repo <meetup urlname> <city> <country>`"
+    ))
+  }
+  list(
+    action = "chapter-repo",
+    urlname = parts[2],
+    city = parts[3],
+    country = paste(parts[-(1:3)], collapse = " ")
+  )
 }
 
 parse_chapter_update_command <- function(parts) {
@@ -602,6 +618,7 @@ normalize_command <- function(parts) {
     list(c("setup", "chapter"), "chapter-setup"),
     list(c("update", "chapter"), "chapter-update"),
     list(c("chapter", "team", "audit"), "chapter-team-audit"),
+    list(c("chapter", "repo"), "chapter-repo"),
     list(c("audit", "chapter", "teams"), "chapter-team-audit"),
     list(c("chapter", "status"), "chapter-status"),
     list(c("chapter", "email"), "chapter-email"),

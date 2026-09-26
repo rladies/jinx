@@ -99,6 +99,8 @@ reference:
       - chapter_team_create
       - chapter_team_audit
       - chapter_team_audit_report
+      - chapter_repo_name
+      - chapter_repo_create
       - chapter_duplicate_check
       - chapter_duplicate_report
       - chapter_duplicate_comment

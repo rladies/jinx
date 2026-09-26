@@ -425,3 +425,91 @@ chapter_parent_team_id <- function(org, parent_team) {
   )
   parent$id
 }
+
+#' The presentations repository name for a chapter
+#'
+#' `meetup-presentations_<team slug>`, matching the 127 repositories the
+#' org already has. Hyphens are kept: `san-diego`, `sao-paulo` and
+#' `kansas-city` all have them, and `sanfrancisco` is the outlier rather
+#' than the rule.
+#'
+#' @param team_slug Team slug, from [chapter_team_slug()].
+#' @return The repository name.
+#' @export
+chapter_repo_name <- function(team_slug) {
+  if (is.null(team_slug) || is.na(team_slug) || !nzchar(team_slug)) {
+    cli::cli_abort("Cannot build a repository name without a team slug")
+  }
+  paste0("meetup-presentations_", team_slug)
+}
+
+#' Create a chapter's presentations repository
+#'
+#' Opt-in: not every chapter wants one, and only 111 of the 122 existing
+#' teams have a repository, so this is never called as part of onboarding
+#' without someone asking for it.
+#'
+#' The repository is public and the chapter's team is given `admin`,
+#' matching every existing chapter repository - organisers administer
+#' their own.
+#'
+#' @param team_slug Team slug, from [chapter_team_slug()].
+#' @param city Chapter city.
+#' @param country Chapter country.
+#' @param region State/region/province, or `NULL`.
+#' @param org GitHub organization. Defaults to `"rladies"`.
+#' @return The repository name (invisibly).
+#' @export
+chapter_repo_create <- function(
+  team_slug,
+  city,
+  country,
+  region = NULL,
+  org = "rladies"
+) {
+  repo <- chapter_repo_name(team_slug)
+
+  existing <- tryCatch(
+    gh::gh("GET /repos/{owner}/{repo}", owner = org, repo = repo),
+    error = function(e) NULL
+  )
+
+  if (is.null(existing)) {
+    gh::gh(
+      "POST /orgs/{org}/repos",
+      org = org,
+      name = repo,
+      description = chapter_repo_description(city, country, region),
+      private = FALSE,
+      auto_init = TRUE
+    )
+    cli::cli_alert_success("Created {.val {org}/{repo}}")
+  } else {
+    cli::cli_alert_info("{.val {org}/{repo}} already exists")
+  }
+
+  gh::gh(
+    "PUT /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}",
+    org = org,
+    team_slug = team_slug,
+    owner = org,
+    repo = repo,
+    permission = "admin"
+  )
+  cli::cli_alert_success("Gave {.val {team_slug}} admin on {.val {repo}}")
+
+  invisible(repo)
+}
+
+#' The description on a chapter's presentations repository
+#' @keywords internal
+#' @noRd
+chapter_repo_description <- function(city, country, region = NULL) {
+  parts <- c(city, region, country)
+  parts <- parts[!is.na(parts) & nzchar(parts)]
+  paste0(
+    "Presentations and materials from RLadies+ ",
+    paste(parts, collapse = ", "),
+    " meetups"
+  )
+}

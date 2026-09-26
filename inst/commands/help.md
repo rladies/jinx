@@ -16,6 +16,7 @@
 | `/jinx chapter-update <city> <country>`              | Create chapter update issue                                                                |
 | `/jinx chapter-status <city|issue>`                  | Show onboarding checklist progress                                                         |
 | `/jinx chapter-team-audit`                           | Compare chapter GitHub teams against the website data                                      |
+| `/jinx chapter-repo <urlname> <city> <country>`      | Create a chapter's presentations repo (opt-in)                                             |
 | `/jinx chapter-email <issue>`                        | Create the chapter mailbox (needs an approval comment)                                      |
 | `/jinx chapter-meetup <issue>`                       | Post the Meetup setup brief on an onboarding issue                                         |
 | `/jinx chapter-meetup-logo <urlname>`                | Upload the RLadies+ logo as a group's photo                                                |
