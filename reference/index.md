@@ -149,6 +149,8 @@ Chapter lifecycle management
   : Create a chapter JSON PR on the website repo
 - [`chapter_check_health()`](https://rladies.github.io/jinx/reference/chapter_check_health.md)
   : Check chapter health across the organization
+- [`chapter_meetup_groups()`](https://rladies.github.io/jinx/reference/chapter_meetup_groups.md)
+  : Chapters that have a Meetup group, read from the website data
 - [`chapter_duplicate_check()`](https://rladies.github.io/jinx/reference/chapter_duplicate_check.md)
   : Check whether a requested chapter already exists or has neighbours
 - [`chapter_duplicate_report()`](https://rladies.github.io/jinx/reference/chapter_duplicate_report.md)
