@@ -103,6 +103,8 @@ chapter_meetup_brief <- function(city, country, status = NULL) {
     "```\n{meetup_description_text()}\n```\n\n",
     "### After creating it\n\n",
     "- Post the group URL back on this issue.\n",
+    "- Set the group photo by running `/jinx chapter-meetup-logo ",
+    "<urlname>`, which uploads the RLadies+ social profile logo.\n",
     "- Ask the organisers to join, then change their role to ",
     "co-organiser.\n",
     "- Co-organisers must not be cis men.\n"

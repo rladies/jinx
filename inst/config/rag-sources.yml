@@ -2,7 +2,7 @@
   source_type: guide
   repo: rladies/rladiesguide
   sitemap: https://guide.rladies.org/sitemap.xml
-  title_suffix: " :: R-Ladies organizational guidance"
+  title_suffix: " :: RLadies+ organizational guidance"
   language_roots:
     english: en
     others: [es]
