@@ -65,10 +65,15 @@ chapter_validate_one <- function(path, is_added = FALSE) {
     ))
   }
 
+  mojibake <- chapter_check_mojibake(path, raw)
+
   rbind(
     chapter_check_schema(path, chapter),
-    chapter_check_mojibake(path, raw),
-    chapter_check_filename(path, chapter, is_added),
+    mojibake,
+    # The expected filename is derived from the city, region and
+    # country, so corrupt text there would have us advise renaming the
+    # file to match the corruption. Report the encoding on its own.
+    if (is.null(mojibake)) chapter_check_filename(path, chapter, is_added),
     chapter_check_urlname(path, chapter),
     chapter_check_status(path, chapter)
   )
