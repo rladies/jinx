@@ -153,6 +153,22 @@ Chapter lifecycle management
   : Check chapter health across the organization
 - [`chapter_meetup_groups()`](https://rladies.github.io/jinx/reference/chapter_meetup_groups.md)
   : Chapters that have a Meetup group, read from the website data
+- [`chapter_team_slug()`](https://rladies.github.io/jinx/reference/chapter_team_slug.md)
+  : The GitHub team slug for a chapter
+- [`chapter_team_name()`](https://rladies.github.io/jinx/reference/chapter_team_name.md)
+  : The display name for a chapter's GitHub team
+- [`chapter_team_description()`](https://rladies.github.io/jinx/reference/chapter_team_description.md)
+  : The chapter description shown on the team
+- [`chapter_team_create()`](https://rladies.github.io/jinx/reference/chapter_team_create.md)
+  : Create a chapter's GitHub team
+- [`chapter_team_audit()`](https://rladies.github.io/jinx/reference/chapter_team_audit.md)
+  : Compare the chapter teams against the website chapter data
+- [`chapter_team_audit_report()`](https://rladies.github.io/jinx/reference/chapter_team_audit_report.md)
+  : Render a team audit as markdown
+- [`chapter_repo_name()`](https://rladies.github.io/jinx/reference/chapter_repo_name.md)
+  : The presentations repository name for a chapter
+- [`chapter_repo_create()`](https://rladies.github.io/jinx/reference/chapter_repo_create.md)
+  : Create a chapter's presentations repository
 - [`chapter_duplicate_check()`](https://rladies.github.io/jinx/reference/chapter_duplicate_check.md)
   : Check whether a requested chapter already exists or has neighbours
 - [`chapter_duplicate_report()`](https://rladies.github.io/jinx/reference/chapter_duplicate_report.md)
