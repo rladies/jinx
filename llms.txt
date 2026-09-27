@@ -357,6 +357,12 @@ Chapter lifecycle management
   : The presentations repository name for a chapter
 - [`chapter_repo_create()`](https://rladies.github.io/jinx/reference/chapter_repo_create.md)
   : Create a chapter's presentations repository
+- [`chapter_organiser_submissions()`](https://rladies.github.io/jinx/reference/chapter_organiser_submissions.md)
+  : Find organiser form submissions for a chapter
+- [`chapter_slack_prompt()`](https://rladies.github.io/jinx/reference/chapter_slack_prompt.md)
+  : Prompt the onboarding issue for the organiser Slack invite
+- [`chapter_slack_sent()`](https://rladies.github.io/jinx/reference/chapter_slack_sent.md)
+  : Record that the organisers Slack invite was sent
 - [`chapter_duplicate_check()`](https://rladies.github.io/jinx/reference/chapter_duplicate_check.md)
   : Check whether a requested chapter already exists or has neighbours
 - [`chapter_duplicate_report()`](https://rladies.github.io/jinx/reference/chapter_duplicate_report.md)
