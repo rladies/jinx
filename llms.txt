@@ -284,6 +284,8 @@ Chapter mailbox provisioning
   : The Meetup URL name for a chapter
 - [`meetup_urlname_status()`](https://rladies.github.io/jinx/reference/meetup_urlname_status.md)
   : Whether a Meetup urlname looks taken
+- [`chapter_meetup_logo_upload()`](https://rladies.github.io/jinx/reference/chapter_meetup_logo_upload.md)
+  : Set a chapter's Meetup group photo to the RLadies+ logo
 
 ## Directory
 
