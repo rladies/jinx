@@ -4,6 +4,7 @@
 #'
 #' @param city City name.
 #' @param country Country name.
+#' @param region State, region or province, or `NULL`.
 #' @param organizers Character vector of organizer names.
 #' @param social_media Named list of social media links (e.g.
 #'   `list(meetup = "...", email = "city@rladies.org")`).
@@ -15,11 +16,12 @@ chapter_create <- function(
   city,
   country,
   organizers,
+  region = NULL,
   social_media = list(),
   status = "prospective",
   output_dir = "."
 ) {
-  slug <- chapter_slug(country, city)
+  filename <- chapter_filename(city, country, region)
 
   chapter <- list(
     urlname = paste0("rladies-", tolower(gsub(" ", "-", city, fixed = TRUE))),
@@ -33,7 +35,14 @@ chapter_create <- function(
     )
   )
 
-  filename <- paste0(slug, ".json")
+  if (!is.null(region) && nzchar(region)) {
+    chapter <- append(
+      chapter,
+      list("state.region" = region),
+      after = match("country", names(chapter))
+    )
+  }
+
   filepath <- file.path(output_dir, filename)
 
   jsonlite::write_json(
