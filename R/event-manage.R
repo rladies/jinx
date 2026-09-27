@@ -29,25 +29,33 @@ event_list_chapter <- function(chapter, months = 3) {
 #'
 #' Fetches events from all configured sources and writes a summary.
 #'
+#' The chapter list comes from the website's `data/chapters` entries via
+#' [chapter_meetup_groups()], not from configuration: that data is
+#' already the source of truth for which chapters exist and which Meetup
+#' group each uses, and a hand-maintained list would drift immediately.
+#'
 #' @param org GitHub organization.
 #' @param target_repo Repository for the event archive.
 #' @param months Number of months of history.
 #' @param dry_run If `TRUE`, print what would be synced without acting.
+#' @param chapters Meetup urlnames to sync. Read from the website data
+#'   when `NULL`.
 #' @return Data frame of all events (invisibly).
 #' @export
 event_sync_chapters <- function(
   org = "rladies",
   target_repo = "event-archive",
   months = 3,
-  dry_run = TRUE
+  dry_run = TRUE,
+  chapters = NULL
 ) {
   cli::cli_h2("Syncing chapter events for {org}")
 
   config <- load_events_config()
-  chapters <- config$chapters %||% character(0)
+  chapters <- chapters %||% chapter_meetup_groups(org = org)$urlname
 
   if (length(chapters) == 0) {
-    cli::cli_alert_warning("No chapters configured in events.yml")
+    cli::cli_alert_warning("No chapters with a Meetup group were found")
     return(invisible(event_empty_df()))
   }
 

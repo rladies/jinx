@@ -7,4 +7,5 @@ sync:
   archive_repo: event-archive
   frequency: weekly
 
-chapters: []
+# The chapter list is derived from the website's data/chapters entries by
+# chapter_meetup_groups(); a list here would drift the day it was written.
