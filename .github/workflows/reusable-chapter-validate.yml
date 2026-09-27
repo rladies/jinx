@@ -1,0 +1,132 @@
+# Reusable: validates the chapter data files a pull request touches
+# against the conventions jinx relies on (jinx::chapter_validate_files).
+#
+# Only files the PR adds or modifies are checked, so pre-existing drift
+# in the other ~380 chapter files never blocks unrelated work.
+#
+# Errors fail the job; warnings are reported and pass. Both land in a
+# single sticky "Chapter data check" comment that is updated in place.
+#
+# Caller requirements:
+#   - permissions: contents: read, packages: read, pull-requests: write,
+#     issues: write  (packages: read is needed to pull
+#     ghcr.io/rladies/jinx-bot, the others to post the comment)
+#   - secrets: JINX_APP_ID, JINX_PRIVATE_KEY (rladies org-level)
+#   - jinx[bot] GitHub App installed on the calling repo
+#
+# See README.md ("Reusable workflows") for the full caller example.
+name: Reusable · Chapter Data Validate
+
+on:
+  workflow_call:
+    inputs:
+      chapters_path:
+        description: Directory holding the chapter JSON files.
+        type: string
+        default: data/chapters
+    secrets:
+      JINX_APP_ID:
+        required: true
+      JINX_PRIVATE_KEY:
+        required: true
+
+permissions:
+  contents: read
+  packages: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  validate:
+    name: Chapter data
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: ghcr.io/rladies/jinx-bot:latest
+    steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+          owner: rladies
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Collect the chapter files this PR touches
+        id: changed
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          CHAPTERS: ${{ inputs.chapters_path }}
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git diff --name-only --diff-filter=AM \
+            "origin/${BASE_REF}...HEAD" -- "${CHAPTERS}/" \
+            | grep '\.json$' > changed.txt || true
+          git diff --name-only --diff-filter=A \
+            "origin/${BASE_REF}...HEAD" -- "${CHAPTERS}/" \
+            | grep '\.json$' > added.txt || true
+          echo "count=$(wc -l < changed.txt | tr -d ' ')" >> "$GITHUB_OUTPUT"
+
+      - name: Validate them
+        id: validate
+        if: steps.changed.outputs.count != '0'
+        run: |
+          Rscript -e '
+            changed <- readLines("changed.txt", warn = FALSE)
+            added <- readLines("added.txt", warn = FALSE)
+            issues <- jinx::chapter_validate_files(changed, added = added)
+            report <- jinx::chapter_validate_report(issues, length(changed))
+            writeLines(report, "chapter-report.md")
+            n <- sum(issues$level == "error")
+            cat(
+              paste0("errors=", n, "\n"),
+              file = Sys.getenv("GITHUB_OUTPUT"),
+              append = TRUE
+            )
+          '
+
+      - name: Post the result
+        if: steps.changed.outputs.count != '0'
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('chapter-report.md', 'utf8');
+            const marker = '## Chapter data check';
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes(marker)
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Fail if anything must be fixed
+        if: steps.validate.outputs.errors != '' && steps.validate.outputs.errors != '0'
+        run: |
+          echo "::error::${{ steps.validate.outputs.errors }} chapter data error(s); see the PR comment."
+          exit 1

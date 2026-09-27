@@ -91,6 +91,8 @@ reference:
       - chapter_create_setup
       - chapter_create_update
       - chapter_create_pr
+      - chapter_validate_files
+      - chapter_validate_report
       - chapter_check_health
       - chapter_meetup_groups
       - chapter_team_slug

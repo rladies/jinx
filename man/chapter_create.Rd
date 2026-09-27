@@ -8,6 +8,7 @@ chapter_create(
   city,
   country,
   organizers,
+  region = NULL,
   social_media = list(),
   status = "prospective",
   output_dir = "."
@@ -19,6 +20,8 @@ chapter_create(
 \item{country}{Country name.}
 
 \item{organizers}{Character vector of organizer names.}
+
+\item{region}{State, region or province, or \code{NULL}.}
 
 \item{social_media}{Named list of social media links (e.g.
 \code{list(meetup = "...", email = "city@rladies.org")}).}
