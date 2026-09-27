@@ -48,6 +48,14 @@ describe("chapter_validate_files()", {
     expect_match(encoding$message, "<e1>", fixed = TRUE)
   })
 
+  it("does not derive a filename from text it knows is corrupt", {
+    dir <- withr::local_tempdir()
+    path <- valid_chapter(dir, city = "Osl<f8>")
+    checks <- chapter_validate_files(path)$check
+    expect_true("encoding" %in% checks)
+    expect_false("filename" %in% checks)
+  })
+
   it("errors on a filename mismatch in an added file", {
     dir <- withr::local_tempdir()
     path <- valid_chapter(dir, filename = "oslo.json")
