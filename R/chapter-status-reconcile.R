@@ -9,10 +9,12 @@
 #' The categories follow the guide: a chapter is active when it has run
 #' an event in the last `months`, and inactive when it has not.
 #'
-#' Chapters are asked to create their events on Meetup even when they
-#' promote them elsewhere, precisely so activity can be tracked, so an
-#' absence of Meetup events is a real signal rather than an artefact of
-#' where a chapter advertises.
+#' Chapters create their events on Meetup even when they promote them
+#' elsewhere, precisely so activity can be tracked, so an absence of
+#' Meetup events is a real signal rather than an artefact of where a
+#' chapter advertises. That holds for every chapter, so one with no
+#' Meetup group at all is included here rather than skipped: having no
+#' group means it never began, or stopped before it started.
 #'
 #' @param chapters_dir Directory of chapter JSON files, typically
 #'   `data/chapters` in the website repository.
