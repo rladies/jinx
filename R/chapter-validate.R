@@ -191,8 +191,8 @@ chapter_validate_report <- function(issues, n_files = NA_integer_) {
     return(paste0(
       header,
       ":white_check_mark: ",
-      chapter_file_count(n_files),
-      " look good.\n"
+      chapter_all_clear_line(n_files),
+      ".\n"
     ))
   }
 
@@ -207,11 +207,14 @@ chapter_validate_report <- function(issues, n_files = NA_integer_) {
   )
 }
 
-chapter_file_count <- function(n) {
+chapter_all_clear_line <- function(n) {
   if (is.na(n)) {
-    return("The changed chapter files")
+    return("The changed chapter files look good")
   }
-  paste0(n, if (n == 1) " chapter file" else " chapter files")
+  if (n == 1) {
+    return("1 chapter file looks good")
+  }
+  paste0(n, " chapter files look good")
 }
 
 chapter_validate_section <- function(rows, title, icon) {

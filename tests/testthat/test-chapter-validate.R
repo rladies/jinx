@@ -135,12 +135,12 @@ describe("chapter_validate_files()", {
 describe("chapter_validate_report()", {
   it("confirms success when there are no issues", {
     report <- chapter_validate_report(chapter_validate_files(character()), 3)
-    expect_match(report, "3 chapter files look good", fixed = TRUE)
+    expect_match(report, "3 chapter files look good.", fixed = TRUE)
   })
 
   it("uses the singular for a single file", {
     report <- chapter_validate_report(chapter_validate_files(character()), 1)
-    expect_match(report, "1 chapter file look", fixed = TRUE)
+    expect_match(report, "1 chapter file looks good.", fixed = TRUE)
   })
 
   it("separates errors from warnings", {
