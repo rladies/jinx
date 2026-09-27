@@ -78,6 +78,12 @@ jobs:
       - name: Validate them
         id: validate
         if: steps.changed.outputs.count != '0'
+        env:
+          # The caller's checkout is the working directory, and a repo
+          # whose .Rprofile activates renv would repoint the library
+          # path at its own (empty) project library, hiding the jinx
+          # installed in this container.
+          R_PROFILE_USER: /dev/null
         run: |
           Rscript -e '
             changed <- readLines("changed.txt", warn = FALSE)
