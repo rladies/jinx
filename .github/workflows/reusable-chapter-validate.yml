@@ -63,6 +63,7 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
           CHAPTERS: ${{ inputs.chapters_path }}
+        shell: bash
         run: |
           set -euo pipefail
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
