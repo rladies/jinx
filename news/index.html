@@ -66,6 +66,13 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="jinx-development-version">jinx (development version)<a class="anchor" aria-label="anchor" href="#jinx-development-version"></a></h2>
 <div class="section level3">
+<h3 id="chapter-data-is-checked-before-it-lands-not-after-development-version">Chapter data is checked before it lands, not after<a class="anchor" aria-label="anchor" href="#chapter-data-is-checked-before-it-lands-not-after-development-version"></a></h3>
+<ul><li>
+<strong><code><a href="../reference/chapter_validate_files.html">chapter_validate_files()</a></code> and <code><a href="../reference/chapter_validate_report.html">chapter_validate_report()</a></code> check the chapter JSON a pull request touches</strong>, exposed to other repositories through <code>reusable-chapter-validate.yml</code>. Only added and modified files are checked, so the drift already sitting in the other files does not block unrelated work. Errors fail the job; warnings are reported and pass. Five checks run: the bundled schema, escaped byte placeholders such as <code>&lt;e1&gt;</code> left in place of accented characters, the filename matching the city/region/country it is derived from, <code>urlname</code> agreeing with <code>social_media.meetup</code>, and a recognised <code>status</code>.</li>
+<li>
+<strong><code><a href="../reference/chapter_create.html">chapter_create()</a></code> derives its filename with <code>chapter_filename()</code></strong> and gained a <code>region</code> argument. It previously built the name from country and city alone, so a chapter with a region got a filename the rest of jinx would not look for - the second implementation of a rule that only needs one.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="an-unset-ci-variable-no-longer-defeats-an-env-default-development-version">An unset CI variable no longer defeats an env default<a class="anchor" aria-label="anchor" href="#an-unset-ci-variable-no-longer-defeats-an-env-default-development-version"></a></h3>
 <ul><li>
 <strong><code>env_default()</code> treats an empty environment variable as unset.</strong> GitHub Actions passes an unset repository variable through as an empty string, and <code><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv()</a></code> only falls back to its default when a variable is genuinely absent - so <code>SLACK_PROMO_CHANNEL</code> resolved to <code>""</code> in CI and the spotlight tried to post to <code>#</code>, failing with <code>channel_not_found</code>. Applied to <code>SLACK_PROMO_CHANNEL</code> and <code>SLACK_DIGEST_CHANNEL</code>, which had the same latent trap.</li>

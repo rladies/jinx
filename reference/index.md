@@ -149,6 +149,10 @@ Chapter lifecycle management
   : Create a chapter update issue
 - [`chapter_create_pr()`](https://rladies.github.io/jinx/reference/chapter_create_pr.md)
   : Create a chapter JSON PR on the website repo
+- [`chapter_validate_files()`](https://rladies.github.io/jinx/reference/chapter_validate_files.md)
+  : Validate website chapter data files
+- [`chapter_validate_report()`](https://rladies.github.io/jinx/reference/chapter_validate_report.md)
+  : Render chapter validation issues as markdown
 - [`chapter_check_health()`](https://rladies.github.io/jinx/reference/chapter_check_health.md)
   : Check chapter health across the organization
 - [`chapter_meetup_groups()`](https://rladies.github.io/jinx/reference/chapter_meetup_groups.md)

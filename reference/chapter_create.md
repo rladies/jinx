@@ -9,6 +9,7 @@ chapter_create(
   city,
   country,
   organizers,
+  region = NULL,
   social_media = list(),
   status = "prospective",
   output_dir = "."
@@ -28,6 +29,10 @@ chapter_create(
 - organizers:
 
   Character vector of organizer names.
+
+- region:
+
+  State, region or province, or `NULL`.
 
 - social_media:
 

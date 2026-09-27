@@ -25,6 +25,7 @@ and start with `reusable-`:
 | `reusable-thank-contributor.yml` | Posts a thank-you on a merged PR (different message for first-time vs returning). |
 | `reusable-website-blog-checklist.yml` | Posts the blog-review checklist on a PR that touches blog content. |
 | `reusable-pr-review.yml` | Calls [`jinx::review_run()`](https://rladies.github.io/jinx/reference/review_run.md) to label and assign reviewers based on the rules bundled in jinx. |
+| `reusable-chapter-validate.yml` | Validates the `data/chapters/*.json` files a PR touches (schema, filename, `urlname`); errors fail, warnings report. |
 | `reusable-copilot-review.yml` | Requests a GitHub Copilot review, guided by the grimoire review gates jinx synced into the repo’s Copilot instructions. |
 
 ### Caller requirements

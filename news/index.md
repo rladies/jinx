@@ -2,6 +2,26 @@
 
 ## jinx (development version)
 
+### Chapter data is checked before it lands, not after
+
+- **[`chapter_validate_files()`](https://rladies.github.io/jinx/reference/chapter_validate_files.md)
+  and
+  [`chapter_validate_report()`](https://rladies.github.io/jinx/reference/chapter_validate_report.md)
+  check the chapter JSON a pull request touches**, exposed to other
+  repositories through `reusable-chapter-validate.yml`. Only added and
+  modified files are checked, so the drift already sitting in the other
+  files does not block unrelated work. Errors fail the job; warnings are
+  reported and pass. Five checks run: the bundled schema, escaped byte
+  placeholders such as `<e1>` left in place of accented characters, the
+  filename matching the city/region/country it is derived from,
+  `urlname` agreeing with `social_media.meetup`, and a recognised
+  `status`.
+- **[`chapter_create()`](https://rladies.github.io/jinx/reference/chapter_create.md)
+  derives its filename with `chapter_filename()`** and gained a `region`
+  argument. It previously built the name from country and city alone, so
+  a chapter with a region got a filename the rest of jinx would not look
+  for - the second implementation of a rule that only needs one.
+
 ### An unset CI variable no longer defeats an env default
 
 - **`env_default()` treats an empty environment variable as unset.**

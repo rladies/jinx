@@ -122,6 +122,10 @@ document.addEventListener("DOMContentLoaded", function() {
 <td>Calls <code><a href="reference/review_run.html">jinx::review_run()</a></code> to label and assign reviewers based on the rules bundled in jinx.</td>
 </tr>
 <tr>
+<td><code>reusable-chapter-validate.yml</code></td>
+<td>Validates the <code>data/chapters/*.json</code> files a PR touches (schema, filename, <code>urlname</code>); errors fail, warnings report.</td>
+</tr>
+<tr>
 <td><code>reusable-copilot-review.yml</code></td>
 <td>Requests a GitHub Copilot review, guided by the grimoire review gates jinx synced into the repo’s Copilot instructions.</td>
 </tr>
