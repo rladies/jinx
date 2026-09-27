@@ -31,6 +31,14 @@ command_spec <- function(keyword = c("jinx_gated", "jinx_safe"), handler) {
 jinx_commands <- function() {
   list(
     help = command_spec("jinx_safe", function(command) read_help_text()),
+    "chapter-repo" = command_spec("jinx_gated", function(command) {
+      slug <- chapter_team_slug(command$urlname)
+      repo <- chapter_repo_create(slug, command$city, command$country)
+      glue::glue("Created **{repo}** and gave `{slug}` admin.")
+    }),
+    "chapter-team-audit" = command_spec("jinx_safe", function(command) {
+      chapter_team_audit_report(chapter_team_audit())
+    }),
     "chapter-status" = command_spec("jinx_safe", function(command) {
       chapter_status_report(command$ref)
     }),
