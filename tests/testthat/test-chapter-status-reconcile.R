@@ -200,11 +200,10 @@ describe("chapter_status_reconcile_report()", {
     )
     health <- health_frame(list("rladies-oslo", "2026-09-01", 1L))
     out <- chapter_status_reconcile(dir, health = health)
-    expect_match(
-      chapter_status_reconcile_report(out),
-      "matches its activity",
-      fixed = TRUE
-    )
+    report <- chapter_status_reconcile_report(out)
+    expect_match(report, "matches its activity", fixed = TRUE)
+    # glue trims a trailing newline unless told not to
+    expect_match(report, "\n$")
   })
 
   it("separates promotions from inactivity flags", {
