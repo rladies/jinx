@@ -149,6 +149,12 @@ Chapter lifecycle management
   : Create a chapter update issue
 - [`chapter_create_pr()`](https://rladies.github.io/jinx/reference/chapter_create_pr.md)
   : Create a chapter JSON PR on the website repo
+- [`chapter_status_reconcile()`](https://rladies.github.io/jinx/reference/chapter_status_reconcile.md)
+  : Reconcile stored chapter status against actual Meetup activity
+- [`chapter_status_reconcile_report()`](https://rladies.github.io/jinx/reference/chapter_status_reconcile_report.md)
+  : Render a status reconciliation as markdown
+- [`chapter_initiated_date()`](https://rladies.github.io/jinx/reference/chapter_initiated_date.md)
+  : When a chapter first appeared in the website repository
 - [`chapter_validate_files()`](https://rladies.github.io/jinx/reference/chapter_validate_files.md)
   : Validate website chapter data files
 - [`chapter_validate_report()`](https://rladies.github.io/jinx/reference/chapter_validate_report.md)
