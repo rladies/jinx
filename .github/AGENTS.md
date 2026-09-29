@@ -14,19 +14,19 @@ R package powering the RLadies+ GitHub organization bot. Deployed as a GitHub Ap
 
 All workflows use `actions/create-github-app-token@v3` (input is `client-id`, accepts the app ID stored in `JINX_APP_ID`) with these **repo secrets** (not variables):
 
-| Secret                      | Purpose                                                                                  |
-| --------------------------- | ---------------------------------------------------------------------------------------- |
-| `JINX_APP_ID`               | GitHub App ID                                                                            |
-| `JINX_PRIVATE_KEY`          | GitHub App private key (.pem)                                                            |
-| `MEETUP_PRIVATE_KEY`        | Meetup OAuth signing key, PEM (ops-event-sync.yml, ops-meetup-archive.yml)               |
-| `MEETUP_CLIENT_KEY`         | Meetup OAuth client key (ops-event-sync.yml, ops-meetup-archive.yml)                     |
-| `MEETUP_MEMBER_ID`          | Numeric member id of the OAuth client owner (ops-event-sync.yml, ops-meetup-archive.yml) |
-| `AIRTABLE_API_KEY`          | Airtable API key (airtable-sync.yml)                                                     |
-| `JINX_WORKER_URL`           | Deployed worker URL (infra-slack-smoke.yml)                                              |
-| `SLACK_ORGANISER_TOKEN`     | Bot token for the organisers workspace (infra-slack-smoke.yml)                           |
-| `SLACK_HEALTHCHECK_CHANNEL` | Channel ID for healthcheck postMessage/delete (infra-slack-smoke.yml)                    |
-| `SLACK_HEALTHCHECK_TEAM_ID` | Team ID for the smoke-test workspace (infra-slack-smoke.yml)                             |
-| `SLACK_SIGNING_SECRET`      | Slack signing secret — used to sign synthetic worker requests                            |
+| Secret                      | Purpose                                                               |
+| --------------------------- | --------------------------------------------------------------------- |
+| `JINX_APP_ID`               | GitHub App ID                                                         |
+| `JINX_PRIVATE_KEY`          | GitHub App private key (.pem)                                         |
+| `MEETUP_PRIVATE_KEY`        | Meetup OAuth signing key, PEM (ops-event-sync.yml)                    |
+| `MEETUP_CLIENT_KEY`         | Meetup OAuth client key (ops-event-sync.yml)                          |
+| `MEETUP_MEMBER_ID`          | Numeric member id of the OAuth client owner (ops-event-sync.yml)      |
+| `AIRTABLE_API_KEY`          | Airtable API key (airtable-sync.yml)                                  |
+| `JINX_WORKER_URL`           | Deployed worker URL (infra-slack-smoke.yml)                           |
+| `SLACK_ORGANISER_TOKEN`     | Bot token for the organisers workspace (infra-slack-smoke.yml)        |
+| `SLACK_HEALTHCHECK_CHANNEL` | Channel ID for healthcheck postMessage/delete (infra-slack-smoke.yml) |
+| `SLACK_HEALTHCHECK_TEAM_ID` | Team ID for the smoke-test workspace (infra-slack-smoke.yml)          |
+| `SLACK_SIGNING_SECRET`      | Slack signing secret — used to sign synthetic worker requests         |
 
 Always reference as `secrets.JINX_APP_ID`, never `vars.JINX_APP_ID`.
 
@@ -240,11 +240,19 @@ Two things that cost real time when this was set up:
 hours and pushes the refreshed `data/` and `archive/` back as `jinx[bot]`. The
 scripts and their renv lockfile stay in that repo; jinx only supplies the Meetup
 credentials, a token scoped to `meetup_archive` contents, and Slack alerts on
-failure. On PRs touching the workflow it runs as a dry run without pushing.
+failure.
 
-Because the scripts run with the Meetup signing key in their environment, write
-access to `meetup_archive` is effectively access to that key. Keep its
-collaborator list as tight as this repo's.
+The scripts run in the `archive` job, which sees only the `MEETUP_*` secrets
+and hands its output to `publish` as an artifact. Only `publish` holds
+`JINX_PRIVATE_KEY`, on a fresh checkout that runs no `meetup_archive` code.
+Keep it that way: `meetup_archive` has far more writers than this repo, and
+the Jinx App key mints org-wide tokens. Write access to `meetup_archive` is
+still effectively access to the Meetup signing key.
+
+To test a `meetup_archive` branch before merging it, run
+`gh workflow run ops-meetup-archive.yml -R rladies/jinx -f ref=<branch>`. Any
+ref other than `main`, and any PR touching the workflow, is a dry run that
+skips `publish`.
 
 ### Where each credential lives
 
