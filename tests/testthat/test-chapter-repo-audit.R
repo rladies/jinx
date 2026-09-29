@@ -225,3 +225,63 @@ describe("chapter_repo_audit_report()", {
     expect_match(chapter_repo_audit_report(chapter_repo_audit(dir)), "\n$")
   })
 })
+
+describe("chapter_repo_audit() organisation prefixes", {
+  it("spots an organisation name written as a repo under the org", {
+    dir <- withr::local_tempdir()
+    write_chapter(
+      dir,
+      "usa-michigan-east-lansing.json",
+      city = "East Lansing",
+      social_media = list(github = "rladies/rladies-eastlansing")
+    )
+    local_gh("/orgs/rladies-eastlansing")
+    out <- chapter_repo_audit(dir)
+    expect_equal(out$state, "prefixed")
+    expect_equal(out$suggestion, "rladies-eastlansing")
+  })
+
+  it("prefers the chapter's own organisation over a conventional repo", {
+    dir <- withr::local_tempdir()
+    write_chapter(
+      dir,
+      "usa-tennessee-nashville.json",
+      city = "Nashville",
+      social_media = list(github = "rladies/rladies-nashville")
+    )
+    local_gh(c(
+      "/orgs/rladies-nashville",
+      "/repos/rladies/meetup-presentations_nashville"
+    ))
+    out <- chapter_repo_audit(dir)
+    expect_equal(out$suggestion, "rladies-nashville")
+  })
+
+  it("still suggests the conventional repo when no organisation exists", {
+    dir <- withr::local_tempdir()
+    write_chapter(
+      dir,
+      "uk-manchester.json",
+      city = "Manchester",
+      social_media = list(github = "rladies/RLadiesManchester")
+    )
+    local_gh("/repos/rladies/meetup-presentations_manchester")
+    out <- chapter_repo_audit(dir)
+    expect_equal(out$state, "missing")
+    expect_equal(out$suggestion, "rladies/meetup-presentations_manchester")
+  })
+
+  it("gives prefixed references their own report section", {
+    dir <- withr::local_tempdir()
+    write_chapter(
+      dir,
+      "seattle.json",
+      city = "Seattle",
+      social_media = list(github = "rladies/rladies-seattle")
+    )
+    local_gh("/orgs/rladies-seattle")
+    report <- chapter_repo_audit_report(chapter_repo_audit(dir))
+    expect_match(report, "spurious owner prefix", fixed = TRUE)
+    expect_match(report, "`rladies-seattle`", fixed = TRUE)
+  })
+})

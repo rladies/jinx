@@ -13,9 +13,11 @@ chapter_repo_audit(chapters_dir, org = "rladies")
 }
 \value{
 A data frame with columns \code{file}, \code{github}, \code{state} and
-\code{suggestion}. \code{state} is \code{"repo"}, \code{"org"}, \code{"url"} or
-\code{"missing"}. A \code{"url"} row resolves but is written as a full URL;
-its suggestion is the same reference in the expected shape. Only
+\code{suggestion}. \code{state} is \code{"repo"}, \code{"org"}, \code{"url"}, \code{"prefixed"}
+or \code{"missing"}. A \code{"url"} row resolves but is written as a full
+URL; a \code{"prefixed"} row is an organisation the chapter owns,
+written as though it were a repository under \code{org}. Both carry the
+same reference in the expected shape as their suggestion. Only
 rows needing attention are returned.
 }
 \description{
