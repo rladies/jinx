@@ -87,7 +87,7 @@ describe("chapter_repo_audit()", {
     expect_true(is.na(out$suggestion))
   })
 
-  it("calls a full URL malformed", {
+  it("resolves a full URL rather than calling it dead", {
     dir <- withr::local_tempdir()
     write_chapter(
       dir,
@@ -95,8 +95,36 @@ describe("chapter_repo_audit()", {
       city = "Sao Paulo",
       social_media = list(github = "https://github.com/R-Ladies-Sao-Paulo/")
     )
+    local_gh("/orgs/R-Ladies-Sao-Paulo")
+    out <- chapter_repo_audit(dir)
+    expect_equal(out$state, "url")
+    expect_equal(out$suggestion, "R-Ladies-Sao-Paulo")
+  })
+
+  it("still calls a full URL dead when it resolves to nothing", {
+    dir <- withr::local_tempdir()
+    write_chapter(
+      dir,
+      "gone.json",
+      city = "Gone",
+      social_media = list(github = "https://github.com/rladies/gone")
+    )
     local_gh(character())
-    expect_equal(chapter_repo_audit(dir)$state, "malformed")
+    expect_equal(chapter_repo_audit(dir)$state, "missing")
+  })
+
+  it("strips a .git suffix and trailing slashes before resolving", {
+    dir <- withr::local_tempdir()
+    write_chapter(
+      dir,
+      "x.json",
+      city = "X",
+      social_media = list(github = "https://github.com/rladies/thing.git")
+    )
+    local_gh("/repos/rladies/thing")
+    out <- chapter_repo_audit(dir)
+    expect_equal(out$state, "url")
+    expect_equal(out$suggestion, "rladies/thing")
   })
 
   it("flags a repo name with no owner", {
@@ -166,5 +194,34 @@ describe("chapter_repo_audit_report()", {
     report <- chapter_repo_audit_report(chapter_repo_audit(dir))
     expect_match(report, "likely replacement", fixed = TRUE)
     expect_match(report, "no obvious replacement", fixed = TRUE)
+  })
+})
+
+describe("chapter_repo_audit_report()", {
+  it("reports a URL-shaped reference separately from the dead ones", {
+    dir <- withr::local_tempdir()
+    write_chapter(
+      dir,
+      "live-url.json",
+      city = "Sao Paulo",
+      social_media = list(github = "https://github.com/R-Ladies-Sao-Paulo/")
+    )
+    write_chapter(
+      dir,
+      "dead.json",
+      city = "Nowhere",
+      social_media = list(github = "rladies/nope")
+    )
+    local_gh("/orgs/R-Ladies-Sao-Paulo")
+    report <- chapter_repo_audit_report(chapter_repo_audit(dir))
+    expect_match(report, "Resolves, but written as a URL", fixed = TRUE)
+    expect_match(report, "Dead, no obvious replacement", fixed = TRUE)
+    expect_match(report, "`R-Ladies-Sao-Paulo`", fixed = TRUE)
+  })
+
+  it("keeps a trailing newline", {
+    dir <- withr::local_tempdir()
+    local_gh(character())
+    expect_match(chapter_repo_audit_report(chapter_repo_audit(dir)), "\n$")
   })
 })

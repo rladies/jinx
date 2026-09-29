@@ -13,8 +13,10 @@ chapter_repo_audit(chapters_dir, org = "rladies")
 }
 \value{
 A data frame with columns \code{file}, \code{github}, \code{state} and
-\code{suggestion}. \code{state} is \code{"repo"}, \code{"org"}, \code{"malformed"} or
-\code{"missing"}. Only rows needing attention are returned.
+\code{suggestion}. \code{state} is \code{"repo"}, \code{"org"}, \code{"url"} or
+\code{"missing"}. A \code{"url"} row resolves but is written as a full URL;
+its suggestion is the same reference in the expected shape. Only
+rows needing attention are returned.
 }
 \description{
 Each chapter may carry a \code{social_media$github} value. Two shapes are
