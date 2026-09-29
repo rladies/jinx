@@ -24,7 +24,7 @@
 | `/jinx chapter-meetup-logo <urlname>`                | Upload the RLadies+ logo as a group's photo                                                |
 | `/jinx gha-dashboard`                                | Generate GitHub Actions status report                                                      |
 | `/jinx contributors [repo]`                          | List contributors for a repo                                                               |
-| `/jinx contributors update [repo]`                   | Update contributors list via PR                                                            |
+| `/jinx contributors update [repo]`                   | Push an updated contributors list to main                                                  |
 | `/jinx contributors org`                             | Show top org-wide contributors                                                             |
 | `/jinx events <chapter>`                             | List recent events for a chapter                                                           |
 | `/jinx events sync`                                  | Sync and publish event summary                                                             |
