@@ -224,7 +224,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="section level3">
 <h3 id="meetup-credentials">Meetup credentials<a class="anchor" aria-label="anchor" href="#meetup-credentials"></a></h3>
 <p>jinx talks to Meetup through <a href="https://rladies.org/meetupr/" class="external-link">meetupr</a>, which owns the JWT exchange and targets the current <code>gql-ext</code> endpoint. jinx holds no Meetup auth code of its own.</p>
-<p>meetupr resolves credentials as <code>&lt;client_name&gt;_&lt;key&gt;</code> environment variables, with the prefix from <code>MEETUPR_CLIENT_NAME</code> — hence the <strong>lowercase</strong> names in <code>ops-event-sync.yml</code>:</p>
+<p>meetupr resolves credentials as <code>&lt;client_name&gt;_&lt;key&gt;</code> environment variables, with the prefix from <code>MEETUPR_CLIENT_NAME</code> — hence the <strong>lowercase</strong> names in <code>ops-event-sync.yml</code> and <code>ops-meetup-archive.yml</code>:</p>
 <table class="table"><colgroup><col width="48%"><col width="51%"></colgroup><thead><tr><th>meetupr env var</th>
 <th>jinx repo secret</th>
 </tr></thead><tbody><tr><td><code>meetupr_client_key</code></td>
@@ -243,6 +243,12 @@ document.addEventListener("DOMContentLoaded", function() {
 <li>
 <code>jose</code> is required for the JWT path and is in meetupr’s Suggests, so CI installs it explicitly via <code>extra-packages: any::jose</code>.</li>
 </ul></div>
+<div class="section level3">
+<h3 id="meetup-archive">Meetup archive<a class="anchor" aria-label="anchor" href="#meetup-archive"></a></h3>
+<p><code>ops-meetup-archive.yml</code> runs the archive scripts that live in <a href="https://github.com/rladies/meetup_archive" class="external-link"><code>rladies/meetup_archive</code></a> every 12 hours and pushes the refreshed <code>data/</code> and <code>archive/</code> back as <code>jinx[bot]</code>. The scripts and their renv lockfile stay in that repo; jinx only supplies the Meetup credentials, a token scoped to <code>meetup_archive</code> contents, and Slack alerts on failure.</p>
+<p>The scripts run in the <code>archive</code> job, which sees only the <code>MEETUP_*</code> secrets and hands its output to <code>publish</code> as an artifact. Only <code>publish</code> holds <code>JINX_PRIVATE_KEY</code>, on a fresh checkout that runs no <code>meetup_archive</code> code. Keep it that way: <code>meetup_archive</code> has far more writers than this repo, and the Jinx App key mints org-wide tokens. Write access to <code>meetup_archive</code> is still effectively access to the Meetup signing key.</p>
+<p>To test a <code>meetup_archive</code> branch before merging it, run <code>gh workflow run ops-meetup-archive.yml -R rladies/jinx -f ref=&lt;branch&gt;</code>. Any ref other than <code>main</code>, and any PR touching the workflow, is a dry run that skips <code>publish</code>.</p>
+</div>
 <div class="section level3">
 <h3 id="where-each-credential-lives">Where each credential lives<a class="anchor" aria-label="anchor" href="#where-each-credential-lives"></a></h3>
 <p>1Password (<code>r-ladiesglobal.1password.com</code>). Go by this table, not by what a field is called - the labels and the env var names do not all line up:</p>
