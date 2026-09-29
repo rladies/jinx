@@ -10,6 +10,27 @@
   organisation. Over current data it finds 14 dead references out of
   116, six of them with an obvious fix.
 
+## Chapter status can be checked against what chapters actually do
+
+- **`chapter_status_reconcile()` compares the website's `status` field
+  against the Meetup event history**, and reports the two mismatches
+  worth acting on, on the guide's own windows: a chapter running events
+  that is not marked active, one with no event in six months, and one
+  with nothing for a year, which should simply be marked `inactive`.
+  `inactive` is now a status the chapter validator accepts. Chapters
+  are asked to post events to Meetup even when they advertise
+  elsewhere, so an absent event is a real gap rather than a sign the
+  chapter organises somewhere jinx cannot see. Only Meetup events are visible
+  to it, and the guide tells chapters they may organise elsewhere, so
+  the report says plainly that a quiet chapter is one to ask about
+  rather than one that has stopped.
+- **`chapter_initiated_date()` reads when a chapter first appeared in
+  the website repository**, for the six-month window in which a chapter
+  with no events is unbegun rather than inactive. It follows renames,
+  without which the ten files renamed for the filename convention would
+  each look brand new, and returns `NA` for the 2023-01-04 bulk import,
+  whose date records the import rather than any chapter starting.
+
 ## Chapter data is checked before it lands, not after
 
 - **`chapter_validate_files()` and `chapter_validate_report()` check the
