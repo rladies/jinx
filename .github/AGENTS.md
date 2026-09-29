@@ -213,7 +213,7 @@ auth code of its own.
 
 meetupr resolves credentials as `<client_name>_<key>` environment variables, with
 the prefix from `MEETUPR_CLIENT_NAME` — hence the **lowercase** names in
-`ops-event-sync.yml`:
+`ops-event-sync.yml` and `ops-meetup-archive.yml`:
 
 | meetupr env var | jinx repo secret |
 | --------------- | ---------------- |
@@ -232,6 +232,27 @@ Two things that cost real time when this was set up:
   `meetupr::meetupr_auth_status()`, which reports the resolved key path.
 - `jose` is required for the JWT path and is in meetupr's Suggests, so CI
   installs it explicitly via `extra-packages: any::jose`.
+
+### Meetup archive
+
+`ops-meetup-archive.yml` runs the archive scripts that live in
+[`rladies/meetup_archive`](https://github.com/rladies/meetup_archive) every 12
+hours and pushes the refreshed `data/` and `archive/` back as `jinx[bot]`. The
+scripts and their renv lockfile stay in that repo; jinx only supplies the Meetup
+credentials, a token scoped to `meetup_archive` contents, and Slack alerts on
+failure.
+
+The scripts run in the `archive` job, which sees only the `MEETUP_*` secrets
+and hands its output to `publish` as an artifact. Only `publish` holds
+`JINX_PRIVATE_KEY`, on a fresh checkout that runs no `meetup_archive` code.
+Keep it that way: `meetup_archive` has far more writers than this repo, and
+the Jinx App key mints org-wide tokens. Write access to `meetup_archive` is
+still effectively access to the Meetup signing key.
+
+To test a `meetup_archive` branch before merging it, run
+`gh workflow run ops-meetup-archive.yml -R rladies/jinx -f ref=<branch>`. Any
+ref other than `main`, and any PR touching the workflow, is a dry run that
+skips `publish`.
 
 ### Where each credential lives
 
