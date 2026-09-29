@@ -14,19 +14,19 @@ R package powering the RLadies+ GitHub organization bot. Deployed as a GitHub Ap
 
 All workflows use `actions/create-github-app-token@v3` (input is `client-id`, accepts the app ID stored in `JINX_APP_ID`) with these **repo secrets** (not variables):
 
-| Secret                      | Purpose                                                               |
-| --------------------------- | --------------------------------------------------------------------- |
-| `JINX_APP_ID`               | GitHub App ID                                                         |
-| `JINX_PRIVATE_KEY`          | GitHub App private key (.pem)                                         |
-| `MEETUP_PRIVATE_KEY`        | Meetup OAuth signing key, PEM (ops-event-sync.yml)                    |
-| `MEETUP_CLIENT_KEY`         | Meetup OAuth client key (ops-event-sync.yml)                          |
-| `MEETUP_MEMBER_ID`          | Numeric member id of the OAuth client owner (ops-event-sync.yml)      |
-| `AIRTABLE_API_KEY`          | Airtable API key (airtable-sync.yml)                                  |
-| `JINX_WORKER_URL`           | Deployed worker URL (infra-slack-smoke.yml)                           |
-| `SLACK_ORGANISER_TOKEN`     | Bot token for the organisers workspace (infra-slack-smoke.yml)        |
-| `SLACK_HEALTHCHECK_CHANNEL` | Channel ID for healthcheck postMessage/delete (infra-slack-smoke.yml) |
-| `SLACK_HEALTHCHECK_TEAM_ID` | Team ID for the smoke-test workspace (infra-slack-smoke.yml)          |
-| `SLACK_SIGNING_SECRET`      | Slack signing secret — used to sign synthetic worker requests         |
+| Secret                      | Purpose                                                                                  |
+| --------------------------- | ---------------------------------------------------------------------------------------- |
+| `JINX_APP_ID`               | GitHub App ID                                                                            |
+| `JINX_PRIVATE_KEY`          | GitHub App private key (.pem)                                                            |
+| `MEETUP_PRIVATE_KEY`        | Meetup OAuth signing key, PEM (ops-event-sync.yml, ops-meetup-archive.yml)               |
+| `MEETUP_CLIENT_KEY`         | Meetup OAuth client key (ops-event-sync.yml, ops-meetup-archive.yml)                     |
+| `MEETUP_MEMBER_ID`          | Numeric member id of the OAuth client owner (ops-event-sync.yml, ops-meetup-archive.yml) |
+| `AIRTABLE_API_KEY`          | Airtable API key (airtable-sync.yml)                                                     |
+| `JINX_WORKER_URL`           | Deployed worker URL (infra-slack-smoke.yml)                                              |
+| `SLACK_ORGANISER_TOKEN`     | Bot token for the organisers workspace (infra-slack-smoke.yml)                           |
+| `SLACK_HEALTHCHECK_CHANNEL` | Channel ID for healthcheck postMessage/delete (infra-slack-smoke.yml)                    |
+| `SLACK_HEALTHCHECK_TEAM_ID` | Team ID for the smoke-test workspace (infra-slack-smoke.yml)                             |
+| `SLACK_SIGNING_SECRET`      | Slack signing secret — used to sign synthetic worker requests                            |
 
 Always reference as `secrets.JINX_APP_ID`, never `vars.JINX_APP_ID`.
 
@@ -213,7 +213,7 @@ auth code of its own.
 
 meetupr resolves credentials as `<client_name>_<key>` environment variables, with
 the prefix from `MEETUPR_CLIENT_NAME` — hence the **lowercase** names in
-`ops-event-sync.yml`:
+`ops-event-sync.yml` and `ops-meetup-archive.yml`:
 
 | meetupr env var | jinx repo secret |
 | --------------- | ---------------- |
@@ -232,6 +232,19 @@ Two things that cost real time when this was set up:
   `meetupr::meetupr_auth_status()`, which reports the resolved key path.
 - `jose` is required for the JWT path and is in meetupr's Suggests, so CI
   installs it explicitly via `extra-packages: any::jose`.
+
+### Meetup archive
+
+`ops-meetup-archive.yml` runs the archive scripts that live in
+[`rladies/meetup_archive`](https://github.com/rladies/meetup_archive) every 12
+hours and pushes the refreshed `data/` and `archive/` back as `jinx[bot]`. The
+scripts and their renv lockfile stay in that repo; jinx only supplies the Meetup
+credentials, a token scoped to `meetup_archive` contents, and Slack alerts on
+failure. On PRs touching the workflow it runs as a dry run without pushing.
+
+Because the scripts run with the Meetup signing key in their environment, write
+access to `meetup_archive` is effectively access to that key. Keep its
+collaborator list as tight as this repo's.
 
 ### Where each credential lives
 
