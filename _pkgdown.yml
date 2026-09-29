@@ -91,6 +91,9 @@ reference:
       - chapter_create_setup
       - chapter_create_update
       - chapter_create_pr
+      - chapter_status_reconcile
+      - chapter_status_reconcile_report
+      - chapter_initiated_date
       - chapter_validate_files
       - chapter_validate_report
       - chapter_check_health

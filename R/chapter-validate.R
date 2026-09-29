@@ -162,7 +162,7 @@ chapter_check_urlname <- function(path, chapter) {
 
 chapter_check_status <- function(path, chapter) {
   status <- chapter$status
-  known <- c("active", "prospective")
+  known <- c("active", "prospective", "inactive")
   retired <- grepl("^retired on [0-9]{2}-[0-9]{2}-[0-9]{4}$", status)
   if (status %in% known || retired) {
     return(NULL)
@@ -174,7 +174,8 @@ chapter_check_status <- function(path, chapter) {
     paste0(
       "Unrecognised status '",
       status,
-      "'; expected active, prospective, or 'retired on DD-MM-YYYY'"
+      "'; expected active, inactive, prospective, or",
+      " 'retired on DD-MM-YYYY'"
     )
   )
 }
