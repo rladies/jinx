@@ -249,6 +249,34 @@ describe("gh_coauthor_logins", {
   it("returns nothing for a plain message", {
     expect_identical(gh_coauthor_logins("docs: tidy up"), character(0))
   })
+
+  it("rejects a trailer that is not shaped like a login", {
+    message <- paste(
+      "feat: x",
+      "Co-authored-by: X <1+evil](https://evil.example) @rladies/global",
+      "@users.noreply.github.com>",
+      sep = ""
+    )
+    expect_identical(gh_coauthor_logins(message), character(0))
+  })
+})
+
+describe("is_valid_login", {
+  it("accepts GitHub logins", {
+    expect_true(is_valid_login("ada"))
+    expect_true(is_valid_login("R-Ladies-Oslo"))
+    expect_true(is_valid_login("a1"))
+  })
+
+  it("rejects anything that could become markdown or a team mention", {
+    expect_false(is_valid_login("rladies/global"))
+    expect_false(is_valid_login("evil](https://evil.example)"))
+    expect_false(is_valid_login("ada lovelace"))
+    expect_false(is_valid_login(""))
+    expect_false(is_valid_login("-ada"))
+    expect_false(is_valid_login("ada--lovelace"))
+    expect_false(is_valid_login(strrep("a", 40)))
+  })
 })
 
 describe("gh_and_list", {

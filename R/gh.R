@@ -429,8 +429,8 @@ gh_pr_helpers <- function(owner, repo, pr_number, author) {
     gh_pr_reviewers(owner, repo, pr_number),
     gh_pr_commenters(owner, repo, pr_number)
   )
-  keep <- nzchar(found$login) &
-    found$login != author &
+  keep <- found$login != author &
+    vapply(found$login, is_valid_login, logical(1), USE.NAMES = FALSE) &
     !vapply(found$login, is_bot, logical(1), USE.NAMES = FALSE)
   found <- found[keep, , drop = FALSE]
   found <- found[!duplicated(found$login), , drop = FALSE]
@@ -531,7 +531,18 @@ gh_coauthor_logins <- function(message) {
   noreply <- grep("@users\\.noreply\\.github\\.com$", emails, value = TRUE)
   logins <- sub("@users\\.noreply\\.github\\.com$", "", noreply)
   logins <- sub("^[0-9]+\\+", "", logins)
-  logins[nzchar(logins)]
+  logins[vapply(logins, is_valid_login, logical(1), USE.NAMES = FALSE)]
+}
+
+# A trailer is free text the PR author writes, so what comes out of one is
+# only a login if it looks like a login: anything else would be pasted into
+# a bot comment as markdown, and "@org/team" there mass-mentions a team.
+is_valid_login <- function(login) {
+  grepl(
+    "^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$",
+    login,
+    perl = TRUE
+  )
 }
 
 gh_thank_message <- function(author, repo, first_time, helpers) {
