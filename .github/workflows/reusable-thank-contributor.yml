@@ -1,6 +1,7 @@
-# Reusable: posts a thank-you on a merged PR, crediting everyone who
-# helped - the author (a different message for first-time vs returning
-# contributors), plus co-authors, reviewers and commenters.
+# Reusable: posts a thank-you on a merged PR or a closed issue, crediting
+# everyone who helped - the author (a different message for first-time vs
+# returning contributors), plus co-authors, reviewers and commenters on a
+# PR, and assignees and commenters on an issue.
 #
 # Caller requirements:
 #   - permissions: contents: read, packages: read  (needed to pull
@@ -29,7 +30,9 @@ jobs:
   thank:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: github.event.pull_request.merged == true
+    if: >-
+      github.event.pull_request.merged == true ||
+      (github.event_name == 'issues' && github.event.action == 'closed')
     container:
       image: ghcr.io/rladies/jinx-bot:latest
     steps:
@@ -46,10 +49,21 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           Rscript -e '
-            jinx::gh_thank_contributor(
-              owner = "${{ github.repository_owner }}",
-              repo = "${{ github.event.repository.name }}",
-              pr_number = ${{ github.event.pull_request.number }},
-              author = "${{ github.event.pull_request.user.login }}"
-            )
+            is_pr <- "${{ github.event_name }}" != "issues"
+            if (is_pr) {
+              jinx::gh_thank_contributor(
+                owner = "${{ github.repository_owner }}",
+                repo = "${{ github.event.repository.name }}",
+                pr_number = ${{ github.event.pull_request.number || 0 }},
+                author = "${{ github.event.pull_request.user.login }}"
+              )
+            } else {
+              jinx::gh_thank_issue_contributors(
+                owner = "${{ github.repository_owner }}",
+                repo = "${{ github.event.repository.name }}",
+                number = ${{ github.event.issue.number || 0 }},
+                author = "${{ github.event.issue.user.login }}",
+                completed = "${{ github.event.issue.state_reason }}" != "not_planned"
+              )
+            }
           '

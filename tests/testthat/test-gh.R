@@ -253,10 +253,13 @@ describe("gh_coauthor_logins", {
   it("rejects a trailer that is not shaped like a login", {
     message <- paste(
       "feat: x",
-      "Co-authored-by: X <1+evil](https://evil.example) @rladies/global",
-      "@users.noreply.github.com>",
-      sep = ""
+      paste0(
+        "Co-authored-by: X <1+evil](https://evil.example) @rladies/global",
+        "@users.noreply.github.com>"
+      ),
+      sep = "\n"
     )
+    expect_match(message, "\nCo-authored-by:")
     expect_identical(gh_coauthor_logins(message), character(0))
   })
 })
@@ -341,7 +344,7 @@ describe("gh_pr_helpers", {
   }
 
   it("collects co-authors, reviewers and commenters", {
-    local_mocked_bindings(gh_pr_fetch = pr_fetch_stub)
+    local_mocked_bindings(gh_api_fetch = pr_fetch_stub)
     helpers <- gh_pr_helpers("rladies", "jinx", 1L, "ada")
     expect_identical(helpers$login, c("grace", "hedy", "marie", "lise"))
     expect_identical(
@@ -351,7 +354,7 @@ describe("gh_pr_helpers", {
   })
 
   it("excludes the author, bots and pending reviews", {
-    local_mocked_bindings(gh_pr_fetch = pr_fetch_stub)
+    local_mocked_bindings(gh_api_fetch = pr_fetch_stub)
     helpers <- gh_pr_helpers("rladies", "jinx", 1L, "ada")
     expect_false("ada" %in% helpers$login)
     expect_false("rosalind" %in% helpers$login)
@@ -359,24 +362,24 @@ describe("gh_pr_helpers", {
   })
 
   it("keeps the first role a person appears in", {
-    local_mocked_bindings(gh_pr_fetch = pr_fetch_stub)
+    local_mocked_bindings(gh_api_fetch = pr_fetch_stub)
     helpers <- gh_pr_helpers("rladies", "jinx", 1L, "ada")
     expect_identical(helpers$role[helpers$login == "marie"], "reviewer")
   })
 
   it("returns no rows when nothing is found", {
-    local_mocked_bindings(gh_pr_fetch = function(endpoint, ...) list())
+    local_mocked_bindings(gh_api_fetch = function(endpoint, ...) list())
     expect_identical(nrow(gh_pr_helpers("rladies", "jinx", 1L, "ada")), 0L)
   })
 })
 
-describe("gh_pr_fetch", {
+describe("gh_api_fetch", {
   it("wraps a single object response in a list", {
     local_mocked_bindings(
       gh = function(...) list(login = "ada"),
       .package = "gh"
     )
-    expect_identical(gh_pr_fetch("GET /x"), list(list(login = "ada")))
+    expect_identical(gh_api_fetch("GET /x"), list(list(login = "ada")))
   })
 
   it("returns an empty list and warns when the call fails", {
@@ -385,7 +388,7 @@ describe("gh_pr_fetch", {
       .package = "gh"
     )
     expect_message(
-      result <- gh_pr_fetch("GET /x"),
+      result <- gh_api_fetch("GET /x"),
       "Could not fetch"
     )
     expect_identical(result, list())
@@ -482,5 +485,276 @@ describe("gh_thank_contributor", {
 
   it("does nothing for bot authors", {
     expect_null(gh_thank_contributor("rladies", "jinx", 1L, "dependabot[bot]"))
+  })
+})
+
+describe("gh_issue_helpers", {
+  issue_fetch_stub <- function(endpoint, ...) {
+    if (grepl("issues/\\{issue_number\\}$", endpoint)) {
+      return(list(list(
+        assignees = list(
+          list(login = "marie"),
+          list(login = "hedy")
+        )
+      )))
+    }
+    list(
+      list(user = list(login = "lise")),
+      list(user = list(login = "marie")),
+      list(user = list(login = "ada")),
+      list(user = list(login = "github-actions"))
+    )
+  }
+
+  it("credits assignees and commenters", {
+    local_mocked_bindings(gh_api_fetch = issue_fetch_stub)
+    helpers <- gh_issue_helpers("rladies", "jinx", 1L, "ada")
+    expect_identical(helpers$login, c("marie", "hedy", "lise"))
+    expect_identical(helpers$role, c("assignee", "assignee", "commenter"))
+  })
+
+  it("does not ask for review comments on an issue", {
+    seen <- character(0)
+    local_mocked_bindings(
+      gh_api_fetch = function(endpoint, ...) {
+        seen <<- c(seen, endpoint)
+        issue_fetch_stub(endpoint, ...)
+      }
+    )
+    gh_issue_helpers("rladies", "jinx", 1L, "ada")
+    expect_false(any(grepl("pulls", seen)))
+  })
+
+  it("copes with an issue nobody was assigned", {
+    local_mocked_bindings(
+      gh_api_fetch = function(endpoint, ...) {
+        if (grepl("issues/\\{issue_number\\}$", endpoint)) {
+          return(list(list(assignees = list())))
+        }
+        list(list(user = list(login = "lise")))
+      }
+    )
+    helpers <- gh_issue_helpers("rladies", "jinx", 1L, "ada")
+    expect_identical(helpers$login, "lise")
+  })
+})
+
+describe("gh_thank_message for issues", {
+  no_helpers <- data.frame(
+    login = character(0),
+    role = character(0),
+    stringsAsFactors = FALSE
+  )
+
+  it("welcomes a first-time issue reporter", {
+    msg <- gh_thank_message("ada", "jinx", TRUE, no_helpers, is_pr = FALSE)
+    expect_true(grepl("first issue in **jinx**", msg, fixed = TRUE))
+    expect_false(grepl("contribution", msg, fixed = TRUE))
+  })
+
+  it("thanks a returning issue reporter", {
+    msg <- gh_thank_message("ada", "jinx", FALSE, no_helpers, is_pr = FALSE)
+    expect_true(grepl("Thank you for raising this, @ada!", msg, fixed = TRUE))
+  })
+})
+
+describe("gh_thank_issue_contributors", {
+  it("posts a comment crediting the reporter and the helpers", {
+    posted <- NULL
+    local_mocked_bindings(
+      is_first_time_contributor = function(...) FALSE,
+      gh_issue_helpers = function(...) {
+        data.frame(
+          login = "marie",
+          role = "assignee",
+          stringsAsFactors = FALSE
+        )
+      }
+    )
+    local_mocked_bindings(
+      gh = function(endpoint, ..., body) {
+        posted <<- body
+        list(html_url = "https://example.com/comment")
+      },
+      .package = "gh"
+    )
+    url <- gh_thank_issue_contributors("rladies", "jinx", 7L, "ada")
+    expect_identical(url, "https://example.com/comment")
+    expect_true(grepl("Thank you for raising this, @ada", posted, fixed = TRUE))
+    expect_true(grepl("@marie for picking this up", posted, fixed = TRUE))
+  })
+
+  it("checks first-time status against issues, not PRs", {
+    seen <- NULL
+    local_mocked_bindings(
+      is_first_time_contributor = function(owner, repo, author, is_pr) {
+        seen <<- is_pr
+        FALSE
+      },
+      gh_issue_helpers = function(...) {
+        data.frame(
+          login = character(0),
+          role = character(0),
+          stringsAsFactors = FALSE
+        )
+      }
+    )
+    local_mocked_bindings(
+      gh = function(...) list(html_url = "u"),
+      .package = "gh"
+    )
+    gh_thank_issue_contributors("rladies", "jinx", 7L, "ada")
+    expect_false(seen)
+  })
+
+  it("does nothing for bot authors", {
+    expect_null(
+      gh_thank_issue_contributors("rladies", "jinx", 7L, "dependabot[bot]")
+    )
+  })
+})
+
+describe("gh_thankable", {
+  frame <- function(login, role, type = "User") {
+    data.frame(
+      login = login,
+      role = role,
+      type = type,
+      stringsAsFactors = FALSE
+    )
+  }
+
+  it("drops a bot that has no [bot] suffix, going by its account type", {
+    found <- rbind(
+      frame("Copilot", "reviewer", "Bot"),
+      frame("marie", "reviewer")
+    )
+    expect_identical(gh_thankable(found, "ada")$login, "marie")
+  })
+
+  it("does not mention the author under a different casing", {
+    found <- rbind(frame("Ada", "co-author"), frame("marie", "reviewer"))
+    expect_identical(gh_thankable(found, "ada")$login, "marie")
+  })
+
+  it("thanks one person once across roles that spell them differently", {
+    found <- rbind(frame("Marie", "co-author"), frame("marie", "reviewer"))
+    thanked <- gh_thankable(found, "ada")
+    expect_identical(thanked$login, "Marie")
+    expect_identical(thanked$role, "co-author")
+  })
+
+  it("drops a ghost user with no login", {
+    expect_identical(nrow(gh_thankable(frame("", "commenter"), "ada")), 0L)
+  })
+
+  it("keeps a human whose type is missing", {
+    found <- data.frame(
+      login = "marie",
+      role = "reviewer",
+      type = NA_character_,
+      stringsAsFactors = FALSE
+    )
+    expect_identical(gh_thankable(found, "ada")$login, "marie")
+  })
+})
+
+describe("gh_thank_helpers_line wording", {
+  helpers <- function(login, role) {
+    data.frame(
+      login = login,
+      role = role,
+      stringsAsFactors = FALSE
+    )
+  }
+
+  it("reads unambiguously with one clause", {
+    expect_identical(
+      as.character(gh_thank_helpers_line(helpers("marie", "reviewer"))),
+      "Thanks also to @marie for reviewing."
+    )
+  })
+
+  it("separates clauses so the ands cannot run together", {
+    line <- gh_thank_helpers_line(
+      helpers(
+        c("grace", "marie", "hedy"),
+        c("co-author", "reviewer", "reviewer")
+      )
+    )
+    expect_identical(
+      as.character(line),
+      "Thanks also to @grace for co-authoring; @marie and @hedy for reviewing."
+    )
+  })
+
+  it("keeps every role in order", {
+    line <- gh_thank_helpers_line(
+      helpers(
+        c("grace", "marie", "lise", "rosalind"),
+        c("co-author", "reviewer", "assignee", "commenter")
+      )
+    )
+    expect_identical(
+      as.character(line),
+      paste(
+        "Thanks also to @grace for co-authoring; @marie for reviewing;",
+        "@lise for picking this up; @rosalind for joining the discussion."
+      )
+    )
+  })
+})
+
+describe("gh_coauthor_logins with two addresses", {
+  it("takes the first address on the trailer line", {
+    message <- paste(
+      "feat: x",
+      "Co-authored-by: A <1+ada@users.noreply.github.com> <b@example.com>",
+      sep = "\n"
+    )
+    expect_identical(gh_coauthor_logins(message), "ada")
+  })
+})
+
+describe("gh_pr_helpers endpoints", {
+  it("asks for conversation and review comments on a PR", {
+    seen <- character(0)
+    local_mocked_bindings(
+      gh_api_fetch = function(endpoint, ...) {
+        seen <<- c(seen, endpoint)
+        list()
+      }
+    )
+    gh_pr_helpers("rladies", "jinx", 1L, "ada")
+    expect_true(any(grepl("issues/\\{issue_number\\}/comments", seen)))
+    expect_true(any(grepl("pulls/\\{pull_number\\}/comments", seen)))
+    expect_true(any(grepl("commits", seen)))
+    expect_true(any(grepl("reviews", seen)))
+  })
+})
+
+describe("gh_thank_issue_contributors on a not-planned close", {
+  it("thanks without the first-timer congratulation", {
+    posted <- NULL
+    local_mocked_bindings(
+      is_first_time_contributor = function(...) TRUE,
+      gh_issue_helpers = function(...) {
+        data.frame(
+          login = character(0),
+          role = character(0),
+          stringsAsFactors = FALSE
+        )
+      }
+    )
+    local_mocked_bindings(
+      gh = function(endpoint, ..., body) {
+        posted <<- body
+        list(html_url = "u")
+      },
+      .package = "gh"
+    )
+    gh_thank_issue_contributors("rladies", "jinx", 7L, "ada", completed = FALSE)
+    expect_false(grepl("first issue", posted, fixed = TRUE))
+    expect_true(grepl("Thank you for raising this", posted, fixed = TRUE))
   })
 })

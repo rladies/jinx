@@ -95,6 +95,48 @@ gh_thank_contributor <- function(
   invisible(comment$html_url)
 }
 
+#' Thank everyone who took part in a closed issue
+#'
+#' Posts a thank-you when an issue is closed, crediting the person who
+#' raised it (with a warmer message if it was their first here) plus
+#' everyone who was assigned to it or commented on it.
+#'
+#' @param owner Repository owner.
+#' @param repo Repository name.
+#' @param number Issue number.
+#' @param author GitHub login of the person who opened the issue.
+#' @param completed Whether the issue was closed as completed. An issue
+#'   closed as `not_planned` (spam, duplicate, invalid) is still thanked,
+#'   but without the first-timer congratulation.
+#' @return Comment URL (invisibly), or `NULL` for bot authors.
+#' @export
+gh_thank_issue_contributors <- function(
+  owner,
+  repo,
+  number,
+  author,
+  completed = TRUE
+) {
+  if (is_bot(author)) {
+    return(invisible(NULL))
+  }
+
+  first_time <- completed &&
+    is_first_time_contributor(owner, repo, author, is_pr = FALSE)
+  helpers <- gh_issue_helpers(owner, repo, number, author)
+  message <- gh_thank_message(author, repo, first_time, helpers, is_pr = FALSE)
+
+  comment <- gh::gh(
+    "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
+    owner = owner,
+    repo = repo,
+    issue_number = number,
+    body = message
+  )
+
+  invisible(comment$html_url)
+}
+
 #' Greet a new PR author
 #'
 #' Thin wrapper around [gh_welcome_contributor()] that fixes `is_pr =
@@ -424,22 +466,62 @@ gh_welcome_message_with_extra <- function(message, extra) {
 }
 
 gh_pr_helpers <- function(owner, repo, pr_number, author) {
-  found <- rbind(
-    gh_pr_coauthors(owner, repo, pr_number),
-    gh_pr_reviewers(owner, repo, pr_number),
-    gh_pr_commenters(owner, repo, pr_number)
+  gh_thankable(
+    rbind(
+      gh_pr_coauthors(owner, repo, pr_number),
+      gh_pr_reviewers(owner, repo, pr_number),
+      gh_comment_authors(owner, repo, pr_number)
+    ),
+    author
   )
-  keep <- found$login != author &
+}
+
+gh_issue_helpers <- function(owner, repo, number, author) {
+  gh_thankable(
+    rbind(
+      gh_issue_assignees(owner, repo, number),
+      gh_comment_authors(owner, repo, number, is_pr = FALSE)
+    ),
+    author
+  )
+}
+
+gh_issue_assignees <- function(owner, repo, number) {
+  issue <- gh_api_fetch(
+    "GET /repos/{owner}/{repo}/issues/{issue_number}",
+    owner = owner,
+    repo = repo,
+    issue_number = number,
+    .limit = NULL
+  )
+  assignees <- unlist(
+    lapply(issue, function(x) x$assignees %||% list()),
+    recursive = FALSE
+  )
+  gh_role_frame(
+    vapply(assignees, function(x) x$login %||% "", character(1)),
+    "assignee",
+    vapply(assignees, function(x) x$type %||% "User", character(1))
+  )
+}
+
+gh_thankable <- function(found, author) {
+  keep <- tolower(found$login) != tolower(author) &
+    !identical_type(found$type, "Bot") &
     vapply(found$login, is_valid_login, logical(1), USE.NAMES = FALSE) &
     !vapply(found$login, is_bot, logical(1), USE.NAMES = FALSE)
   found <- found[keep, , drop = FALSE]
-  found <- found[!duplicated(found$login), , drop = FALSE]
+  found <- found[!duplicated(tolower(found$login)), , drop = FALSE]
   row.names(found) <- NULL
   found
 }
 
+identical_type <- function(types, value) {
+  !is.na(types) & types == value
+}
+
 gh_pr_coauthors <- function(owner, repo, pr_number) {
-  commits <- gh_pr_fetch(
+  commits <- gh_api_fetch(
     "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits",
     owner = owner,
     repo = repo,
@@ -451,11 +533,21 @@ gh_pr_coauthors <- function(owner, repo, pr_number) {
       gh_coauthor_logins(commit$commit$message %||% "")
     )
   }))
-  gh_role_frame(logins, "co-author")
+  types <- unlist(lapply(commits, function(commit) {
+    c(
+      if (is.null(commit$author$login)) {
+        NULL
+      } else {
+        commit$author$type %||% "User"
+      },
+      rep("User", length(gh_coauthor_logins(commit$commit$message %||% "")))
+    )
+  }))
+  gh_role_frame(logins, "co-author", types)
 }
 
 gh_pr_reviewers <- function(owner, repo, pr_number) {
-  reviews <- gh_pr_fetch(
+  reviews <- gh_api_fetch(
     "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews",
     owner = owner,
     repo = repo,
@@ -465,40 +557,41 @@ gh_pr_reviewers <- function(owner, repo, pr_number) {
     function(review) !identical(review$state, "PENDING"),
     reviews
   )
-  logins <- vapply(
-    submitted,
-    function(review) review$user$login %||% "",
-    character(1)
+  gh_role_frame(
+    vapply(submitted, function(x) x$user$login %||% "", character(1)),
+    "reviewer",
+    vapply(submitted, function(x) x$user$type %||% "User", character(1))
   )
-  gh_role_frame(logins, "reviewer")
 }
 
-gh_pr_commenters <- function(owner, repo, pr_number) {
-  comments <- c(
-    gh_pr_fetch(
-      "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
-      owner = owner,
-      repo = repo,
-      issue_number = pr_number
-    ),
-    gh_pr_fetch(
-      "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments",
-      owner = owner,
-      repo = repo,
-      pull_number = pr_number
+gh_comment_authors <- function(owner, repo, number, is_pr = TRUE) {
+  comments <- gh_api_fetch(
+    "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
+    owner = owner,
+    repo = repo,
+    issue_number = number
+  )
+  if (is_pr) {
+    comments <- c(
+      comments,
+      gh_api_fetch(
+        "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments",
+        owner = owner,
+        repo = repo,
+        pull_number = number
+      )
     )
+  }
+  gh_role_frame(
+    vapply(comments, function(x) x$user$login %||% "", character(1)),
+    "commenter",
+    vapply(comments, function(x) x$user$type %||% "User", character(1))
   )
-  logins <- vapply(
-    comments,
-    function(comment) comment$user$login %||% "",
-    character(1)
-  )
-  gh_role_frame(logins, "commenter")
 }
 
-gh_pr_fetch <- function(endpoint, ...) {
+gh_api_fetch <- function(endpoint, ..., .limit = Inf) {
   result <- tryCatch(
-    gh::gh(endpoint, ..., .limit = Inf),
+    gh::gh(endpoint, ..., .limit = .limit),
     error = function(e) {
       cli::cli_alert_warning("Could not fetch {endpoint}: {e$message}")
       list()
@@ -510,11 +603,13 @@ gh_pr_fetch <- function(endpoint, ...) {
   result
 }
 
-gh_role_frame <- function(logins, role) {
-  logins <- unique(logins[!is.na(logins)])
+gh_role_frame <- function(logins, role, types = NULL) {
+  types <- types %||% rep("User", length(logins))
+  keep <- !is.na(logins) & !duplicated(tolower(logins))
   data.frame(
-    login = as.character(logins),
-    role = rep(role, length(logins)),
+    login = as.character(logins[keep]),
+    role = rep(role, sum(keep)),
+    type = as.character(types[keep]),
     stringsAsFactors = FALSE
   )
 }
@@ -527,7 +622,7 @@ gh_coauthor_logins <- function(message) {
     ignore.case = TRUE,
     value = TRUE
   )
-  emails <- sub(".*<([^>]+)>.*", "\\1", trailers)
+  emails <- sub("^[^<]*<([^>]+)>.*", "\\1", trailers)
   noreply <- grep("@users\\.noreply\\.github\\.com$", emails, value = TRUE)
   logins <- sub("@users\\.noreply\\.github\\.com$", "", noreply)
   logins <- sub("^[0-9]+\\+", "", logins)
@@ -545,14 +640,21 @@ is_valid_login <- function(login) {
   )
 }
 
-gh_thank_message <- function(author, repo, first_time, helpers) {
-  opening <- if (first_time) {
+gh_thank_message <- function(author, repo, first_time, helpers, is_pr = TRUE) {
+  opening <- if (is_pr && first_time) {
     glue::glue(
       "Congratulations on your first contribution to **{repo}**, @{author}! ",
       "Thank you for helping make RLadies+ better."
     )
-  } else {
+  } else if (is_pr) {
     glue::glue("Thank you for your contribution, @{author}!")
+  } else if (first_time) {
+    glue::glue(
+      "That was your first issue in **{repo}**, @{author} - thank you for ",
+      "raising it, and for helping make RLadies+ better."
+    )
+  } else {
+    glue::glue("Thank you for raising this, @{author}!")
   }
   paste(
     c(opening, gh_thank_helpers_line(helpers), "_Generated by jinx_"),
@@ -567,6 +669,7 @@ gh_thank_helpers_line <- function(helpers) {
   verbs <- c(
     "co-author" = "co-authoring",
     "reviewer" = "reviewing",
+    "assignee" = "picking this up",
     "commenter" = "joining the discussion"
   )
   clauses <- vapply(
@@ -581,7 +684,7 @@ gh_thank_helpers_line <- function(helpers) {
     character(1)
   )
   clauses <- clauses[nzchar(clauses)]
-  glue::glue("Thanks also to {gh_and_list(clauses)}.")
+  glue::glue("Thanks also to {paste(clauses, collapse = '; ')}.")
 }
 
 gh_mention_list <- function(logins) {

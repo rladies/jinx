@@ -1,13 +1,32 @@
 # jinx (development version)
 
-## Merged PRs thank everyone who helped, not just the author
+## Merged PRs and closed issues thank everyone who helped
 
 - **`gh_thank_contributor()` now credits co-authors, reviewers and
   commenters** alongside the PR author. Co-authors come from the commit
   authors and `Co-authored-by:` trailers (resolved via GitHub noreply
   addresses), reviewers from submitted reviews, and commenters from both
   the conversation and the review comments. Each person is named once,
-  under the most substantial thing they did, and bots are left out.
+  under the most substantial thing they did, and bots are left out. A
+  login that does not match GitHub's login grammar is never mentioned,
+  because a trailer is text the PR author writes and `@org/team` in that
+  position would mass-mention a team.
+
+- **`gh_thank_issue_contributors()` does the same when an issue closes**,
+  which until now thanked nobody at all. It credits the reporter (warmer
+  wording if it was their first issue here) plus the assignees and
+  commenters. It fires on any close, since the reporting and triage
+  effort was real either way, but an issue closed as `not_planned`
+  (spam, duplicate, invalid) is thanked without the first-timer
+  congratulation. `reusable-thank-contributor.yml` now accepts
+  `issues: [closed]` alongside merged PRs.
+
+- **An account GitHub reports as a `Bot` is never thanked**, even when
+  its login carries no `[bot]` suffix. Copilot's review account is the
+  one that matters here: it posts as `Copilot`, so matching on the login
+  alone had jinx thanking a bot on most PRs. Logins are also compared
+  case-insensitively, so the author is not thanked alongside themselves
+  and nobody is credited twice under two spellings.
 
 ## Chapter GitHub links are checked against reality
 
