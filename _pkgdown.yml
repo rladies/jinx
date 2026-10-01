@@ -91,6 +91,8 @@ reference:
       - chapter_create_setup
       - chapter_create_update
       - chapter_create_pr
+      - chapter_repo_audit
+      - chapter_repo_audit_report
       - chapter_status_reconcile
       - chapter_status_reconcile_report
       - chapter_initiated_date

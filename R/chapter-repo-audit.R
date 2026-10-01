@@ -1,0 +1,196 @@
+#' Audit the GitHub references in chapter data
+#'
+#' Each chapter may carry a `social_media$github` value. Two shapes are
+#' legitimate: `owner/repo` for a chapter that keeps its files in a
+#' repository, and a bare organisation name for a chapter that runs its
+#' own GitHub organisation. Anything that resolves to neither is a dead
+#' link on the chapter's page.
+#'
+#' Where a reference is dead and the conventional
+#' `<org>/meetup-presentations_<city>` repository exists, that is
+#' reported as the likely correction.
+#'
+#' @param chapters_dir Directory of chapter JSON files.
+#' @param org Organisation the conventional repository would live in.
+#' @return A data frame with columns `file`, `github`, `state` and
+#'   `suggestion`. `state` is `"repo"`, `"org"`, `"url"`, `"prefixed"`
+#'   or `"missing"`. A `"url"` row resolves but is written as a full
+#'   URL; a `"prefixed"` row is an organisation the chapter owns,
+#'   written as though it were a repository under `org`. Both carry the
+#'   same reference in the expected shape as their suggestion. Only
+#'   rows needing attention are returned.
+#' @export
+chapter_repo_audit <- function(chapters_dir, org = "rladies") {
+  files <- list.files(chapters_dir, pattern = "[.]json$", full.names = TRUE)
+  rows <- lapply(files, function(f) chapter_repo_row(f, org))
+  out <- do.call(rbind, c(list(chapter_repo_frame()), rows))
+  out <- out[out$state != "repo" & out$state != "org", , drop = FALSE]
+  rownames(out) <- NULL
+  out
+}
+
+chapter_repo_frame <- function(
+  file = character(),
+  github = character(),
+  state = character(),
+  suggestion = character()
+) {
+  data.frame(
+    file = file,
+    github = github,
+    state = state,
+    suggestion = suggestion,
+    stringsAsFactors = FALSE
+  )
+}
+
+chapter_repo_row <- function(path, org) {
+  chapter <- tryCatch(jsonlite::read_json(path), error = function(e) NULL)
+  ref <- chapter$social_media$github
+  if (is.null(ref) || !nzchar(ref)) {
+    return(NULL)
+  }
+  state <- chapter_repo_state(ref)
+  chapter_repo_frame(
+    basename(path),
+    ref,
+    state,
+    if (state == "repo" || state == "org") {
+      NA_character_
+    } else if (state == "url") {
+      chapter_repo_bare(ref)
+    } else if (state == "prefixed") {
+      chapter_repo_tail(ref)
+    } else {
+      chapter_repo_suggestion(chapter$city, org)
+    }
+  )
+}
+
+# A full github.com URL still names something real most of the time, so
+# resolve it rather than calling it dead: Sao Paulo's
+# "https://github.com/R-Ladies-Sao-Paulo/" is a live organisation written
+# in the wrong shape. The state distinguishes the two so the report asks
+# for a rewrite rather than a hunt for a missing repository.
+chapter_repo_state <- function(ref) {
+  bare <- chapter_repo_bare(ref)
+  resolved <- chapter_repo_resolve(bare)
+  if (identical(resolved, "missing")) {
+    return("missing")
+  }
+  if (identical(resolved, "prefixed")) {
+    return("prefixed")
+  }
+  if (!identical(bare, ref)) {
+    return("url")
+  }
+  resolved
+}
+
+chapter_repo_bare <- function(ref) {
+  bare <- sub("^https?://(www[.])?github[.]com/", "", ref)
+  bare <- sub("[.]git$", "", bare)
+  sub("/+$", "", bare)
+}
+
+# An owner/repo that does not resolve is often an organisation name with
+# an "rladies/" prefix bolted on: the chapter runs its own organisation,
+# and someone wrote it down as though it were a repository under ours.
+# Checking the tail as an organisation before declaring the reference
+# dead matters, because the conventional-repository suggestion would
+# otherwise point a chapter away from its own work - East Lansing keeps
+# 24 repositories in rladies-eastlansing.
+chapter_repo_resolve <- function(bare) {
+  parts <- strsplit(bare, "/", fixed = TRUE)[[1]]
+  parts <- parts[nzchar(parts)]
+  if (length(parts) == 2) {
+    if (chapter_gh_exists(paste0("/repos/", bare))) {
+      return("repo")
+    }
+    if (chapter_gh_exists(paste0("/orgs/", parts[2]))) {
+      return("prefixed")
+    }
+    return("missing")
+  }
+  if (length(parts) == 1 && chapter_gh_exists(paste0("/orgs/", bare))) {
+    return("org")
+  }
+  "missing"
+}
+
+chapter_repo_tail <- function(ref) {
+  parts <- strsplit(chapter_repo_bare(ref), "/", fixed = TRUE)[[1]]
+  parts <- parts[nzchar(parts)]
+  parts[length(parts)]
+}
+
+chapter_repo_suggestion <- function(city, org) {
+  if (is.null(city) || !nzchar(city)) {
+    return(NA_character_)
+  }
+  candidate <- paste0(org, "/meetup-presentations_", chapter_slug(city))
+  if (chapter_gh_exists(paste0("/repos/", candidate))) {
+    return(candidate)
+  }
+  NA_character_
+}
+
+# gh::gh() needs the leading slash. Without it every lookup fails at the
+# curl layer, which looks exactly like a 404 and marks the whole
+# directory dead.
+chapter_gh_exists <- function(endpoint) {
+  result <- tryCatch(
+    {
+      gh::gh(paste("GET", endpoint))
+      TRUE
+    },
+    error = function(e) FALSE
+  )
+  isTRUE(result)
+}
+
+#' Render a chapter GitHub audit as markdown
+#'
+#' @param audit Data frame from [chapter_repo_audit()].
+#' @return A markdown string.
+#' @export
+chapter_repo_audit_report <- function(audit) {
+  header <- "## Chapter GitHub links\n\n"
+  if (nrow(audit) == 0) {
+    return(glue::glue(
+      "{header}Every chapter GitHub reference resolves.\n",
+      .trim = FALSE
+    ))
+  }
+  url <- audit[audit$state == "url", , drop = FALSE]
+  prefixed <- audit[audit$state == "prefixed", , drop = FALSE]
+  rest <- audit[!audit$state %in% c("url", "prefixed"), , drop = FALSE]
+  fixable <- rest[!is.na(rest$suggestion), , drop = FALSE]
+  unknown <- rest[is.na(rest$suggestion), , drop = FALSE]
+  glue::glue(
+    "{header}",
+    "{chapter_repo_section(fixable, 'Dead, with a likely replacement')}",
+    "{chapter_repo_section(unknown, 'Dead, no obvious replacement')}",
+    "{chapter_repo_section(url, 'Resolves, but written as a URL')}",
+    "{chapter_repo_section(prefixed, prefixed_title)}",
+    "\n_Generated by jinx_\n",
+    prefixed_title = "Own organisation, with a spurious owner prefix",
+    .trim = FALSE
+  )
+}
+
+chapter_repo_section <- function(rows, title) {
+  if (nrow(rows) == 0) {
+    return("")
+  }
+  rows$arrow <- ifelse(
+    is.na(rows$suggestion),
+    "",
+    glue::glue_data(rows, " -> `{suggestion}`")
+  )
+  lines <- glue::glue_data(rows, "- `{file}`: `{github}` ({state}){arrow}")
+  glue::glue(
+    "### {title}\n\n{glue::glue_collapse(lines, sep = '\n')}\n\n",
+    .trim = FALSE
+  )
+}
