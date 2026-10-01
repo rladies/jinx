@@ -223,3 +223,236 @@ describe("gh_open_or_update_pr", {
     expect_identical(url, "https://github.com/x/y/pull/10")
   })
 })
+
+describe("gh_coauthor_logins", {
+  it("extracts logins from noreply co-author trailers", {
+    message <- paste(
+      "feat: something",
+      "",
+      "Co-authored-by: Ada Lovelace <123+ada@users.noreply.github.com>",
+      "Co-authored-by: Grace <grace@users.noreply.github.com>",
+      sep = "\n"
+    )
+    expect_identical(gh_coauthor_logins(message), c("ada", "grace"))
+  })
+
+  it("ignores trailers without a resolvable GitHub email", {
+    message <- paste(
+      "fix: thing",
+      "Co-authored-by: Someone <someone@example.com>",
+      "Co-authored-by: No Email Here",
+      sep = "\n"
+    )
+    expect_identical(gh_coauthor_logins(message), character(0))
+  })
+
+  it("returns nothing for a plain message", {
+    expect_identical(gh_coauthor_logins("docs: tidy up"), character(0))
+  })
+})
+
+describe("gh_and_list", {
+  it("returns a single item unchanged", {
+    expect_identical(gh_and_list("@ada"), "@ada")
+  })
+
+  it("joins two items with and", {
+    expect_identical(gh_and_list(c("@ada", "@grace")), "@ada and @grace")
+  })
+
+  it("joins three items with commas and a final and", {
+    expect_identical(
+      gh_and_list(c("@ada", "@grace", "@hedy")),
+      "@ada, @grace and @hedy"
+    )
+  })
+
+  it("returns an empty string for nothing", {
+    expect_identical(gh_and_list(character(0)), "")
+  })
+})
+
+describe("gh_mention_list", {
+  it("prefixes logins with @", {
+    expect_identical(gh_mention_list(c("ada", "grace")), "@ada and @grace")
+  })
+})
+
+describe("gh_pr_helpers", {
+  pr_fetch_stub <- function(endpoint, ...) {
+    if (grepl("commits", endpoint)) {
+      return(list(
+        list(
+          author = list(login = "ada"),
+          commit = list(
+            message = paste(
+              "feat: thing",
+              "Co-authored-by: Grace <9+grace@users.noreply.github.com>",
+              sep = "\n"
+            )
+          )
+        ),
+        list(
+          author = list(login = "hedy"),
+          commit = list(message = "fix: thing")
+        )
+      ))
+    }
+    if (grepl("reviews", endpoint)) {
+      return(list(
+        list(user = list(login = "marie"), state = "APPROVED"),
+        list(user = list(login = "rosalind"), state = "PENDING"),
+        list(user = list(login = "github-actions"), state = "COMMENTED")
+      ))
+    }
+    list(
+      list(user = list(login = "lise")),
+      list(user = list(login = "marie")),
+      list(user = list(login = "copilot[bot]"))
+    )
+  }
+
+  it("collects co-authors, reviewers and commenters", {
+    local_mocked_bindings(gh_pr_fetch = pr_fetch_stub)
+    helpers <- gh_pr_helpers("rladies", "jinx", 1L, "ada")
+    expect_identical(helpers$login, c("grace", "hedy", "marie", "lise"))
+    expect_identical(
+      helpers$role,
+      c("co-author", "co-author", "reviewer", "commenter")
+    )
+  })
+
+  it("excludes the author, bots and pending reviews", {
+    local_mocked_bindings(gh_pr_fetch = pr_fetch_stub)
+    helpers <- gh_pr_helpers("rladies", "jinx", 1L, "ada")
+    expect_false("ada" %in% helpers$login)
+    expect_false("rosalind" %in% helpers$login)
+    expect_false(any(grepl("bot|github-actions", helpers$login)))
+  })
+
+  it("keeps the first role a person appears in", {
+    local_mocked_bindings(gh_pr_fetch = pr_fetch_stub)
+    helpers <- gh_pr_helpers("rladies", "jinx", 1L, "ada")
+    expect_identical(helpers$role[helpers$login == "marie"], "reviewer")
+  })
+
+  it("returns no rows when nothing is found", {
+    local_mocked_bindings(gh_pr_fetch = function(endpoint, ...) list())
+    expect_identical(nrow(gh_pr_helpers("rladies", "jinx", 1L, "ada")), 0L)
+  })
+})
+
+describe("gh_pr_fetch", {
+  it("wraps a single object response in a list", {
+    local_mocked_bindings(
+      gh = function(...) list(login = "ada"),
+      .package = "gh"
+    )
+    expect_identical(gh_pr_fetch("GET /x"), list(list(login = "ada")))
+  })
+
+  it("returns an empty list and warns when the call fails", {
+    local_mocked_bindings(
+      gh = function(...) stop("404"),
+      .package = "gh"
+    )
+    expect_message(
+      result <- gh_pr_fetch("GET /x"),
+      "Could not fetch"
+    )
+    expect_identical(result, list())
+  })
+})
+
+describe("gh_thank_helpers_line", {
+  it("returns nothing when there are no helpers", {
+    empty <- data.frame(
+      login = character(0),
+      role = character(0),
+      stringsAsFactors = FALSE
+    )
+    expect_identical(gh_thank_helpers_line(empty), character(0))
+  })
+
+  it("groups people by what they did", {
+    helpers <- data.frame(
+      login = c("grace", "marie", "lise", "hedy"),
+      role = c("co-author", "reviewer", "commenter", "reviewer"),
+      stringsAsFactors = FALSE
+    )
+    line <- gh_thank_helpers_line(helpers)
+    expect_true(grepl("@grace for co-authoring", line, fixed = TRUE))
+    expect_true(grepl("@marie and @hedy for reviewing", line, fixed = TRUE))
+    expect_true(
+      grepl("@lise for joining the discussion", line, fixed = TRUE)
+    )
+  })
+})
+
+describe("gh_thank_message", {
+  no_helpers <- data.frame(
+    login = character(0),
+    role = character(0),
+    stringsAsFactors = FALSE
+  )
+
+  it("congratulates a first-time contributor", {
+    msg <- gh_thank_message("ada", "jinx", TRUE, no_helpers)
+    expect_true(grepl("first contribution to **jinx**", msg, fixed = TRUE))
+    expect_true(grepl("_Generated by jinx_", msg, fixed = TRUE))
+    expect_false(grepl("Thanks also", msg, fixed = TRUE))
+  })
+
+  it("thanks a returning contributor", {
+    msg <- gh_thank_message("ada", "jinx", FALSE, no_helpers)
+    expect_true(grepl(
+      "Thank you for your contribution, @ada!",
+      msg,
+      fixed = TRUE
+    ))
+  })
+
+  it("credits helpers before the signature", {
+    helpers <- data.frame(
+      login = "marie",
+      role = "reviewer",
+      stringsAsFactors = FALSE
+    )
+    msg <- gh_thank_message("ada", "jinx", FALSE, helpers)
+    expect_lt(
+      regexpr("Thanks also", msg, fixed = TRUE),
+      regexpr("_Generated by jinx_", msg, fixed = TRUE)
+    )
+  })
+})
+
+describe("gh_thank_contributor", {
+  it("posts a comment crediting everyone who helped", {
+    posted <- NULL
+    local_mocked_bindings(
+      is_first_time_contributor = function(...) FALSE,
+      gh_pr_helpers = function(...) {
+        data.frame(
+          login = "marie",
+          role = "reviewer",
+          stringsAsFactors = FALSE
+        )
+      }
+    )
+    local_mocked_bindings(
+      gh = function(endpoint, ..., body) {
+        posted <<- body
+        list(html_url = "https://example.com/comment")
+      },
+      .package = "gh"
+    )
+    url <- gh_thank_contributor("rladies", "jinx", 1L, "ada")
+    expect_identical(url, "https://example.com/comment")
+    expect_true(grepl("@ada", posted, fixed = TRUE))
+    expect_true(grepl("@marie for reviewing", posted, fixed = TRUE))
+  })
+
+  it("does nothing for bot authors", {
+    expect_null(gh_thank_contributor("rladies", "jinx", 1L, "dependabot[bot]"))
+  })
+})

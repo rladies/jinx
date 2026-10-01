@@ -1,5 +1,6 @@
-# Reusable: posts a thank-you on a merged PR (different message for
-# first-time vs returning contributors).
+# Reusable: posts a thank-you on a merged PR, crediting everyone who
+# helped - the author (a different message for first-time vs returning
+# contributors), plus co-authors, reviewers and commenters.
 #
 # Caller requirements:
 #   - permissions: contents: read, packages: read  (needed to pull

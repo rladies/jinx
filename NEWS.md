@@ -1,5 +1,14 @@
 # jinx (development version)
 
+## Merged PRs thank everyone who helped, not just the author
+
+- **`gh_thank_contributor()` now credits co-authors, reviewers and
+  commenters** alongside the PR author. Co-authors come from the commit
+  authors and `Co-authored-by:` trailers (resolved via GitHub noreply
+  addresses), reviewers from submitted reviews, and commenters from both
+  the conversation and the review comments. Each person is named once,
+  under the most substantial thing they did, and bots are left out.
+
 ## Chapter GitHub links are checked against reality
 
 - **`chapter_repo_audit()` resolves every chapter's `social_media$github`

@@ -17,7 +17,7 @@ and start with `reusable-`:
 | Workflow                              | What it does                                                                                                            |
 | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `reusable-welcome-contributor.yml`    | Posts a first-time welcome on a new PR or issue. Accepts an optional `extra_message` for project-specific reminders.    |
-| `reusable-thank-contributor.yml`      | Posts a thank-you on a merged PR (different message for first-time vs returning).                                       |
+| `reusable-thank-contributor.yml`      | Posts a thank-you on a merged PR, crediting co-authors, reviewers and commenters (and welcoming first-timers).          |
 | `reusable-website-blog-checklist.yml` | Posts the blog-review checklist on a PR that touches blog content.                                                      |
 | `reusable-pr-review.yml`              | Calls `jinx::review_run()` to label and assign reviewers based on the rules bundled in jinx.                            |
 | `reusable-chapter-validate.yml`         | Validates the `data/chapters/*.json` files a PR touches (schema, filename, `urlname`); errors fail, warnings report.    |
