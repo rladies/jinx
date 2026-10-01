@@ -2,6 +2,17 @@
 
 ## jinx (development version)
 
+### Chapter GitHub links are checked against reality
+
+- **[`chapter_repo_audit()`](https://rladies.github.io/jinx/reference/chapter_repo_audit.md)
+  resolves every chapter’s `social_media$github` reference**, and
+  reports the dead ones with a likely replacement where the conventional
+  `meetup-presentations_<city>` repository exists. Two shapes are
+  accepted, because both are in use: `owner/repo`, and a bare
+  organisation name for the chapters that run their own GitHub
+  organisation. Over current data it finds 14 dead references out of
+  116, six of them with an obvious fix.
+
 ### Chapter status can be checked against what chapters actually do
 
 - **[`chapter_status_reconcile()`](https://rladies.github.io/jinx/reference/chapter_status_reconcile.md)
