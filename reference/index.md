@@ -424,7 +424,9 @@ Reusable PR/issue automation across repos
 - [`gh_post_checklist()`](https://rladies.github.io/jinx/reference/gh_post_checklist.md)
   : Post a content review checklist on a PR
 - [`gh_thank_contributor()`](https://rladies.github.io/jinx/reference/gh_thank_contributor.md)
-  : Thank a contributor when their PR is merged
+  : Thank everyone who contributed to a merged PR
+- [`gh_thank_issue_contributors()`](https://rladies.github.io/jinx/reference/gh_thank_issue_contributors.md)
+  : Thank everyone who took part in a closed issue
 - [`gh_welcome_contributor()`](https://rladies.github.io/jinx/reference/gh_welcome_contributor.md)
   : Welcome a contributor on a new PR or issue
 

@@ -1,7 +1,9 @@
-# Thank a contributor when their PR is merged
+# Thank everyone who contributed to a merged PR
 
-Posts a thank-you message tailored to whether this is their first merged
-PR.
+Posts a thank-you message tailored to whether this is the author's first
+merged PR, and credits everyone else who helped: co-authors (commit
+authors and `Co-authored-by:` trailers), reviewers, and people who
+commented on the PR.
 
 ## Usage
 

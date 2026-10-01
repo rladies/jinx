@@ -22,7 +22,7 @@ and start with `reusable-`:
 | Workflow | What it does |
 |----|----|
 | `reusable-welcome-contributor.yml` | Posts a first-time welcome on a new PR or issue. Accepts an optional `extra_message` for project-specific reminders. |
-| `reusable-thank-contributor.yml` | Posts a thank-you on a merged PR (different message for first-time vs returning). |
+| `reusable-thank-contributor.yml` | Posts a thank-you on a merged PR or closed issue, crediting everyone who took part (and welcoming first-timers). |
 | `reusable-website-blog-checklist.yml` | Posts the blog-review checklist on a PR that touches blog content. |
 | `reusable-pr-review.yml` | Calls [`jinx::review_run()`](https://rladies.github.io/jinx/reference/review_run.md) to label and assign reviewers based on the rules bundled in jinx. |
 | `reusable-chapter-validate.yml` | Validates the `data/chapters/*.json` files a PR touches (schema, filename, `urlname`); errors fail, warnings report. |
@@ -61,7 +61,7 @@ on:
   pull_request:
     types: [opened, closed]
   issues:
-    types: [opened]
+    types: [opened, closed]
 
 permissions:
   contents: read
@@ -76,7 +76,9 @@ jobs:
       JINX_PRIVATE_KEY: ${{ secrets.JINX_PRIVATE_KEY }}
 
   thank:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    if: >-
+      (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) ||
+      (github.event_name == 'issues' && github.event.action == 'closed')
     uses: rladies/jinx/.github/workflows/reusable-thank-contributor.yml@main
     secrets:
       JINX_APP_ID: ${{ secrets.JINX_APP_ID }}

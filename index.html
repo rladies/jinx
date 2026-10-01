@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </tr>
 <tr>
 <td><code>reusable-thank-contributor.yml</code></td>
-<td>Posts a thank-you on a merged PR (different message for first-time vs returning).</td>
+<td>Posts a thank-you on a merged PR or closed issue, crediting everyone who took part (and welcoming first-timers).</td>
 </tr>
 <tr>
 <td><code>reusable-website-blog-checklist.yml</code></td>
@@ -147,7 +147,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
 <span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="at">    </span><span class="fu">types</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">opened</span><span class="kw">,</span><span class="at"> closed</span><span class="kw">]</span></span>
 <span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="at">  </span><span class="fu">issues</span><span class="kw">:</span></span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="at">    </span><span class="fu">types</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">opened</span><span class="kw">]</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="at">    </span><span class="fu">types</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">opened</span><span class="kw">,</span><span class="at"> closed</span><span class="kw">]</span></span>
 <span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a></span>
 <span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="fu">permissions</span><span class="kw">:</span></span>
 <span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="at">  </span><span class="fu">contents</span><span class="kw">:</span><span class="at"> read</span></span>
@@ -162,11 +162,13 @@ document.addEventListener("DOMContentLoaded", function() {
 <span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="at">      </span><span class="fu">JINX_PRIVATE_KEY</span><span class="kw">:</span><span class="at"> ${{ secrets.JINX_PRIVATE_KEY }}</span></span>
 <span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a></span>
 <span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="at">  </span><span class="fu">thank</span><span class="kw">:</span></span>
-<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="at">    </span><span class="fu">if</span><span class="kw">:</span><span class="at"> github.event_name == 'pull_request' &amp;&amp; github.event.action == 'closed' &amp;&amp; github.event.pull_request.merged == true</span></span>
-<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="at">    </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> rladies/jinx/.github/workflows/reusable-thank-contributor.yml@main</span></span>
-<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a><span class="at">    </span><span class="fu">secrets</span><span class="kw">:</span></span>
-<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a><span class="at">      </span><span class="fu">JINX_APP_ID</span><span class="kw">:</span><span class="at"> ${{ secrets.JINX_APP_ID }}</span></span>
-<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a><span class="at">      </span><span class="fu">JINX_PRIVATE_KEY</span><span class="kw">:</span><span class="at"> ${{ secrets.JINX_PRIVATE_KEY }}</span></span></code></pre></div>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="fu">    if</span><span class="kw">: </span><span class="ch">&gt;-</span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>      (github.event_name == 'pull_request' &amp;&amp; github.event.action == 'closed' &amp;&amp; github.event.pull_request.merged == true) ||</span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a>      (github.event_name == 'issues' &amp;&amp; github.event.action == 'closed')</span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a><span class="at">    </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> rladies/jinx/.github/workflows/reusable-thank-contributor.yml@main</span></span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a><span class="at">    </span><span class="fu">secrets</span><span class="kw">:</span></span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a><span class="at">      </span><span class="fu">JINX_APP_ID</span><span class="kw">:</span><span class="at"> ${{ secrets.JINX_APP_ID }}</span></span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a><span class="at">      </span><span class="fu">JINX_PRIVATE_KEY</span><span class="kw">:</span><span class="at"> ${{ secrets.JINX_PRIVATE_KEY }}</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="copilot-reviews-grimoire-gates">Copilot reviews (grimoire gates)<a class="anchor" aria-label="anchor" href="#copilot-reviews-grimoire-gates"></a>
