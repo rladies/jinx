@@ -1,5 +1,5 @@
 ### Speaker Recommendation
 
-**Speaker**: <SPEAKER>
-**Expertise**: <EXPERTISE>
-**Conference**: <CONFERENCE>
+**Speaker**: <<SPEAKER>>
+**Expertise**: <<EXPERTISE>>
+**Conference**: <<CONFERENCE>>

@@ -100,7 +100,7 @@ chapter_meetup_brief <- function(city, country, status = NULL) {
     "\n### Description, ready to paste\n\n",
     "The mission text, the code of conduct link and the photography ",
     "notice must all stay. Organisers may translate or adapt the rest.\n\n",
-    "```\n{meetup_description_text()}\n```\n\n",
+    "````\n{meetup_description_text()}\n````\n\n",
     "### After creating it\n\n",
     "- Post the group URL back on this issue.\n",
     "- Set the group photo by running `/jinx chapter-meetup-logo ",
@@ -136,15 +136,11 @@ meetup_status_line <- function(status, urlname) {
   paste0(text, "\n")
 }
 
-#' The standard description text
+#' The standard description text, as the guide holds it
 #' @keywords internal
 #' @noRd
 meetup_description_text <- function() {
-  path <- system.file("templates", "meetup-description.md", package = "jinx")
-  if (!nzchar(path)) {
-    cli::cli_abort("Meetup description template not found in jinx")
-  }
-  paste(readLines(path, warn = FALSE), collapse = "\n")
+  guide_template("meetup-group-description")
 }
 
 #' Post the Meetup setup brief on an onboarding issue

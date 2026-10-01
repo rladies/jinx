@@ -1,11 +1,11 @@
-# Welcome, <NAME>!
+# Welcome, <<NAME>>!
 
-@<GH_USER> is joining the Global Team, as part of the <TEAM> Team.
+@<<GH_USER>> is joining the Global Team, as part of the <<TEAM>> Team.
 
 ### What we will do to onboard you
 
 - [x] @rladies/leadership will add you to the `global` Team here on GitHub
-- [x] @rladies/leadership will add you to the `<TEAM>` Team here on GitHub
+- [x] @rladies/leadership will add you to the `<<TEAM>>` Team here on GitHub
 - [ ] @rladies/communications team will post a welcome message on our social media
 - [ ] @rladies/email team will create for you an rladies.org email account (if necessary)
 - [ ] @rladies/leadership will add you to the `#team-global` channel on RLadies+ Organizers Slack.
@@ -34,6 +34,6 @@ You should find a link to the issue in the footer of the email.
 - Update both your slack profiles' "Title" section to include information about your membership on the Global team and which team you are on.
   - [ ] [Community Slack](https://rladies-community.slack.com)
   - [ ] [Organizers Slack](https://r-ladies.slack.com)
-  - Title example: "RLadies+ Global Team -- <TEAM>"
+  - Title example: "RLadies+ Global Team -- <<TEAM>>"
 - [ ] Once you have Airtable access (through 1password), add your information to the [Global Team Overview](https://airtable.com/appZjaV7eM0Y9FsHZ/pag5XLP72Yv14h2lj)
 - [ ] Read [About the Global Team](https://guide.rladies.org/about/globalteam/)

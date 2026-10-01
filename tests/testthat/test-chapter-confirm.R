@@ -12,8 +12,8 @@ describe("chapter_confirm_body", {
 
   it("says so rather than leaving a placeholder when something is missing", {
     body <- chapter_confirm_body("Oslo")
-    expect_false(grepl("<EMAIL>", body, fixed = TRUE))
-    expect_false(grepl("<MEETUP_URL>", body, fixed = TRUE))
+    expect_false(grepl("<<EMAIL>>", body, fixed = TRUE))
+    expect_false(grepl("<<MEETUP_URL>>", body, fixed = TRUE))
     expect_match(body, "not set up yet")
     expect_match(body, "not created yet")
   })

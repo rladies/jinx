@@ -1,7 +1,4 @@
-#' Render a template with placeholder replacement
-#'
-#' Replaces `<KEY>` placeholders in the template with the corresponding
-#' values from `variables`.
+#' Render a template file with placeholder replacement
 #'
 #' @param template_path Path to the markdown template file.
 #' @param variables Named list of placeholder values. Names should match
@@ -10,10 +7,29 @@
 #' @keywords internal
 #' @noRd
 render_template <- function(template_path, variables) {
-  content <- paste(readLines(template_path, warn = FALSE), collapse = "\n")
+  render_placeholders(
+    paste(readLines(template_path, warn = FALSE), collapse = "\n"),
+    variables
+  )
+}
+
+#' Replace `<<KEY>>` placeholders in template text
+#'
+#' `<<KEY>>` is the convention the guide uses for the templates it holds,
+#' and jinx's own templates follow it so that one renderer serves both.
+#' Keys without a value are left in place, which is what the guide wants
+#' for the placeholders a human is expected to fill in.
+#'
+#' @param content Template text.
+#' @param variables Named list of placeholder values, keyed without the
+#'   angle brackets.
+#' @return Rendered text.
+#' @keywords internal
+#' @noRd
+render_placeholders <- function(content, variables) {
   for (key in names(variables)) {
     content <- gsub(
-      paste0("<", key, ">"),
+      paste0("<<", key, ">>"),
       variables[[key]],
       content,
       fixed = TRUE

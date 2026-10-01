@@ -2,21 +2,33 @@
 % Please edit documentation in R/chapter-monitor.R
 \name{prepare_inactivity_emails}
 \alias{prepare_inactivity_emails}
-\title{Send inactivity warning emails}
+\title{Prepare the guide's first inactivity notice for inactive chapters}
 \usage{
-prepare_inactivity_emails(chapters, template_path = NULL, dry_run = TRUE)
+prepare_inactivity_emails(
+  chapters,
+  template = "chapter-inactive-first-notice",
+  dry_run = TRUE
+)
 }
 \arguments{
 \item{chapters}{Chapter status data from \code{\link[=chapter_monitor_status]{chapter_monitor_status()}}.}
 
-\item{template_path}{Path to email template.}
+\item{template}{Name of the guide template to send. Defaults to the
+first inactivity notice; the guide also documents a retirement
+notice (\code{"chapter-retirement-scheduled"}) for chapters that do not
+reply.}
 
-\item{dry_run}{If \code{TRUE} (default), only returns the email data without
-sending.}
+\item{dry_run}{Controls the wording of the summary only. Either way
+the prepared emails are returned rather than sent: delivery goes
+through \code{\link[=mail_send]{mail_send()}}, which a human still drives.}
 }
 \value{
-Data frame of prepared emails (invisibly).
+Data frame of prepared emails, one row per inactive chapter,
+with \code{chapter}, \code{email}, \code{subject} and \code{body} (invisibly).
 }
 \description{
-Identifies inactive chapters and prepares warning emails for organizers.
+Identifies inactive chapters and prepares the notice the guide
+documents for them. The wording and the subject line come from the
+guide, fetched at call time, so the message organisers receive is the
+one a volunteer can edit there.
 }

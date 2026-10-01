@@ -1,4 +1,4 @@
-We have received a request to update the infrastructure for the chapter in **<CITY>**, **<COUNTRY>**. The following steps are needed to complete this task:
+We have received a request to update the infrastructure for the chapter in **<<CITY>>**, **<<COUNTRY>>**. The following steps are needed to complete this task:
 
 ### Updating chapter information
 
@@ -20,7 +20,7 @@ If the chapter is active, the current organizers should facilitate email access 
 
 2. The @rladies/meetup-pro team will:
 
--  [ ] request the new organizer(s) to join their Meetup group as member(s). You'll find a template for that message on our wiki.
+-  [ ] request the new organizer(s) to join their Meetup group as member(s). The message to send them is [Appendix B of the Meetup guidelines](https://guide.rladies.org/global-team/meetup/#appendix-b-message-template).
 -  [ ] once new co-organizer(s) have joined, change their status to co-organizer(s) on Meetup
 -  [ ] change status of co-organizer(s) stepping down to member(s) on Meetup
 

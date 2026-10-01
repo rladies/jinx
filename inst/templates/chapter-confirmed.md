@@ -1,9 +1,9 @@
 Hi, and welcome to RLadies+!
 
-RLadies+ <CITY> is now set up. Here is what exists:
+RLadies+ <<CITY>> is now set up. Here is what exists:
 
-- Chapter email: <EMAIL>
-- Meetup group: <MEETUP_URL>
+- Chapter email: <<EMAIL>>
+- Meetup group: <<MEETUP_URL>>
 
 A few things worth knowing:
 

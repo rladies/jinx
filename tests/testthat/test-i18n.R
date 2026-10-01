@@ -38,7 +38,7 @@ describe("i18n_list_languages", {
 describe("extract_placeholder_keys", {
   it("extracts placeholder keys from template content", {
     path <- tempfile(fileext = ".md")
-    writeLines("Hello <NAME>, welcome to <TEAM>!", path)
+    writeLines("Hello <<NAME>>, welcome to <<TEAM>>!", path)
     on.exit(unlink(path))
 
     result <- extract_placeholder_keys(path)
@@ -56,7 +56,7 @@ describe("extract_placeholder_keys", {
 
   it("deduplicates repeated keys", {
     path <- tempfile(fileext = ".md")
-    writeLines("<NAME> said hi to <NAME>", path)
+    writeLines("<<NAME>> said hi to <<NAME>>", path)
     on.exit(unlink(path))
 
     result <- extract_placeholder_keys(path)
