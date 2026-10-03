@@ -730,7 +730,10 @@ blog_feed_run <- function(
   )
   blog_feed_report_feedless(collected$feedless)
   cli::cli_alert_info(
-    "Polled {collected$sources} feed{?s}: {length(collected$posts)} recent post{?s}."
+    paste0(
+      "Polled {collected$sources} feed{?s}: ",
+      "{length(collected$posts)} recent post{?s}."
+    )
   )
 
   counts <- integer()
