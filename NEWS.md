@@ -38,6 +38,12 @@
   feed and a category feed - and the seen-set is only consulted at the
   start of a run.
 
+- **A failed run is reported on GitHub only**, not in Slack. Every other
+  schedule pings the healthcheck channel when it fails, but this one runs
+  144 times a day, and a blog feed going quiet is not an incident worth
+  interrupting a channel over - the Feed app it replaces said nothing
+  either.
+
 - **`slack_post_message()` gained an `unfurl` argument**, off by default.
   The blog feed turns it on: a message whose whole point is the linked
   post should show the preview card.

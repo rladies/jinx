@@ -5,12 +5,7 @@ on:
     # Matches the cadence the Slack Feed app polled at. GitHub runs these
     # on a best-effort basis and delays them under load, so treat it as
     # "about every ten minutes" rather than a guarantee.
-    #
-    # Split so the top-of-the-hour run is distinguishable from the rest:
-    # a token or channel breaking would otherwise alert the healthcheck
-    # channel 144 times a day, so only this slot carries the alert.
-    - cron: "0 * * * *"
-    - cron: "10,20,30,40,50 * * * *"
+    - cron: "*/10 * * * *"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -52,15 +47,3 @@ jobs:
             dry_run = ${{ inputs.dry_run && 'TRUE' || 'FALSE' }},
             seed = ${{ inputs.seed && 'TRUE' || 'FALSE' }}
           )'
-
-  notify-failure:
-    needs: announce
-    if: >-
-      failure() && (github.event_name == 'workflow_dispatch' ||
-      github.event.schedule == '0 * * * *')
-    uses: ./.github/workflows/reusable-slack-fail-notify.yml
-    with:
-      message: "😿 Jinx blog-feed run failed — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run logs>"
-    secrets:
-      SLACK_BOT_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
-      SLACK_CHANNEL: ${{ secrets.SLACK_HEALTHCHECK_CHANNEL }}
