@@ -412,7 +412,7 @@ describe("blog_feed_collect", {
     function(req, ...) map[[req$url]] %||% rss_doc(character())
   }
 
-  it("announces new posts from every source, oldest first", {
+  it("collects recent posts from every source, oldest first", {
     local_mocked_bindings(
       rag_fetch_text = feeds(list(
         "https://aosmith.rbind.io/index.xml" = rss_doc(rss_item(
@@ -457,20 +457,6 @@ describe("blog_feed_collect", {
     expect_length(collected$posts, 1L)
   })
 
-  it("skips items already announced", {
-    local_mocked_bindings(
-      rag_fetch_text = feeds(list(
-        "https://aosmith.rbind.io/index.xml" = rss_doc(rss_item(guid = "old"))
-      ))
-    )
-    collected <- blog_feed_collect(
-      seen = "old",
-      entries = entries,
-      now = now
-    )
-    expect_length(collected$posts, 0L)
-  })
-
   it("keeps polling when one feed is unreachable", {
     local_mocked_bindings(
       rag_fetch_text = function(req, ...) {
@@ -495,28 +481,48 @@ describe("blog_feed_collect", {
     )
   })
 
-  it("caps a run at limit posts, announcing the oldest", {
+  it("does not filter by what any workspace has announced", {
     local_mocked_bindings(
       rag_fetch_text = feeds(list(
-        "https://aosmith.rbind.io/index.xml" = rss_doc(c(
-          rss_item(
-            guid = "newer",
-            link = "https://example.com/newer",
-            date = "Tue, 30 Sep 2025 10:00:00 +0000"
-          ),
-          rss_item(
-            guid = "older",
-            link = "https://example.com/older",
-            date = "Mon, 29 Sep 2025 10:00:00 +0000"
-          )
-        ))
-      ))
+        "https://aosmith.rbind.io/index.xml" = rss_doc(rss_item(guid = "old")),
+        "https://second.example/index.xml" = rss_doc(rss_item(guid = "old"))
+      )),
+      blog_feed_seen_load = function(...) "old"
     )
+    expect_length(blog_feed_collect(entries = entries, now = now)$posts, 1L)
+  })
+})
+
+describe("blog_feed_pending", {
+  posts <- lapply(c("a", "b", "c"), function(id) {
+    list(item = data.frame(id = id, date = 1, stringsAsFactors = FALSE))
+  })
+
+  it("drops what this workspace has already announced", {
+    pending <- blog_feed_pending(posts, seen = c("a", "c"))
+    expect_identical(
+      vapply(pending, function(p) p$item$id, character(1)),
+      "b"
+    )
+  })
+
+  it("caps a run at limit posts, keeping the oldest", {
     expect_message(
-      collected <- blog_feed_collect(entries = entries, limit = 1L, now = now),
-      "announcing the 1 oldest"
+      pending <- blog_feed_pending(posts, limit = 2L),
+      "announcing the 2 oldest"
     )
-    expect_identical(collected$posts[[1]]$item$id, "older")
+    expect_identical(
+      vapply(pending, function(p) p$item$id, character(1)),
+      c("a", "b")
+    )
+  })
+
+  it("returns nothing when everything has been announced", {
+    expect_length(blog_feed_pending(posts, seen = c("a", "b", "c")), 0L)
+  })
+
+  it("handles an empty collection", {
+    expect_length(blog_feed_pending(list()), 0L)
   })
 })
 
@@ -607,6 +613,27 @@ describe("blog_feed_post", {
     expect_identical(saved, "p1")
   })
 
+  it("announces posts it is handed rather than polling again", {
+    collected_posts <- list(list(
+      item = blog_feed_items(rss_doc(rss_item(guid = "handed"))),
+      source = blog_feed_sources(entries)$sources
+    ))
+    local_mocked_bindings(
+      rag_fetch_text = function(...) cli::cli_abort("should not poll"),
+      blog_feed_seen_load = function(...) character(),
+      slack_post_message = function(...) list(ok = TRUE),
+      blog_feed_seen_save = function(...) NULL
+    )
+    expect_equal(
+      blog_feed_post(
+        "community",
+        posts = collected_posts,
+        slack_token = "xoxb-test"
+      ),
+      1L
+    )
+  })
+
   it("lets Slack unfurl the post so the channel shows previews", {
     unfurled <- NULL
     one_post()
@@ -643,74 +670,6 @@ describe("blog_feed_post", {
       "Would post"
     )
     expect_equal(count, 1L)
-  })
-
-  it("does not record an id when the post failed", {
-    one_post()
-    local_mocked_bindings(
-      slack_post_message = function(...) list(ok = FALSE, error = "no_channel"),
-      blog_feed_seen_save = function(...) cli::cli_abort("should not save")
-    )
-    expect_error(
-      blog_feed_post(
-        "community",
-        slack_token = "xoxb-test",
-        entries = entries,
-        max_age_days = 1e6
-      ),
-      "no_channel"
-    )
-  })
-
-  it("reports nothing to do when no feed has new items", {
-    local_mocked_bindings(
-      rag_fetch_text = function(...) rss_doc(character()),
-      blog_feed_seen_load = function(...) character(),
-      slack_post_message = function(...) cli::cli_abort("should not post")
-    )
-    expect_message(
-      count <- blog_feed_post(
-        "community",
-        slack_token = "xoxb-test",
-        entries = list(content_entry())
-      ),
-      "No new community posts"
-    )
-    expect_equal(count, 0L)
-  })
-
-  it("names curated entries that cannot be announced", {
-    local_mocked_bindings(
-      rag_fetch_text = function(...) rss_doc(character()),
-      blog_feed_seen_load = function(...) character()
-    )
-    expect_message(
-      blog_feed_post(
-        "community",
-        slack_token = "xoxb-test",
-        entries = list(content_entry(rss_feed = NULL))
-      ),
-      "No feed|no .*rss_feed"
-    )
-  })
-
-  it("seeds the seen-set without posting", {
-    saved <- NULL
-    local_mocked_bindings(
-      rag_fetch_text = function(...) {
-        rss_doc(c(
-          rss_item(guid = "a", link = "https://example.com/a"),
-          rss_item(guid = "b", link = "https://example.com/b")
-        ))
-      },
-      slack_post_message = function(...) cli::cli_abort("should not post"),
-      blog_feed_seen_save = function(workspace, seen, ...) saved <<- seen
-    )
-    expect_message(
-      blog_feed_post("organiser", seed = TRUE, entries = entries),
-      "Seeded 2 items"
-    )
-    expect_identical(saved, c("a", "b"))
   })
 
   it("needs no Slack token for a dry run", {
@@ -761,20 +720,63 @@ describe("blog_feed_post", {
     )
   })
 
-  it("records nothing when seeding on a dry run", {
+  it("keeps what it managed to announce before a post failed", {
+    saved <- NULL
+    posts <- lapply(c("ok", "fails"), function(id) {
+      list(
+        item = blog_feed_items(rss_doc(rss_item(
+          guid = id,
+          link = paste0("https://example.com/", id)
+        ))),
+        source = blog_feed_sources(entries)$sources
+      )
+    })
     local_mocked_bindings(
-      rag_fetch_text = function(...) rss_doc(rss_item(guid = "a")),
-      slack_post_message = function(...) cli::cli_abort("should not post"),
-      blog_feed_seen_save = function(...) cli::cli_abort("should not save")
+      blog_feed_seen_load = function(...) character(),
+      slack_post_message = function(text, ...) {
+        if (grepl("fails", text, fixed = TRUE)) {
+          return(list(ok = FALSE, error = "rate_limited"))
+        }
+        list(ok = TRUE)
+      },
+      blog_feed_seen_save = function(workspace, seen, ...) saved <<- seen
+    )
+    expect_error(
+      blog_feed_post("community", posts = posts, slack_token = "xoxb-test"),
+      "rate_limited"
+    )
+    expect_identical(saved, "ok")
+  })
+
+  it("reports nothing to do when no feed has new items", {
+    local_mocked_bindings(
+      rag_fetch_text = function(...) rss_doc(character()),
+      blog_feed_seen_load = function(...) character(),
+      slack_post_message = function(...) cli::cli_abort("should not post")
+    )
+    expect_message(
+      count <- blog_feed_post(
+        "community",
+        slack_token = "xoxb-test",
+        entries = entries
+      ),
+      "Nothing new"
+    )
+    expect_equal(count, 0L)
+  })
+
+  it("names curated entries that cannot be announced", {
+    local_mocked_bindings(
+      rag_fetch_text = function(...) rss_doc(character()),
+      blog_feed_seen_load = function(...) character()
     )
     expect_message(
       blog_feed_post(
-        "organiser",
-        seed = TRUE,
-        dry_run = TRUE,
-        entries = entries
+        "community",
+        slack_token = "xoxb-test",
+        entries = list(content_entry(rss_feed = NULL))
       ),
-      "would be seeded"
+      "No feed|no .*rss_feed"
     )
   })
 
@@ -784,10 +786,7 @@ describe("blog_feed_post", {
 
   it("defaults the channel to blogs-by-rladies", {
     withr::with_envvar(c(SLACK_BLOG_CHANNEL = ""), {
-      expect_equal(
-        eval(formals(blog_feed_post)$channel),
-        "blogs-by-rladies"
-      )
+      expect_equal(eval(formals(blog_feed_post)$channel), "blogs-by-rladies")
     })
   })
 
@@ -795,6 +794,128 @@ describe("blog_feed_post", {
     withr::with_envvar(c(SLACK_BLOG_CHANNEL = "blog-test"), {
       expect_equal(eval(formals(blog_feed_post)$channel), "blog-test")
     })
+  })
+})
+
+describe("blog_feed_run", {
+  entries <- list(content_entry())
+
+  it("polls the feeds once and announces in every workspace", {
+    polls <- 0L
+    posted <- character()
+    local_mocked_bindings(
+      rag_fetch_text = function(...) {
+        polls <<- polls + 1L
+        rss_doc(rss_item(guid = "p1"))
+      },
+      blog_feed_seen_load = function(workspace, ...) character(),
+      slack_bot_token = function(workspace) paste0("xoxb-", workspace),
+      slack_post_message = function(text, channel, token, ...) {
+        posted <<- c(posted, token)
+        list(ok = TRUE)
+      },
+      blog_feed_seen_save = function(...) NULL
+    )
+    counts <- blog_feed_run(entries = entries, max_age_days = 1e6)
+    expect_equal(polls, 1L)
+    expect_identical(posted, c("xoxb-community", "xoxb-organiser"))
+    expect_equal(unname(counts), c(1L, 1L))
+  })
+
+  it("respects each workspace's own seen-set", {
+    posted <- character()
+    local_mocked_bindings(
+      rag_fetch_text = function(...) rss_doc(rss_item(guid = "p1")),
+      blog_feed_seen_load = function(workspace, ...) {
+        if (identical(workspace, "community")) "p1" else character()
+      },
+      slack_bot_token = function(workspace) paste0("xoxb-", workspace),
+      slack_post_message = function(text, channel, token, ...) {
+        posted <<- c(posted, token)
+        list(ok = TRUE)
+      },
+      blog_feed_seen_save = function(...) NULL
+    )
+    expect_message(
+      counts <- blog_feed_run(entries = entries, max_age_days = 1e6),
+      "Nothing new"
+    )
+    expect_identical(posted, "xoxb-organiser")
+    expect_equal(counts[["community"]], 0L)
+  })
+
+  it("still announces in the other workspace when one fails", {
+    posted <- character()
+    local_mocked_bindings(
+      rag_fetch_text = function(...) rss_doc(rss_item(guid = "p1")),
+      blog_feed_seen_load = function(...) character(),
+      slack_bot_token = function(workspace) paste0("xoxb-", workspace),
+      slack_post_message = function(text, channel, token, ...) {
+        if (identical(token, "xoxb-community")) {
+          return(list(ok = FALSE, error = "channel_not_found"))
+        }
+        posted <<- c(posted, token)
+        list(ok = TRUE)
+      },
+      blog_feed_seen_save = function(...) NULL
+    )
+    expect_error(
+      expect_message(
+        blog_feed_run(entries = entries, max_age_days = 1e6),
+        "channel_not_found"
+      ),
+      "failed for"
+    )
+    expect_identical(posted, "xoxb-organiser")
+  })
+
+  it("seeds every workspace from one poll, without posting", {
+    seeded <- character()
+    polls <- 0L
+    local_mocked_bindings(
+      rag_fetch_text = function(...) {
+        polls <<- polls + 1L
+        rss_doc(rss_item(guid = "a"))
+      },
+      slack_post_message = function(...) cli::cli_abort("should not post"),
+      blog_feed_seen_save = function(workspace, seen, ...) {
+        seeded <<- c(seeded, workspace)
+      }
+    )
+    expect_message(
+      blog_feed_run(seed = TRUE, entries = entries),
+      "Seeded 1 item"
+    )
+    expect_equal(polls, 1L)
+    expect_identical(seeded, c("community", "organiser"))
+  })
+
+  it("records nothing when seeding on a dry run", {
+    local_mocked_bindings(
+      rag_fetch_text = function(...) rss_doc(rss_item(guid = "a")),
+      slack_post_message = function(...) cli::cli_abort("should not post"),
+      blog_feed_seen_save = function(...) cli::cli_abort("should not save")
+    )
+    expect_message(
+      blog_feed_run(seed = TRUE, dry_run = TRUE, entries = entries),
+      "would be seeded"
+    )
+  })
+
+  it("can be pointed at a single workspace", {
+    posted <- character()
+    local_mocked_bindings(
+      rag_fetch_text = function(...) rss_doc(rss_item(guid = "p1")),
+      blog_feed_seen_load = function(...) character(),
+      slack_bot_token = function(workspace) paste0("xoxb-", workspace),
+      slack_post_message = function(text, channel, token, ...) {
+        posted <<- c(posted, token)
+        list(ok = TRUE)
+      },
+      blog_feed_seen_save = function(...) NULL
+    )
+    blog_feed_run("organiser", entries = entries, max_age_days = 1e6)
+    expect_identical(posted, "xoxb-organiser")
   })
 })
 

@@ -2,34 +2,35 @@
 % Please edit documentation in R/blog-feed.R
 \name{blog_feed_collect}
 \alias{blog_feed_collect}
-\title{Collect every new post across the curated feeds}
+\title{Collect every recent post across the curated feeds}
 \usage{
 blog_feed_collect(
-  seen = character(),
   entries = NULL,
   max_age_days = 14,
-  limit = 20L,
   now = as.numeric(Sys.time())
 )
 }
 \arguments{
-\item{seen}{Character vector of item ids already announced.}
-
 \item{entries}{Curated content entries. Fetched when \code{NULL}.}
 
 \item{max_age_days}{Only announce items published within this window.}
 
-\item{limit}{Maximum number of posts to return in one run.}
-
 \item{now}{Current time, as a unix timestamp.}
 }
 \value{
-A list with \code{posts} (a list of \code{item}/\code{source} pairs),
-\code{feedless} (titles with no \code{rss_feed}), and \code{sources} (how many feeds
-were polled).
+A list with \code{posts} (a list of \code{item}/\code{source} pairs, oldest
+first), \code{feedless} (titles with no \code{rss_feed}), and \code{sources} (how
+many feeds were polled).
 }
 \description{
 Polls each source in turn, keeping going when an individual feed is
-down so one dead blog can't silence the rest, then returns the new
-items sorted oldest first so the channel reads in publication order.
+down so one dead blog can't silence the rest, then returns the items
+sorted oldest first so a channel reads in publication order.
+}
+\details{
+Deliberately knows nothing about what any workspace has already
+announced: both blog channels want the same posts, so a run polls the
+feeds once and each workspace filters the result against its own
+seen-set with \code{\link[=blog_feed_pending]{blog_feed_pending()}}. Polling per workspace would
+double the requests every contributor's blog receives.
 }

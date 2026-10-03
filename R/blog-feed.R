@@ -474,25 +474,27 @@ blog_feed_seen_save <- function(
   )
 }
 
-#' Collect every new post across the curated feeds
+#' Collect every recent post across the curated feeds
 #'
 #' Polls each source in turn, keeping going when an individual feed is
-#' down so one dead blog can't silence the rest, then returns the new
-#' items sorted oldest first so the channel reads in publication order.
+#' down so one dead blog can't silence the rest, then returns the items
+#' sorted oldest first so a channel reads in publication order.
 #'
-#' @param seen Character vector of item ids already announced.
+#' Deliberately knows nothing about what any workspace has already
+#' announced: both blog channels want the same posts, so a run polls the
+#' feeds once and each workspace filters the result against its own
+#' seen-set with [blog_feed_pending()]. Polling per workspace would
+#' double the requests every contributor's blog receives.
+#'
 #' @inheritParams blog_feed_new_items
 #' @param entries Curated content entries. Fetched when `NULL`.
-#' @param limit Maximum number of posts to return in one run.
-#' @return A list with `posts` (a list of `item`/`source` pairs),
-#'   `feedless` (titles with no `rss_feed`), and `sources` (how many feeds
-#'   were polled).
+#' @return A list with `posts` (a list of `item`/`source` pairs, oldest
+#'   first), `feedless` (titles with no `rss_feed`), and `sources` (how
+#'   many feeds were polled).
 #' @export
 blog_feed_collect <- function(
-  seen = character(),
   entries = NULL,
   max_age_days = 14,
-  limit = 20L,
   now = as.numeric(Sys.time())
 ) {
   split <- blog_feed_sources(entries %||% blog_feed_entries())
@@ -502,10 +504,10 @@ blog_feed_collect <- function(
   for (i in seq_len(nrow(sources))) {
     source <- sources[i, , drop = FALSE]
     items <- blog_feed_fetch(source$feed)
-    new <- blog_feed_new_items(items, seen, max_age_days, now)
-    for (j in seq_len(nrow(new))) {
+    recent <- blog_feed_new_items(items, character(), max_age_days, now)
+    for (j in seq_len(nrow(recent))) {
       posts[[length(posts) + 1L]] <- list(
-        item = new[j, , drop = FALSE],
+        item = recent[j, , drop = FALSE],
         source = source
       )
     }
@@ -513,14 +515,30 @@ blog_feed_collect <- function(
 
   order_by_date <- order(vapply(posts, function(p) p$item$date, numeric(1)))
   posts <- blog_feed_distinct(posts[order_by_date])
-  if (length(posts) > limit) {
-    cli::cli_alert_warning(
-      "blog-feed: {length(posts)} new posts, announcing the {limit} oldest"
-    )
-    posts <- posts[seq_len(limit)]
-  }
 
   list(posts = posts, feedless = split$feedless, sources = nrow(sources))
+}
+
+#' Keep the posts one workspace still owes its channel
+#'
+#' @param posts List of `item`/`source` pairs from [blog_feed_collect()].
+#' @param seen Character vector of item ids already announced there.
+#' @param limit Most posts to announce in one run.
+#' @return The subset still to announce, oldest first.
+#' @export
+blog_feed_pending <- function(posts, seen = character(), limit = 20L) {
+  if (length(posts) == 0L) {
+    return(list())
+  }
+  ids <- vapply(posts, function(p) p$item$id, character(1))
+  pending <- posts[!ids %in% seen]
+  if (length(pending) > limit) {
+    cli::cli_alert_warning(
+      "blog-feed: {length(pending)} new posts, announcing the {limit} oldest"
+    )
+    pending <- pending[seq_len(limit)]
+  }
+  pending
 }
 
 #' Drop a post the same run has already collected from another feed
@@ -542,23 +560,27 @@ blog_feed_distinct <- function(posts) {
   posts[!duplicated(ids)]
 }
 
-#' Announce new community posts in a workspace's blog channel
+#' Announce new community posts in one workspace's blog channel
 #'
 #' Replaces the Slack Feed app's per-blog subscriptions with one run
 #' driven by `awesome-rladies-creations`: a blog added to the curated list
-#' is announced in both workspaces without anyone touching Slack.
+#' is announced without anyone touching Slack.
 #'
 #' Announced ids are recorded in KV per workspace, and only after a
 #' successful post - a failed run re-announces nothing and loses nothing.
 #'
+#' Use [blog_feed_run()] to serve both workspaces, which polls the feeds
+#' once for the pair rather than once each.
+#'
 #' @param workspace Which Slack workspace to post in.
 #' @param channel Channel to post to. Defaults to env
 #'   `SLACK_BLOG_CHANNEL`, falling back to `"blogs-by-rladies"`.
-#' @param dry_run When `TRUE`, print the messages and record nothing.
-#' @param seed When `TRUE`, record every current feed item as announced
-#'   without posting. Run once per workspace at cutover so the first real
-#'   run doesn't repeat what the Feed app already posted.
-#' @param slack_token Bot token for `workspace`.
+#' @param dry_run When `TRUE`, log the messages and record nothing.
+#' @param posts Collected posts from [blog_feed_collect()]. Collected
+#'   here when `NULL`.
+#' @param limit Most posts to announce in one run.
+#' @param slack_token Bot token for `workspace`. Resolved from the
+#'   workspace when unset.
 #' @inheritParams blog_feed_collect
 #' @param namespace_id KV namespace ID for `SLACK_TOKENS`.
 #' @param account_id Cloudflare account ID. Defaults to env
@@ -571,27 +593,23 @@ blog_feed_post <- function(
   workspace = c("community", "organiser"),
   channel = env_default("SLACK_BLOG_CHANNEL", "blogs-by-rladies"),
   dry_run = FALSE,
-  seed = FALSE,
-  slack_token = NULL,
+  posts = NULL,
   entries = NULL,
   max_age_days = 14,
   limit = 20L,
+  slack_token = NULL,
   namespace_id = slack_tokens_namespace_id(),
   account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
   api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
 ) {
   workspace <- match.arg(workspace)
-  entries <- entries %||% blog_feed_entries()
-
-  if (seed) {
-    return(invisible(blog_feed_seed(
-      workspace,
-      entries,
-      namespace_id,
-      account_id,
-      api_token,
-      dry_run = dry_run
-    )))
+  if (is.null(posts)) {
+    collected <- blog_feed_collect(
+      entries = entries,
+      max_age_days = max_age_days
+    )
+    blog_feed_report_feedless(collected$feedless)
+    posts <- collected$posts
   }
 
   seen <- blog_feed_seen_load(
@@ -600,18 +618,9 @@ blog_feed_post <- function(
     account_id,
     api_token
   )
-  collected <- blog_feed_collect(
-    seen = seen,
-    entries = entries,
-    max_age_days = max_age_days,
-    limit = limit
-  )
-  blog_feed_report_feedless(collected$feedless)
-
-  if (length(collected$posts) == 0L) {
-    cli::cli_alert_info(
-      "No new community posts across {collected$sources} feed{?s}."
-    )
+  pending <- blog_feed_pending(posts, seen, limit)
+  if (length(pending) == 0L) {
+    cli::cli_alert_info("Nothing new for #{channel} ({workspace}).")
     return(invisible(0L))
   }
 
@@ -619,10 +628,10 @@ blog_feed_post <- function(
     slack_token <- slack_bot_token(workspace)
   }
   announced <- character()
-  for (post in collected$posts) {
+  for (post in pending) {
     text <- blog_feed_format(post$item, post$source)
     if (dry_run) {
-      cli::cli_alert_info("Would post to #{channel}:\n{text}")
+      cli::cli_alert_info("Would post to #{channel} ({workspace}):\n{text}")
       next
     }
     resp <- slack_post_message(
@@ -632,9 +641,19 @@ blog_feed_post <- function(
       unfurl = TRUE
     )
     if (!isTRUE(resp$ok)) {
+      if (length(announced) > 0L) {
+        blog_feed_seen_save(
+          workspace,
+          c(seen, announced),
+          namespace_id,
+          account_id,
+          api_token
+        )
+      }
       cli::cli_abort(
         paste0(
-          "Failed to post to #{channel}: {resp$error %||% 'unknown error'}. ",
+          "Failed to post to #{channel} ({workspace}): ",
+          "{resp$error %||% 'unknown error'}. ",
           "Announced {length(announced)} post{?s} before failing."
         )
       )
@@ -644,9 +663,9 @@ blog_feed_post <- function(
 
   if (dry_run) {
     cli::cli_alert_info(
-      "Dry run: {length(collected$posts)} post{?s} would go to #{channel}."
+      "Dry run: {length(pending)} post{?s} would go to #{channel}."
     )
-    return(invisible(length(collected$posts)))
+    return(invisible(length(pending)))
   }
 
   blog_feed_seen_save(
@@ -662,14 +681,99 @@ blog_feed_post <- function(
   invisible(length(announced))
 }
 
+#' Serve every workspace's blog channel from one poll of the feeds
+#'
+#' The scheduled entry point. Both channels want the same posts, so the
+#' feeds are polled once and each workspace is then filtered against its
+#' own seen-set - at a ten-minute cadence, polling per workspace would
+#' double the requests every contributor's blog receives for no gain.
+#'
+#' One workspace failing does not stop the others: each is attempted, and
+#' the error is re-raised at the end so the run still goes red.
+#'
+#' @param workspaces Workspaces to announce in.
+#' @param seed When `TRUE`, record every current feed item as announced
+#'   in each workspace without posting. Run once at cutover so the first
+#'   real run doesn't repeat what the Feed app already posted.
+#' @inheritParams blog_feed_post
+#' @return Invisibly, a named integer of posts announced per workspace.
+#' @export
+blog_feed_run <- function(
+  workspaces = c("community", "organiser"),
+  channel = env_default("SLACK_BLOG_CHANNEL", "blogs-by-rladies"),
+  dry_run = FALSE,
+  seed = FALSE,
+  entries = NULL,
+  max_age_days = 14,
+  limit = 20L,
+  namespace_id = slack_tokens_namespace_id(),
+  account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
+  api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
+) {
+  workspaces <- match.arg(workspaces, several.ok = TRUE)
+  entries <- entries %||% blog_feed_entries()
+
+  if (seed) {
+    return(invisible(blog_feed_seed(
+      workspaces,
+      entries,
+      namespace_id,
+      account_id,
+      api_token,
+      dry_run = dry_run
+    )))
+  }
+
+  collected <- blog_feed_collect(
+    entries = entries,
+    max_age_days = max_age_days
+  )
+  blog_feed_report_feedless(collected$feedless)
+  cli::cli_alert_info(
+    "Polled {collected$sources} feed{?s}: {length(collected$posts)} recent post{?s}."
+  )
+
+  counts <- integer()
+  failures <- list()
+  for (workspace in workspaces) {
+    result <- tryCatch(
+      blog_feed_post(
+        workspace = workspace,
+        channel = channel,
+        dry_run = dry_run,
+        posts = collected$posts,
+        limit = limit,
+        namespace_id = namespace_id,
+        account_id = account_id,
+        api_token = api_token
+      ),
+      error = function(e) {
+        cli::cli_alert_danger("{workspace}: {conditionMessage(e)}")
+        failures[[workspace]] <<- conditionMessage(e)
+        0L
+      }
+    )
+    counts[[workspace]] <- result
+  }
+
+  if (length(failures) > 0L) {
+    cli::cli_abort(
+      "Blog feed failed for {.val {names(failures)}}.",
+      call = NULL
+    )
+  }
+  invisible(counts)
+}
+
 #' Record every current feed item as announced, without posting
 #'
-#' @inheritParams blog_feed_post
+#' @param workspaces Workspaces to seed.
+#' @inheritParams blog_feed_run
 #' @return The number of ids recorded.
 #' @keywords internal
 #' @noRd
 blog_feed_seed <- function(
-  workspace,
+  workspaces,
   entries,
   namespace_id,
   account_id,
@@ -684,13 +788,15 @@ blog_feed_seed <- function(
   ids <- unique(as.character(ids))
   if (dry_run) {
     cli::cli_alert_info(
-      "Dry run: {length(ids)} item{?s} would be seeded for {workspace}."
+      "Dry run: {length(ids)} item{?s} would be seeded for {.val {workspaces}}."
     )
     return(length(ids))
   }
-  blog_feed_seen_save(workspace, ids, namespace_id, account_id, api_token)
+  for (workspace in workspaces) {
+    blog_feed_seen_save(workspace, ids, namespace_id, account_id, api_token)
+  }
   cli::cli_alert_success(
-    "Seeded {length(ids)} item{?s} as announced for {workspace}."
+    "Seeded {length(ids)} item{?s} as announced for {.val {workspaces}}."
   )
   length(ids)
 }

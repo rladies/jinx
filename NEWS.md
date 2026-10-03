@@ -13,15 +13,30 @@
   nobody has to remember a matching `/feed subscribe`, and a blog removed
   from the list stops being announced.
 
-- **`bot-blog-feed.yml` runs it daily**, once per workspace. Announced
-  item ids are remembered in KV per workspace and only recorded after the
-  post succeeds, so a failed run repeats nothing and loses nothing. Items
-  older than two weeks are never announced, which stops a newly-added
-  blog's back catalogue flooding the channel, and `seed = TRUE` records a
-  workspace's current feed items as announced without posting - run once
-  at cutover so the first real run doesn't repeat what the Feed app
-  already posted. Curated entries with no `rss_feed` are named in the run
-  log rather than silently skipped.
+- **`blog_feed_run()` serves both workspaces from one poll of the
+  feeds**, and `bot-blog-feed.yml` calls it about every ten minutes - the
+  cadence the Slack Feed app polled at. Polling once for the pair rather
+  than once per workspace halves the requests every contributor's blog
+  receives; each workspace is then filtered against its own seen-set, so
+  the two channels stay independent. One workspace failing does not stop
+  the other, and the run still goes red. GitHub runs schedules on a
+  best-effort basis, so this is "about every ten minutes" rather than a
+  guarantee.
+
+- **Announced item ids are remembered in KV per workspace** and recorded
+  after the posts succeed, including the ones that landed before a
+  mid-run failure - so a failure neither repeats what it already said nor
+  loses it. Items older than two weeks are never announced, which stops a
+  newly-added blog's back catalogue flooding the channel, and
+  `seed = TRUE` records the current feed items as announced without
+  posting - run once at cutover so the first real run doesn't repeat what
+  the Feed app already posted. Curated entries with no `rss_feed` are
+  named in the run log rather than silently skipped.
+
+- **A post collected from two feeds is announced once.** Two curated
+  entries can resolve to the same post - a blog listed with both its main
+  feed and a category feed - and the seen-set is only consulted at the
+  start of a run.
 
 - **`slack_post_message()` gained an `unfurl` argument**, off by default.
   The blog feed turns it on: a message whose whole point is the linked
