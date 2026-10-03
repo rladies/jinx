@@ -1,7 +1,7 @@
 describe("render_template", {
   it("replaces placeholders", {
     tmp <- withr::local_tempfile(
-      lines = "Welcome <NAME> (@<GH_USER>) to <TEAM>!"
+      lines = "Welcome <<NAME>> (@<<GH_USER>>) to <<TEAM>>!"
     )
     result <- render_template(
       tmp,
@@ -16,7 +16,7 @@ describe("render_template", {
 
   it("handles multiple occurrences of same placeholder", {
     tmp <- withr::local_tempfile(
-      lines = "Hi <NAME>, welcome <NAME>!"
+      lines = "Hi <<NAME>>, welcome <<NAME>>!"
     )
     result <- render_template(tmp, list(NAME = "Ada"))
     expect_identical(result, "Hi Ada, welcome Ada!")
@@ -24,10 +24,10 @@ describe("render_template", {
 
   it("leaves unknown placeholders untouched", {
     tmp <- withr::local_tempfile(
-      lines = "Hello <NAME>, your role is <ROLE>"
+      lines = "Hello <<NAME>>, your role is <<ROLE>>"
     )
     result <- render_template(tmp, list(NAME = "Ada"))
-    expect_identical(result, "Hello Ada, your role is <ROLE>")
+    expect_identical(result, "Hello Ada, your role is <<ROLE>>")
   })
 })
 

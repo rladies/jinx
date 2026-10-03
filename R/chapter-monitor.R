@@ -61,61 +61,52 @@ chapter_monitor_status <- function(
   chapters
 }
 
-#' Send inactivity warning emails
+#' Prepare the guide's first inactivity notice for inactive chapters
 #'
-#' Identifies inactive chapters and prepares warning emails for organizers.
+#' Identifies inactive chapters and prepares the notice the guide
+#' documents for them. The wording and the subject line come from the
+#' guide, fetched at call time, so the message organisers receive is the
+#' one a volunteer can edit there.
 #'
 #' @param chapters Chapter status data from [chapter_monitor_status()].
-#' @param template_path Path to email template.
-#' @param dry_run If `TRUE` (default), only returns the email data without
-#'   sending.
-#' @return Data frame of prepared emails (invisibly).
+#' @param template Name of the guide template to send. Defaults to the
+#'   first inactivity notice; the guide also documents a retirement
+#'   notice (`"chapter-retirement-scheduled"`) for chapters that do not
+#'   reply.
+#' @param dry_run Controls the wording of the summary only. Either way
+#'   the prepared emails are returned rather than sent: delivery goes
+#'   through [mail_send()], which a human still drives.
+#' @return Data frame of prepared emails, one row per inactive chapter,
+#'   with `chapter`, `email`, `subject` and `body` (invisibly).
 #' @export
 prepare_inactivity_emails <- function(
   chapters,
-  template_path = NULL,
+  template = "chapter-inactive-first-notice",
   dry_run = TRUE
 ) {
-  if (is.null(template_path)) {
-    template_path <- system.file(
-      "templates",
-      "chapter-inactive.md",
-      package = "jinx"
-    )
-  }
-
   inactive <- chapters[chapters$status == "inactive", ]
   if (nrow(inactive) == 0) {
     cli::cli_alert_info("No inactive chapters found")
     return(invisible(data.frame()))
   }
 
-  template <- paste(readLines(template_path, warn = FALSE), collapse = "\n")
+  notice <- guide_email_template(template)
 
   emails <- data.frame(
     chapter = inactive$name,
     email = paste0(inactive$urlname, "@rladies.org"),
-    subject = paste0(inactive$name, " is at risk of being deactivated"),
+    subject = notice$subject,
+    body = notice$body,
     stringsAsFactors = FALSE
-  )
-
-  emails$body <- vapply(
-    seq_len(nrow(emails)),
-    function(i) {
-      glue::glue(
-        template,
-        chapter_name = emails$chapter[i],
-        .open = "{{",
-        .close = "}}"
-      )
-    },
-    character(1)
   )
 
   if (dry_run) {
     cli::cli_alert_info("Dry run: {nrow(emails)} emails prepared (not sent)")
   } else {
-    cli::cli_alert_success("{nrow(emails)} inactivity warnings sent")
+    cli::cli_alert_info(c(
+      "{nrow(emails)} email{?s} prepared. jinx does not send these itself yet;",
+      " pass each row to {.fn mail_send}."
+    ))
   }
 
   invisible(emails)

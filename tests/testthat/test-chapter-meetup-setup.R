@@ -58,6 +58,8 @@ describe("meetup_urlname_status", {
 })
 
 describe("chapter_meetup_brief", {
+  local_guide_template_text("Description.")
+
   it("spells out the name and URL that cannot be changed later", {
     body <- chapter_meetup_brief("Oslo", "Norway")
     expect_match(body, "RLadies+ Oslo", fixed = TRUE)
@@ -72,11 +74,32 @@ describe("chapter_meetup_brief", {
     expect_match(body, "Oslo, Norway", fixed = TRUE)
   })
 
-  it("carries the description with the parts that must stay", {
+  it("quotes the guide's description rather than a copy of its own", {
+    local_guide_template_text("Canonical description, edited in the guide.")
     body <- chapter_meetup_brief("Oslo", "Norway")
-    expect_match(body, "https://rladies.org/coc/", fixed = TRUE)
-    expect_match(body, "photography/video filming/media", fixed = TRUE)
-    expect_match(body, "promotes gender diversity", fixed = TRUE)
+    expect_match(
+      body,
+      "Canonical description, edited in the guide.",
+      fixed = TRUE
+    )
+    expect_match(body, "````\nCanonical description", fixed = TRUE)
+  })
+
+  it("fences the description so a code block inside it cannot break out", {
+    local_guide_template_text("Before\n```\ncode\n```\nAfter")
+    body <- chapter_meetup_brief("Oslo", "Norway")
+    expect_match(
+      body,
+      "````\nBefore\n```\ncode\n```\nAfter\n````",
+      fixed = TRUE
+    )
+  })
+
+  it("fails loudly when the guide cannot be reached", {
+    local_mocked_bindings(
+      guide_template_fetch = function(...) cli::cli_abort("Could not fetch")
+    )
+    expect_error(chapter_meetup_brief("Oslo", "Norway"), "Could not fetch")
   })
 
   it("reminds about the co-organiser step", {
@@ -116,6 +139,7 @@ describe("chapter_meetup_request", {
         list(city = "Oslo", country = "Norway")
       },
       meetup_urlname_status = function(...) "available",
+      guide_template_fetch = function(...) "Description.",
       announce_post_reply = function(org, repo, number, body) posted <<- body
     )
     body <- chapter_meetup_request(5)
@@ -137,6 +161,7 @@ describe("chapter_meetup_request", {
         NULL
       },
       meetup_urlname_status = function(...) "unknown",
+      guide_template_fetch = function(...) "Description.",
       announce_post_reply = function(org, repo, number, body) posted <<- body
     )
     chapter_meetup_request(5, city = "Bergen", country = "Norway")
@@ -171,6 +196,8 @@ describe("chapter-meetup privilege", {
 })
 
 describe("the urlname convention note", {
+  local_guide_template_text("Description.")
+
   it("says a chapter may ask for a different urlname", {
     body <- chapter_meetup_brief("Portland", "USA")
     expect_match(body, "rladies-pdx", fixed = TRUE)

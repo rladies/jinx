@@ -14,12 +14,16 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   gp:
     name: goodpractice check
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    container:
+      image: ghcr.io/rladies/jinx-bot:latest
+
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -34,16 +38,21 @@ jobs:
           private-key: ${{ secrets.JINX_PRIVATE_KEY }}
           owner: rladies
 
-      - uses: r-lib/actions/setup-r@v2
-        with:
-          use-public-rspm: true
-
-      - uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          extra-packages: |
-            any::goodpractice
-            any::rcmdcheck
-            local::.
+      # setup-r spent nine minutes of a fifteen-minute budget on apt
+      # installing R system requirements for R CMD check, which the checks
+      # in gp-report.R do not run, and the job died before goodpractice
+      # started. The bot image already carries R and the dependency tree,
+      # so only what it lacks is installed at run time: goodpractice, and
+      # anything DESCRIPTION gained since the image was published.
+      - name: Install missing goodpractice dependencies
+        run: |
+          pak::pak(
+            c("deps::.", "goodpractice"),
+            dependencies = TRUE,
+            upgrade = FALSE,
+            ask = FALSE
+          )
+        shell: Rscript {0}
 
       - name: Run goodpractice
         id: gp

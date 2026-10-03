@@ -1,4 +1,4 @@
-We have received a request to activate a new chapter in **<CITY>**, **<COUNTRY>**. The following steps are needed to complete this task:
+We have received a request to activate a new chapter in **<<CITY>>**, **<<COUNTRY>>**. The following steps are needed to complete this task:
 
 ### Initial checks
 
@@ -36,7 +36,7 @@ The @rladies/meetup-pro team will:
 
 -  [ ] create the city chapter on Meetup following [our organizational guidelines](https://guide.rladies.org/coordination/meetup/).
 -  [ ] post the url of the chapter in this issue
--  [ ] inform organizers via Slack that the chapter has been created and request them to join as member. You'll find a template for that message on our wiki.
+-  [ ] inform organizers via Slack that the chapter has been created and request them to join as member. The message to send them is [Appendix B of the Meetup guidelines](https://guide.rladies.org/global-team/meetup/#appendix-b-message-template).
 -  [ ] once they have joined, change their status to co-organizer on Meetup
 
 ### Add the chapter to the website

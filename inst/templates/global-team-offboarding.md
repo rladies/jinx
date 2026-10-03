@@ -1,5 +1,5 @@
-@<GH_USER> is leaving the <TEAM> Team and the Global Team.
-Thank you for all the time you have spent on RLadies+, <NAME>.
+@<<GH_USER>> is leaving the <<TEAM>> Team and the Global Team.
+Thank you for all the time you have spent on RLadies+, <<NAME>>.
 We appreciate you and your work so much!
 
 ### What we will do to offboard you

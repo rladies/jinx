@@ -276,6 +276,11 @@ reference:
       - starts_with("cfp_")
       - starts_with("conference_")
 
+  - title: Communications templates
+    desc: Canonical org comms text, held in the guide
+    contents:
+      - starts_with("guide_")
+
   - title: Internationalization
     desc: Template translations
     contents:
