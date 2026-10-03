@@ -368,3 +368,41 @@ describe("slack_subscribe_rss", {
     expect_match(post_args$text, "/feed subscribe https://example.com/feed.xml")
   })
 })
+
+describe("slack_message_body", {
+  it("omits blocks entirely when none are given", {
+    body <- slack_message_body("hello", "general")
+    expect_false("blocks" %in% names(body))
+    expect_identical(body$text, "hello")
+    expect_identical(body$channel, "general")
+    expect_false(body$unfurl_links)
+    expect_false(body$unfurl_media)
+  })
+
+  it("sends the blocks and the fallback text together", {
+    body <- slack_message_body(
+      "fallback",
+      "general",
+      unfurl = TRUE,
+      blocks = list(list(type = "section"))
+    )
+    expect_identical(body$text, "fallback")
+    expect_identical(body$blocks[[1]]$type, "section")
+    expect_true(body$unfurl_links)
+    expect_true(body$unfurl_media)
+  })
+
+  it("encodes the blocks as a JSON array", {
+    body <- slack_message_body(
+      "fallback",
+      "general",
+      blocks = list(list(type = "section"), list(type = "image"))
+    )
+    parsed <- jsonlite::fromJSON(
+      jsonlite::toJSON(body, auto_unbox = TRUE),
+      simplifyVector = FALSE
+    )
+    expect_length(parsed$blocks, 2L)
+    expect_identical(parsed$blocks[[2]]$type, "image")
+  })
+})

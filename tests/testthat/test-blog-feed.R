@@ -804,6 +804,9 @@ describe("blog_feed_run", {
     polls <- 0L
     posted <- character()
     local_mocked_bindings(
+      blog_feed_og = function(...) {
+        list(description = "", image = "", image_alt = "")
+      },
       rag_fetch_text = function(...) {
         polls <<- polls + 1L
         rss_doc(rss_item(guid = "p1"))
@@ -820,6 +823,23 @@ describe("blog_feed_run", {
     expect_equal(polls, 1L)
     expect_identical(posted, c("xoxb-community", "xoxb-organiser"))
     expect_equal(unname(counts), c(1L, 1L))
+  })
+
+  it("reads a post's preview once, not once per workspace", {
+    og_reads <- character()
+    local_mocked_bindings(
+      rag_fetch_text = function(...) rss_doc(rss_item(guid = "p1")),
+      blog_feed_og = function(url) {
+        og_reads <<- c(og_reads, url)
+        list(description = "D", image = "", image_alt = "")
+      },
+      blog_feed_seen_load = function(...) character(),
+      slack_bot_token = function(workspace) paste0("xoxb-", workspace),
+      slack_post_message = function(...) list(ok = TRUE),
+      blog_feed_seen_save = function(...) NULL
+    )
+    blog_feed_run(entries = entries, max_age_days = 1e6)
+    expect_length(og_reads, 1L)
   })
 
   it("respects each workspace's own seen-set", {
