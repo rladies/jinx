@@ -157,3 +157,61 @@ describe("parse_cache_purge_command", {
     expect_identical(cmd$action, "cache-purge")
   })
 })
+
+describe("kv_string_set_load", {
+  it("parses a stored JSON array", {
+    local_mocked_bindings(cf_ops_get_kv_value = function(...) '["a","b"]')
+    expect_identical(kv_string_set_load("k"), c("a", "b"))
+  })
+
+  it("treats an unset, unparseable or unreadable key as nothing recorded", {
+    local_mocked_bindings(cf_ops_get_kv_value = function(...) "")
+    expect_identical(kv_string_set_load("k"), character())
+
+    local_mocked_bindings(cf_ops_get_kv_value = function(...) "{not json")
+    expect_identical(kv_string_set_load("k"), character())
+
+    local_mocked_bindings(
+      cf_ops_get_kv_value = function(...) cli::cli_abort("boom")
+    )
+    expect_identical(kv_string_set_load("k"), character())
+  })
+})
+
+describe("kv_string_set_save", {
+  it("stores the values as a JSON array under the key", {
+    captured <- NULL
+    local_mocked_bindings(
+      cf_ops_kv_put = function(..., key_name, value) {
+        captured <<- list(key = key_name, value = value)
+      }
+    )
+    kv_string_set_save("my_key", c("a", "b"))
+    expect_identical(captured$key, "my_key")
+    expect_identical(
+      as.character(jsonlite::fromJSON(captured$value)),
+      c("a", "b")
+    )
+  })
+
+  it("keeps every value when no limit is given", {
+    captured <- NULL
+    local_mocked_bindings(
+      cf_ops_kv_put = function(..., value) captured <<- value
+    )
+    kv_string_set_save("k", c("a", "a", "b"))
+    expect_length(as.character(jsonlite::fromJSON(captured)), 3L)
+  })
+
+  it("drops duplicates and keeps the most recent when limited", {
+    captured <- NULL
+    local_mocked_bindings(
+      cf_ops_kv_put = function(..., value) captured <<- value
+    )
+    kv_string_set_save("k", c("old", "dup", "dup", "new"), keep = 2L)
+    expect_identical(
+      as.character(jsonlite::fromJSON(captured)),
+      c("dup", "new")
+    )
+  })
+})

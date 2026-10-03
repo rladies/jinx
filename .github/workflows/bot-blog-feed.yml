@@ -1,0 +1,49 @@
+name: Bot · Blog Feed
+
+on:
+  schedule:
+    # Matches the cadence the Slack Feed app polled at. GitHub runs these
+    # on a best-effort basis and delays them under load, so treat it as
+    # "about every ten minutes" rather than a guarantee.
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Log what would be posted without posting it"
+        type: boolean
+        default: false
+      seed:
+        description: "Record every current feed item as announced, posting nothing (run once at cutover)"
+        type: boolean
+        default: false
+
+concurrency:
+  # One run at a time: a poll takes well under a minute, but if one ever
+  # overruns the schedule, queued duplicates would announce the same posts
+  # twice from the same seen-set.
+  group: bot-blog-feed
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: ghcr.io/rladies/jinx-bot:latest
+
+    steps:
+      - name: Announce new community posts in both workspaces
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SLACK_COMMUNITY_TOKEN: ${{ secrets.SLACK_COMMUNITY_TOKEN }}
+          SLACK_ORGANISER_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
+          SLACK_BLOG_CHANNEL: ${{ vars.SLACK_BLOG_CHANNEL }}
+        run: |
+          Rscript -e 'jinx::blog_feed_run(
+            dry_run = ${{ inputs.dry_run && 'TRUE' || 'FALSE' }},
+            seed = ${{ inputs.seed && 'TRUE' || 'FALSE' }}
+          )'

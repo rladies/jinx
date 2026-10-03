@@ -223,3 +223,73 @@ cf_ops_purge_cache <- function(
     token = token
   )
 }
+
+#' Read a JSON string array out of KV
+#'
+#' Several schedules keep "what have I already done" as a list of ids
+#' under one key - the channel spotlight's round-robin, the blog feed's
+#' announced posts. Every failure degrades to "nothing recorded yet"
+#' rather than erroring: a missing key is the first run, and a run that
+#' cannot read its state should re-announce at worst, not abort.
+#'
+#' @param key_name KV key holding a JSON array of strings.
+#' @param namespace_id KV namespace ID.
+#' @param account_id Cloudflare account ID.
+#' @param api_token Cloudflare API token.
+#' @return Character vector, empty when the key is unset or unreadable.
+#' @keywords internal
+#' @noRd
+kv_string_set_load <- function(
+  key_name,
+  namespace_id = slack_tokens_namespace_id(),
+  account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
+  api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
+) {
+  raw <- tryCatch(
+    cf_ops_get_kv_value(
+      account_id = account_id,
+      namespace_id = namespace_id,
+      key_name = key_name,
+      token = api_token
+    ),
+    error = function(e) NA_character_
+  )
+  if (length(raw) != 1L || is.na(raw) || !nzchar(raw)) {
+    return(character())
+  }
+  parsed <- tryCatch(
+    jsonlite::fromJSON(raw, simplifyVector = TRUE),
+    error = function(e) character()
+  )
+  as.character(parsed)
+}
+
+#' Write a JSON string array to KV
+#'
+#' @inheritParams kv_string_set_load
+#' @param values Character vector to store.
+#' @param keep When set, drop duplicates and store only the last `keep`
+#'   values, so a growing set cannot outgrow a single KV read.
+#' @return The API response (invisibly).
+#' @keywords internal
+#' @noRd
+kv_string_set_save <- function(
+  key_name,
+  values,
+  keep = NULL,
+  namespace_id = slack_tokens_namespace_id(),
+  account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
+  api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
+) {
+  values <- as.character(values)
+  if (!is.null(keep)) {
+    values <- utils::tail(unique(values), keep)
+  }
+  cf_ops_kv_put(
+    account_id = account_id,
+    namespace_id = namespace_id,
+    key_name = key_name,
+    value = jsonlite::toJSON(values),
+    token = api_token
+  )
+}

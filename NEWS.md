@@ -1,5 +1,53 @@
 # jinx (development version)
 
+## Jinx announces community blog posts in Slack
+
+- **`blog_feed_post()` takes over the `#blogs-by-rladies` channels** from
+  the Slack Feed app, in both the community and organiser workspaces. It
+  reads the curated list in
+  [`awesome-rladies-creations`](https://github.com/rladies/awesome-rladies-creations),
+  polls every entry that carries an `rss_feed` - blogs, YouTube channels
+  and websites alike, since they all serve the same RSS or Atom XML - and
+  posts one message per new item with its title, author and link. Adding
+  a blog to the curated list is now all it takes to get it into Slack:
+  nobody has to remember a matching `/feed subscribe`, and a blog removed
+  from the list stops being announced.
+
+- **`blog_feed_run()` serves both workspaces from one poll of the
+  feeds**, and `bot-blog-feed.yml` calls it about every ten minutes - the
+  cadence the Slack Feed app polled at. Polling once for the pair rather
+  than once per workspace halves the requests every contributor's blog
+  receives; each workspace is then filtered against its own seen-set, so
+  the two channels stay independent. One workspace failing does not stop
+  the other, and the run still goes red. GitHub runs schedules on a
+  best-effort basis, so this is "about every ten minutes" rather than a
+  guarantee.
+
+- **Announced item ids are remembered in KV per workspace** and recorded
+  after the posts succeed, including the ones that landed before a
+  mid-run failure - so a failure neither repeats what it already said nor
+  loses it. Items older than two weeks are never announced, which stops a
+  newly-added blog's back catalogue flooding the channel, and
+  `seed = TRUE` records the current feed items as announced without
+  posting - run once at cutover so the first real run doesn't repeat what
+  the Feed app already posted. Curated entries with no `rss_feed` are
+  named in the run log rather than silently skipped.
+
+- **A post collected from two feeds is announced once.** Two curated
+  entries can resolve to the same post - a blog listed with both its main
+  feed and a category feed - and the seen-set is only consulted at the
+  start of a run.
+
+- **A failed run is reported on GitHub only**, not in Slack. Every other
+  schedule pings the healthcheck channel when it fails, but this one runs
+  144 times a day, and a blog feed going quiet is not an incident worth
+  interrupting a channel over - the Feed app it replaces said nothing
+  either.
+
+- **`slack_post_message()` gained an `unfurl` argument**, off by default.
+  The blog feed turns it on: a message whose whole point is the linked
+  post should show the preview card.
+
 ## Org comms templates come from the guide
 
 - **`guide_template()` fetches a canonical communications template**
@@ -39,6 +87,7 @@
 - **The chapter setup and update checklists point at the guide** for the
   "your chapter is set up" message, instead of at a wiki that no longer
   holds it.
+
 
 ## Merged PRs and closed issues thank everyone who helped
 
