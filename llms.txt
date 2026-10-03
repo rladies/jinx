@@ -325,6 +325,22 @@ Blog content management
   : Check community blog links from the awesome-rladies-creations repo
 - [`blog_create_entry()`](https://rladies.github.io/jinx/reference/blog_create_entry.md)
   : Auto-generate a blog entry JSON file from a URL
+- [`blog_feed_collect()`](https://rladies.github.io/jinx/reference/blog_feed_collect.md)
+  : Collect every recent post across the curated feeds
+- [`blog_feed_format()`](https://rladies.github.io/jinx/reference/blog_feed_format.md)
+  : Format one new post as a Slack mrkdwn message
+- [`blog_feed_items()`](https://rladies.github.io/jinx/reference/blog_feed_items.md)
+  : Parse an RSS or Atom document into a data frame of items
+- [`blog_feed_new_items()`](https://rladies.github.io/jinx/reference/blog_feed_new_items.md)
+  : Keep the items worth announcing
+- [`blog_feed_pending()`](https://rladies.github.io/jinx/reference/blog_feed_pending.md)
+  : Keep the posts one workspace still owes its channel
+- [`blog_feed_post()`](https://rladies.github.io/jinx/reference/blog_feed_post.md)
+  : Announce new community posts in one workspace's blog channel
+- [`blog_feed_run()`](https://rladies.github.io/jinx/reference/blog_feed_run.md)
+  : Serve every workspace's blog channel from one poll of the feeds
+- [`blog_feed_sources()`](https://rladies.github.io/jinx/reference/blog_feed_sources.md)
+  : Split curated entries into pollable sources and gaps
 - [`validate_blog_entry()`](https://rladies.github.io/jinx/reference/validate_blog_entry.md)
   : Validate blog entry JSON files against schema
 
