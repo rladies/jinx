@@ -422,17 +422,101 @@ blog_feed_new_items <- function(
 #' @return Character scalar Slack mrkdwn message.
 #' @export
 blog_feed_format <- function(item, source) {
-  heading <- blog_feed_heading(source$type)
-  byline <- if (nzchar(source$author)) {
-    glue::glue("by {escape_markdown(source$author)} \u00b7 ")
-  } else {
-    ""
-  }
   glue::glue(
-    "{heading}\n",
+    "{blog_feed_heading(source$type)}\n",
     "<{item$link}|{escape_markdown(item$title)}>\n",
-    "{byline}_{escape_markdown(source$title)}_"
+    "{blog_feed_byline(source)}"
   )
+}
+
+#' Build a new post as Slack blocks
+#'
+#' The heading, a linked bold title and the post's own description go in
+#' one section; the preview image follows as its own block so Slack
+#' renders it full width rather than as a thumbnail; the byline sits in a
+#' context block, which Slack renders small and grey so it reads as
+#' attribution rather than as part of the post.
+#'
+#' Every piece of text here comes from a feed or a page that contributors
+#' control, so all of it is escaped - the link markup around the title is
+#' the only markup the message is allowed to introduce.
+#'
+#' @param item A one-row data frame from [blog_feed_items()].
+#' @param source A one-row data frame from [blog_feed_sources()].
+#' @param og Preview data from [blog_feed_og()]. Omitted fields are fine.
+#' @return A list of Slack Block Kit blocks.
+#' @export
+blog_feed_blocks <- function(item, source, og = list()) {
+  lines <- c(
+    blog_feed_heading(source$type),
+    glue::glue("*<{item$link}|{escape_markdown(item$title)}>*")
+  )
+  description <- og$description %||% ""
+  if (nzchar(description)) {
+    lines <- c(lines, "", escape_markdown(description))
+  }
+
+  blocks <- list(list(
+    type = "section",
+    text = list(type = "mrkdwn", text = paste(lines, collapse = "\n"))
+  ))
+
+  image <- og$image %||% ""
+  if (nzchar(image)) {
+    blocks <- c(blocks, list(blog_feed_image_block(image, og, item$title)))
+  }
+
+  byline <- blog_feed_byline(source)
+  if (nzchar(byline)) {
+    blocks <- c(
+      blocks,
+      list(list(
+        type = "context",
+        elements = list(list(type = "mrkdwn", text = byline))
+      ))
+    )
+  }
+  blocks
+}
+
+#' Build the preview image block
+#'
+#' `alt_text` is required by Slack and is always set. A caption (Slack's
+#' image `title`) is only set from a real `og:image:alt`, because that is
+#' the one case where a human wrote something about this image - a
+#' generated caption would just repeat the title above it.
+#'
+#' @param image Validated image URL.
+#' @param og Preview data from [blog_feed_og()].
+#' @param title The post's title.
+#' @return One Slack image block.
+#' @keywords internal
+#' @noRd
+blog_feed_image_block <- function(image, og, title) {
+  caption <- og$image_alt %||% ""
+  block <- list(
+    type = "image",
+    image_url = image,
+    alt_text = blog_feed_image_alt(caption, title)
+  )
+  if (nzchar(caption)) {
+    block$title <- list(
+      type = "plain_text",
+      text = blog_feed_clip(caption, 1000L),
+      emoji = TRUE
+    )
+  }
+  block
+}
+
+blog_feed_byline <- function(source) {
+  author <- source$author %||% ""
+  blog <- escape_markdown(source$title)
+  if (nzchar(author)) {
+    glue::glue("by {escape_markdown(author)} \u00b7 _{blog}_")
+  } else {
+    glue::glue("_{blog}_")
+  }
 }
 
 blog_feed_heading <- function(type) {
@@ -560,6 +644,74 @@ blog_feed_distinct <- function(posts) {
   posts[!duplicated(ids)]
 }
 
+#' Post one announcement, with the preview if Slack will take it
+#'
+#' Slack fetches a block's `image_url` itself and rejects the whole
+#' message if it cannot, so a single malformed `og:image` would otherwise
+#' cost us the post - and, at a ten-minute cadence, cost us the same post
+#' on every run until someone fixed the blog. A rejection that names the
+#' blocks is therefore retried once as plain text, which is what the
+#' channel showed before previews existed.
+#'
+#' With a preview of our own, Slack's unfurl is turned off: it would
+#' append a second copy of the same image and description underneath.
+#'
+#' @param text Fallback and notification text.
+#' @param post One `item`/`source` pair.
+#' @param channel Channel to post to.
+#' @param token Slack bot token.
+#' @param og_fetch Reader for the post's preview data.
+#' @return The Slack API response.
+#' @keywords internal
+#' @noRd
+blog_feed_send <- function(
+  text,
+  post,
+  channel,
+  token,
+  og_fetch = blog_feed_og
+) {
+  og <- og_fetch(post$item$link)
+  has_preview <- nzchar(og$image %||% "") || nzchar(og$description %||% "")
+  if (!has_preview) {
+    return(slack_post_message(
+      text,
+      channel = channel,
+      token = token,
+      unfurl = TRUE
+    ))
+  }
+
+  resp <- slack_post_message(
+    text,
+    channel = channel,
+    token = token,
+    unfurl = FALSE,
+    blocks = blog_feed_blocks(post$item, post$source, og)
+  )
+  if (isTRUE(resp$ok) || !blog_feed_block_error(resp$error)) {
+    return(resp)
+  }
+
+  cli::cli_alert_warning(
+    "blog-feed: Slack refused the preview ({resp$error}), posting plain text."
+  )
+  slack_post_message(text, channel = channel, token = token, unfurl = TRUE)
+}
+
+#' Is this Slack error about the blocks rather than the message?
+#'
+#' @param error The `error` field of a Slack API response.
+#' @return `TRUE` when a plain-text retry is worth attempting.
+#' @keywords internal
+#' @noRd
+blog_feed_block_error <- function(error) {
+  error <- error %||% ""
+  length(error) == 1L &&
+    nzchar(error) &&
+    grepl("block|image|invalid_arguments", error, ignore.case = TRUE)
+}
+
 #' Announce new community posts in one workspace's blog channel
 #'
 #' Replaces the Slack Feed app's per-blog subscriptions with one run
@@ -581,6 +733,10 @@ blog_feed_distinct <- function(posts) {
 #' @param limit Most posts to announce in one run.
 #' @param slack_token Bot token for `workspace`. Resolved from the
 #'   workspace when unset.
+#' @param og_fetch Reader for a post's preview data. Defaults to a
+#'   per-call cache; [blog_feed_run()] passes one shared across
+#'   workspaces so a post's page is read once however many channels
+#'   announce it.
 #' @inheritParams blog_feed_collect
 #' @param namespace_id KV namespace ID for `SLACK_TOKENS`.
 #' @param account_id Cloudflare account ID. Defaults to env
@@ -598,6 +754,7 @@ blog_feed_post <- function(
   max_age_days = 14,
   limit = 20L,
   slack_token = NULL,
+  og_fetch = blog_feed_og_memo(),
   namespace_id = slack_tokens_namespace_id(),
   account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
   api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
@@ -634,12 +791,7 @@ blog_feed_post <- function(
       cli::cli_alert_info("Would post to #{channel} ({workspace}):\n{text}")
       next
     }
-    resp <- slack_post_message(
-      text,
-      channel = channel,
-      token = slack_token,
-      unfurl = TRUE
-    )
+    resp <- blog_feed_send(text, post, channel, slack_token, og_fetch)
     if (!isTRUE(resp$ok)) {
       if (length(announced) > 0L) {
         blog_feed_seen_save(
@@ -729,6 +881,7 @@ blog_feed_run <- function(
     max_age_days = max_age_days
   )
   blog_feed_report_feedless(collected$feedless)
+  og_fetch <- blog_feed_og_memo()
   cli::cli_alert_info(
     paste0(
       "Polled {collected$sources} feed{?s}: ",
@@ -746,6 +899,7 @@ blog_feed_run <- function(
         dry_run = dry_run,
         posts = collected$posts,
         limit = limit,
+        og_fetch = og_fetch,
         namespace_id = namespace_id,
         account_id = account_id,
         api_token = api_token
