@@ -2,6 +2,50 @@
 
 ## jinx (development version)
 
+### Org comms templates come from the guide
+
+- **[`guide_template()`](https://rladies.github.io/jinx/reference/guide_template.md)
+  fetches a canonical communications template** from
+  `https://guide.rladies.org/templates/<name>.md`, where the guide now
+  keeps the text RLadies+ sends to organisers and chapters. A failed
+  fetch is an error: there is no vendored fallback, because the second
+  copy is the drift this removes. A response that is not markdown is
+  refused too, so an error page never reaches a chapter.
+
+- **[`guide_email_template()`](https://rladies.github.io/jinx/reference/guide_email_template.md)
+  is the same thing for a template that is sent as email.** The guide
+  writes those with their subject on a leading `SUBJECT:` line, and this
+  returns subject and body separately so callers send the guide’s
+  subject rather than inventing one. It errors when the template carries
+  no subject.
+
+- **[`prepare_inactivity_emails()`](https://rladies.github.io/jinx/reference/prepare_inactivity_emails.md)
+  now prepares the notice the guide documents.** jinx’s own copy had
+  drifted into warning organisers that their chapter “may be
+  deactivated”, where the guide’s documented first notice offers help
+  and only mentions retirement as what happens if nobody replies. The
+  subject line comes from the guide too. The `template_path` argument is
+  replaced by `template`, naming a guide template, so the same function
+  can prepare the retirement notice as the second step of that process.
+  It also stops reporting that it sent the emails: it never has, and
+  delivery goes through
+  [`mail_send()`](https://rladies.github.io/jinx/reference/mail_send.md).
+
+- **The Meetup setup brief quotes the guide’s group description** rather
+  than a copy of its own, which had lost a clause of the photography
+  consent paragraph. `inst/templates/meetup-description.md` and
+  `inst/templates/chapter-inactive.md` are deleted.
+
+- **Placeholders are `<<KEY>>` everywhere.** This is the convention the
+  guide uses, so one renderer serves both jinx’s own templates and the
+  guide’s. jinx’s templates and translations are migrated; a key with no
+  value is left in place, which is what the guide wants for the parts a
+  human fills in.
+
+- **The chapter setup and update checklists point at the guide** for the
+  “your chapter is set up” message, instead of at a wiki that no longer
+  holds it.
+
 ### Merged PRs and closed issues thank everyone who helped
 
 - **[`gh_thank_contributor()`](https://rladies.github.io/jinx/reference/gh_thank_contributor.md)

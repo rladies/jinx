@@ -262,7 +262,7 @@ Chapter activity monitoring and outreach
 - [`chapter_monitor_status()`](https://rladies.github.io/jinx/reference/chapter_monitor_status.md)
   : Monitor chapter activity status
 - [`prepare_inactivity_emails()`](https://rladies.github.io/jinx/reference/prepare_inactivity_emails.md)
-  : Send inactivity warning emails
+  : Prepare the guide's first inactivity notice for inactive chapters
 
 ## Slack
 
@@ -625,6 +625,15 @@ CFP tracking and speaker recommendations
   : Generate conference coordination report
 - [`conference_list_speakers()`](https://rladies.github.io/jinx/reference/conference_list_speakers.md)
   : List speaker recommendations for a conference
+
+## Communications templates
+
+Canonical org comms text, held in the guide
+
+- [`guide_email_template()`](https://rladies.github.io/jinx/reference/guide_email_template.md)
+  : Fetch a canonical email template from the guide
+- [`guide_template()`](https://rladies.github.io/jinx/reference/guide_template.md)
+  : Fetch a canonical communications template from the guide
 
 ## Internationalization
 
