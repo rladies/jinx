@@ -449,23 +449,12 @@ blog_feed_seen_load <- function(
   account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
   api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
 ) {
-  raw <- tryCatch(
-    cf_ops_get_kv_value(
-      account_id = account_id,
-      namespace_id = namespace_id,
-      key_name = blog_feed_seen_key(workspace),
-      token = api_token
-    ),
-    error = function(e) NA_character_
+  kv_string_set_load(
+    blog_feed_seen_key(workspace),
+    namespace_id,
+    account_id,
+    api_token
   )
-  if (length(raw) != 1L || is.na(raw) || !nzchar(raw)) {
-    return(character())
-  }
-  parsed <- tryCatch(
-    jsonlite::fromJSON(raw, simplifyVector = TRUE),
-    error = function(e) character()
-  )
-  as.character(parsed)
 }
 
 blog_feed_seen_save <- function(
@@ -475,13 +464,13 @@ blog_feed_seen_save <- function(
   account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
   api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
 ) {
-  seen <- utils::tail(unique(as.character(seen)), blog_feed_memory())
-  cf_ops_kv_put(
-    account_id = account_id,
+  kv_string_set_save(
+    blog_feed_seen_key(workspace),
+    seen,
+    keep = blog_feed_memory(),
     namespace_id = namespace_id,
-    key_name = blog_feed_seen_key(workspace),
-    value = jsonlite::toJSON(seen),
-    token = api_token
+    account_id = account_id,
+    api_token = api_token
   )
 }
 
@@ -523,7 +512,7 @@ blog_feed_collect <- function(
   }
 
   order_by_date <- order(vapply(posts, function(p) p$item$date, numeric(1)))
-  posts <- posts[order_by_date]
+  posts <- blog_feed_distinct(posts[order_by_date])
   if (length(posts) > limit) {
     cli::cli_alert_warning(
       "blog-feed: {length(posts)} new posts, announcing the {limit} oldest"
@@ -532,6 +521,25 @@ blog_feed_collect <- function(
   }
 
   list(posts = posts, feedless = split$feedless, sources = nrow(sources))
+}
+
+#' Drop a post the same run has already collected from another feed
+#'
+#' Two curated entries can resolve to the same post - a blog listed with
+#' both its main feed and a category feed, or a site that moved and is
+#' listed twice - and `seen` is only consulted at the start of a run, so
+#' nothing else would stop the channel getting the item twice.
+#'
+#' @param posts List of `item`/`source` pairs, oldest first.
+#' @return The same list with later duplicates of an item id removed.
+#' @keywords internal
+#' @noRd
+blog_feed_distinct <- function(posts) {
+  if (length(posts) == 0L) {
+    return(posts)
+  }
+  ids <- vapply(posts, function(p) p$item$id, character(1))
+  posts[!duplicated(ids)]
 }
 
 #' Announce new community posts in a workspace's blog channel
@@ -581,7 +589,8 @@ blog_feed_post <- function(
       entries,
       namespace_id,
       account_id,
-      api_token
+      api_token,
+      dry_run = dry_run
     )))
   }
 
@@ -606,7 +615,9 @@ blog_feed_post <- function(
     return(invisible(0L))
   }
 
-  slack_token <- slack_token %||% slack_bot_token(workspace)
+  if (!dry_run && is_blank(slack_token)) {
+    slack_token <- slack_bot_token(workspace)
+  }
   announced <- character()
   for (post in collected$posts) {
     text <- blog_feed_format(post$item, post$source)
@@ -631,19 +642,24 @@ blog_feed_post <- function(
     announced <- c(announced, post$item$id)
   }
 
-  if (length(announced) > 0L) {
-    blog_feed_seen_save(
-      workspace,
-      c(seen, announced),
-      namespace_id,
-      account_id,
-      api_token
+  if (dry_run) {
+    cli::cli_alert_info(
+      "Dry run: {length(collected$posts)} post{?s} would go to #{channel}."
     )
+    return(invisible(length(collected$posts)))
   }
-  cli::cli_alert_success(
-    "Announced {length(collected$posts)} post{?s} in #{channel} ({workspace})"
+
+  blog_feed_seen_save(
+    workspace,
+    c(seen, announced),
+    namespace_id,
+    account_id,
+    api_token
   )
-  invisible(length(collected$posts))
+  cli::cli_alert_success(
+    "Announced {length(announced)} post{?s} in #{channel} ({workspace})"
+  )
+  invisible(length(announced))
 }
 
 #' Record every current feed item as announced, without posting
@@ -657,7 +673,8 @@ blog_feed_seed <- function(
   entries,
   namespace_id,
   account_id,
-  api_token
+  api_token,
+  dry_run = FALSE
 ) {
   split <- blog_feed_sources(entries)
   ids <- unlist(lapply(
@@ -665,6 +682,12 @@ blog_feed_seed <- function(
     function(feed) blog_feed_fetch(feed)$id
   ))
   ids <- unique(as.character(ids))
+  if (dry_run) {
+    cli::cli_alert_info(
+      "Dry run: {length(ids)} item{?s} would be seeded for {workspace}."
+    )
+    return(length(ids))
+  }
   blog_feed_seen_save(workspace, ids, namespace_id, account_id, api_token)
   cli::cli_alert_success(
     "Seeded {length(ids)} item{?s} as announced for {workspace}."

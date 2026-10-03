@@ -446,6 +446,17 @@ describe("blog_feed_collect", {
     expect_identical(collected$posts[[1]]$source$title, "Second blog")
   })
 
+  it("collects a post once when two feeds carry it", {
+    local_mocked_bindings(
+      rag_fetch_text = feeds(list(
+        "https://aosmith.rbind.io/index.xml" = rss_doc(rss_item(guid = "same")),
+        "https://second.example/index.xml" = rss_doc(rss_item(guid = "same"))
+      ))
+    )
+    collected <- blog_feed_collect(entries = entries, now = now)
+    expect_length(collected$posts, 1L)
+  })
+
   it("skips items already announced", {
     local_mocked_bindings(
       rag_fetch_text = feeds(list(
@@ -700,6 +711,71 @@ describe("blog_feed_post", {
       "Seeded 2 items"
     )
     expect_identical(saved, c("a", "b"))
+  })
+
+  it("needs no Slack token for a dry run", {
+    one_post()
+    local_mocked_bindings(
+      slack_bot_token = function(...) cli::cli_abort("should not need a token"),
+      slack_post_message = function(...) cli::cli_abort("should not post")
+    )
+    expect_message(
+      blog_feed_post(
+        "community",
+        dry_run = TRUE,
+        entries = entries,
+        max_age_days = 1e6
+      ),
+      "Would post"
+    )
+  })
+
+  it("falls back to the workspace token when none is passed", {
+    one_post()
+    local_mocked_bindings(
+      slack_bot_token = function(workspace) paste0("xoxb-", workspace),
+      slack_post_message = function(text, channel, token, ...) {
+        expect_identical(token, "xoxb-organiser")
+        list(ok = TRUE)
+      },
+      blog_feed_seen_save = function(...) NULL
+    )
+    blog_feed_post("organiser", entries = entries, max_age_days = 1e6)
+  })
+
+  it("treats an empty token as unset rather than posting with it", {
+    one_post()
+    local_mocked_bindings(
+      slack_bot_token = function(workspace) paste0("xoxb-", workspace),
+      slack_post_message = function(text, channel, token, ...) {
+        expect_identical(token, "xoxb-community")
+        list(ok = TRUE)
+      },
+      blog_feed_seen_save = function(...) NULL
+    )
+    blog_feed_post(
+      "community",
+      slack_token = "",
+      entries = entries,
+      max_age_days = 1e6
+    )
+  })
+
+  it("records nothing when seeding on a dry run", {
+    local_mocked_bindings(
+      rag_fetch_text = function(...) rss_doc(rss_item(guid = "a")),
+      slack_post_message = function(...) cli::cli_abort("should not post"),
+      blog_feed_seen_save = function(...) cli::cli_abort("should not save")
+    )
+    expect_message(
+      blog_feed_post(
+        "organiser",
+        seed = TRUE,
+        dry_run = TRUE,
+        entries = entries
+      ),
+      "would be seeded"
+    )
   })
 
   it("rejects an unknown workspace", {

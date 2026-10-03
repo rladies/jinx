@@ -70,23 +70,12 @@ promo_recent_load <- function(
   account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
   api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
 ) {
-  raw <- tryCatch(
-    cf_ops_get_kv_value(
-      account_id = account_id,
-      namespace_id = namespace_id,
-      key_name = promo_recent_key(team_id),
-      token = api_token
-    ),
-    error = function(e) NA_character_
+  kv_string_set_load(
+    promo_recent_key(team_id),
+    namespace_id,
+    account_id,
+    api_token
   )
-  if (length(raw) != 1L || is.na(raw) || !nzchar(raw)) {
-    return(character())
-  }
-  parsed <- tryCatch(
-    jsonlite::fromJSON(raw, simplifyVector = TRUE),
-    error = function(e) character()
-  )
-  as.character(parsed)
 }
 
 promo_recent_save <- function(
@@ -96,12 +85,12 @@ promo_recent_save <- function(
   account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
   api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
 ) {
-  cf_ops_kv_put(
-    account_id = account_id,
+  kv_string_set_save(
+    promo_recent_key(team_id),
+    recent,
     namespace_id = namespace_id,
-    key_name = promo_recent_key(team_id),
-    value = jsonlite::toJSON(as.character(recent)),
-    token = api_token
+    account_id = account_id,
+    api_token = api_token
   )
 }
 
