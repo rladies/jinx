@@ -4,7 +4,12 @@
 \alias{slack_post_message}
 \title{Post a message to a Slack channel}
 \usage{
-slack_post_message(text, channel, token = Sys.getenv("SLACK_TOKEN"))
+slack_post_message(
+  text,
+  channel,
+  token = Sys.getenv("SLACK_TOKEN"),
+  unfurl = FALSE
+)
 }
 \arguments{
 \item{text}{Message text (supports Slack mrkdwn formatting).}
@@ -12,6 +17,11 @@ slack_post_message(text, channel, token = Sys.getenv("SLACK_TOKEN"))
 \item{channel}{Slack channel name (without #).}
 
 \item{token}{Slack API token. Defaults to \code{Sys.getenv("SLACK_TOKEN")}.}
+
+\item{unfurl}{Whether Slack may expand links into previews. Off by
+default: most of what Jinx posts links to an issue or a chapter page,
+where a preview card adds noise. Messages whose whole point is the
+linked page (community blog posts) turn it on.}
 }
 \value{
 API response (invisibly).

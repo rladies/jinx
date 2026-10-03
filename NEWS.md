@@ -1,5 +1,32 @@
 # jinx (development version)
 
+## Jinx announces community blog posts in Slack
+
+- **`blog_feed_post()` takes over the `#blogs-by-rladies` channels** from
+  the Slack Feed app, in both the community and organiser workspaces. It
+  reads the curated list in
+  [`awesome-rladies-creations`](https://github.com/rladies/awesome-rladies-creations),
+  polls every entry that carries an `rss_feed` - blogs, YouTube channels
+  and websites alike, since they all serve the same RSS or Atom XML - and
+  posts one message per new item with its title, author and link. Adding
+  a blog to the curated list is now all it takes to get it into Slack:
+  nobody has to remember a matching `/feed subscribe`, and a blog removed
+  from the list stops being announced.
+
+- **`bot-blog-feed.yml` runs it daily**, once per workspace. Announced
+  item ids are remembered in KV per workspace and only recorded after the
+  post succeeds, so a failed run repeats nothing and loses nothing. Items
+  older than two weeks are never announced, which stops a newly-added
+  blog's back catalogue flooding the channel, and `seed = TRUE` records a
+  workspace's current feed items as announced without posting - run once
+  at cutover so the first real run doesn't repeat what the Feed app
+  already posted. Curated entries with no `rss_feed` are named in the run
+  log rather than silently skipped.
+
+- **`slack_post_message()` gained an `unfurl` argument**, off by default.
+  The blog feed turns it on: a message whose whole point is the linked
+  post should show the preview card.
+
 ## Org comms templates come from the guide
 
 - **`guide_template()` fetches a canonical communications template**
@@ -39,6 +66,7 @@
 - **The chapter setup and update checklists point at the guide** for the
   "your chapter is set up" message, instead of at a wiki that no longer
   holds it.
+
 
 ## Merged PRs and closed issues thank everyone who helped
 

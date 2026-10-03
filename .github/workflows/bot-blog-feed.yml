@@ -1,0 +1,68 @@
+name: Bot · Blog Feed
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Log what would be posted without posting it"
+        type: boolean
+        default: false
+      seed:
+        description: "Record every current feed item as announced, posting nothing (run once per workspace at cutover)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: bot-blog-feed
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container:
+      image: ghcr.io/rladies/jinx-bot:latest
+
+    strategy:
+      # The run records announced posts per workspace in KV, so a failure in
+      # one workspace must not stop the other from catching up.
+      fail-fast: false
+      # Sequential: both workspaces read the same 45-odd feeds, and the
+      # upstream blogs are small personal sites.
+      max-parallel: 1
+      matrix:
+        include:
+          - workspace: community
+            token_secret: SLACK_COMMUNITY_TOKEN
+          - workspace: organiser
+            token_secret: SLACK_ORGANISER_TOKEN
+
+    steps:
+      - name: Announce new community posts in ${{ matrix.workspace }}
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SLACK_TOKEN: ${{ secrets[matrix.token_secret] }}
+          SLACK_BLOG_CHANNEL: ${{ vars.SLACK_BLOG_CHANNEL }}
+        run: |
+          Rscript -e 'jinx::blog_feed_post(
+            workspace = "${{ matrix.workspace }}",
+            slack_token = Sys.getenv("SLACK_TOKEN"),
+            dry_run = ${{ inputs.dry_run && 'TRUE' || 'FALSE' }},
+            seed = ${{ inputs.seed && 'TRUE' || 'FALSE' }}
+          )'
+
+  notify-failure:
+    needs: announce
+    if: failure()
+    uses: ./.github/workflows/reusable-slack-fail-notify.yml
+    with:
+      message: "😿 Jinx blog-feed run failed — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run logs>"
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
+      SLACK_CHANNEL: ${{ secrets.SLACK_HEALTHCHECK_CHANNEL }}
