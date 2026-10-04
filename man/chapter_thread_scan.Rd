@@ -28,7 +28,7 @@ only record, so the facts are read back out of the conversation
 rather than asked for again.
 }
 \details{
-Only human comments count, and the first posting of a fact wins: a
-later comment quoting the URL back cannot displace the team that
-announced it.
+Only human comments count - plus jinx's own record of a group it
+published - and the first posting of a fact wins: a later comment
+quoting the URL back cannot displace the team that announced it.
 }

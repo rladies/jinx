@@ -89,6 +89,30 @@ describe("chapter_thread_is_human", {
   })
 })
 
+describe("chapter_thread_counts", {
+  it("counts a human comment", {
+    expect_true(chapter_thread_counts(thread_comment("hi", "organiser")))
+  })
+
+  it("counts jinx's record of a group it published", {
+    entry <- thread_comment(
+      paste(
+        "Live at https://www.meetup.com/rladies-oslo/",
+        chapter_thread_live_marker()
+      ),
+      "jinx[bot]"
+    )
+    expect_true(chapter_thread_counts(entry))
+  })
+
+  it("does not count jinx's proposed urlname", {
+    expect_false(chapter_thread_counts(thread_comment(
+      "Proposed: x",
+      "jinx[bot]"
+    )))
+  })
+})
+
 describe("chapter_thread_scan", {
   local_thread <- function(comments, env = parent.frame()) {
     local_mocked_bindings(
@@ -135,6 +159,23 @@ describe("chapter_thread_scan", {
       thread_comment("Thanks! https://www.meetup.com/rladies-typo/", "someone")
     ))
     expect_identical(chapter_thread_scan(7)$urlname, "rladies-oslo")
+  })
+
+  it("reads the urlname from jinx's own publish record", {
+    local_thread(list(
+      thread_comment(
+        "Proposed: https://www.meetup.com/rladies-guess/",
+        "jinx[bot]"
+      ),
+      thread_comment(
+        paste(
+          "Published at https://www.meetup.com/rladies-real/",
+          chapter_thread_live_marker()
+        ),
+        "jinx[bot]"
+      )
+    ))
+    expect_identical(chapter_thread_scan(7)$urlname, "rladies-real")
   })
 
   it("returns nothing when the thread carries neither fact yet", {

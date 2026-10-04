@@ -78,6 +78,17 @@ jinx_commands <- function() {
       chapter_meetup_logo_upload(command$urlname)
       glue::glue("Set the RLadies+ logo on **{command$urlname}**.")
     }),
+    "chapter-meetup-draft" = command_spec("jinx_gated", function(command) {
+      chapter_meetup_draft(command$issue)
+      glue::glue(
+        "Drafted the Meetup group for #{command$issue}. ",
+        "Details are in the comment above."
+      )
+    }),
+    "chapter-meetup-publish" = command_spec("jinx_gated", function(command) {
+      urlname <- chapter_meetup_publish(command$issue)
+      glue::glue("Published **{urlname}** on Meetup.")
+    }),
     "chapter-meetup" = command_spec("jinx_gated", function(command) {
       chapter_meetup_request(command$issue)
       glue::glue("Posted the Meetup setup brief on #{command$issue}.")

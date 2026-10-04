@@ -56,16 +56,40 @@ chapter_thread_emails <- function(text) {
   unique(tolower(matches))
 }
 
-#' Whether a thread entry was written by a human
+#' Marker jinx puts on a comment stating a group is live
 #'
-#' jinx's own Meetup brief proposes a urlname before the group exists,
-#' so reading the bot's comments back would have it confirm its own
-#' guess as fact.
+#' Bot comments are otherwise ignored here, and have to be: jinx's own
+#' Meetup brief *proposes* a urlname before the group exists, so reading
+#' its comments back indiscriminately would have it confirm its own
+#' guess as fact. This marker distinguishes the one bot comment that
+#' reports an accomplished fact - the group was published - from the one
+#' that floats a suggestion.
+#' @keywords internal
+#' @noRd
+chapter_thread_live_marker <- function() "<!-- jinx:meetup-live -->"
+
+#' Whether a thread entry was written by a human
 #' @keywords internal
 #' @noRd
 chapter_thread_is_human <- function(entry) {
   login <- entry$user$login %or% ""
   nzchar(login) && !is_bot(login)
+}
+
+#' Whether a thread entry may be read for facts
+#'
+#' A human comment, or jinx's own record of a group it published.
+#' @keywords internal
+#' @noRd
+chapter_thread_counts <- function(entry) {
+  if (chapter_thread_is_human(entry)) {
+    return(TRUE)
+  }
+  grepl(
+    chapter_thread_live_marker(),
+    entry$body %or% "",
+    fixed = TRUE
+  )
 }
 
 #' Read an onboarding thread for the facts later steps need
@@ -75,9 +99,9 @@ chapter_thread_is_human <- function(entry) {
 #' only record, so the facts are read back out of the conversation
 #' rather than asked for again.
 #'
-#' Only human comments count, and the first posting of a fact wins: a
-#' later comment quoting the URL back cannot displace the team that
-#' announced it.
+#' Only human comments count - plus jinx's own record of a group it
+#' published - and the first posting of a fact wins: a later comment
+#' quoting the URL back cannot displace the team that announced it.
 #'
 #' @param issue_number Onboarding issue number.
 #' @param org GitHub organization. Defaults to `"rladies"`.
@@ -99,7 +123,7 @@ chapter_thread_scan <- function(
   )
 
   bodies <- vapply(
-    Filter(chapter_thread_is_human, comments),
+    Filter(chapter_thread_counts, comments),
     function(comment) comment$body %or% "",
     character(1)
   )

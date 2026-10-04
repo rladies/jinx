@@ -24,6 +24,8 @@
 | `/jinx chapter-email [issue]`                        | Create the chapter mailbox (needs an approval comment)                                      |
 | `/jinx chapter-meetup [issue]`                       | Post the Meetup setup brief on an onboarding issue                                         |
 | `/jinx chapter-meetup-logo <urlname>`                | Upload the RLadies+ logo as a group's photo                                                |
+| `/jinx chapter-meetup-draft [issue]`                 | Draft the chapter's Meetup group from the issue; creates nothing public                    |
+| `/jinx chapter-meetup-publish [issue]`               | Publish the drafted group. Irreversible                                                    |
 | `/jinx gha-dashboard`                                | Generate GitHub Actions status report                                                      |
 | `/jinx contributors [repo]`                          | List contributors for a repo                                                               |
 | `/jinx contributors update [repo]`                   | Push an updated contributors list to main                                                  |
