@@ -1,5 +1,49 @@
 # jinx (development version)
 
+## Commands work from any repository, and one of them sets a chapter up
+
+- **`/jinx` commands can be run from any RLadies+ repository**, not just
+  `rladies/jinx`. A repo adopts them with the new
+  `reusable-commands.yml`, which does nothing but relay the comment's
+  location to jinx. The jinx repository keeps the credentials: the
+  Airtable, Slack, Cloudflare and Meetup secrets are configured there
+  and nowhere else, so a repository that gains commands gains no access
+  to them. The reply comes back on the issue where the command was
+  typed.
+
+- **A relayed command's text and author are read from the API, never
+  from the dispatch.** The payload carries an `owner/repo` and a comment
+  id; `cmd_relay_resolve()` fetches that comment with jinx's own
+  credentials and takes the command and the actor from what GitHub
+  returns. A forged dispatch therefore cannot put a command in an
+  authorised member's mouth - at worst it replays one they genuinely
+  posted, which the ten-minute freshness window bounds and the commands
+  are idempotent against. Authorisation is unchanged: privileged
+  commands still need the actor in the global team directory.
+
+- **`/jinx chapter-provision <issue>` does the whole infrastructure
+  set-up** that jinx can do by itself: the prospective website entry,
+  the chapter's GitHub team, the Meetup group photo, and - with the
+  `repo` option - the presentations repository. Each step checks for its
+  own work first and a failing step does not stop the others, so the
+  command is meant to be re-run as the onboarding thread fills in. It
+  posts one table saying what was done, what is waiting and what broke.
+  The chapter mailbox stays out of it: that needs its own approval
+  comment on the issue.
+
+- **jinx reads the facts it needs off the onboarding conversation.**
+  `chapter_thread_scan()` picks the Meetup group URL and the chapter
+  mailbox out of the issue's comments, because the checklist already
+  asks the Meetup Pro and email teams to post them there and that is the
+  only record of either. Only human comments count - jinx's own Meetup
+  brief *proposes* a urlname, and reading that back would have it
+  confirm its own guess as fact - and the first human posting of a fact
+  wins over a later comment quoting it.
+
+- **`/jinx chapter-team <urlname> <city> <country>`** creates a
+  chapter's GitHub team under `chapters`. `chapter_team_create()` had
+  been in the package, and reachable from nothing.
+
 ## Blog announcements carry the post's own preview
 
 - **A post is announced as Slack blocks rather than one line of text.**
