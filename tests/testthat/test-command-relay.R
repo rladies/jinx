@@ -3,7 +3,10 @@ relay_comment <- function(
   association = "MEMBER",
   login = "organiser",
   created_at = "2026-10-04T12:00:00Z",
-  issue_url = "https://api.github.com/repos/rladies/new-chapters-onboarding/issues/7"
+  issue_url = paste0(
+    "https://api.github.com/repos/rladies/",
+    "new-chapters-onboarding/issues/7"
+  )
 ) {
   list(
     body = body,
