@@ -201,9 +201,11 @@ chapter_provision_report <- function(report, meta, found) {
     )
   } else if (waiting) {
     paste0(
-      "Waiting on the Meetup group. Once the Meetup Pro team posts the ",
-      "group URL here, run `/jinx chapter-provision <issue>` again and ",
-      "the remaining steps will pick it up."
+      "Waiting on the Meetup group, which is what makes the team slug ",
+      "derivable. Draft it with `/jinx chapter-meetup-draft` and publish ",
+      "it with `/jinx chapter-meetup-publish`, or paste the group URL ",
+      "here if it already exists. Then run `/jinx chapter-provision` ",
+      "again and the remaining steps pick it up."
     )
   } else {
     "That is everything jinx can set up on its own."

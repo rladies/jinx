@@ -1,5 +1,39 @@
 # jinx (development version)
 
+## jinx can create a chapter's Meetup group
+
+- **`/jinx chapter-meetup-draft` builds the group from the onboarding
+  issue and leaves it as a draft**, which creates nothing public: the
+  standard name and urlname from `chapter_meetup_name()` and
+  `chapter_meetup_urlname()`, the standard description from the guide,
+  and the city's own coordinates from the geocoder the duplicate check
+  already uses. It refuses a urlname Meetup says is taken and a city it
+  cannot place, rather than drafting something wrong.
+
+- **`/jinx chapter-meetup-publish` is the irreversible half, and is its
+  own command on purpose.** Drafting is a derivation and can be redone;
+  publishing creates a real group under the Pro network and cannot be
+  undone from here. So jinx posts the draft for @rladies/meetup-pro to
+  read - name, URL, coordinates, urlname check - and waits to be told.
+
+- **Topics are left unset.** They are the one part of a group that is a
+  judgement call rather than a derivation.
+
+- The draft token is kept in a hidden block on the issue, because Meetup
+  exposes no way to list drafts: neither `Query` nor `Member` has a
+  `groupDrafts` field. It is an identifier rather than a credential --
+  the GraphQL endpoint authenticates every request against the Pro
+  account, so the token publishes nothing without jinx's own Meetup
+  credentials -- and it is cleared once the group is live.
+
+- **`chapter_thread_scan()` reads jinx's own publish record**, marked
+  with `<!-- jinx:meetup-live -->`. Bot comments are otherwise ignored
+  and have to be, since the Meetup *brief* proposes a urlname before any
+  group exists; the marker separates the comment that reports an
+  accomplished fact from the one that floats a suggestion. Without it
+  `chapter-provision` would have gone on waiting for a group jinx had
+  just created.
+
 ## An issue command knows which issue it is on
 
 - **`/jinx chapter-provision`, `chapter-email`, `chapter-meetup`,
