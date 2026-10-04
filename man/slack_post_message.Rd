@@ -8,7 +8,8 @@ slack_post_message(
   text,
   channel,
   token = Sys.getenv("SLACK_TOKEN"),
-  unfurl = FALSE
+  unfurl = FALSE,
+  blocks = NULL
 )
 }
 \arguments{
@@ -22,6 +23,10 @@ slack_post_message(
 default: most of what Jinx posts links to an issue or a chapter page,
 where a preview card adds noise. Messages whose whole point is the
 linked page (community blog posts) turn it on.}
+
+\item{blocks}{Optional Slack Block Kit blocks. When given, \code{text} is
+still sent and serves as the notification and fallback text, which
+is what a push notification and an unsupported client show.}
 }
 \value{
 API response (invisibly).

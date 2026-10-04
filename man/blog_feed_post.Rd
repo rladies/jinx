@@ -13,6 +13,7 @@ blog_feed_post(
   max_age_days = 14,
   limit = 20L,
   slack_token = NULL,
+  og_fetch = blog_feed_og_memo(),
   namespace_id = slack_tokens_namespace_id(),
   account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
   api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
@@ -37,6 +38,11 @@ here when \code{NULL}.}
 
 \item{slack_token}{Bot token for \code{workspace}. Resolved from the
 workspace when unset.}
+
+\item{og_fetch}{Reader for a post's preview data. Defaults to a
+per-call cache; \code{\link[=blog_feed_run]{blog_feed_run()}} passes one shared across
+workspaces so a post's page is read once however many channels
+announce it.}
 
 \item{namespace_id}{KV namespace ID for \code{SLACK_TOKENS}.}
 

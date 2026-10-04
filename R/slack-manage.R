@@ -230,6 +230,27 @@ slack_subscribe_rss <- function(
   invisible(resp)
 }
 
+#' Assemble a `chat.postMessage` body
+#'
+#' Kept separate from the request so the payload can be checked without
+#' standing up an HTTP mock. `blocks` is dropped when absent rather than
+#' sent as null, which Slack rejects.
+#'
+#' @inheritParams slack_post_message
+#' @return A named list ready for JSON encoding.
+#' @keywords internal
+#' @noRd
+slack_message_body <- function(text, channel, unfurl = FALSE, blocks = NULL) {
+  body <- list(
+    channel = channel,
+    text = text,
+    blocks = blocks,
+    unfurl_links = unfurl,
+    unfurl_media = unfurl
+  )
+  Filter(Negate(is.null), body)
+}
+
 #' Post a message to a Slack channel
 #'
 #' Sends a markdown-formatted message to the specified Slack channel
@@ -242,13 +263,17 @@ slack_subscribe_rss <- function(
 #'   default: most of what Jinx posts links to an issue or a chapter page,
 #'   where a preview card adds noise. Messages whose whole point is the
 #'   linked page (community blog posts) turn it on.
+#' @param blocks Optional Slack Block Kit blocks. When given, `text` is
+#'   still sent and serves as the notification and fallback text, which
+#'   is what a push notification and an unsupported client show.
 #' @return API response (invisibly).
 #' @export
 slack_post_message <- function(
   text,
   channel,
   token = Sys.getenv("SLACK_TOKEN"),
-  unfurl = FALSE
+  unfurl = FALSE,
+  blocks = NULL
 ) {
   if (!nzchar(token)) {
     cli::cli_abort("SLACK_TOKEN environment variable is not set")
@@ -256,12 +281,9 @@ slack_post_message <- function(
 
   resp <- httr2::request("https://slack.com/api/chat.postMessage") |>
     httr2::req_headers(Authorization = paste("Bearer", token)) |>
-    httr2::req_body_json(list(
-      channel = channel,
-      text = text,
-      unfurl_links = unfurl,
-      unfurl_media = unfurl
-    )) |>
+    httr2::req_body_json(
+      slack_message_body(text, channel, unfurl, blocks)
+    ) |>
     httr2::req_perform() |>
     httr2::resp_body_json()
 
