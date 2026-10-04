@@ -2,6 +2,46 @@
 
 ## jinx (development version)
 
+### Blog announcements carry the post’s own preview
+
+- **A post is announced as Slack blocks rather than one line of text.**
+  The heading, the linked title and the post’s own description sit in
+  one section; the preview image follows as its own block, so Slack
+  renders it full width rather than as a thumbnail; the byline moves to
+  a context block, which Slack renders small and grey so it reads as
+  attribution.
+
+- **[`blog_feed_og()`](https://rladies.github.io/jinx/reference/blog_feed_og.md)
+  reads the description and image from the post itself** - Open Graph
+  tags, falling back to Twitter’s and to the plain `description`, since
+  the community’s blogs are built by half a dozen site generators.
+  Measured across a sample of real post pages, about three in four carry
+  a description and an image. One extra request per *announced* post,
+  shared across workspaces, so a post’s page is read once however many
+  channels announce it.
+
+- **Image blocks always carry alt text.** A post’s own `og:image:alt` is
+  used when it is set, and becomes the image’s caption too - that is the
+  one case where a human wrote something about this image. When it is
+  missing, which is most of the time, the alt says what the image *is*
+  (“Preview image for …”) rather than inventing what it shows: the image
+  has not been looked at, and a confident fabricated description would
+  be worse than none. No caption is invented either.
+
+- **Slack’s own unfurl is turned off when we supply a preview**, since
+  it would append a second copy of the same image and description, and
+  left on for a post that offers neither.
+
+- **A preview Slack refuses costs the picture, not the post.** Slack
+  fetches a block’s `image_url` itself and rejects the whole message if
+  it cannot, so a rejection naming the blocks is retried once as plain
+  text. Without that, one malformed `og:image` would have cost the same
+  post on every run until someone fixed the blog.
+
+- **[`slack_post_message()`](https://rladies.github.io/jinx/reference/slack_post_message.md)
+  gained a `blocks` argument.** `text` is still sent alongside it, which
+  is what a push notification and an unsupported client show.
+
 ### Jinx announces community blog posts in Slack
 
 - **[`blog_feed_post()`](https://rladies.github.io/jinx/reference/blog_feed_post.md)

@@ -85,6 +85,7 @@ is announced without anyone touching Slack.</p>
 <span>  max_age_days <span class="op">=</span> <span class="fl">14</span>,</span>
 <span>  limit <span class="op">=</span> <span class="fl">20L</span>,</span>
 <span>  slack_token <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  og_fetch <span class="op">=</span> <span class="fu">blog_feed_og_memo</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  namespace_id <span class="op">=</span> <span class="fu">slack_tokens_namespace_id</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  account_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"CLOUDFLARE_ACCOUNT_ID"</span><span class="op">)</span>,</span>
 <span>  api_token <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"CLOUDFLARE_API_TOKEN"</span><span class="op">)</span></span>
@@ -128,6 +129,13 @@ here when <code>NULL</code>.</p></dd>
 <dt id="arg-slack-token">slack_token<a class="anchor" aria-label="anchor" href="#arg-slack-token"></a></dt>
 <dd><p>Bot token for <code>workspace</code>. Resolved from the
 workspace when unset.</p></dd>
+
+
+<dt id="arg-og-fetch">og_fetch<a class="anchor" aria-label="anchor" href="#arg-og-fetch"></a></dt>
+<dd><p>Reader for a post's preview data. Defaults to a
+per-call cache; <code><a href="blog_feed_run.html">blog_feed_run()</a></code> passes one shared across
+workspaces so a post's page is read once however many channels
+announce it.</p></dd>
 
 
 <dt id="arg-namespace-id">namespace_id<a class="anchor" aria-label="anchor" href="#arg-namespace-id"></a></dt>

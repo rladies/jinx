@@ -325,6 +325,8 @@ Blog content management
   : Check community blog links from the awesome-rladies-creations repo
 - [`blog_create_entry()`](https://rladies.github.io/jinx/reference/blog_create_entry.md)
   : Auto-generate a blog entry JSON file from a URL
+- [`blog_feed_blocks()`](https://rladies.github.io/jinx/reference/blog_feed_blocks.md)
+  : Build a new post as Slack blocks
 - [`blog_feed_collect()`](https://rladies.github.io/jinx/reference/blog_feed_collect.md)
   : Collect every recent post across the curated feeds
 - [`blog_feed_format()`](https://rladies.github.io/jinx/reference/blog_feed_format.md)
@@ -333,6 +335,8 @@ Blog content management
   : Parse an RSS or Atom document into a data frame of items
 - [`blog_feed_new_items()`](https://rladies.github.io/jinx/reference/blog_feed_new_items.md)
   : Keep the items worth announcing
+- [`blog_feed_og()`](https://rladies.github.io/jinx/reference/blog_feed_og.md)
+  : Read a post's Open Graph preview data
 - [`blog_feed_pending()`](https://rladies.github.io/jinx/reference/blog_feed_pending.md)
   : Keep the posts one workspace still owes its channel
 - [`blog_feed_post()`](https://rladies.github.io/jinx/reference/blog_feed_post.md)

@@ -10,7 +10,8 @@ slack_post_message(
   text,
   channel,
   token = Sys.getenv("SLACK_TOKEN"),
-  unfurl = FALSE
+  unfurl = FALSE,
+  blocks = NULL
 )
 ```
 
@@ -34,6 +35,12 @@ slack_post_message(
   what Jinx posts links to an issue or a chapter page, where a preview
   card adds noise. Messages whose whole point is the linked page
   (community blog posts) turn it on.
+
+- blocks:
+
+  Optional Slack Block Kit blocks. When given, `text` is still sent and
+  serves as the notification and fallback text, which is what a push
+  notification and an unsupported client show.
 
 ## Value
 

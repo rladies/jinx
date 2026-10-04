@@ -16,6 +16,7 @@ blog_feed_post(
   max_age_days = 14,
   limit = 20L,
   slack_token = NULL,
+  og_fetch = blog_feed_og_memo(),
   namespace_id = slack_tokens_namespace_id(),
   account_id = Sys.getenv("CLOUDFLARE_ACCOUNT_ID"),
   api_token = Sys.getenv("CLOUDFLARE_API_TOKEN")
@@ -58,6 +59,13 @@ blog_feed_post(
 - slack_token:
 
   Bot token for `workspace`. Resolved from the workspace when unset.
+
+- og_fetch:
+
+  Reader for a post's preview data. Defaults to a per-call cache;
+  [`blog_feed_run()`](https://rladies.github.io/jinx/reference/blog_feed_run.md)
+  passes one shared across workspaces so a post's page is read once
+  however many channels announce it.
 
 - namespace_id:
 
