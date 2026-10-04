@@ -74,6 +74,8 @@ jobs:
           COMMAND_SOURCE: ${{ github.event.action == 'slack-command' && 'slack' || 'github' }}
           COMMAND_TEXT: ${{ github.event.action == 'slack-command' && github.event.client_payload.command || github.event.comment.body }}
           COMMAND_ACTOR: ${{ github.event.action == 'slack-command' && github.event.client_payload.user_id || github.event.comment.user.login }}
+          COMMAND_REPO: ${{ github.repository }}
+          COMMAND_ISSUE: ${{ github.event.issue.number }}
           RELAY_REPO: ${{ github.event.client_payload.repo }}
           RELAY_COMMENT_ID: ${{ github.event.client_payload.comment_id }}
           COMMAND_TEAM_ID: ${{ github.event.client_payload.team_id }}
@@ -87,6 +89,8 @@ jobs:
             text <- Sys.getenv("COMMAND_TEXT")
             actor <- Sys.getenv("COMMAND_ACTOR")
             relay_repo <- Sys.getenv("RELAY_REPO")
+            context_repo <- Sys.getenv("COMMAND_REPO")
+            context_issue <- Sys.getenv("COMMAND_ISSUE")
             if (nzchar(relay_repo)) {
               relayed <- jinx::cmd_relay_resolve(
                 relay_repo,
@@ -94,6 +98,8 @@ jobs:
               )
               text <- relayed$text
               actor <- relayed$actor
+              context_repo <- relayed$repo
+              context_issue <- relayed$issue
               writeLines(
                 c(relayed$owner, relayed$name, as.character(relayed$issue)),
                 "jinx_target.txt"
@@ -116,6 +122,12 @@ jobs:
                 team_id,
                 Sys.getenv("COMMAND_CHANNEL_ID"),
                 Sys.getenv("COMMAND_CHANNEL_NAME")
+              )
+            } else {
+              cmd <- jinx::cmd_attach_issue_context(
+                cmd,
+                context_repo,
+                context_issue
               )
             }
             authz <- jinx::cmd_authorize(

@@ -1,5 +1,20 @@
 # jinx (development version)
 
+## An issue command knows which issue it is on
+
+- **`/jinx chapter-provision`, `chapter-email`, `chapter-meetup`,
+  `chapter-slack` and `chapter-slack-sent` no longer need the issue
+  number** when they are run as a comment on the issue they are about,
+  which is nearly always. Repeating a number that is already at the top
+  of the page was only ever a chance to mistype it.
+
+- **An implicit number is only taken from the onboarding repository.**
+  These commands address onboarding issues by number, so a number
+  borrowed from a comment somewhere else in the org would point at a
+  different issue in `new-chapters-onboarding` - and that issue is the
+  one that would get a chapter provisioned against it. Elsewhere the
+  number is still required, and `cmd_attach_issue_context()` says so.
+
 ## Commands work from any repository, and one of them sets a chapter up
 
 - **`/jinx` commands can be run from any RLadies+ repository**, not just

@@ -163,10 +163,24 @@ describe("/jinx chapter-slack parsing", {
     )
   })
 
-  it("explains itself without an issue number", {
-    parsed <- cmd_parse("/jinx chapter-slack")
-    expect_identical(parsed$action, "error")
-    expect_match(parsed$message, "issue number")
+  it("takes the issue from the comment it was posted on", {
+    cmd <- cmd_attach_issue_context(
+      cmd_parse("/jinx chapter-slack"),
+      "rladies/new-chapters-onboarding",
+      12
+    )
+    expect_identical(cmd$action, "chapter-slack")
+    expect_identical(cmd$issue, 12L)
+  })
+
+  it("explains itself without an issue number to borrow", {
+    cmd <- cmd_attach_issue_context(
+      cmd_parse("/jinx chapter-slack"),
+      "rladies/jinx",
+      12
+    )
+    expect_identical(cmd$action, "error")
+    expect_match(cmd$message, "needs an issue number")
   })
 
   it("both are gated, since they comment on and edit an issue", {
