@@ -225,7 +225,23 @@ describe("/jinx chapter-email parsing", {
     expect_match(parsed$message, "issue number")
   })
 
-  it("explains itself when given nothing", {
-    expect_identical(cmd_parse("/jinx chapter-email")$action, "error")
+  it("takes the issue from the comment it was posted on", {
+    cmd <- cmd_attach_issue_context(
+      cmd_parse("/jinx chapter-email"),
+      "rladies/new-chapters-onboarding",
+      12
+    )
+    expect_identical(cmd$action, "chapter-email")
+    expect_identical(cmd$issue, 12L)
+  })
+
+  it("explains itself when there is no issue to borrow", {
+    cmd <- cmd_attach_issue_context(
+      cmd_parse("/jinx chapter-email"),
+      "rladies/jinx",
+      12
+    )
+    expect_identical(cmd$action, "error")
+    expect_match(cmd$message, "needs an issue number")
   })
 })

@@ -106,6 +106,76 @@ cmd_attach_slack_context <- function(
   command
 }
 
+#' The repository whose issues carry a chapter's onboarding
+#'
+#' @param org GitHub organization.
+#' @param onboarding_repo Repository holding onboarding issues.
+#' @return `"owner/repo"`.
+#' @keywords internal
+#' @noRd
+cmd_onboarding_repo <- function(
+  org = "rladies",
+  onboarding_repo = "new-chapters-onboarding"
+) {
+  paste0(org, "/", onboarding_repo)
+}
+
+#' Commands that act on an onboarding issue
+#' @keywords internal
+#' @noRd
+cmd_issue_actions <- function() {
+  c(
+    "chapter-slack",
+    "chapter-slack-sent",
+    "chapter-email",
+    "chapter-meetup",
+    "chapter-provision"
+  )
+}
+
+#' Fill in the issue a command was typed on
+#'
+#' These commands all take an issue number, and are nearly always run as
+#' a comment on the very issue they are about. Repeating the number is
+#' then just a chance to get it wrong, so a command that omits it is
+#' read as being about the issue it was posted on.
+#'
+#' The number is only ever taken from an issue in the onboarding
+#' repository. The commands read and write onboarding issues by number
+#' there, so an implicit number borrowed from a comment in some other
+#' repository would address a different issue entirely - and that issue
+#' is the one that would get a chapter provisioned against it.
+#'
+#' @param command Parsed command from [cmd_parse()], or `NULL`.
+#' @param repo Repository the comment is on, as `"owner/repo"`.
+#' @param issue Issue number the comment is on.
+#' @return The command with `issue` filled in, an error command when it
+#'   cannot be, or `command` unchanged for commands that take no issue.
+#' @export
+cmd_attach_issue_context <- function(command, repo = NULL, issue = NULL) {
+  if (is.null(command) || !command$action %in% cmd_issue_actions()) {
+    return(command)
+  }
+  if (length(command$issue) == 1 && !is.na(command$issue)) {
+    return(command)
+  }
+
+  usage <- glue::glue(
+    "`/jinx {command$action}` needs an issue number when it is not run ",
+    "as a comment on the onboarding issue itself."
+  )
+
+  if (!identical(repo %or% "", cmd_onboarding_repo())) {
+    return(list(action = "error", message = usage))
+  }
+  if (is.null(issue) || is.na(suppressWarnings(as.integer(issue)))) {
+    return(list(action = "error", message = usage))
+  }
+
+  command$issue <- as.integer(issue)
+  command
+}
+
 parse_review_command <- function(parts) {
   gates <- copilot_gates()
   usage <- glue::glue(
@@ -252,23 +322,11 @@ parse_chapter_status_command <- function(parts) {
 }
 
 parse_chapter_email_command <- function(parts) {
-  if (length(parts) < 2 || !grepl("^[0-9]+$", parts[2])) {
-    return(list(
-      action = "error",
-      message = "Usage: `/jinx chapter-email <issue number>`"
-    ))
-  }
-  list(action = "chapter-email", issue = as.integer(parts[2]))
+  parse_chapter_issue_command(parts, "chapter-email")
 }
 
 parse_chapter_meetup_command <- function(parts) {
-  if (length(parts) < 2 || !grepl("^[0-9]+$", parts[2])) {
-    return(list(
-      action = "error",
-      message = "Usage: `/jinx chapter-meetup <issue number>`"
-    ))
-  }
-  list(action = "chapter-meetup", issue = as.integer(parts[2]))
+  parse_chapter_issue_command(parts, "chapter-meetup")
 }
 
 parse_chapter_meetup_logo_command <- function(parts) {
@@ -312,35 +370,36 @@ parse_chapter_team_command <- function(parts) {
 }
 
 parse_chapter_provision_command <- function(parts) {
-  if (length(parts) < 2 || !grepl("^[0-9]+$", parts[2])) {
-    return(list(
-      action = "error",
-      message = "Usage: `/jinx chapter-provision <issue number> [repo]`"
-    ))
+  usage <- "Usage: `/jinx chapter-provision [issue number] [repo]`"
+  args <- parts[-1]
+  issue <- NA_integer_
+  if (length(args) && grepl("^[0-9]+$", args[1])) {
+    issue <- as.integer(args[1])
+    args <- args[-1]
   }
-  extras <- tolower(parts[-(1:2)])
+  extras <- tolower(args)
   unknown <- setdiff(extras, "repo")
   if (length(unknown)) {
     return(list(
       action = "error",
-      message = glue::glue(
-        "Unknown option `{unknown[1]}`. ",
-        "Usage: `/jinx chapter-provision <issue number> [repo]`"
-      )
+      message = glue::glue("Unknown option `{unknown[1]}`. {usage}")
     ))
   }
   list(
     action = "chapter-provision",
-    issue = as.integer(parts[2]),
+    issue = issue,
     presentations_repo = "repo" %in% extras
   )
 }
 
 parse_chapter_issue_command <- function(parts, action) {
-  if (length(parts) < 2 || !grepl("^[0-9]+$", parts[2])) {
+  if (length(parts) < 2) {
+    return(list(action = action, issue = NA_integer_))
+  }
+  if (!grepl("^[0-9]+$", parts[2])) {
     return(list(
       action = "error",
-      message = glue::glue("Usage: `/jinx {action} <issue number>`")
+      message = glue::glue("Usage: `/jinx {action} [issue number]`")
     ))
   }
   list(action = action, issue = as.integer(parts[2]))
