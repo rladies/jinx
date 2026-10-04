@@ -37,6 +37,8 @@ cmd_parse <- function(body) {
     "chapter-status" = parse_chapter_status_command(parts),
     "chapter-team-audit" = list(action = "chapter-team-audit"),
     "chapter-repo" = parse_chapter_repo_command(parts),
+    "chapter-team" = parse_chapter_team_command(parts),
+    "chapter-provision" = parse_chapter_provision_command(parts),
     "chapter-slack" = parse_chapter_issue_command(parts, "chapter-slack"),
     "chapter-slack-sent" = parse_chapter_issue_command(
       parts,
@@ -291,6 +293,46 @@ parse_chapter_repo_command <- function(parts) {
     urlname = parts[2],
     city = parts[3],
     country = paste(parts[-(1:3)], collapse = " ")
+  )
+}
+
+parse_chapter_team_command <- function(parts) {
+  if (length(parts) < 4) {
+    return(list(
+      action = "error",
+      message = "Usage: `/jinx chapter-team <meetup urlname> <city> <country>`"
+    ))
+  }
+  list(
+    action = "chapter-team",
+    urlname = parts[2],
+    city = parts[3],
+    country = paste(parts[-(1:3)], collapse = " ")
+  )
+}
+
+parse_chapter_provision_command <- function(parts) {
+  if (length(parts) < 2 || !grepl("^[0-9]+$", parts[2])) {
+    return(list(
+      action = "error",
+      message = "Usage: `/jinx chapter-provision <issue number> [repo]`"
+    ))
+  }
+  extras <- tolower(parts[-(1:2)])
+  unknown <- setdiff(extras, "repo")
+  if (length(unknown)) {
+    return(list(
+      action = "error",
+      message = glue::glue(
+        "Unknown option `{unknown[1]}`. ",
+        "Usage: `/jinx chapter-provision <issue number> [repo]`"
+      )
+    ))
+  }
+  list(
+    action = "chapter-provision",
+    issue = as.integer(parts[2]),
+    presentations_repo = "repo" %in% extras
   )
 }
 
@@ -633,8 +675,11 @@ normalize_command <- function(parts) {
     list(c("setup", "chapter"), "chapter-setup"),
     list(c("update", "chapter"), "chapter-update"),
     list(c("chapter", "team", "audit"), "chapter-team-audit"),
+    list(c("chapter", "provision"), "chapter-provision"),
+    list(c("provision", "chapter"), "chapter-provision"),
     list(c("chapter", "repo"), "chapter-repo"),
     list(c("audit", "chapter", "teams"), "chapter-team-audit"),
+    list(c("chapter", "team"), "chapter-team"),
     list(c("chapter", "slack", "sent"), "chapter-slack-sent"),
     list(c("chapter", "slack"), "chapter-slack"),
     list(c("chapter", "status"), "chapter-status"),

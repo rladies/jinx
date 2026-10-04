@@ -36,6 +36,27 @@ jinx_commands <- function() {
       repo <- chapter_repo_create(slug, command$city, command$country)
       glue::glue("Created **{repo}** and gave `{slug}` admin.")
     }),
+    "chapter-team" = command_spec("jinx_gated", function(command) {
+      slug <- chapter_team_create(
+        command$urlname,
+        command$city,
+        command$country
+      )
+      glue::glue("Created the team `@rladies/{slug}`.")
+    }),
+    "chapter-provision" = command_spec("jinx_gated", function(command) {
+      report <- chapter_provision(
+        command$issue,
+        presentations_repo = command$presentations_repo
+      )
+      glue::glue(
+        "Provisioning run for #{command$issue}: ",
+        "{sum(report$status == 'done')} done, ",
+        "{sum(report$status == 'waiting')} waiting, ",
+        "{sum(report$status == 'failed')} failed. ",
+        "Details are in the comment above."
+      )
+    }),
     "chapter-team-audit" = command_spec("jinx_safe", function(command) {
       chapter_team_audit_report(chapter_team_audit())
     }),

@@ -4,7 +4,7 @@ on:
   issue_comment:
     types: [created]
   repository_dispatch:
-    types: [slack-command]
+    types: [slack-command, github-relay]
 
 permissions:
   contents: read
@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - name: Mask Slack metadata
-        if: github.event_name == 'repository_dispatch'
+        if: github.event.action == 'slack-command'
         run: |
           echo "::add-mask::${{ github.event.client_payload.team_id }}"
           echo "::add-mask::${{ github.event.client_payload.channel_id }}"
@@ -36,7 +36,7 @@ jobs:
           echo "::add-mask::${{ github.event.client_payload.command }}"
 
       - name: Verify Slack workspace
-        if: github.event_name == 'repository_dispatch'
+        if: github.event.action == 'slack-command'
         env:
           TEAM_ID: ${{ github.event.client_payload.team_id }}
           ORGANIZER_TEAM_ID: ${{ vars.SLACK_ORGANIZER_TEAM_ID }}
@@ -71,9 +71,11 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_RUM_SITE_TAG: ${{ vars.CLOUDFLARE_RUM_SITE_TAG }}
           CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
-          COMMAND_SOURCE: ${{ github.event_name == 'repository_dispatch' && 'slack' || 'github' }}
-          COMMAND_TEXT: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.command || github.event.comment.body }}
-          COMMAND_ACTOR: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.user_id || github.event.comment.user.login }}
+          COMMAND_SOURCE: ${{ github.event.action == 'slack-command' && 'slack' || 'github' }}
+          COMMAND_TEXT: ${{ github.event.action == 'slack-command' && github.event.client_payload.command || github.event.comment.body }}
+          COMMAND_ACTOR: ${{ github.event.action == 'slack-command' && github.event.client_payload.user_id || github.event.comment.user.login }}
+          RELAY_REPO: ${{ github.event.client_payload.repo }}
+          RELAY_COMMENT_ID: ${{ github.event.client_payload.comment_id }}
           COMMAND_TEAM_ID: ${{ github.event.client_payload.team_id }}
           COMMAND_CHANNEL_ID: ${{ github.event.client_payload.channel_id }}
           COMMAND_CHANNEL_NAME: ${{ github.event.client_payload.channel_name }}
@@ -84,6 +86,19 @@ jobs:
             source <- Sys.getenv("COMMAND_SOURCE")
             text <- Sys.getenv("COMMAND_TEXT")
             actor <- Sys.getenv("COMMAND_ACTOR")
+            relay_repo <- Sys.getenv("RELAY_REPO")
+            if (nzchar(relay_repo)) {
+              relayed <- jinx::cmd_relay_resolve(
+                relay_repo,
+                Sys.getenv("RELAY_COMMENT_ID")
+              )
+              text <- relayed$text
+              actor <- relayed$actor
+              writeLines(
+                c(relayed$owner, relayed$name, as.character(relayed$issue)),
+                "jinx_target.txt"
+              )
+            }
             team_id <- Sys.getenv("COMMAND_TEAM_ID")
             organiser_id <- Sys.getenv("SLACK_ORGANIZER_TEAM_ID")
             workspace <- if (source != "slack") {
@@ -135,8 +150,36 @@ jobs:
               body
             });
 
+      - name: Reply to the originating issue
+        if: always() && github.event.action == 'github-relay'
+        uses: actions/github-script@v9
+        env:
+          RUN_URL: https://github.com/rladies/jinx/actions/runs/${{ github.run_id }}
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const fs = require("fs");
+            if (!fs.existsSync("jinx_target.txt")) {
+              core.setFailed("No verified origin for the relayed command.");
+              return;
+            }
+            const [owner, repo, issue] = fs
+              .readFileSync("jinx_target.txt", "utf8")
+              .trim()
+              .split("\n");
+            const body = fs.existsSync("jinx_response.txt")
+              ? fs.readFileSync("jinx_response.txt", "utf8")
+              : `😿 Something went wrong. [View logs](${process.env.RUN_URL})`;
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: Number(issue),
+              body
+            });
+
       - name: Reply to Slack
-        if: always() && github.event_name == 'repository_dispatch'
+        if: always() && github.event.action == 'slack-command'
         env:
           SLACK_RESPONSE_URL: ${{ github.event.client_payload.response_url }}
           RUN_URL: https://github.com/rladies/jinx/actions/runs/${{ github.run_id }}
