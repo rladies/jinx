@@ -84,11 +84,24 @@ describe("chapter_nudge_issue", {
 })
 
 describe("chapter_remind_stale", {
+  it("searches the labels the onboarding repository actually has", {
+    seen <- character(0)
+    local_mocked_bindings(
+      gh = function(endpoint, ...) {
+        seen <<- c(seen, list(...)$labels)
+        list()
+      },
+      .package = "gh"
+    )
+    expect_message(chapter_remind_stale())
+    expect_setequal(seen, unname(chapter_issue_labels()))
+  })
+
   it("nudges once per stale issue across both labels", {
     local_mocked_bindings(
       gh = function(endpoint, ...) {
         args <- list(...)
-        if (identical(args$labels, "new chapter")) {
+        if (identical(args$labels, chapter_issue_label("setup"))) {
           list(stale_issue(pending_body))
         } else {
           list()

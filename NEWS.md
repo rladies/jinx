@@ -1,5 +1,49 @@
 # jinx (development version)
 
+## Opening an onboarding issue starts the onboarding
+
+- **The two intake templates become issue forms, and jinx composes the
+  issue from them.** The forms ask only for the facts - city, country,
+  region, prospective organisers - and `chapter_intake()` writes the
+  rest when the issue opens: the conventional
+  `City, Country chapter setup` title, the checklist, and the
+  machine-readable block every other chapter command reads. Nothing is
+  hand-edited into a placeholder any more.
+
+- **The checklist now comes from the template bundled with jinx**, not
+  from a copy in the onboarding repository. The two had already drifted
+  - the repository's copy still said "R-Ladies" and linked a wiki page
+  the guide replaced - and a checklist jinx ticks items off cannot be
+  allowed to differ from the one it reads.
+
+- **A new chapter's Meetup group is drafted on intake.** Drafting
+  creates nothing public and a draft can be discarded, so it costs
+  nothing to have it waiting; @rladies/meetup-pro is left with only the
+  publish. The duplicate-city check, the onboarding team notification
+  and the available commands are posted at the same time. A step that
+  fails is reported and the rest of the intake stands.
+
+- Human judgement is untouched. Confirming the place is a real city,
+  vetting the organisers and checking the Airtable form are still
+  checklist items for a person, and nothing public exists until someone
+  runs a command.
+
+## Fixes
+
+- **`chapter_remind_stale()` was searching for labels that do not
+  exist.** It filtered onboarding issues on `"new chapter"` and
+  `"chapter update"`; the repository's labels are
+  `"new chapter: first contact"` and `"updating chapter data"`, so the
+  stale-issue nudge had nothing to find. `chapter_create_setup()` and
+  `chapter_create_update()` applied the same non-existent labels.
+  All three now read `chapter_issue_label()`.
+
+- **The bot image could not talk to Meetup at all.** `jose` signs the
+  JWT `meetupr` authenticates with, and sits in `meetupr`'s Suggests, so
+  `pak::pak("local::.")` never installed it - which means
+  `/jinx chapter-meetup-logo` has been failing in the container since it
+  was added. The image installs it explicitly now.
+
 ## jinx can create a chapter's Meetup group
 
 - **`/jinx chapter-meetup-draft` builds the group from the onboarding

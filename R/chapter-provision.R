@@ -1,3 +1,19 @@
+#' Status icons for a step table
+#'
+#' Built from code points because `air` rewrites `\uXXXX` escapes in a
+#' string literal into the characters themselves, and non-ASCII in R
+#' code is an `R CMD check` warning.
+#' @keywords internal
+#' @noRd
+provision_icons <- function() {
+  c(
+    done = intToUtf8(0x2705),
+    skipped = intToUtf8(c(0x27a1, 0xfe0f)),
+    waiting = intToUtf8(0x23f3),
+    failed = intToUtf8(0x274c)
+  )
+}
+
 #' Record one provisioning step's outcome
 #' @keywords internal
 #' @noRd
@@ -180,12 +196,7 @@ chapter_provision <- function(
 #' @keywords internal
 #' @noRd
 chapter_provision_report <- function(report, meta, found) {
-  icons <- c(
-    done = "\u2705",
-    skipped = "\u27a1\ufe0f",
-    waiting = "\u23f3",
-    failed = "\u274c"
-  )
+  icons <- provision_icons()
   lines <- glue::glue_data(
     report,
     "| {icons[status]} | {step} | {detail} |"
