@@ -300,6 +300,7 @@ reference:
     desc: Build the Cloudflare Vectorize index that powers the Slack bot
     contents:
       - rag_index_build
+      - rag_purge_private
       - gather_rag_source
       - chunk_markdown
       - rag_chunk_id

@@ -73,9 +73,7 @@ gh_list_org_r_repos <- function(org) {
     .limit = Inf
   )
   Filter(
-    function(r) {
-      !isTRUE(r$archived) && !isTRUE(r$disabled) && identical(r$language, "R")
-    },
+    function(r) rag_repo_is_indexable(r) && identical(r$language, "R"),
     repos
   )
 }

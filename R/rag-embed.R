@@ -121,6 +121,44 @@ cloudflare_vectorize_upsert <- function(
     cloudflarer::cf_resp()
 }
 
+#' Delete vectors from a Vectorize index by id
+#'
+#' Custom for the same reason as [cloudflare_vectorize_upsert()]:
+#' cloudflarer does not wrap Vectorize v2.
+#'
+#' Deleting an id the index does not hold is not an error, which is what
+#' makes [rag_purge_private()] safe to run on every build.
+#'
+#' @param ids Character vector of vector ids.
+#' @param account_id Cloudflare account ID.
+#' @param api_token Cloudflare API token.
+#' @param index_name Vectorize index name.
+#' @return The unwrapped `result` payload from the Cloudflare response.
+#' @export
+cloudflare_vectorize_delete_by_ids <- function(
+  ids,
+  account_id,
+  api_token,
+  index_name
+) {
+  cloudflarer::cf_request(
+    c(
+      "accounts",
+      account_id,
+      "vectorize",
+      "v2",
+      "indexes",
+      index_name,
+      "delete_by_ids"
+    ),
+    token = api_token
+  ) |>
+    httr2::req_retry(max_tries = 3) |>
+    httr2::req_body_json(list(ids = as.list(ids))) |>
+    httr2::req_perform() |>
+    cloudflarer::cf_resp()
+}
+
 #' Discover the Cloudflare account ID for a token
 #'
 #' Fails if the token has access to zero or more than one account.
