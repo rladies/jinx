@@ -38,6 +38,12 @@ RUN for attempt in 1 2 3; do \
       sleep 10; \
     done
 
+# jose signs the JWT meetupr authenticates Meetup with. It is correctly in
+# meetupr's Suggests - most users authenticate interactively - so installing
+# the package does not bring it, and every Meetup call from this image fails
+# without it.
+RUN Rscript -e 'install.packages("jose")'
+
 # Runtime for weekly-challenge verification: reprex/callr run candidate
 # solutions in an isolated session; the allowlist is what generated challenges
 # may use. Sourced from the package so the image tracks the allowlist.

@@ -86,7 +86,7 @@ chapter_remind_stale <- function(
   org = "rladies",
   onboarding_repo = "new-chapters-onboarding",
   days = 14,
-  labels = c("new chapter", "chapter update")
+  labels = chapter_issue_labels()
 ) {
   cutoff <- Sys.Date() - days
   nudged <- list()

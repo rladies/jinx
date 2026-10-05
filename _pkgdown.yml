@@ -93,6 +93,7 @@ reference:
       - chapter_create_setup
       - chapter_create_update
       - chapter_provision
+      - chapter_intake
       - chapter_thread_scan
       - chapter_create_pr
       - chapter_repo_audit

@@ -8,7 +8,7 @@ chapter_remind_stale(
   org = "rladies",
   onboarding_repo = "new-chapters-onboarding",
   days = 14,
-  labels = c("new chapter", "chapter update")
+  labels = chapter_issue_labels()
 )
 }
 \arguments{
