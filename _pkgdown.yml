@@ -307,4 +307,5 @@ reference:
       - cloudflare_embed
       - cloudflare_generate
       - cloudflare_vectorize_upsert
+      - cloudflare_vectorize_delete_by_ids
       - cloudflare_account_id
