@@ -16,6 +16,7 @@ on:
       - "DESCRIPTION"
       - "NAMESPACE"
       - ".Rbuildignore"
+      - ".github/workflows/ci-r-cmd-check.yml"
   push:
     branches: [main]
     paths:
@@ -28,6 +29,7 @@ on:
       - "DESCRIPTION"
       - "NAMESPACE"
       - ".Rbuildignore"
+      - ".github/workflows/ci-r-cmd-check.yml"
 
 permissions:
   contents: read
