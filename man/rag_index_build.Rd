@@ -10,7 +10,8 @@ rag_index_build(
   api_token = Sys.getenv("CLOUDFLARE_API_TOKEN"),
   index_name = NULL,
   batch_size = 50L,
-  model = "@cf/baai/bge-base-en-v1.5"
+  model = "@cf/baai/bge-base-en-v1.5",
+  purge_private = TRUE
 )
 }
 \arguments{
@@ -28,9 +29,15 @@ or \code{"rladies-content"}.}
 \item{batch_size}{Number of chunks per embed/upsert call.}
 
 \item{model}{Workers AI embedding model.}
+
+\item{purge_private}{Whether to delete any private repository's
+chunks from the index afterwards. See \code{\link[=rag_purge_private]{rag_purge_private()}}: the
+index is upserted rather than rebuilt, so vectors from before
+private repositories were excluded persist until deleted.}
 }
 \value{
-Invisibly: list with \code{chunks} (total) and \code{upsert} (API response).
+Invisibly: list with \code{chunks} (total), \code{upsert} (API
+response) and \code{purged} (ids deleted).
 }
 \description{
 Gathers chunks from every configured source, embeds them with
