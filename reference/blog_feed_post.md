@@ -85,8 +85,17 @@ Invisibly, the number of posts announced.
 
 ## Details
 
-Announced ids are recorded in KV per workspace, and only after a
-successful post - a failed run re-announces nothing and loses nothing.
+Announced ids are recorded in KV per workspace, after each successful
+post rather than once at the end of the run. The window in which a post
+has reached Slack but not the seen-set is what makes a channel read the
+same post twice, so it is kept to one post: whatever fails next - Slack,
+Cloudflare, the runner - everything already announced is already
+recorded.
+
+Announcing a backlog therefore writes the same key once per post, faster
+than Workers KV allows; the retry in
+[`cf_ops_kv_put()`](https://rladies.github.io/jinx/reference/cf_ops_kv_put.md)
+absorbs that and throttles the loop.
 
 Use
 [`blog_feed_run()`](https://rladies.github.io/jinx/reference/blog_feed_run.md)
