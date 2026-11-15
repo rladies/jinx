@@ -17,9 +17,16 @@
   run. The same applies to the channel spotlight's round-robin.
 
 - **Cloudflare KV reads and writes retry.** `cloudflarer` builds its
-  requests without `httr2::req_retry()`, so jinx retries its own KV
-  calls three times for a transport failure, a 429 or a 5xx, and never
-  for a 404 or a 403.
+  requests without `httr2::req_retry()` and its KV functions do not
+  expose the request, so jinx retries its own KV calls three times for a
+  transport failure, a 429 or a 5xx - never for a 404 or a 403, and
+  never for a failure raised before the request goes out. The lasting
+  fix belongs in `cloudflarer`, which would make this a deletion.
+
+- **A failed blog-feed run says so in Slack**, like the other
+  schedules. Going red instead of posting is only the safer failure if
+  somebody hears about it; a sustained Cloudflare outage will say so
+  once per ten-minute run.
 
 ## Blog announcements carry the post's own preview
 

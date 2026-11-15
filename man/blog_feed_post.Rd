@@ -68,6 +68,10 @@ read the same post twice, so it is kept to one post: whatever fails
 next - Slack, Cloudflare, the runner - everything already announced
 is already recorded.
 
+Announcing a backlog therefore writes the same key once per post,
+faster than Workers KV allows; the retry in \code{\link[=cf_ops_kv_put]{cf_ops_kv_put()}} absorbs
+that and throttles the loop.
+
 Use \code{\link[=blog_feed_run]{blog_feed_run()}} to serve both workspaces, which polls the feeds
 once for the pair rather than once each.
 }

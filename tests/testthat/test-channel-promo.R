@@ -439,13 +439,7 @@ describe("promo_recent_load", {
 
   it("returns an empty vector when the key is missing", {
     local_mocked_bindings(
-      cf_ops_get_kv_value = function(...) {
-        cli::cli_abort(
-          "Cloudflare API request failed.",
-          class = "cloudflarer_error",
-          status_code = 404L
-        )
-      }
+      cf_ops_get_kv_value = function(...) cf_error(404L)
     )
     expect_identical(promo_recent_load("T", "ns", "a", "t"), character())
   })

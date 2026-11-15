@@ -158,17 +158,10 @@ describe("parse_cache_purge_command", {
   })
 })
 
-cf_error <- function(status) {
-  cli::cli_abort(
-    "Cloudflare API request failed.",
-    class = "cloudflarer_error",
-    status_code = status
-  )
-}
-
 describe("cf_ops_transient", {
   it("retries a transport failure, which carries no status", {
-    expect_true(cf_ops_transient(simpleError("connection refused")))
+    cnd <- tryCatch(transport_error(), error = function(e) e)
+    expect_true(cf_ops_transient(cnd))
   })
 
   it("retries a 429 or a 5xx", {
@@ -180,65 +173,147 @@ describe("cf_ops_transient", {
     expect_false(cf_ops_transient(list(status_code = 404L)))
     expect_false(cf_ops_transient(list(status_code = 403L)))
   })
+
+  it("gives up on a failure raised before the request went out", {
+    expect_false(cf_ops_transient(simpleError("must be a character string")))
+  })
+
+  it("gives up rather than error on a status it cannot compare", {
+    expect_false(cf_ops_transient(list(status_code = NA_integer_)))
+    expect_false(cf_ops_transient(list(status_code = integer())))
+  })
 })
 
 describe("cf_ops_retry", {
-  it("returns the first successful result without waiting", {
+  local_waits <- function(env = parent.frame()) {
     waits <- integer()
-    result <- cf_ops_retry(
-      function() "value",
-      backoff = function(attempt) waits <<- c(waits, attempt)
+    local_mocked_bindings(
+      cf_ops_backoff = function(attempt) waits <<- c(waits, attempt),
+      .env = env
     )
-    expect_identical(result, "value")
-    expect_length(waits, 0L)
+    function() waits
+  }
+
+  it("returns the first successful result without waiting", {
+    waits <- local_waits()
+    expect_identical(cf_ops_retry(function() "value"), "value")
+    expect_length(waits(), 0L)
   })
 
-  it("tries again after a transient failure", {
+  it("tries again after a transient failure, waiting longer each time", {
+    waits <- local_waits()
     attempts <- 0L
-    waits <- integer()
-    result <- cf_ops_retry(
-      function() {
-        attempts <<- attempts + 1L
-        if (attempts < 3L) {
-          cli::cli_abort("Couldn't connect to server")
-        }
-        "value"
-      },
-      backoff = function(attempt) waits <<- c(waits, attempt)
-    )
+    result <- cf_ops_retry(function() {
+      attempts <<- attempts + 1L
+      if (attempts < 3L) {
+        transport_error()
+      }
+      "value"
+    })
     expect_identical(result, "value")
     expect_equal(attempts, 3L)
-    expect_identical(waits, c(1L, 2L))
+    expect_identical(waits(), c(1L, 2L))
   })
 
   it("re-raises once the tries run out", {
+    local_waits()
     attempts <- 0L
     expect_error(
-      cf_ops_retry(
-        function() {
-          attempts <<- attempts + 1L
-          cli::cli_abort("Couldn't connect to server")
-        },
-        backoff = function(attempt) NULL
-      ),
-      "Couldn't connect"
+      cf_ops_retry(function() {
+        attempts <<- attempts + 1L
+        transport_error()
+      }),
+      "Failed to perform HTTP request"
     )
     expect_equal(attempts, 3L)
   })
 
-  it("does not retry a failure retrying cannot fix", {
-    attempts <- 0L
-    expect_error(
-      cf_ops_retry(
-        function() {
+  it("does not retry, or wait, for a failure retrying cannot fix", {
+    waits <- local_waits()
+    for (status in c(404L, 403L)) {
+      attempts <- 0L
+      expect_error(
+        cf_ops_retry(function() {
           attempts <<- attempts + 1L
-          cf_error(404L)
-        },
-        backoff = function(attempt) NULL
-      ),
-      class = "cloudflarer_error"
+          cf_error(status)
+        }),
+        class = "cloudflarer_error"
+      )
+      expect_equal(attempts, 1L)
+    }
+    expect_length(waits(), 0L)
+  })
+
+  it("always makes the call, however small the retry budget", {
+    local_waits()
+    for (tries in c(1L, 0L)) {
+      attempts <- 0L
+      expect_error(
+        cf_ops_retry(
+          function() {
+            attempts <<- attempts + 1L
+            transport_error()
+          },
+          tries = tries
+        ),
+        "Failed to perform HTTP request"
+      )
+      expect_equal(attempts, 1L)
+    }
+  })
+})
+
+describe("the KV wrappers' retries", {
+  read_greeting <- function() {
+    cf_ops_get_kv_value(
+      account_id = "acc123",
+      namespace_id = "ns1",
+      key_name = "greeting",
+      token = "tok"
     )
-    expect_equal(attempts, 1L)
+  }
+
+  it("carries cf_ops_get_kv_value() through a 5xx", {
+    local_mocked_bindings(cf_ops_backoff = function(attempt) NULL)
+    local_mocked_responses(list(
+      response_json(status_code = 503, body = list(success = FALSE)),
+      response(body = charToRaw("hello world"))
+    ))
+    expect_identical(read_greeting(), "hello world")
+  })
+
+  it("carries cf_ops_kv_put() through the 429 a per-key write limit gives", {
+    local_mocked_bindings(cf_ops_backoff = function(attempt) NULL)
+    local_mocked_responses(list(
+      response_json(status_code = 429, body = list(success = FALSE)),
+      response_json(body = list(success = TRUE))
+    ))
+    expect_no_error(
+      cf_ops_kv_put(
+        account_id = "acc123",
+        namespace_id = "ns1",
+        key_name = "greeting",
+        value = "hello",
+        token = "tok"
+      )
+    )
+  })
+
+  it("does not retry a key that is simply missing", {
+    local_mocked_bindings(
+      cf_ops_backoff = function(attempt) cli::cli_abort("should not wait")
+    )
+    local_mocked_responses(list(
+      response_json(
+        status_code = 404,
+        body = list(
+          success = FALSE,
+          errors = list(list(code = 10009, message = "key not found"))
+        )
+      ),
+      response(body = charToRaw("hello world"))
+    ))
+    expect_error(read_greeting(), class = "cloudflarer_error")
   })
 })
 

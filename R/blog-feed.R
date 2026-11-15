@@ -725,6 +725,10 @@ blog_feed_block_error <- function(error) {
 #' next - Slack, Cloudflare, the runner - everything already announced
 #' is already recorded.
 #'
+#' Announcing a backlog therefore writes the same key once per post,
+#' faster than Workers KV allows; the retry in [cf_ops_kv_put()] absorbs
+#' that and throttles the loop.
+#'
 #' Use [blog_feed_run()] to serve both workspaces, which polls the feeds
 #' once for the pair rather than once each.
 #'

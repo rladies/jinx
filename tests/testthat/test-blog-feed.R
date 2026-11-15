@@ -544,13 +544,7 @@ describe("blog_feed_seen_load", {
 
   it("starts empty when the key has never been written", {
     local_mocked_bindings(
-      cf_ops_get_kv_value = function(...) {
-        cli::cli_abort(
-          "Cloudflare API request failed.",
-          class = "cloudflarer_error",
-          status_code = 404L
-        )
-      }
+      cf_ops_get_kv_value = function(...) cf_error(404L)
     )
     expect_identical(blog_feed_seen_load("community"), character())
   })
@@ -600,6 +594,17 @@ describe("blog_feed_post", {
       blog_feed_seen_load = function(...) character(),
       .env = env
     )
+  }
+  posts_for <- function(ids) {
+    lapply(ids, function(id) {
+      list(
+        item = blog_feed_items(rss_doc(rss_item(
+          guid = id,
+          link = paste0("https://example.com/", id)
+        ))),
+        source = blog_feed_sources(entries)$sources
+      )
+    })
   }
 
   it("posts each new item and records it as announced", {
@@ -735,15 +740,7 @@ describe("blog_feed_post", {
 
   it("records each post before sending the next", {
     saves <- list()
-    posts <- lapply(c("first", "second"), function(id) {
-      list(
-        item = blog_feed_items(rss_doc(rss_item(
-          guid = id,
-          link = paste0("https://example.com/", id)
-        ))),
-        source = blog_feed_sources(entries)$sources
-      )
-    })
+    posts <- posts_for(c("first", "second"))
     local_mocked_bindings(
       blog_feed_seen_load = function(...) character(),
       slack_post_message = function(...) list(ok = TRUE),
@@ -757,15 +754,7 @@ describe("blog_feed_post", {
 
   it("has already recorded earlier posts when a later save fails", {
     saves <- list()
-    posts <- lapply(c("first", "second"), function(id) {
-      list(
-        item = blog_feed_items(rss_doc(rss_item(
-          guid = id,
-          link = paste0("https://example.com/", id)
-        ))),
-        source = blog_feed_sources(entries)$sources
-      )
-    })
+    posts <- posts_for(c("first", "second"))
     local_mocked_bindings(
       blog_feed_seen_load = function(...) character(),
       slack_post_message = function(...) list(ok = TRUE),
@@ -785,15 +774,7 @@ describe("blog_feed_post", {
 
   it("keeps what it managed to announce before a post failed", {
     saved <- NULL
-    posts <- lapply(c("ok", "fails"), function(id) {
-      list(
-        item = blog_feed_items(rss_doc(rss_item(
-          guid = id,
-          link = paste0("https://example.com/", id)
-        ))),
-        source = blog_feed_sources(entries)$sources
-      )
-    })
+    posts <- posts_for(c("ok", "fails"))
     local_mocked_bindings(
       blog_feed_seen_load = function(...) character(),
       slack_post_message = function(text, ...) {
