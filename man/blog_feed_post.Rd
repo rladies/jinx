@@ -61,8 +61,12 @@ driven by \code{awesome-rladies-creations}: a blog added to the curated list
 is announced without anyone touching Slack.
 }
 \details{
-Announced ids are recorded in KV per workspace, and only after a
-successful post - a failed run re-announces nothing and loses nothing.
+Announced ids are recorded in KV per workspace, after each successful
+post rather than once at the end of the run. The window in which a
+post has reached Slack but not the seen-set is what makes a channel
+read the same post twice, so it is kept to one post: whatever fails
+next - Slack, Cloudflare, the runner - everything already announced
+is already recorded.
 
 Use \code{\link[=blog_feed_run]{blog_feed_run()}} to serve both workspaces, which polls the feeds
 once for the pair rather than once each.

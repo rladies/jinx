@@ -1,5 +1,26 @@
 # jinx (development version)
 
+## A Cloudflare blip no longer reposts the blog channel
+
+- **Announced posts are recorded one at a time, as each one is sent.**
+  The seen-set used to be written once, after the whole batch: on 3
+  November a run posted to both blog channels and then could not reach
+  `api.cloudflare.com` to record it, which would have announced the same
+  post again ten minutes later. The window between "Slack has it" and
+  "KV knows" is now one post wide.
+
+- **An unreadable seen-set aborts the run instead of reading as
+  empty.** `kv_string_set_load()` treated every failure as "nothing
+  recorded yet", so a blip on the *read* would have reposted up to
+  `limit` posts the channel had already seen. A missing key still means
+  a first run; a 5xx, a bad token or a connection failure now stops the
+  run. The same applies to the channel spotlight's round-robin.
+
+- **Cloudflare KV reads and writes retry.** `cloudflarer` builds its
+  requests without `httr2::req_retry()`, so jinx retries its own KV
+  calls three times for a transport failure, a 429 or a 5xx, and never
+  for a 404 or a 403.
+
 ## Blog announcements carry the post's own preview
 
 - **A post is announced as Slack blocks rather than one line of text.**

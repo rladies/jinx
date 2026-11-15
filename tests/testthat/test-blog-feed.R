@@ -542,11 +542,24 @@ describe("blog_feed_seen_load", {
     expect_identical(blog_feed_seen_load("community"), character())
   })
 
-  it("starts empty when the KV read errors", {
+  it("starts empty when the key has never been written", {
     local_mocked_bindings(
-      cf_ops_get_kv_value = function(...) cli::cli_abort("boom")
+      cf_ops_get_kv_value = function(...) {
+        cli::cli_abort(
+          "Cloudflare API request failed.",
+          class = "cloudflarer_error",
+          status_code = 404L
+        )
+      }
     )
     expect_identical(blog_feed_seen_load("community"), character())
+  })
+
+  it("aborts when the KV read fails, rather than re-announce everything", {
+    local_mocked_bindings(
+      cf_ops_get_kv_value = function(...) cli::cli_abort("Couldn't connect")
+    )
+    expect_error(blog_feed_seen_load("community"), "Couldn't connect")
   })
 })
 
@@ -718,6 +731,56 @@ describe("blog_feed_post", {
       entries = entries,
       max_age_days = 1e6
     )
+  })
+
+  it("records each post before sending the next", {
+    saves <- list()
+    posts <- lapply(c("first", "second"), function(id) {
+      list(
+        item = blog_feed_items(rss_doc(rss_item(
+          guid = id,
+          link = paste0("https://example.com/", id)
+        ))),
+        source = blog_feed_sources(entries)$sources
+      )
+    })
+    local_mocked_bindings(
+      blog_feed_seen_load = function(...) character(),
+      slack_post_message = function(...) list(ok = TRUE),
+      blog_feed_seen_save = function(workspace, seen, ...) {
+        saves[[length(saves) + 1L]] <<- seen
+      }
+    )
+    blog_feed_post("community", posts = posts, slack_token = "xoxb-test")
+    expect_identical(saves, list("first", c("first", "second")))
+  })
+
+  it("has already recorded earlier posts when a later save fails", {
+    saves <- list()
+    posts <- lapply(c("first", "second"), function(id) {
+      list(
+        item = blog_feed_items(rss_doc(rss_item(
+          guid = id,
+          link = paste0("https://example.com/", id)
+        ))),
+        source = blog_feed_sources(entries)$sources
+      )
+    })
+    local_mocked_bindings(
+      blog_feed_seen_load = function(...) character(),
+      slack_post_message = function(...) list(ok = TRUE),
+      blog_feed_seen_save = function(workspace, seen, ...) {
+        saves[[length(saves) + 1L]] <<- seen
+        if (length(saves) > 1L) {
+          cli::cli_abort("Couldn't connect")
+        }
+      }
+    )
+    expect_error(
+      blog_feed_post("community", posts = posts, slack_token = "xoxb-test"),
+      "Couldn't connect"
+    )
+    expect_identical(saves[[1]], "first")
   })
 
   it("keeps what it managed to announce before a post failed", {

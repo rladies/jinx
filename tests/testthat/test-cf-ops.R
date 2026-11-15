@@ -158,23 +158,115 @@ describe("parse_cache_purge_command", {
   })
 })
 
+cf_error <- function(status) {
+  cli::cli_abort(
+    "Cloudflare API request failed.",
+    class = "cloudflarer_error",
+    status_code = status
+  )
+}
+
+describe("cf_ops_transient", {
+  it("retries a transport failure, which carries no status", {
+    expect_true(cf_ops_transient(simpleError("connection refused")))
+  })
+
+  it("retries a 429 or a 5xx", {
+    expect_true(cf_ops_transient(list(status_code = 429L)))
+    expect_true(cf_ops_transient(list(status_code = 503L)))
+  })
+
+  it("gives up on a status only the caller can fix", {
+    expect_false(cf_ops_transient(list(status_code = 404L)))
+    expect_false(cf_ops_transient(list(status_code = 403L)))
+  })
+})
+
+describe("cf_ops_retry", {
+  it("returns the first successful result without waiting", {
+    waits <- integer()
+    result <- cf_ops_retry(
+      function() "value",
+      backoff = function(attempt) waits <<- c(waits, attempt)
+    )
+    expect_identical(result, "value")
+    expect_length(waits, 0L)
+  })
+
+  it("tries again after a transient failure", {
+    attempts <- 0L
+    waits <- integer()
+    result <- cf_ops_retry(
+      function() {
+        attempts <<- attempts + 1L
+        if (attempts < 3L) {
+          cli::cli_abort("Couldn't connect to server")
+        }
+        "value"
+      },
+      backoff = function(attempt) waits <<- c(waits, attempt)
+    )
+    expect_identical(result, "value")
+    expect_equal(attempts, 3L)
+    expect_identical(waits, c(1L, 2L))
+  })
+
+  it("re-raises once the tries run out", {
+    attempts <- 0L
+    expect_error(
+      cf_ops_retry(
+        function() {
+          attempts <<- attempts + 1L
+          cli::cli_abort("Couldn't connect to server")
+        },
+        backoff = function(attempt) NULL
+      ),
+      "Couldn't connect"
+    )
+    expect_equal(attempts, 3L)
+  })
+
+  it("does not retry a failure retrying cannot fix", {
+    attempts <- 0L
+    expect_error(
+      cf_ops_retry(
+        function() {
+          attempts <<- attempts + 1L
+          cf_error(404L)
+        },
+        backoff = function(attempt) NULL
+      ),
+      class = "cloudflarer_error"
+    )
+    expect_equal(attempts, 1L)
+  })
+})
+
 describe("kv_string_set_load", {
   it("parses a stored JSON array", {
     local_mocked_bindings(cf_ops_get_kv_value = function(...) '["a","b"]')
     expect_identical(kv_string_set_load("k"), c("a", "b"))
   })
 
-  it("treats an unset, unparseable or unreadable key as nothing recorded", {
+  it("treats an unset or unparseable key as nothing recorded", {
     local_mocked_bindings(cf_ops_get_kv_value = function(...) "")
     expect_identical(kv_string_set_load("k"), character())
 
     local_mocked_bindings(cf_ops_get_kv_value = function(...) "{not json")
     expect_identical(kv_string_set_load("k"), character())
 
-    local_mocked_bindings(
-      cf_ops_get_kv_value = function(...) cli::cli_abort("boom")
-    )
+    local_mocked_bindings(cf_ops_get_kv_value = function(...) cf_error(404L))
     expect_identical(kv_string_set_load("k"), character())
+  })
+
+  it("aborts rather than report an unreadable key as empty", {
+    local_mocked_bindings(
+      cf_ops_get_kv_value = function(...) cli::cli_abort("Couldn't connect")
+    )
+    expect_error(kv_string_set_load("k"), "Couldn't connect")
+
+    local_mocked_bindings(cf_ops_get_kv_value = function(...) cf_error(500L))
+    expect_error(kv_string_set_load("k"), class = "cloudflarer_error")
   })
 })
 
