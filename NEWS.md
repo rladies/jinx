@@ -1,5 +1,19 @@
 # jinx (development version)
 
+## Blog feeds are fetched through the worker
+
+- **Feeds behind Cloudflare bot protection are announced again.** Several
+  blogs in the curated list sit behind Cloudflare with Bot Fight Mode on,
+  which managed-challenges the Azure ranges GitHub Actions runs on: those
+  feeds answered every scheduled poll with a 403 while the run itself
+  stayed green, so their posts went unannounced. `blog_feed_fetch()` and
+  `blog_feed_og()` now fetch through the worker's new `POST /content/fetch`
+  route, whose egress is scored differently.
+
+- **No new configuration.** `rag_request_proxied()` routes through the
+  worker whenever `JINX_WORKER_URL` and `JINX_WORKER_API_KEY` are both set,
+  and falls back to a direct request otherwise, so local runs and tests
+  need no worker.
 ## A Cloudflare blip no longer reposts the blog channel
 
 - **Announced posts are recorded one at a time, as each one is sent.**

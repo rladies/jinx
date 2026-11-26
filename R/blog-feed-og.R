@@ -40,7 +40,7 @@ blog_feed_description_chars <- function() 300L
 blog_feed_og <- function(url) {
   empty <- list(description = "", image = "", image_alt = "")
   html <- tryCatch(
-    rag_fetch_text(rag_request(url)),
+    rag_fetch_text(rag_request_proxied(url)),
     error = function(e) NULL
   )
   if (is.null(html)) {
