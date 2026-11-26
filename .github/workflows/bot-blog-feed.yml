@@ -42,6 +42,11 @@ jobs:
           SLACK_COMMUNITY_TOKEN: ${{ secrets.SLACK_COMMUNITY_TOKEN }}
           SLACK_ORGANISER_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
           SLACK_BLOG_CHANNEL: ${{ vars.SLACK_BLOG_CHANNEL }}
+          # Feeds are fetched through the worker's /content/fetch route: several
+          # curated blogs sit behind Cloudflare bot protection that
+          # challenges the Azure ranges this runner uses.
+          JINX_WORKER_URL: ${{ secrets.JINX_WORKER_URL }}
+          JINX_WORKER_API_KEY: ${{ secrets.JINX_WORKER_API_KEY }}
         run: |
           Rscript -e 'jinx::blog_feed_run(
             dry_run = ${{ inputs.dry_run && 'TRUE' || 'FALSE' }},

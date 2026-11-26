@@ -85,3 +85,49 @@ rag_fetch_json <- function(req, retries = 1L) {
 rag_parse_date <- function(raw) {
   parse_unix_date(raw) %or% 0L
 }
+
+#' Worker endpoint that fetches a public URL on the indexer's behalf
+#'
+#' Derived from `JINX_WORKER_URL` rather than configured separately: the
+#' workflows that need the proxy already carry that secret and the Worker's
+#' API key, so routing through it costs no new configuration.
+#'
+#' @return Character scalar URL, `""` when `JINX_WORKER_URL` is unset.
+#' @keywords internal
+#' @noRd
+rag_proxy_url <- function() {
+  base <- Sys.getenv("JINX_WORKER_URL")
+  if (is_blank(base)) {
+    return("")
+  }
+  paste0(sub("/+$", "", base), "/content/fetch")
+}
+
+#' Build a request that fetches `url` through the jinx Worker
+#'
+#' Several curated blogs sit behind Cloudflare with Bot Fight Mode on, which
+#' managed-challenges the Azure ranges GitHub Actions runs on - those feeds
+#' answered every scheduled poll with a 403. A Worker's egress is scored
+#' differently, so the same request from there succeeds.
+#'
+#' Falls back to a direct request whenever the proxy is not configured, so
+#' local runs and tests need no Worker.
+#'
+#' @param url Target URL.
+#' @param proxy Worker `/content/fetch` endpoint.
+#' @param key Bearer key for the Worker's HTTP API.
+#' @return [httr2::request] object.
+#' @keywords internal
+rag_request_proxied <- function(
+  url,
+  proxy = rag_proxy_url(),
+  key = Sys.getenv("JINX_WORKER_API_KEY")
+) {
+  if (is_blank(proxy) || is_blank(key)) {
+    return(rag_request(url))
+  }
+  httr2::request(proxy) |>
+    httr2::req_user_agent(rag_user_agent()) |>
+    httr2::req_auth_bearer_token(key) |>
+    httr2::req_body_json(list(url = url, user_agent = rag_user_agent()))
+}

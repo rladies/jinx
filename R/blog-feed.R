@@ -368,7 +368,7 @@ blog_feed_strip_zone <- function(raw) {
 #' @keywords internal
 #' @noRd
 blog_feed_fetch <- function(feed, max_items = 25L) {
-  xml <- rag_fetch_text(rag_request(feed))
+  xml <- rag_fetch_text(rag_request_proxied(feed))
   if (is.null(xml)) {
     cli::cli_alert_warning("blog-feed: could not read {feed}")
     return(blog_feed_empty_items())
