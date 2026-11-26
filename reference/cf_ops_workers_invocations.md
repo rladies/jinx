@@ -1,7 +1,7 @@
 # Query Workers invocation/error/CPU metrics
 
 Thin wrapper over
-[`cloudflarer::cf_workers_invocations()`](https://rdrr.io/pkg/cloudflarer/man/cf_workers_invocations.html),
+[`cloudflarer::cf_workers_invocations()`](http://drmowinckels.io/cloudflarer/reference/cf_workers_invocations.md),
 defaulting `script_name` to `"jinx"` (matches `wrangler.jsonc`'s worker
 name) rather than requiring the caller to know it.
 

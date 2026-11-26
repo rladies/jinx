@@ -2,7 +2,24 @@
 
 ## jinx (development version)
 
-### A Cloudflare blip no longer reposts the blog channel
+### Blog feeds are fetched through the worker
+
+- **Feeds behind Cloudflare bot protection are announced again.**
+  Several blogs in the curated list sit behind Cloudflare with Bot Fight
+  Mode on, which managed-challenges the Azure ranges GitHub Actions runs
+  on: those feeds answered every scheduled poll with a 403 while the run
+  itself stayed green, so their posts went unannounced.
+  `blog_feed_fetch()` and
+  [`blog_feed_og()`](https://rladies.github.io/jinx/reference/blog_feed_og.md)
+  now fetch through the worker’s new `POST /content/fetch` route, whose
+  egress is scored differently.
+
+- **No new configuration.**
+  [`rag_request_proxied()`](https://rladies.github.io/jinx/reference/rag_request_proxied.md)
+  routes through the worker whenever `JINX_WORKER_URL` and
+  `JINX_WORKER_API_KEY` are both set, and falls back to a direct request
+  otherwise, so local runs and tests need no worker. \## A Cloudflare
+  blip no longer reposts the blog channel
 
 - **Announced posts are recorded one at a time, as each one is sent.**
   The seen-set used to be written once, after the whole batch: on 3
@@ -578,11 +595,11 @@
 
 - **`/jinx workers-status` reports Workers invocation/error/CPU
   metrics** for the `jinx` script, via
-  [`cloudflarer::cf_workers_invocations()`](https://rdrr.io/pkg/cloudflarer/man/cf_workers_invocations.html).
+  [`cloudflarer::cf_workers_invocations()`](http://drmowinckels.io/cloudflarer/reference/cf_workers_invocations.md).
   `jinx_safe` — read-only, same class as `gha-dashboard`.
 - **`/jinx cache-purge <prefix> [<prefix> ...]` purges specific URL
   prefixes from the Cloudflare cache**, via
-  [`cloudflarer::cf_purge_cache()`](https://rdrr.io/pkg/cloudflarer/man/cf_purge_cache.html).
+  [`cloudflarer::cf_purge_cache()`](http://drmowinckels.io/cloudflarer/reference/cf_purge_cache.md).
   `jinx_gated` — the one genuinely mutating, production-affecting
   command in this integration. The R wrapper
   ([`cf_ops_purge_cache()`](https://rladies.github.io/jinx/reference/cf_ops_purge_cache.md))
@@ -609,7 +626,7 @@
   [`rum_generate_report()`](https://rladies.github.io/jinx/reference/rum_generate_report.md)
   in `R/website-rum.R` query pageviews and top pages/referrers/countries
   via
-  [`cloudflarer::cf_rum_page_views()`](https://rdrr.io/pkg/cloudflarer/man/cf_rum_page_views.html)
+  [`cloudflarer::cf_rum_page_views()`](http://drmowinckels.io/cloudflarer/reference/cf_rum_page_views.md)
   and `cf_rum_top()`. `jinx_safe` — aggregate traffic data, same
   sensitivity class as the Plausible command. No issue-publishing
   helper; like `gha-dashboard`, the report is returned directly as the
@@ -643,15 +660,15 @@
   of a hand-rolled `httr2` request builder.
   [`cloudflare_account_id()`](https://rladies.github.io/jinx/reference/cloudflare_account_id.md)
   now delegates to
-  [`cloudflarer::cf_list_accounts()`](https://rdrr.io/pkg/cloudflarer/man/cf_list_accounts.html);
+  [`cloudflarer::cf_list_accounts()`](http://drmowinckels.io/cloudflarer/reference/cf_list_accounts.md);
   [`cloudflare_embed()`](https://rladies.github.io/jinx/reference/cloudflare_embed.md)
   and
   [`cloudflare_vectorize_upsert()`](https://rladies.github.io/jinx/reference/cloudflare_vectorize_upsert.md)
   stay custom (cloudflarer doesn’t wrap Workers AI inference or
   Vectorize v2) but now build on
-  [`cloudflarer::cf_request()`](https://rdrr.io/pkg/cloudflarer/man/cf_request.html)
+  [`cloudflarer::cf_request()`](http://drmowinckels.io/cloudflarer/reference/cf_request.md)
   and unwrap responses with
-  [`cloudflarer::cf_resp()`](https://rdrr.io/pkg/cloudflarer/man/cf_resp.html),
+  [`cloudflarer::cf_resp()`](http://drmowinckels.io/cloudflarer/reference/cf_resp.md),
   which raises a classed `cloudflarer_error` on API failure instead of a
   bare HTTP-status error.
   [`cloudflare_vectorize_upsert()`](https://rladies.github.io/jinx/reference/cloudflare_vectorize_upsert.md)’s

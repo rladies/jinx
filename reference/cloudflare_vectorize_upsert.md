@@ -3,9 +3,9 @@
 Custom because
 [cloudflarer](https://drmowinckels.r-universe.dev/cloudflarer) does not
 wrap Vectorize v2; built on its
-[`cloudflarer::cf_request()`](https://rdrr.io/pkg/cloudflarer/man/cf_request.html)
+[`cloudflarer::cf_request()`](http://drmowinckels.io/cloudflarer/reference/cf_request.md)
 and
-[`cloudflarer::cf_resp()`](https://rdrr.io/pkg/cloudflarer/man/cf_resp.html)
+[`cloudflarer::cf_resp()`](http://drmowinckels.io/cloudflarer/reference/cf_resp.md)
 for consistent auth and error handling.
 
 ## Usage

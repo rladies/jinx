@@ -27,7 +27,7 @@ rum_generate_report(
 - site_tag:
 
   RUM site tag, as returned by
-  [`cloudflarer::cf_list_rum_sites()`](https://rdrr.io/pkg/cloudflarer/man/cf_list_rum_sites.html).
+  [`cloudflarer::cf_list_rum_sites()`](http://drmowinckels.io/cloudflarer/reference/cf_list_rum_sites.md).
   Defaults to env `CLOUDFLARE_RUM_SITE_TAG`.
 
 - token:

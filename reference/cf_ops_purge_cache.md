@@ -1,7 +1,7 @@
 # Purge specific URLs or prefixes from the Cloudflare cache
 
 Thin wrapper over
-[`cloudflarer::cf_purge_cache()`](https://rdrr.io/pkg/cloudflarer/man/cf_purge_cache.html)
+[`cloudflarer::cf_purge_cache()`](http://drmowinckels.io/cloudflarer/reference/cf_purge_cache.md)
 that deliberately does not expose `purge_everything` — a maintainer who
 genuinely needs a full-zone wipe calls
 `cloudflarer::cf_purge_cache(purge_everything = TRUE)` directly. That

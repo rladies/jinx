@@ -1,7 +1,7 @@
 # Write a single value to a Cloudflare KV namespace
 
 Wraps
-[`cloudflarer::cf_put_kv_value()`](https://rdrr.io/pkg/cloudflarer/man/cf_put_kv_value.html).
+[`cloudflarer::cf_put_kv_value()`](http://drmowinckels.io/cloudflarer/reference/cf_put_kv_value.md).
 Unlike
 [`cf_ops_list_kv_keys()`](https://rladies.github.io/jinx/reference/cf_ops_list_kv_keys.md)/
 [`cf_ops_get_kv_value()`](https://rladies.github.io/jinx/reference/cf_ops_get_kv_value.md),

@@ -122,10 +122,17 @@ document.addEventListener("DOMContentLoaded", function() {
 /airtable/webhook   POST   Form submissions from Airtable
 /ai/generate        POST   Workers AI passthrough for other RLadies+ repos
 /links/shorten      POST   Create (or reuse) a l.rladies.org short link
-/workspace/mailbox  POST   Create a chapter mailbox in Google Workspace</code></pre>
-<p>Routes follow <code>/&lt;service&gt;/&lt;action&gt;</code> — never flat paths like <code>/slack-interact</code> or <code>/airtable-webhook</code>. Slack-side endpoints all run through <code>verifySlackSignature()</code> in the router; <code>/airtable/webhook</code> uses its own <code>x-airtable-secret</code> header; <code>/ai/generate</code>, <code>/links/shorten</code> and <code>/workspace/mailbox</code> are gated by a shared <code>JINX_WORKER_API_KEY</code> bearer token (constant-time compared, <code>worker/src/api-auth.js</code>) — see the README’s “HTTP API for other repos” section for the request/response contract of each.</p>
+/workspace/mailbox  POST   Create a chapter mailbox in Google Workspace
+/content/fetch      POST   Fetch a public URL from Cloudflare's network</code></pre>
+<p>Routes follow <code>/&lt;service&gt;/&lt;action&gt;</code> — never flat paths like <code>/slack-interact</code> or <code>/airtable-webhook</code>. Slack-side endpoints all run through <code>verifySlackSignature()</code> in the router; <code>/airtable/webhook</code> uses its own <code>x-airtable-secret</code> header; <code>/ai/generate</code>, <code>/links/shorten</code>, <code>/workspace/mailbox</code> and <code>/content/fetch</code> are gated by a shared <code>JINX_WORKER_API_KEY</code> bearer token (constant-time compared, <code>worker/src/api-auth.js</code>) — see the README’s “HTTP API for other repos” section for the request/response contract of each.</p>
 <p>(An earlier <code>/analytics/rum</code> route proxying Cloudflare Web Analytics was removed — <code><a href="reference/rum_collect_analytics.html">rum_collect_analytics()</a></code>, already exported from the <code>jinx</code> R package, covers that need directly as an R dependency instead.)</p>
 <p>The same worker also answers <code>GET &lt;code&gt;</code> on a second hostname, <code>l.rladies.org</code> (routed via the <code>routes</code> entry in <code>wrangler.jsonc</code>, not the <code>/&lt;service&gt;/&lt;action&gt;</code> API above), 301-redirecting to the short link’s target or <code>404</code> if the code is unknown. See “URL shortener” below.</p>
+</div>
+<div class="section level3">
+<h3 id="fetching-feeds-through-the-worker">Fetching feeds through the worker<a class="anchor" aria-label="anchor" href="#fetching-feeds-through-the-worker"></a></h3>
+<p><code>POST /content/fetch</code> (<code>worker/src/fetch-proxy.js</code>) takes <code>{url, user_agent?}</code> and returns the upstream body with the upstream status mirrored, so a caller’s own error handling still sees a 403 as a 403.</p>
+<p>It exists because several blogs in <code>awesome-rladies-creations</code> sit behind Cloudflare with Bot Fight Mode on, which managed-challenges the Azure ranges GitHub Actions runs on: those feeds answered every scheduled poll of <code><a href="reference/blog_feed_run.html">blog_feed_run()</a></code> with a 403 while the run itself stayed green, so posts went unannounced for days before anyone noticed. A worker’s egress is scored differently and the same request succeeds. <code><a href="reference/rag_request_proxied.html">rag_request_proxied()</a></code> on the R side routes through it whenever <code>JINX_WORKER_URL</code> and <code>JINX_WORKER_API_KEY</code> are both set, and falls back to a direct request otherwise, so local runs and tests need no worker.</p>
+<p>It is a fetch proxy, so beyond the bearer gate the target must be an http(s) URL on a public hostname — IP literals, <code>localhost</code> and the <code>.local</code>, <code>.internal</code> and dotless names are refused before any fetch happens, which is what keeps cloud metadata endpoints out of reach — and the response is capped at 2 MB.</p>
 </div>
 <div class="section level3">
 <h3 id="chapter-mailbox-provisioning--stays-in-javascript">Chapter mailbox provisioning — stays in JavaScript<a class="anchor" aria-label="anchor" href="#chapter-mailbox-provisioning--stays-in-javascript"></a></h3>
@@ -239,7 +246,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <ul><li>
 <strong>Generating a new signing key retires the old one.</strong> A stale key fails with <code>invalid_grant: invalid assertion</code>, which reads like a code bug rather than a credential one.</li>
 <li>
-<strong><code>~/.Renviron</code> overrides the environment you pass on the command line.</strong> If a local <code>&lt;client_name&gt;_jwt_token</code> points at an old key, every local meetupr call uses it no matter what you set in the shell. Check with <code><a href="https://rdrr.io/pkg/meetupr/man/meetupr_auth_status.html" class="external-link">meetupr::meetupr_auth_status()</a></code>, which reports the resolved key path.</li>
+<strong><code>~/.Renviron</code> overrides the environment you pass on the command line.</strong> If a local <code>&lt;client_name&gt;_jwt_token</code> points at an old key, every local meetupr call uses it no matter what you set in the shell. Check with <code><a href="http://rladies.org/meetupr/reference/meetupr_auth_status.html" class="external-link">meetupr::meetupr_auth_status()</a></code>, which reports the resolved key path.</li>
 <li>
 <code>jose</code> is required for the JWT path and is in meetupr’s Suggests, so CI installs it explicitly via <code>extra-packages: any::jose</code>.</li>
 </ul></div>

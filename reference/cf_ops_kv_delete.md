@@ -1,7 +1,7 @@
 # Delete a single value from a Cloudflare KV namespace
 
 Wraps
-[`cloudflarer::cf_delete_kv_value()`](https://rdrr.io/pkg/cloudflarer/man/cf_delete_kv_value.html).
+[`cloudflarer::cf_delete_kv_value()`](http://drmowinckels.io/cloudflarer/reference/cf_delete_kv_value.md).
 See
 [`cf_ops_kv_put()`](https://rladies.github.io/jinx/reference/cf_ops_kv_put.md)
 for why this is narrowly scoped rather than a general-purpose tool.

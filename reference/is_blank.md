@@ -2,7 +2,7 @@
 
 Catches NULL, zero-length vectors and lists (including the
 empty-JSON-object case [`list()`](https://rdrr.io/r/base/list.html) from
-[`jsonlite::fromJSON`](https://jeroen.r-universe.dev/jsonlite/reference/fromJSON.html)),
+[`jsonlite::fromJSON`](https://rdrr.io/pkg/jsonlite/man/fromJSON.html)),
 and length-1 atomic values that are `NA` or `""`.
 
 ## Usage

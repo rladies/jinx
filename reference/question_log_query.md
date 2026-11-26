@@ -1,7 +1,7 @@
 # Query the anonymous question log
 
 Reads rows from the Cloudflare D1 `jinx-question-log` database via
-[`cloudflarer::cf_d1_query()`](https://rdrr.io/pkg/cloudflarer/man/cf_d1_query.html) -
+[`cloudflarer::cf_d1_query()`](http://drmowinckels.io/cloudflarer/reference/cf_d1_query.md) -
 the same table `worker/src/question-log.js` writes to from inside the
 Cloudflare Worker when `@Jinx` answers a question. No Slack user id,
 channel, or thread timestamp is stored, so a row cannot be traced to who

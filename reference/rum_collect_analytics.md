@@ -1,9 +1,9 @@
 # Collect Cloudflare RUM (Web Analytics) traffic data
 
 Queries the Cloudflare Web Analytics beacon data for a date range, via
-[`cloudflarer::cf_rum_page_views()`](https://rdrr.io/pkg/cloudflarer/man/cf_rum_page_views.html)
+[`cloudflarer::cf_rum_page_views()`](http://drmowinckels.io/cloudflarer/reference/cf_rum_page_views.md)
 and
-[`cloudflarer::cf_rum_top()`](https://rdrr.io/pkg/cloudflarer/man/cf_rum_top.html).
+[`cloudflarer::cf_rum_top()`](http://drmowinckels.io/cloudflarer/reference/cf_rum_top.md).
 A sibling to
 [`website_collect_analytics()`](https://rladies.github.io/jinx/reference/website_collect_analytics.md)
 (which queries Plausible) — Cloudflare RUM is a separate, beacon-based
@@ -30,7 +30,7 @@ rum_collect_analytics(
 - site_tag:
 
   RUM site tag, as returned by
-  [`cloudflarer::cf_list_rum_sites()`](https://rdrr.io/pkg/cloudflarer/man/cf_list_rum_sites.html).
+  [`cloudflarer::cf_list_rum_sites()`](http://drmowinckels.io/cloudflarer/reference/cf_list_rum_sites.md).
   Defaults to env `CLOUDFLARE_RUM_SITE_TAG`.
 
 - token:

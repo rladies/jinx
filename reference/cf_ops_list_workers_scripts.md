@@ -1,7 +1,7 @@
 # List Workers scripts deployed on the account
 
 Thin wrapper over
-[`cloudflarer::cf_list_workers_scripts()`](https://rdrr.io/pkg/cloudflarer/man/cf_list_workers_scripts.html).
+[`cloudflarer::cf_list_workers_scripts()`](http://drmowinckels.io/cloudflarer/reference/cf_list_workers_scripts.md).
 
 ## Usage
 

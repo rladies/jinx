@@ -4,9 +4,9 @@ Calls the Cloudflare REST endpoint `accounts/{id}/ai/run/{model}` with a
 chat-style `messages` array and returns the generated text. Sibling of
 [`cloudflare_embed()`](https://rladies.github.io/jinx/reference/cloudflare_embed.md) -
 same auth/retry/error-handling idiom, built on
-[`cloudflarer::cf_request()`](https://rdrr.io/pkg/cloudflarer/man/cf_request.html)
+[`cloudflarer::cf_request()`](http://drmowinckels.io/cloudflarer/reference/cf_request.md)
 and
-[`cloudflarer::cf_resp()`](https://rdrr.io/pkg/cloudflarer/man/cf_resp.html)
+[`cloudflarer::cf_resp()`](http://drmowinckels.io/cloudflarer/reference/cf_resp.md)
 because cloudflarer does not wrap Workers AI inference.
 
 ## Usage

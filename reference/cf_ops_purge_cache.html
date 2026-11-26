@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     <div class="ref-description section level2">
-    <p>Thin wrapper over <code><a href="https://rdrr.io/pkg/cloudflarer/man/cf_purge_cache.html" class="external-link">cloudflarer::cf_purge_cache()</a></code> that deliberately
+    <p>Thin wrapper over <code><a href="http://drmowinckels.io/cloudflarer/reference/cf_purge_cache.html" class="external-link">cloudflarer::cf_purge_cache()</a></code> that deliberately
 does not expose <code>purge_everything</code> — a maintainer who genuinely needs
 a full-zone wipe calls <code>cloudflarer::cf_purge_cache(purge_everything = TRUE)</code> directly. That extra step is intentional friction on the most
 dangerous call this integration can make.</p>
