@@ -52,3 +52,13 @@ jobs:
             dry_run = ${{ inputs.dry_run && 'TRUE' || 'FALSE' }},
             seed = ${{ inputs.seed && 'TRUE' || 'FALSE' }}
           )'
+
+  notify-failure:
+    needs: announce
+    if: failure()
+    uses: ./.github/workflows/reusable-slack-fail-notify.yml
+    with:
+      message: "😿 Jinx blog-feed run failed — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run logs>"
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_ORGANISER_TOKEN }}
+      SLACK_CHANNEL: ${{ secrets.SLACK_HEALTHCHECK_CHANNEL }}

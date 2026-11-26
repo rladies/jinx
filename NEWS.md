@@ -14,6 +14,33 @@
   worker whenever `JINX_WORKER_URL` and `JINX_WORKER_API_KEY` are both set,
   and falls back to a direct request otherwise, so local runs and tests
   need no worker.
+## A Cloudflare blip no longer reposts the blog channel
+
+- **Announced posts are recorded one at a time, as each one is sent.**
+  The seen-set used to be written once, after the whole batch: on 3
+  November a run posted to both blog channels and then could not reach
+  `api.cloudflare.com` to record it, which would have announced the same
+  post again ten minutes later. The window between "Slack has it" and
+  "KV knows" is now one post wide.
+
+- **An unreadable seen-set aborts the run instead of reading as
+  empty.** `kv_string_set_load()` treated every failure as "nothing
+  recorded yet", so a blip on the *read* would have reposted up to
+  `limit` posts the channel had already seen. A missing key still means
+  a first run; a 5xx, a bad token or a connection failure now stops the
+  run. The same applies to the channel spotlight's round-robin.
+
+- **Cloudflare KV reads and writes retry.** `cloudflarer` builds its
+  requests without `httr2::req_retry()` and its KV functions do not
+  expose the request, so jinx retries its own KV calls three times for a
+  transport failure, a 429 or a 5xx - never for a 404 or a 403, and
+  never for a failure raised before the request goes out. The lasting
+  fix belongs in `cloudflarer`, which would make this a deletion.
+
+- **A failed blog-feed run says so in Slack**, like the other
+  schedules. Going red instead of posting is only the safer failure if
+  somebody hears about it; a sustained Cloudflare outage will say so
+  once per ten-minute run.
 
 ## Blog announcements carry the post's own preview
 
