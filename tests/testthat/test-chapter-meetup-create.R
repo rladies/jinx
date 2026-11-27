@@ -172,6 +172,17 @@ describe("chapter_meetup_draft", {
     expect_match(calls$comment, "chapter-meetup-publish", fixed = TRUE)
   })
 
+  it("logs the token before storing it, so a failed write is recoverable", {
+    local_meetup()
+    local_mocked_bindings(
+      chapter_meetup_draft_store = function(...) stop("GitHub is down")
+    )
+    expect_error(
+      expect_message(chapter_meetup_draft(7), "tok123"),
+      "GitHub is down"
+    )
+  })
+
   it("refuses a taken urlname", {
     local_meetup(status = "taken")
     expect_error(chapter_meetup_draft(7), "already taken")
