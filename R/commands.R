@@ -47,6 +47,14 @@ cmd_parse <- function(body) {
     "chapter-email" = parse_chapter_email_command(parts),
     "chapter-meetup" = parse_chapter_meetup_command(parts),
     "chapter-meetup-logo" = parse_chapter_meetup_logo_command(parts),
+    "chapter-meetup-draft" = parse_chapter_issue_command(
+      parts,
+      "chapter-meetup-draft"
+    ),
+    "chapter-meetup-publish" = parse_chapter_issue_command(
+      parts,
+      "chapter-meetup-publish"
+    ),
     "slack-invite" = parse_slack_invite_command(parts),
     "blog-add" = parse_blog_add_command(parts),
     "blog-check-links" = list(action = "blog-check-links"),
@@ -129,6 +137,8 @@ cmd_issue_actions <- function() {
     "chapter-slack-sent",
     "chapter-email",
     "chapter-meetup",
+    "chapter-meetup-draft",
+    "chapter-meetup-publish",
     "chapter-provision"
   )
 }
@@ -744,6 +754,8 @@ normalize_command <- function(parts) {
     list(c("chapter", "status"), "chapter-status"),
     list(c("chapter", "email"), "chapter-email"),
     list(c("chapter", "meetup", "logo"), "chapter-meetup-logo"),
+    list(c("chapter", "meetup", "draft"), "chapter-meetup-draft"),
+    list(c("chapter", "meetup", "publish"), "chapter-meetup-publish"),
     list(c("chapter", "meetup"), "chapter-meetup"),
     list(c("add", "blog"), "blog-add"),
     list(c("check", "links"), "blog-check-links"),
