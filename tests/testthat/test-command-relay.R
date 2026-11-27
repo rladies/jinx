@@ -125,3 +125,21 @@ describe("cmd_relay_resolve", {
     expect_identical(relayed$actor, "real-member")
   })
 })
+
+describe("cmd_relay_split_repo()", {
+  it("accepts a repository in the org", {
+    expect_identical(cmd_relay_split_repo("rladies/jinx"), c("rladies", "jinx"))
+  })
+
+  it("refuses a repository outside the org", {
+    expect_error(
+      cmd_relay_split_repo("attacker/evil"),
+      "only relayed from"
+    )
+  })
+
+  it("refuses anything that is not owner/repo", {
+    expect_error(cmd_relay_split_repo("rladies"), "owner/repo")
+    expect_error(cmd_relay_split_repo(""), "owner/repo")
+  })
+})

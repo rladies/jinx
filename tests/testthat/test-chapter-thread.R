@@ -106,7 +106,7 @@ describe("chapter_thread_scan", {
         "meetup-team"
       )
     ))
-    found <- chapter_thread_scan(7)
+    found <- chapter_thread_scan(7, "Oslo")
     expect_identical(found$urlname, "rladies-oslo")
     expect_identical(found$email, "oslo@rladies.org")
     expect_identical(found$meetup_url, "https://www.meetup.com/rladies-oslo/")
@@ -115,15 +115,15 @@ describe("chapter_thread_scan", {
   it("ignores jinx's own proposed urlname", {
     local_thread(list(
       thread_comment(
-        "Proposed urlname: https://www.meetup.com/rladies-guess/",
+        "Proposed urlname: https://www.meetup.com/rladies-oslo-guess/",
         "jinx[bot]"
       ),
       thread_comment(
-        "Live at https://www.meetup.com/rladies-real/",
+        "Live at https://www.meetup.com/rladies-oslo/",
         "meetup-team"
       )
     ))
-    expect_identical(chapter_thread_scan(7)$urlname, "rladies-real")
+    expect_identical(chapter_thread_scan(7, "Oslo")$urlname, "rladies-oslo")
   })
 
   it("keeps the first human posting when a later comment quotes it", {
@@ -132,14 +132,73 @@ describe("chapter_thread_scan", {
         "Live at https://www.meetup.com/rladies-oslo/",
         "meetup-team"
       ),
-      thread_comment("Thanks! https://www.meetup.com/rladies-typo/", "someone")
+      thread_comment(
+        "Thanks! https://www.meetup.com/rladies-oslo-typo/",
+        "someone"
+      )
     ))
-    expect_identical(chapter_thread_scan(7)$urlname, "rladies-oslo")
+    expect_identical(chapter_thread_scan(7, "Oslo")$urlname, "rladies-oslo")
+  })
+
+  it("will not adopt another chapter's group posted as an example", {
+    local_thread(list(
+      thread_comment(
+        "See https://www.meetup.com/rladies-london/ for how it looks",
+        "mentor"
+      ),
+      thread_comment(
+        "Live at https://www.meetup.com/rladies-oslo/",
+        "meetup-team"
+      )
+    ))
+    found <- chapter_thread_scan(7, "Oslo")
+    expect_identical(found$urlname, "rladies-oslo")
+    expect_identical(found$other_urlnames, "rladies-london")
+  })
+
+  it("waits rather than guessing when only other chapters are mentioned", {
+    local_thread(list(
+      thread_comment(
+        "See https://www.meetup.com/rladies-london/ for an example",
+        "mentor"
+      )
+    ))
+    found <- chapter_thread_scan(7, "Oslo")
+    expect_null(found$urlname)
+    expect_identical(found$other_urlnames, "rladies-london")
+  })
+
+  it("accepts a urlname the Pro team gave a suffix", {
+    local_thread(list(
+      thread_comment(
+        "Live at https://www.meetup.com/rladies-oslo-norway/",
+        "meetup-team"
+      )
+    ))
+    expect_identical(
+      chapter_thread_scan(7, "Oslo")$urlname,
+      "rladies-oslo-norway"
+    )
+  })
+
+  it("will not report another address at the domain as the mailbox", {
+    local_thread(list(
+      thread_comment("Ask global@rladies.org to set it up", "organiser"),
+      thread_comment("Mailbox is oslo@rladies.org", "email-team")
+    ))
+    expect_identical(chapter_thread_scan(7, "Oslo")$email, "oslo@rladies.org")
+  })
+
+  it("has no mailbox when only other addresses are mentioned", {
+    local_thread(list(
+      thread_comment("Ask global@rladies.org to set it up", "organiser")
+    ))
+    expect_null(chapter_thread_scan(7, "Oslo")$email)
   })
 
   it("returns nothing when the thread carries neither fact yet", {
     local_thread(list(thread_comment("Working on it", "organiser")))
-    found <- chapter_thread_scan(7)
+    found <- chapter_thread_scan(7, "Oslo")
     expect_null(found$urlname)
     expect_null(found$email)
     expect_null(found$meetup_url)
@@ -147,6 +206,6 @@ describe("chapter_thread_scan", {
 
   it("survives an empty thread", {
     local_thread(list())
-    expect_null(chapter_thread_scan(7)$urlname)
+    expect_null(chapter_thread_scan(7, "Oslo")$urlname)
   })
 })

@@ -22,13 +22,34 @@ cmd_relay_associations <- function() {
 #' @noRd
 cmd_relay_max_age <- function() 600
 
-#' Split an `owner/repo` string
+#' The only organization a command may be relayed from
+#' @return Character scalar.
+#' @keywords internal
+#' @noRd
+cmd_relay_owner <- function() "rladies"
+
+#' Split an `owner/repo` string, and refuse one outside the org
+#'
+#' The owner comes from the dispatch payload, so it is the caller's to
+#' choose. Resolution outside the org already fails in practice - the
+#' App token is minted with `owner: rladies`, so the lookup 404s - but
+#' that protection lives in a workflow file, not here, and narrowing or
+#' widening the token's scope later would reopen this silently.
+#'
+#' @param repo Candidate `owner/repo` reference.
+#' @return The owner and repository name.
 #' @keywords internal
 #' @noRd
 cmd_relay_split_repo <- function(repo) {
   parts <- strsplit(repo %or% "", "/", fixed = TRUE)[[1]]
   if (length(parts) != 2 || !all(nzchar(parts))) {
     cli::cli_abort("{.val {repo}} is not an {.code owner/repo} reference.")
+  }
+  if (!identical(tolower(parts[1]), cmd_relay_owner())) {
+    cli::cli_abort(
+      "Commands are only relayed from {.val {cmd_relay_owner()}}, not
+       {.val {parts[1]}}."
+    )
   }
   parts
 }

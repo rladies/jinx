@@ -6,6 +6,7 @@
 \usage{
 chapter_thread_scan(
   issue_number,
+  city,
   org = "rladies",
   onboarding_repo = "new-chapters-onboarding"
 )
@@ -13,13 +14,17 @@ chapter_thread_scan(
 \arguments{
 \item{issue_number}{Onboarding issue number.}
 
+\item{city}{Chapter city, used to recognise this chapter's own
+Meetup group and mailbox among any others mentioned.}
+
 \item{org}{GitHub organization. Defaults to \code{"rladies"}.}
 
 \item{onboarding_repo}{Repository holding onboarding issues.}
 }
 \value{
 A list with \code{urlname}, \code{email} and \code{meetup_url}, each \code{NULL}
-when the thread does not carry it yet.
+when the thread does not carry it yet, and \code{other_urlnames}, the
+groups mentioned that belong to other chapters.
 }
 \description{
 The onboarding checklist asks the email and Meetup Pro teams to post
@@ -30,5 +35,7 @@ rather than asked for again.
 \details{
 Only human comments count, and the first posting of a fact wins: a
 later comment quoting the URL back cannot displace the team that
-announced it.
+announced it. Both facts must also belong to this chapter - the
+thread is a conversation, and other chapters' groups and addresses
+get mentioned in it.
 }
