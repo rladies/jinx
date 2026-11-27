@@ -2,7 +2,10 @@ name: CI · Good Practice
 
 on:
   pull_request:
-    branches: [main]
+    # No base-branch filter on purpose: a stacked PR targets the branch
+    # below it in the stack, and `branches: [main]` meant every one of
+    # those went unchecked until it was retargeted. The paths filter is
+    # what keeps this from running on unrelated changes.
     paths:
       - "R/**"
       - "tests/**"
