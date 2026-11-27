@@ -90,6 +90,8 @@ reference:
       - chapter_create
       - chapter_create_setup
       - chapter_create_update
+      - chapter_provision
+      - chapter_thread_scan
       - chapter_create_pr
       - chapter_repo_audit
       - chapter_repo_audit_report

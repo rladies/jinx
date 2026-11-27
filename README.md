@@ -22,6 +22,41 @@ and start with `reusable-`:
 | `reusable-pr-review.yml`              | Calls `jinx::review_run()` to label and assign reviewers based on the rules bundled in jinx.                            |
 | `reusable-chapter-validate.yml`         | Validates the `data/chapters/*.json` files a PR touches (schema, filename, `urlname`); errors fail, warnings report.    |
 | `reusable-copilot-review.yml`         | Requests a GitHub Copilot review, guided by the grimoire review gates jinx synced into the repo's Copilot instructions. |
+| `reusable-commands.yml`               | Lets organisers run `/jinx ...` as an issue or PR comment in the calling repo. Relays to jinx; needs no secrets of its own.  |
+
+### Running commands from another repository
+
+`reusable-commands.yml` is the one reusable that needs no `packages: read`
+and pulls no container: it mints an App token, reacts to the comment, and
+relays the comment's location to `rladies/jinx`, which runs the command
+with its own credentials and replies on the issue the command was typed
+on.
+
+That split is deliberate. Every secret a command needs - Airtable, Slack,
+Cloudflare, Meetup - is configured on `rladies/jinx` alone. Only
+`JINX_APP_ID` and `JINX_PRIVATE_KEY` are org-level, so a repository that
+adopts commands can relay to jinx without being able to read anything
+jinx uses.
+
+```yaml
+name: Jinx Commands
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  jinx:
+    uses: rladies/jinx/.github/workflows/reusable-commands.yml@main
+    secrets: inherit
+```
+
+Commands are still authorised the same way wherever they are typed:
+anything privileged needs the commenter in the global team directory, and
+the comment itself has to come from a repository member or better.
 
 ### Caller requirements
 

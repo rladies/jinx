@@ -17,6 +17,8 @@
 | `/jinx chapter-status <city|issue>`                  | Show onboarding checklist progress                                                         |
 | `/jinx chapter-team-audit`                           | Compare chapter GitHub teams against the website data                                      |
 | `/jinx chapter-repo <urlname> <city> <country>`      | Create a chapter's presentations repo (opt-in)                                             |
+| `/jinx chapter-team <urlname> <city> <country>`      | Create a chapter's GitHub team under `chapters`                                            |
+| `/jinx chapter-provision <issue> [repo]`             | Set up everything jinx can for a chapter: website entry, team, Meetup photo, `repo` to add the presentations repo |
 | `/jinx chapter-slack <issue>`                        | Prompt for the Organisers Slack invite                                                     |
 | `/jinx chapter-slack-sent <issue>`                   | Record that the Organisers Slack invite was sent                                           |
 | `/jinx chapter-email <issue>`                        | Create the chapter mailbox (needs an approval comment)                                      |
