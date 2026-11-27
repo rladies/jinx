@@ -50,4 +50,4 @@ Roxygen: list(markdown = TRUE)
 Config/Needs/website: rladies/cloak, rprojroot
 Remotes:
     drmowinckels/cloudflarer
-Config/roxygen2/version: 8.1.0
+Config/roxygen2/version: 8.1.1
