@@ -97,10 +97,12 @@ describe("rag_private_repo_ids", {
     expect_true(beyond %in% ids)
   })
 
-  it("still covers the metadata chunk when there is no README", {
+  it("covers a deleted README's chunks, which are still in the index", {
     local_mocked_bindings(gh_fetch_readme = function(...) NULL)
     ids <- rag_private_repo_ids(purge_repo(), "token")
-    expect_identical(ids, rag_chunk_id("rladies/secret-plans", "_meta", 0L))
+    expect_true(rag_chunk_id("rladies/secret-plans", "_meta", 0L) %in% ids)
+    expect_true(rag_chunk_id("rladies/secret-plans", "README.md", 0L) %in% ids)
+    expect_true(rag_chunk_id("rladies/secret-plans", "README.md", 10L) %in% ids)
   })
 
   it("returns each id once", {
@@ -139,13 +141,17 @@ describe("rag_purge_private", {
       purge_repo("rladies/also-secret")
     ))
     expect_message(n <- rag_purge_private("rladies", "acct", "tok", "idx"))
-    expect_identical(n, 2L)
-    expect_setequal(
-      calls$deleted,
-      c(
-        rag_chunk_id("rladies/secret-plans", "_meta", 0L),
-        rag_chunk_id("rladies/also-secret", "_meta", 0L)
-      )
+    # Each repo contributes its _meta chunk plus the README margin, which
+    # is deleted whether or not the repo still has a README.
+    expect_identical(n, 2L * (1L + rag_purge_margin()))
+    expect_true(
+      rag_chunk_id("rladies/secret-plans", "_meta", 0L) %in% calls$deleted
+    )
+    expect_true(
+      rag_chunk_id("rladies/also-secret", "_meta", 0L) %in% calls$deleted
+    )
+    expect_true(
+      rag_chunk_id("rladies/also-secret", "README.md", 0L) %in% calls$deleted
     )
   })
 
@@ -157,8 +163,9 @@ describe("rag_purge_private", {
   })
 
   it("batches large deletes", {
+    repos <- 20L
     many <- lapply(
-      seq_len(1200),
+      seq_len(repos),
       function(i) purge_repo(paste0("rladies/secret-", i))
     )
     calls <- local_purge(many)
@@ -169,10 +176,14 @@ describe("rag_purge_private", {
       "i",
       batch_size = 500L
     ))
-    expect_identical(calls$batches, 3L)
+    per_repo <- 1L + rag_purge_margin()
+    expect_identical(
+      calls$batches,
+      as.integer(ceiling(repos * per_repo / 500))
+    )
   })
 
-  it("carries on when one repo's ids cannot be computed", {
+  it("purges what it can, then fails on the repo it could not", {
     calls <- local_purge(list(
       purge_repo("rladies/secret-plans"),
       purge_repo("rladies/broken")
@@ -185,16 +196,20 @@ describe("rag_purge_private", {
         NULL
       }
     )
-    expect_message(n <- rag_purge_private("rladies", "a", "t", "i"))
-    expect_identical(n, 1L)
+    suppressMessages(
+      expect_error(
+        rag_purge_private("rladies", "a", "t", "i"),
+        "rladies/broken"
+      )
+    )
+    expect_true(calls$batches >= 1L)
   })
 
-  it("does nothing without a GitHub token", {
+  it("fails rather than skipping the purge without a GitHub token", {
     withr::local_envvar(GITHUB_TOKEN = "")
-    expect_message(
-      n <- rag_purge_private("rladies", "a", "t", "i"),
-      "skipping private purge"
+    expect_error(
+      rag_purge_private("rladies", "a", "t", "i"),
+      "GITHUB_TOKEN is not set"
     )
-    expect_identical(n, 0L)
   })
 })

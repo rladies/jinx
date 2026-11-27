@@ -62,10 +62,17 @@
 
 - **It runs on every build**, not once. It is idempotent, deleting an id
   the index does not hold is not an error, and a repository that goes
-  private later then gets cleaned up without anyone having to notice.  It
-  also deletes a margin past each README's current chunk count, since a
-  README that has been shortened since it was indexed leaves vectors
-  behind at indices it no longer produces.
+  private later then gets cleaned up without anyone having to notice.
+  The README range is deleted from zero to a margin past the current
+  chunk count, because a README that has been shortened - or deleted -
+  since it was indexed leaves vectors behind at indices it no longer
+  produces.
+
+- **The purge fails the build rather than skipping quietly.** A missing
+  `GITHUB_TOKEN` used to warn and do nothing, and a repository whose ids
+  could not be computed was skipped with a warning; both left a green
+  run in which private text may still be in the index. Both now stop the
+  run, after the deletes that did succeed.
 
 - A repository's metadata chunk no longer states its visibility. The
   field only ever had one interesting value, and that value cannot

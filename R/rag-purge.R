@@ -2,9 +2,10 @@
 #'
 #' The ids a repository's chunks got are recomputed from the repository
 #' as it is now, but it was indexed as it was then. A README that has
-#' since been shortened leaves vectors behind at the indices it no
-#' longer produces, so a margin is deleted past the end. Deleting an id
-#' the index does not hold is not an error.
+#' since been shortened - or deleted outright - leaves vectors behind at
+#' indices it no longer produces, so the whole range from zero to a
+#' margin past the current end is deleted. Deleting an id the index does
+#' not hold is not an error.
 #' @keywords internal
 #' @noRd
 rag_purge_margin <- function() 50L
@@ -28,21 +29,19 @@ rag_private_repo_ids <- function(repo, token) {
     character(1)
   )
 
+  # From zero, not from the current chunk count: a repo whose README was
+  # deleted produces no README chunks now, and starting the range at the
+  # end would leave every chunk it had when indexed in place.
   readme <- Filter(function(chunk) identical(chunk$path, "README.md"), chunks)
-  if (length(readme)) {
-    extra <- seq(
-      length(readme),
-      length(readme) + rag_purge_margin() - 1L
+  extra <- seq(0L, length(readme) + rag_purge_margin() - 1L)
+  ids <- c(
+    ids,
+    vapply(
+      extra,
+      function(i) rag_chunk_id(repo$full_name, "README.md", i),
+      character(1)
     )
-    ids <- c(
-      ids,
-      vapply(
-        extra,
-        function(i) rag_chunk_id(repo$full_name, "README.md", i),
-        character(1)
-      )
-    )
-  }
+  )
 
   unique(ids)
 }
@@ -76,8 +75,13 @@ rag_purge_private <- function(
 ) {
   token <- Sys.getenv("GITHUB_TOKEN", unset = "")
   if (!nzchar(token)) {
-    cli::cli_alert_warning("GITHUB_TOKEN not set - skipping private purge")
-    return(invisible(0L))
+    cli::cli_abort(
+      paste0(
+        "GITHUB_TOKEN is not set, so private repositories cannot be ",
+        "identified and their chunks would stay in {.field {index_name}}. ",
+        "Set it, or pass {.code purge_private = FALSE} to accept that."
+      )
+    )
   }
 
   repos <- gh::gh(
@@ -92,6 +96,7 @@ rag_purge_private <- function(
     return(invisible(0L))
   }
 
+  skipped <- character()
   ids <- unique(unlist(
     lapply(private, function(repo) {
       tryCatch(
@@ -101,15 +106,14 @@ rag_purge_private <- function(
             "Could not compute ids for {repo$full_name}: ",
             "{conditionMessage(cnd)}"
           )
+          skipped <<- c(skipped, repo$full_name)
           character(0)
         }
       )
     })
   ))
-  if (!length(ids)) {
-    return(invisible(0L))
-  }
 
+  ids <- ids %||% character()
   batches <- split(ids, ceiling(seq_along(ids) / batch_size))
   for (batch in batches) {
     cloudflare_vectorize_delete_by_ids(
@@ -123,5 +127,35 @@ rag_purge_private <- function(
   cli::cli_alert_success(
     "Purged {length(ids)} id{?s} for {length(private)} private repo{?s}"
   )
+
+  # After the deletes that did work, so a repo we could reach is still
+  # cleaned - but the run goes red, because a skipped repo means private
+  # text may still be in the index and a green run would hide that.
+  rag_purge_report_skipped(skipped, index_name)
+
   invisible(length(ids))
+}
+
+#' Fail the run when a private repo could not be purged
+#'
+#' A repository whose ids could not be computed may still have chunks in
+#' the index. Warning alone would leave the build green, which is how
+#' the exposure went unnoticed in the first place.
+#'
+#' @param skipped Full names of repositories that were skipped.
+#' @param index_name Vectorize index name, for the message.
+#' @return Invisibly `NULL`, or an error when anything was skipped.
+#' @keywords internal
+#' @noRd
+rag_purge_report_skipped <- function(skipped, index_name) {
+  if (!length(skipped)) {
+    return(invisible(NULL))
+  }
+  cli::cli_abort(
+    paste0(
+      "Could not purge {length(skipped)} private repositor{?y/ies} from ",
+      "{.field {index_name}}: {.val {skipped}}. Their chunks may still be ",
+      "in the index."
+    )
+  )
 }
