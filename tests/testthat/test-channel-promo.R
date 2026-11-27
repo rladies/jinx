@@ -437,11 +437,18 @@ describe("promo_recent_load", {
     )
   })
 
-  it("returns an empty vector when the key is missing or unreadable", {
+  it("returns an empty vector when the key is missing", {
     local_mocked_bindings(
-      cf_ops_get_kv_value = function(...) cli::cli_abort("404 not found")
+      cf_ops_get_kv_value = function(...) cf_error(404L)
     )
     expect_identical(promo_recent_load("T", "ns", "a", "t"), character())
+  })
+
+  it("aborts when the key cannot be read, so no channel repeats", {
+    local_mocked_bindings(
+      cf_ops_get_kv_value = function(...) cli::cli_abort("Couldn't connect")
+    )
+    expect_error(promo_recent_load("T", "ns", "a", "t"), "Couldn't connect")
   })
 
   it("returns an empty vector for an empty stored value", {

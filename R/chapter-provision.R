@@ -98,7 +98,7 @@ chapter_provision <- function(
     ))
   }
 
-  found <- chapter_thread_scan(issue_number, org, onboarding_repo)
+  found <- chapter_thread_scan(issue_number, meta$city, org, onboarding_repo)
   state <- chapter_onboard_state(issue_number, org, onboarding_repo)
   steps <- list()
 
@@ -118,12 +118,10 @@ chapter_provision <- function(
     })
   }
 
+  waiting <- chapter_provision_waiting(found)
+
   steps[[2]] <- if (is.null(found$urlname)) {
-    provision_step(
-      "GitHub team",
-      "waiting",
-      "no Meetup group on this issue yet"
-    )
+    provision_step("GitHub team", "waiting", waiting)
   } else {
     provision_try("GitHub team", function() {
       slug <- chapter_team_create(
@@ -144,11 +142,7 @@ chapter_provision <- function(
       "opt-in; ask for it with `repo`"
     )
   } else if (is.null(found$urlname)) {
-    provision_step(
-      "Presentations repo",
-      "waiting",
-      "no Meetup group on this issue yet"
-    )
+    provision_step("Presentations repo", "waiting", waiting)
   } else {
     provision_try("Presentations repo", function() {
       repo <- chapter_repo_create(
@@ -163,11 +157,7 @@ chapter_provision <- function(
   }
 
   steps[[4]] <- if (is.null(found$urlname)) {
-    provision_step(
-      "Meetup photo",
-      "waiting",
-      "no Meetup group on this issue yet"
-    )
+    provision_step("Meetup photo", "waiting", waiting)
   } else {
     provision_try("Meetup photo", function() {
       chapter_meetup_logo_upload(found$urlname)
@@ -185,6 +175,32 @@ chapter_provision <- function(
   )
 
   invisible(report)
+}
+
+#' Why the steps that need a Meetup group are waiting
+#'
+#' A thread that mentions only other chapters' groups looks identical
+#' to an empty one in the report, which sends the onboarding team
+#' looking for a comment that is already there. Say which it is.
+#'
+#' @param found Facts from [chapter_thread_scan()].
+#' @return The detail string for a waiting step.
+#' @keywords internal
+#' @noRd
+chapter_provision_waiting <- function(found) {
+  others <- found$other_urlnames %||% character()
+  if (!length(others)) {
+    return("no Meetup group on this issue yet")
+  }
+  # Plain text, not cli: this string goes into a GitHub comment, and
+  # cli::format_inline() would carry ANSI colour codes into it.
+  groups <- paste0("`", others, "`", collapse = ", ")
+  whose <- if (length(others) == 1L) {
+    " belongs to another chapter"
+  } else {
+    " belong to other chapters"
+  }
+  paste0("no Meetup group for this chapter yet - ", groups, whose)
 }
 
 #' Render a provisioning run as a comment
