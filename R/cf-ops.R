@@ -107,6 +107,108 @@ cf_ops_list_kv_keys <- function(
   )
 }
 
+#' Retry a Cloudflare call that failed for a transient reason
+#'
+#' `cloudflarer` builds its requests without `httr2::req_retry()`, and
+#' its KV functions expose neither the request nor a `...`, so jinx
+#' cannot reach in and add one the way the Airtable and Slack calls do.
+#' A DNS blip or a 503 therefore reaches the caller as a hard error.
+#' For the KV reads and writes that carry a schedule's "what have I
+#' already done" state that is worse than it sounds: the blog feed once
+#' posted to Slack and then died saving its seen-set, which would have
+#' announced the same post again on the next poll. The lasting fix is
+#' `req_retry()` in `cloudflarer` itself, which would make this a
+#' deletion; the KV wrappers retry in the meantime, and nothing else
+#' does.
+#'
+#' Only retries what retrying can fix - a transport failure, a 429, or a
+#' 5xx. A 404 (missing key) or a 403 (wrong token) is returned to the
+#' caller on the first attempt, as is anything raised before the request
+#' leaves (`cloudflarer`'s own argument checks, a missing account id).
+#'
+#' The 429 matters more than it looks: Workers KV allows one write per
+#' second to the same key, so a caller writing one key repeatedly - see
+#' [blog_feed_post()] - earns 429s in normal operation, and the backoff
+#' doubles as its throttle. `Retry-After` is ignored; a flat second is
+#' enough for a one-per-second limit.
+#'
+#' @param call Zero-argument function performing the Cloudflare call.
+#' @param tries Most attempts to make.
+#' @return Whatever `call` returns.
+#' @keywords internal
+#' @noRd
+cf_ops_retry <- function(call, tries = 3L) {
+  attempt <- 0L
+  repeat {
+    attempt <- attempt + 1L
+    result <- tryCatch(call(), error = function(e) e)
+    if (!inherits(result, "error")) {
+      return(result)
+    }
+    if (attempt >= tries || !cf_ops_transient(result)) {
+      stop(result)
+    }
+    cf_ops_backoff(attempt)
+  }
+}
+
+#' Wait between Cloudflare retries
+#'
+#' Its own function, rather than an anonymous one inlined in
+#' [cf_ops_retry()], so a test can replace it and assert the retry
+#' without waiting for it.
+#'
+#' @param attempt Attempt number that just failed.
+#' @return Nothing, called for the wait.
+#' @keywords internal
+#' @noRd
+cf_ops_backoff <- function(attempt) {
+  Sys.sleep(attempt)
+}
+
+#' The HTTP status a failed Cloudflare call carries, if any
+#'
+#' `cloudflarer` attaches the status to its `cloudflarer_error` as
+#' `status_code`. A transport failure is an `httr2_failure` and carries
+#' none, as does anything raised before the request went out.
+#'
+#' @param cnd Condition raised by the call.
+#' @return The status, or `NULL` when there is no usable one.
+#' @keywords internal
+#' @noRd
+cf_ops_status <- function(cnd) {
+  status <- cnd$status_code
+  if (length(status) == 1L && !is.na(status)) {
+    status
+  } else {
+    NULL
+  }
+}
+
+#' Is a failed Cloudflare call worth trying again?
+#'
+#' @param cnd Condition raised by the call.
+#' @return `TRUE` when the failure is transport-level, a 429, or a 5xx.
+#' @keywords internal
+#' @noRd
+cf_ops_transient <- function(cnd) {
+  status <- cf_ops_status(cnd)
+  if (is.null(status)) {
+    return(inherits(cnd, "httr2_failure"))
+  }
+  status >= 500L || status == 429L
+}
+
+#' Did a failed Cloudflare call just mean "no such key"?
+#'
+#' @param cnd Condition raised by the call.
+#' @return `TRUE` for a 404.
+#' @keywords internal
+#' @noRd
+cf_ops_missing_key <- function(cnd) {
+  isTRUE(cf_ops_status(cnd) == 404L)
+}
+
 #' Read a single value from a Cloudflare KV namespace
 #'
 #' Read-only, for interactive/console use during an incident — see
@@ -122,13 +224,15 @@ cf_ops_get_kv_value <- function(
   key_name,
   token = cf_ops_token()
 ) {
-  cloudflarer::cf_get_kv_value(
-    account_id = account_id,
-    namespace_id = namespace_id,
-    key_name = key_name,
-    as = "text",
-    token = token
-  )
+  cf_ops_retry(function() {
+    cloudflarer::cf_get_kv_value(
+      account_id = account_id,
+      namespace_id = namespace_id,
+      key_name = key_name,
+      as = "text",
+      token = token
+    )
+  })
 }
 
 #' Write a single value to a Cloudflare KV namespace
@@ -155,14 +259,16 @@ cf_ops_kv_put <- function(
   ttl_seconds = NULL,
   token = cf_ops_token()
 ) {
-  invisible(cloudflarer::cf_put_kv_value(
-    account_id = account_id,
-    namespace_id = namespace_id,
-    key_name = key_name,
-    value = value,
-    expiration_ttl = ttl_seconds,
-    token = token
-  ))
+  invisible(cf_ops_retry(function() {
+    cloudflarer::cf_put_kv_value(
+      account_id = account_id,
+      namespace_id = namespace_id,
+      key_name = key_name,
+      value = value,
+      expiration_ttl = ttl_seconds,
+      token = token
+    )
+  }))
 }
 
 #' Delete a single value from a Cloudflare KV namespace
@@ -228,15 +334,20 @@ cf_ops_purge_cache <- function(
 #'
 #' Several schedules keep "what have I already done" as a list of ids
 #' under one key - the channel spotlight's round-robin, the blog feed's
-#' announced posts. Every failure degrades to "nothing recorded yet"
-#' rather than erroring: a missing key is the first run, and a run that
-#' cannot read its state should re-announce at worst, not abort.
+#' announced posts. An absent key is the first run and reads as nothing
+#' recorded, as does a value that is empty or isn't JSON.
+#'
+#' A read that fails for any other reason aborts instead. "Nothing
+#' recorded" and "I could not find out" look identical to the caller but
+#' are not: the blog feed answers the first by announcing everything
+#' recent, which on a Cloudflare blip would repost up to `limit` posts
+#' the channel has already seen.
 #'
 #' @param key_name KV key holding a JSON array of strings.
 #' @param namespace_id KV namespace ID.
 #' @param account_id Cloudflare account ID.
 #' @param api_token Cloudflare API token.
-#' @return Character vector, empty when the key is unset or unreadable.
+#' @return Character vector.
 #' @keywords internal
 #' @noRd
 kv_string_set_load <- function(
@@ -252,7 +363,12 @@ kv_string_set_load <- function(
       key_name = key_name,
       token = api_token
     ),
-    error = function(e) NA_character_
+    cloudflarer_error = function(e) {
+      if (!cf_ops_missing_key(e)) {
+        stop(e)
+      }
+      NA_character_
+    }
   )
   if (length(raw) != 1L || is.na(raw) || !nzchar(raw)) {
     return(character())

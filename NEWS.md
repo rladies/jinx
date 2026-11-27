@@ -1,5 +1,47 @@
 # jinx (development version)
 
+## Blog feeds are fetched through the worker
+
+- **Feeds behind Cloudflare bot protection are announced again.** Several
+  blogs in the curated list sit behind Cloudflare with Bot Fight Mode on,
+  which managed-challenges the Azure ranges GitHub Actions runs on: those
+  feeds answered every scheduled poll with a 403 while the run itself
+  stayed green, so their posts went unannounced. `blog_feed_fetch()` and
+  `blog_feed_og()` now fetch through the worker's new `POST /content/fetch`
+  route, whose egress is scored differently.
+
+- **No new configuration.** `rag_request_proxied()` routes through the
+  worker whenever `JINX_WORKER_URL` and `JINX_WORKER_API_KEY` are both set,
+  and falls back to a direct request otherwise, so local runs and tests
+  need no worker.
+## A Cloudflare blip no longer reposts the blog channel
+
+- **Announced posts are recorded one at a time, as each one is sent.**
+  The seen-set used to be written once, after the whole batch: on 3
+  November a run posted to both blog channels and then could not reach
+  `api.cloudflare.com` to record it, which would have announced the same
+  post again ten minutes later. The window between "Slack has it" and
+  "KV knows" is now one post wide.
+
+- **An unreadable seen-set aborts the run instead of reading as
+  empty.** `kv_string_set_load()` treated every failure as "nothing
+  recorded yet", so a blip on the *read* would have reposted up to
+  `limit` posts the channel had already seen. A missing key still means
+  a first run; a 5xx, a bad token or a connection failure now stops the
+  run. The same applies to the channel spotlight's round-robin.
+
+- **Cloudflare KV reads and writes retry.** `cloudflarer` builds its
+  requests without `httr2::req_retry()` and its KV functions do not
+  expose the request, so jinx retries its own KV calls three times for a
+  transport failure, a 429 or a 5xx - never for a 404 or a 403, and
+  never for a failure raised before the request goes out. The lasting
+  fix belongs in `cloudflarer`, which would make this a deletion.
+
+- **A failed blog-feed run says so in Slack**, like the other
+  schedules. Going red instead of posting is only the safer failure if
+  somebody hears about it; a sustained Cloudflare outage will say so
+  once per ten-minute run.
+
 ## An issue command knows which issue it is on
 
 - **`/jinx chapter-provision`, `chapter-email`, `chapter-meetup`,
@@ -54,6 +96,17 @@
   brief *proposes* a urlname, and reading that back would have it
   confirm its own guess as fact - and the first human posting of a fact
   wins over a later comment quoting it.
+
+- **Both facts have to belong to the chapter being provisioned.** A
+  thread is a conversation: another chapter's group gets linked as an
+  example and another `@rladies.org` address gets named in passing. A
+  group counts only if its urlname begins with the one the chapter's
+  city gives it, matched on the prefix so a group the Pro team
+  suffixed by hand still counts, and the mailbox only if it is the
+  city's own. Anything else is reported as belonging elsewhere and the
+  steps that need a group keep waiting - a wrong guess would have named
+  the team and the repository after another chapter and uploaded this
+  chapter's logo over that group's photo.
 
 - **`/jinx chapter-team <urlname> <city> <country>`** creates a
   chapter's GitHub team under `chapters`. `chapter_team_create()` had

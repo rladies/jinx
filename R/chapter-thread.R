@@ -68,6 +68,30 @@ chapter_thread_is_human <- function(entry) {
   nzchar(login) && !is_bot(login)
 }
 
+#' Meetup urlnames in the thread that are not this chapter's
+#'
+#' A urlname has to begin with the chapter's own derived one. Threads
+#' carry links to other chapters' groups - a mentor posting one as an
+#' example is the ordinary case - and adopting one of those would name
+#' the GitHub team and the presentations repository after the wrong
+#' chapter and upload this chapter's logo over that group's photo.
+#'
+#' Matched on the prefix rather than exactly, because a group the
+#' Meetup Pro team made by hand may carry a suffix
+#' (`rladies-oslo-norway`). A wrong guess is reported as waiting, which
+#' costs a comment; a wrong match writes to another chapter's group.
+#'
+#' @param urlnames Urlnames found in the thread.
+#' @param city Chapter city.
+#' @return A list with `mine` and `theirs`, both character vectors.
+#' @keywords internal
+#' @noRd
+chapter_thread_partition <- function(urlnames, city) {
+  expected <- tolower(chapter_meetup_urlname(city))
+  mine <- startsWith(tolower(urlnames), expected)
+  list(mine = urlnames[mine], theirs = urlnames[!mine])
+}
+
 #' Read an onboarding thread for the facts later steps need
 #'
 #' The onboarding checklist asks the email and Meetup Pro teams to post
@@ -77,16 +101,22 @@ chapter_thread_is_human <- function(entry) {
 #'
 #' Only human comments count, and the first posting of a fact wins: a
 #' later comment quoting the URL back cannot displace the team that
-#' announced it.
+#' announced it. Both facts must also belong to this chapter - the
+#' thread is a conversation, and other chapters' groups and addresses
+#' get mentioned in it.
 #'
 #' @param issue_number Onboarding issue number.
+#' @param city Chapter city, used to recognise this chapter's own
+#'   Meetup group and mailbox among any others mentioned.
 #' @param org GitHub organization. Defaults to `"rladies"`.
 #' @param onboarding_repo Repository holding onboarding issues.
 #' @return A list with `urlname`, `email` and `meetup_url`, each `NULL`
-#'   when the thread does not carry it yet.
+#'   when the thread does not carry it yet, and `other_urlnames`, the
+#'   groups mentioned that belong to other chapters.
 #' @export
 chapter_thread_scan <- function(
   issue_number,
+  city,
   org = "rladies",
   onboarding_repo = "new-chapters-onboarding"
 ) {
@@ -104,15 +134,32 @@ chapter_thread_scan <- function(
     character(1)
   )
 
-  urlnames <- unlist(lapply(bodies, chapter_thread_urlnames))
-  emails <- unlist(lapply(bodies, chapter_thread_emails))
+  urlnames <- unlist(lapply(bodies, chapter_thread_urlnames)) %||% character()
+  emails <- unlist(lapply(bodies, chapter_thread_emails)) %||% character()
 
-  urlname <- if (length(urlnames)) urlnames[[1]] else NULL
+  groups <- chapter_thread_partition(urlnames, city)
+  # The mailbox is <city>@rladies.org, so an address for the onboarding
+  # team or another chapter - both of which get mentioned in a thread -
+  # is not this chapter's and must not be reported as it.
+  mine <- emails[emails == tolower(chapter_mailbox_address(city))]
+
+  urlname <- if (length(groups$mine)) groups$mine[[1]] else NULL
   list(
     urlname = urlname,
-    email = if (length(emails)) emails[[1]] else NULL,
+    email = if (length(mine)) mine[[1]] else NULL,
     meetup_url = if (!is.null(urlname)) {
       paste0("https://www.meetup.com/", urlname, "/")
-    }
+    },
+    other_urlnames = groups$theirs
   )
+}
+
+#' The mailbox address a chapter's city gives it
+#'
+#' @param city Chapter city.
+#' @return The address as a character scalar.
+#' @keywords internal
+#' @noRd
+chapter_mailbox_address <- function(city) {
+  paste0(chapter_slug(city), "@rladies.org")
 }

@@ -23,6 +23,7 @@ import {
   JOIN_HOST,
 } from "./invite-gateway.js";
 import { workspace_mailbox_handle } from "./workspace.js";
+import { fetch_proxy_handle } from "./fetch-proxy.js";
 
 const SLACK_ROUTES = {
   "/slack/command": slack_command_handle,
@@ -37,6 +38,7 @@ const API_ROUTES = {
   "/ai/generate": ai_generate_handle,
   "/links/shorten": links_shorten_handle,
   "/workspace/mailbox": workspace_mailbox_handle,
+  "/content/fetch": fetch_proxy_handle,
 };
 
 export default {
