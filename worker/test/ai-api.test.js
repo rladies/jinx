@@ -12,7 +12,10 @@ function generateRequest(body) {
 
 describe("ai_generate_handle", () => {
   it("returns 400 on invalid JSON", async () => {
-    const res = await ai_generate_handle(generateRequest("not json"), makeEnv());
+    const res = await ai_generate_handle(
+      generateRequest("not json"),
+      makeEnv(),
+    );
     expect(res.status).toBe(400);
   });
 
@@ -22,47 +25,83 @@ describe("ai_generate_handle", () => {
         model: "@cf/some/unapproved-model",
         messages: [{ role: "user", content: "hi" }],
       }),
-      makeEnv()
+      makeEnv(),
     );
     expect(res.status).toBe(400);
   });
 
   it("returns 400 when messages is missing or empty", async () => {
     const missing = await ai_generate_handle(
-      generateRequest({ model: "@cf/meta/llama-3.3-70b-instruct" }),
-      makeEnv()
+      generateRequest({ model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast" }),
+      makeEnv(),
     );
     expect(missing.status).toBe(400);
 
     const empty = await ai_generate_handle(
-      generateRequest({ model: "@cf/meta/llama-3.3-70b-instruct", messages: [] }),
-      makeEnv()
+      generateRequest({
+        model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+        messages: [],
+      }),
+      makeEnv(),
     );
     expect(empty.status).toBe(400);
   });
 
   it("calls the AI binding and returns its result on a happy path", async () => {
     const run = vi.fn(async (model, input) => {
-      expect(model).toBe("@cf/meta/llama-3.3-70b-instruct");
+      expect(model).toBe("@cf/meta/llama-3.3-70b-instruct-fp8-fast");
       expect(input.messages).toEqual([{ role: "user", content: "hi" }]);
-      expect(input.response_format).toEqual({ type: "json_schema", json_schema: { type: "object" } });
+      expect(input.response_format).toEqual({
+        type: "json_schema",
+        json_schema: { type: "object" },
+      });
       return { response: '{"answer":"hello"}' };
     });
     const env = { ...makeEnv(), AI: { run } };
 
     const res = await ai_generate_handle(
       generateRequest({
-        model: "@cf/meta/llama-3.3-70b-instruct",
+        model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
         messages: [{ role: "user", content: "hi" }],
-        response_format: { type: "json_schema", json_schema: { type: "object" } },
+        response_format: {
+          type: "json_schema",
+          json_schema: { type: "object" },
+        },
       }),
-      env
+      env,
     );
 
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.result.response).toBe('{"answer":"hello"}');
     expect(run).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to the default model when the caller omits one", async () => {
+    const run = vi.fn(async () => ({ response: "ok" }));
+    const env = { ...makeEnv(), AI: { run } };
+
+    const res = await ai_generate_handle(
+      generateRequest({ messages: [{ role: "user", content: "hi" }] }),
+      env,
+    );
+
+    expect(res.status).toBe(200);
+    expect(run.mock.calls[0][0]).toBe(
+      "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    );
+  });
+
+  it("names the allowed models when rejecting one", async () => {
+    const res = await ai_generate_handle(
+      generateRequest({
+        model: "@cf/some/unapproved-model",
+        messages: [{ role: "user", content: "hi" }],
+      }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(400);
+    expect(await res.text()).toMatch(/llama-3\.3-70b-instruct-fp8-fast/);
   });
 
   it("returns 502 when the AI binding throws", async () => {
@@ -77,10 +116,10 @@ describe("ai_generate_handle", () => {
 
     const res = await ai_generate_handle(
       generateRequest({
-        model: "@cf/meta/llama-3.3-70b-instruct",
+        model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
         messages: [{ role: "user", content: "hi" }],
       }),
-      env
+      env,
     );
 
     expect(res.status).toBe(502);
