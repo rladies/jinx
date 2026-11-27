@@ -151,7 +151,7 @@ describe("worker fetch routing", () => {
         method: "POST",
         headers: { authorization: "Bearer test-jinx-api-key" },
         body: JSON.stringify({
-          model: "@cf/meta/llama-3.3-70b-instruct",
+          model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
           messages: [{ role: "user", content: "hi" }],
         }),
       }),
