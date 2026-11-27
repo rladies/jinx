@@ -27,13 +27,14 @@ gather_github_org <- function(src) {
     per_page = 100L,
     .limit = Inf
   )
-  live_repos <- Filter(
-    function(r) !isTRUE(r$archived) && !isTRUE(r$disabled),
-    repos
-  )
+  live_repos <- Filter(rag_repo_is_indexable, repos)
+  private <- length(Filter(function(r) isTRUE(r$private), repos))
   cli::cli_alert_info(
     "{length(teams)} teams, {length(repos)} repos ({length(live_repos)} live)"
   )
+  if (private) {
+    cli::cli_alert_info("Skipping {private} private repo{?s}")
+  }
 
   team_chunks <- Filter(
     Negate(is.null),
@@ -48,6 +49,22 @@ gather_github_org <- function(src) {
   chunks <- c(team_chunks, repo_chunks)
   cli::cli_alert_info("github-org: {length(chunks)} chunks")
   chunks
+}
+
+#' Whether a repository may be indexed
+#'
+#' A private repository's name, description and README must not reach the
+#' index: it answers questions in Slack, where anyone in the community
+#' workspace can ask, and nothing about being readable by the App means
+#' it is readable by them. Archived and disabled repositories are
+#' skipped as before.
+#'
+#' @param repo A repository record from the GitHub API.
+#' @return `TRUE` when the repository may be indexed.
+#' @keywords internal
+#' @noRd
+rag_repo_is_indexable <- function(repo) {
+  !isTRUE(repo$archived) && !isTRUE(repo$disabled) && !isTRUE(repo$private)
 }
 
 #' Render a GitHub team to a labelled chunk record
@@ -129,8 +146,7 @@ render_repo_meta_text <- function(repo) {
     `Primary language` = repo$language %or% "n/a",
     Topics = topics,
     License = repo$license$spdx_id %or% "n/a",
-    Homepage = repo$homepage %or% repo$html_url,
-    Visibility = if (isTRUE(repo$private)) "private" else "public"
+    Homepage = repo$homepage %or% repo$html_url
   )
   paste(paste0(names(fields), ": ", fields), collapse = "\n")
 }

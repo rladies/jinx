@@ -14,6 +14,7 @@
   worker whenever `JINX_WORKER_URL` and `JINX_WORKER_API_KEY` are both set,
   and falls back to a direct request otherwise, so local runs and tests
   need no worker.
+
 ## A Cloudflare blip no longer reposts the blog channel
 
 - **Announced posts are recorded one at a time, as each one is sent.**
@@ -41,6 +42,41 @@
   schedules. Going red instead of posting is only the safer failure if
   somebody hears about it; a sustained Cloudflare outage will say so
   once per ten-minute run.
+
+## Private repositories are out of the RAG index
+
+- **The org source indexed every repository the App could see, private
+  ones included.** It filtered on `archived` and `disabled` and never on
+  `private`, so private repository names, descriptions and README text
+  were embedded into the index that answers questions in Slack - where
+  anyone in the community workspace can ask. Being readable by the App
+  is not the same as being readable by them. `rag_repo_is_indexable()`
+  now decides, and the pkgdown source uses it too.
+
+- **What was already indexed is deleted.** The index is upserted by id
+  rather than rebuilt, so filtering the gather would have left every
+  vector already in it exactly where it was. `rag_purge_private()`
+  recomputes the ids each private repository's chunks were stored under
+  - with the same functions that produced them, rather than a guess at
+  the scheme - and deletes them.
+
+- **It runs on every build**, not once. It is idempotent, deleting an id
+  the index does not hold is not an error, and a repository that goes
+  private later then gets cleaned up without anyone having to notice.
+  The README range is deleted from zero to a margin past the current
+  chunk count, because a README that has been shortened - or deleted -
+  since it was indexed leaves vectors behind at indices it no longer
+  produces.
+
+- **The purge fails the build rather than skipping quietly.** A missing
+  `GITHUB_TOKEN` used to warn and do nothing, and a repository whose ids
+  could not be computed was skipped with a warning; both left a green
+  run in which private text may still be in the index. Both now stop the
+  run, after the deletes that did succeed.
+
+- A repository's metadata chunk no longer states its visibility. The
+  field only ever had one interesting value, and that value cannot
+  appear any more.
 
 ## Blog announcements carry the post's own preview
 

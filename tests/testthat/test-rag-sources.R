@@ -355,18 +355,26 @@ describe("render_repo_meta_text", {
     txt <- render_repo_meta_text(repo)
     expect_match(txt, "Repository: rladies/foo")
     expect_match(txt, "Topics: \\(none\\)")
-    expect_match(txt, "Visibility: public")
+    expect_no_match(txt, "Visibility")
   })
 
-  it("renders topics list and private visibility", {
+  it("renders a topics list", {
     txt <- render_repo_meta_text(list(
       full_name = "rladies/foo",
-      private = TRUE,
       topics = list("r", "shiny"),
       html_url = "u"
     ))
     expect_match(txt, "Topics: r, shiny")
-    expect_match(txt, "Visibility: private")
+  })
+
+  it("says nothing about visibility, since only public repos are indexed", {
+    txt <- render_repo_meta_text(list(
+      full_name = "rladies/foo",
+      private = TRUE,
+      html_url = "u"
+    ))
+    expect_no_match(txt, "Visibility")
+    expect_no_match(txt, "private")
   })
 })
 

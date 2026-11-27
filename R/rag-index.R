@@ -13,8 +13,13 @@
 #' @param index_name Vectorize index. Defaults to env `VECTORIZE_INDEX`
 #'   or `"rladies-content"`.
 #' @param batch_size Number of chunks per embed/upsert call.
+#' @param purge_private Whether to delete any private repository's
+#'   chunks from the index afterwards. See [rag_purge_private()]: the
+#'   index is upserted rather than rebuilt, so vectors from before
+#'   private repositories were excluded persist until deleted.
 #' @param model Workers AI embedding model.
-#' @return Invisibly: list with `chunks` (total) and `upsert` (API response).
+#' @return Invisibly: list with `chunks` (total), `upsert` (API
+#'   response) and `purged` (ids deleted).
 #' @export
 rag_index_build <- function(
   sources = NULL,
@@ -22,7 +27,8 @@ rag_index_build <- function(
   api_token = Sys.getenv("CLOUDFLARE_API_TOKEN"),
   index_name = NULL,
   batch_size = 50L,
-  model = "@cf/baai/bge-base-en-v1.5"
+  model = "@cf/baai/bge-base-en-v1.5",
+  purge_private = TRUE
 ) {
   if (!nzchar(api_token)) {
     cli::cli_abort("CLOUDFLARE_API_TOKEN is not set.")
@@ -53,7 +59,26 @@ rag_index_build <- function(
   cli::cli_alert_success(
     "Upserted {length(vectors)} vectors to {.field {index_name}}."
   )
-  invisible(list(chunks = chunks, upsert = result))
+
+  purged <- if (isTRUE(purge_private)) {
+    orgs <- unique(unlist(lapply(sources, function(src) src$org)))
+    sum(vapply(
+      orgs,
+      function(org) {
+        rag_purge_private(
+          org = org,
+          account_id = account_id,
+          api_token = api_token,
+          index_name = index_name
+        )
+      },
+      integer(1)
+    ))
+  } else {
+    0L
+  }
+
+  invisible(list(chunks = chunks, upsert = result, purged = purged))
 }
 
 #' Gather chunks from every configured source
