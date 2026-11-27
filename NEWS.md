@@ -61,6 +61,11 @@
 - **Topics are left unset.** They are the one part of a group that is a
   judgement call rather than a derivation.
 
+- **The draft token is written to the run log before it is stored.** The
+  draft exists on Meetup by then, and Meetup cannot list drafts, so a
+  failed write to the issue would otherwise leave it unreachable for
+  good. The log line is the recovery path.
+
 - The draft token is kept in a hidden block on the issue, because Meetup
   exposes no way to list drafts: neither `Query` nor `Member` has a
   `groupDrafts` field. It is an identifier rather than a credential --

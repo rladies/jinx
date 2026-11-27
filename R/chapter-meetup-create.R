@@ -213,6 +213,13 @@ chapter_meetup_draft <- function(
     cli::cli_abort("Meetup returned no draft token for {.val {urlname}}")
   }
 
+  # Logged before it is stored, because the draft already exists by now
+  # and Meetup cannot list drafts. If the issue write below fails, this
+  # line is the only remaining way to reach the draft. The token is an
+  # identifier, not a credential - publishing with it still needs
+  # jinx's own Meetup account - so the run log is a safe place for it.
+  cli::cli_alert_info("Draft token for {.val {urlname}}: {token}")
+
   chapter_meetup_draft_store(
     issue_number,
     chapter_meetup_draft_render(token, urlname, name),
