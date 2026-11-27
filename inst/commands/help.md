@@ -18,11 +18,11 @@
 | `/jinx chapter-team-audit`                           | Compare chapter GitHub teams against the website data                                      |
 | `/jinx chapter-repo <urlname> <city> <country>`      | Create a chapter's presentations repo (opt-in)                                             |
 | `/jinx chapter-team <urlname> <city> <country>`      | Create a chapter's GitHub team under `chapters`                                            |
-| `/jinx chapter-provision <issue> [repo]`             | Set up everything jinx can for a chapter: website entry, team, Meetup photo, `repo` to add the presentations repo |
-| `/jinx chapter-slack <issue>`                        | Prompt for the Organisers Slack invite                                                     |
-| `/jinx chapter-slack-sent <issue>`                   | Record that the Organisers Slack invite was sent                                           |
-| `/jinx chapter-email <issue>`                        | Create the chapter mailbox (needs an approval comment)                                      |
-| `/jinx chapter-meetup <issue>`                       | Post the Meetup setup brief on an onboarding issue                                         |
+| `/jinx chapter-provision [issue] [repo]`             | Set up everything jinx can for a chapter: website entry, team, Meetup photo, `repo` to add the presentations repo |
+| `/jinx chapter-slack [issue]`                        | Prompt for the Organisers Slack invite                                                     |
+| `/jinx chapter-slack-sent [issue]`                   | Record that the Organisers Slack invite was sent                                           |
+| `/jinx chapter-email [issue]`                        | Create the chapter mailbox (needs an approval comment)                                      |
+| `/jinx chapter-meetup [issue]`                       | Post the Meetup setup brief on an onboarding issue                                         |
 | `/jinx chapter-meetup-logo <urlname>`                | Upload the RLadies+ logo as a group's photo                                                |
 | `/jinx gha-dashboard`                                | Generate GitHub Actions status report                                                      |
 | `/jinx contributors [repo]`                          | List contributors for a repo                                                               |
@@ -53,3 +53,6 @@
 **Teams:** abstract-review, blog, campaigns, chapter-activity, chapter-onboarding, coc, communications, community-slack, conference-liaison, directory, meetup-pro, mentoring, rocur, translation, website
 
 **DM Jinx or open the Assistant panel** to ask any RLadies+ question — Jinx searches the guide and the website. React to Jinx's answers with 👍 / 👎 / ❤️ so we can track which replies are useful.
+
+Commands taking `[issue]` can leave it out when run as a comment on the
+onboarding issue itself.

@@ -413,3 +413,86 @@ describe("cmd_attach_slack_context", {
     expect_null(cmd_attach_slack_context(NULL, "T_ORG", "C1", "general"))
   })
 })
+
+describe("cmd_attach_issue_context", {
+  onboarding <- "rladies/new-chapters-onboarding"
+
+  it("fills the issue from the comment it was posted on", {
+    cmd <- cmd_attach_issue_context(
+      cmd_parse("/jinx chapter-provision"),
+      onboarding,
+      42
+    )
+    expect_identical(cmd$action, "chapter-provision")
+    expect_identical(cmd$issue, 42L)
+  })
+
+  it("keeps an explicit issue number over the context", {
+    cmd <- cmd_attach_issue_context(
+      cmd_parse("/jinx chapter-provision 7"),
+      onboarding,
+      42
+    )
+    expect_identical(cmd$issue, 7L)
+  })
+
+  it("keeps the repo option when the issue comes from context", {
+    cmd <- cmd_attach_issue_context(
+      cmd_parse("/jinx chapter-provision repo"),
+      onboarding,
+      42
+    )
+    expect_identical(cmd$issue, 42L)
+    expect_true(cmd$presentations_repo)
+  })
+
+  it("fills the issue for the other issue commands too", {
+    for (action in c(
+      "chapter-slack",
+      "chapter-slack-sent",
+      "chapter-email",
+      "chapter-meetup"
+    )) {
+      cmd <- cmd_attach_issue_context(
+        cmd_parse(paste("/jinx", action)),
+        onboarding,
+        42
+      )
+      expect_identical(cmd$issue, 42L)
+      expect_identical(cmd$action, action)
+    }
+  })
+
+  it("refuses an implicit issue from another repository", {
+    cmd <- cmd_attach_issue_context(
+      cmd_parse("/jinx chapter-provision"),
+      "rladies/jinx",
+      42
+    )
+    expect_identical(cmd$action, "error")
+    expect_match(cmd$message, "needs an issue number")
+  })
+
+  it("refuses an implicit issue when there is no issue", {
+    cmd <- cmd_attach_issue_context(
+      cmd_parse("/jinx chapter-provision"),
+      onboarding,
+      ""
+    )
+    expect_identical(cmd$action, "error")
+  })
+
+  it("leaves commands that take no issue alone", {
+    cmd <- cmd_parse("/jinx chapter-team-audit")
+    expect_identical(cmd_attach_issue_context(cmd, onboarding, 42), cmd)
+  })
+
+  it("leaves a NULL command alone", {
+    expect_null(cmd_attach_issue_context(NULL, onboarding, 42))
+  })
+
+  it("still rejects a non-numeric issue argument", {
+    cmd <- cmd_parse("/jinx chapter-email nonsense")
+    expect_identical(cmd$action, "error")
+  })
+})
