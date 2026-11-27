@@ -1,0 +1,57 @@
+name: Ops · Chapter Intake
+
+on:
+  repository_dispatch:
+    types: [chapter-intake]
+
+concurrency:
+  group: ops-chapter-intake-${{ github.event.client_payload.issue }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  intake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: ghcr.io/rladies/jinx-bot:latest
+
+    steps:
+      - name: Verify the originating repository
+        env:
+          ORIGIN_REPO: ${{ github.event.client_payload.repo }}
+        run: |
+          if [ "$ORIGIN_REPO" != "rladies/new-chapters-onboarding" ]; then
+            echo "::error::Intake is only for rladies/new-chapters-onboarding"
+            exit 1
+          fi
+
+      - name: Mint jinx-familiar App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.JINX_APP_ID }}
+          private-key: ${{ secrets.JINX_PRIVATE_KEY }}
+          owner: rladies
+
+      - name: Take the issue over
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          # meetupr resolves credentials as <client_name>_<key>, with the
+          # prefix from MEETUPR_CLIENT_NAME - hence the lowercase names.
+          MEETUPR_CLIENT_NAME: meetupr
+          meetupr_client_key: ${{ secrets.MEETUP_CLIENT_KEY }}
+          meetupr_jwt_issuer: ${{ secrets.MEETUP_MEMBER_ID }}
+          meetupr_jwt_token: ${{ secrets.MEETUP_PRIVATE_KEY }}
+          ISSUE: ${{ github.event.client_payload.issue }}
+        run: |
+          Rscript -e '
+            issue <- Sys.getenv("ISSUE")
+            if (!grepl("^[0-9]+$", issue)) {
+              stop("client_payload.issue is not an issue number")
+            }
+            jinx::chapter_intake(as.integer(issue))
+          '

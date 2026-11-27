@@ -40,7 +40,7 @@ chapter_create_setup <- function(
     repo = onboarding_repo,
     title = glue::glue("{city}, {country} chapter setup"),
     body = body,
-    labels = list("new chapter")
+    labels = list(chapter_issue_label("setup"))
   )
 
   review_assign_onboarding(org, onboarding_repo, issue$number)
@@ -84,7 +84,7 @@ chapter_create_update <- function(
     repo = onboarding_repo,
     title = glue::glue("{city}, {country} chapter update"),
     body = body,
-    labels = list("chapter update")
+    labels = list(chapter_issue_label("update"))
   )
 
   review_assign_onboarding(org, onboarding_repo, issue$number)
