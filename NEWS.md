@@ -1,5 +1,48 @@
 # jinx (development version)
 
+## Blog feeds are fetched through the worker
+
+- **Feeds behind Cloudflare bot protection are announced again.** Several
+  blogs in the curated list sit behind Cloudflare with Bot Fight Mode on,
+  which managed-challenges the Azure ranges GitHub Actions runs on: those
+  feeds answered every scheduled poll with a 403 while the run itself
+  stayed green, so their posts went unannounced. `blog_feed_fetch()` and
+  `blog_feed_og()` now fetch through the worker's new `POST /content/fetch`
+  route, whose egress is scored differently.
+
+- **No new configuration.** `rag_request_proxied()` routes through the
+  worker whenever `JINX_WORKER_URL` and `JINX_WORKER_API_KEY` are both set,
+  and falls back to a direct request otherwise, so local runs and tests
+  need no worker.
+
+## A Cloudflare blip no longer reposts the blog channel
+
+- **Announced posts are recorded one at a time, as each one is sent.**
+  The seen-set used to be written once, after the whole batch: on 3
+  November a run posted to both blog channels and then could not reach
+  `api.cloudflare.com` to record it, which would have announced the same
+  post again ten minutes later. The window between "Slack has it" and
+  "KV knows" is now one post wide.
+
+- **An unreadable seen-set aborts the run instead of reading as
+  empty.** `kv_string_set_load()` treated every failure as "nothing
+  recorded yet", so a blip on the *read* would have reposted up to
+  `limit` posts the channel had already seen. A missing key still means
+  a first run; a 5xx, a bad token or a connection failure now stops the
+  run. The same applies to the channel spotlight's round-robin.
+
+- **Cloudflare KV reads and writes retry.** `cloudflarer` builds its
+  requests without `httr2::req_retry()` and its KV functions do not
+  expose the request, so jinx retries its own KV calls three times for a
+  transport failure, a 429 or a 5xx - never for a 404 or a 403, and
+  never for a failure raised before the request goes out. The lasting
+  fix belongs in `cloudflarer`, which would make this a deletion.
+
+- **A failed blog-feed run says so in Slack**, like the other
+  schedules. Going red instead of posting is only the safer failure if
+  somebody hears about it; a sustained Cloudflare outage will say so
+  once per ten-minute run.
+
 ## Private repositories are out of the RAG index
 
 - **The org source indexed every repository the App could see, private
@@ -19,7 +62,7 @@
 
 - **It runs on every build**, not once. It is idempotent, deleting an id
   the index does not hold is not an error, and a repository that goes
-  private later then gets cleaned up without anyone having to notice. It
+  private later then gets cleaned up without anyone having to notice.  It
   also deletes a margin past each README's current chunk count, since a
   README that has been shortened since it was indexed leaves vectors
   behind at indices it no longer produces.
@@ -27,143 +70,6 @@
 - A repository's metadata chunk no longer states its visibility. The
   field only ever had one interesting value, and that value cannot
   appear any more.
-
-## Opening an onboarding issue starts the onboarding
-
-- **The two intake templates become issue forms, and jinx composes the
-  issue from them.** The forms ask only for the facts - city, country,
-  region, prospective organisers - and `chapter_intake()` writes the
-  rest when the issue opens: the conventional
-  `City, Country chapter setup` title, the checklist, and the
-  machine-readable block every other chapter command reads. Nothing is
-  hand-edited into a placeholder any more.
-
-- **The checklist now comes from the template bundled with jinx**, not
-  from a copy in the onboarding repository. The two had already drifted
-  - the repository's copy still said "R-Ladies" and linked a wiki page
-  the guide replaced - and a checklist jinx ticks items off cannot be
-  allowed to differ from the one it reads.
-
-- **A new chapter's Meetup group is drafted on intake.** Drafting
-  creates nothing public and a draft can be discarded, so it costs
-  nothing to have it waiting; @rladies/meetup-pro is left with only the
-  publish. The duplicate-city check, the onboarding team notification
-  and the available commands are posted at the same time. A step that
-  fails is reported and the rest of the intake stands.
-
-- Human judgement is untouched. Confirming the place is a real city,
-  vetting the organisers and checking the Airtable form are still
-  checklist items for a person, and nothing public exists until someone
-  runs a command.
-
-## Fixes
-
-- **`chapter_remind_stale()` was searching for labels that do not
-  exist.** It filtered onboarding issues on `"new chapter"` and
-  `"chapter update"`; the repository's labels are
-  `"new chapter: first contact"` and `"updating chapter data"`, so the
-  stale-issue nudge had nothing to find. `chapter_create_setup()` and
-  `chapter_create_update()` applied the same non-existent labels.
-  All three now read `chapter_issue_label()`.
-
-- **The bot image could not talk to Meetup at all.** `jose` signs the
-  JWT `meetupr` authenticates with, and sits in `meetupr`'s Suggests, so
-  `pak::pak("local::.")` never installed it - which means
-  `/jinx chapter-meetup-logo` has been failing in the container since it
-  was added. The image installs it explicitly now.
-
-## jinx can create a chapter's Meetup group
-
-- **`/jinx chapter-meetup-draft` builds the group from the onboarding
-  issue and leaves it as a draft**, which creates nothing public: the
-  standard name and urlname from `chapter_meetup_name()` and
-  `chapter_meetup_urlname()`, the standard description from the guide,
-  and the city's own coordinates from the geocoder the duplicate check
-  already uses. It refuses a urlname Meetup says is taken and a city it
-  cannot place, rather than drafting something wrong.
-
-- **`/jinx chapter-meetup-publish` is the irreversible half, and is its
-  own command on purpose.** Drafting is a derivation and can be redone;
-  publishing creates a real group under the Pro network and cannot be
-  undone from here. So jinx posts the draft for @rladies/meetup-pro to
-  read - name, URL, coordinates, urlname check - and waits to be told.
-
-- **Topics are left unset.** They are the one part of a group that is a
-  judgement call rather than a derivation.
-
-- The draft token is kept in a hidden block on the issue, because Meetup
-  exposes no way to list drafts: neither `Query` nor `Member` has a
-  `groupDrafts` field. It is an identifier rather than a credential --
-  the GraphQL endpoint authenticates every request against the Pro
-  account, so the token publishes nothing without jinx's own Meetup
-  credentials -- and it is cleared once the group is live.
-
-- **`chapter_thread_scan()` reads jinx's own publish record**, marked
-  with `<!-- jinx:meetup-live -->`. Bot comments are otherwise ignored
-  and have to be, since the Meetup *brief* proposes a urlname before any
-  group exists; the marker separates the comment that reports an
-  accomplished fact from the one that floats a suggestion. Without it
-  `chapter-provision` would have gone on waiting for a group jinx had
-  just created.
-
-## An issue command knows which issue it is on
-
-- **`/jinx chapter-provision`, `chapter-email`, `chapter-meetup`,
-  `chapter-slack` and `chapter-slack-sent` no longer need the issue
-  number** when they are run as a comment on the issue they are about,
-  which is nearly always. Repeating a number that is already at the top
-  of the page was only ever a chance to mistype it.
-
-- **An implicit number is only taken from the onboarding repository.**
-  These commands address onboarding issues by number, so a number
-  borrowed from a comment somewhere else in the org would point at a
-  different issue in `new-chapters-onboarding` - and that issue is the
-  one that would get a chapter provisioned against it. Elsewhere the
-  number is still required, and `cmd_attach_issue_context()` says so.
-
-## Commands work from any repository, and one of them sets a chapter up
-
-- **`/jinx` commands can be run from any RLadies+ repository**, not just
-  `rladies/jinx`. A repo adopts them with the new
-  `reusable-commands.yml`, which does nothing but relay the comment's
-  location to jinx. The jinx repository keeps the credentials: the
-  Airtable, Slack, Cloudflare and Meetup secrets are configured there
-  and nowhere else, so a repository that gains commands gains no access
-  to them. The reply comes back on the issue where the command was
-  typed.
-
-- **A relayed command's text and author are read from the API, never
-  from the dispatch.** The payload carries an `owner/repo` and a comment
-  id; `cmd_relay_resolve()` fetches that comment with jinx's own
-  credentials and takes the command and the actor from what GitHub
-  returns. A forged dispatch therefore cannot put a command in an
-  authorised member's mouth - at worst it replays one they genuinely
-  posted, which the ten-minute freshness window bounds and the commands
-  are idempotent against. Authorisation is unchanged: privileged
-  commands still need the actor in the global team directory.
-
-- **`/jinx chapter-provision <issue>` does the whole infrastructure
-  set-up** that jinx can do by itself: the prospective website entry,
-  the chapter's GitHub team, the Meetup group photo, and - with the
-  `repo` option - the presentations repository. Each step checks for its
-  own work first and a failing step does not stop the others, so the
-  command is meant to be re-run as the onboarding thread fills in. It
-  posts one table saying what was done, what is waiting and what broke.
-  The chapter mailbox stays out of it: that needs its own approval
-  comment on the issue.
-
-- **jinx reads the facts it needs off the onboarding conversation.**
-  `chapter_thread_scan()` picks the Meetup group URL and the chapter
-  mailbox out of the issue's comments, because the checklist already
-  asks the Meetup Pro and email teams to post them there and that is the
-  only record of either. Only human comments count - jinx's own Meetup
-  brief *proposes* a urlname, and reading that back would have it
-  confirm its own guess as fact - and the first human posting of a fact
-  wins over a later comment quoting it.
-
-- **`/jinx chapter-team <urlname> <city> <country>`** creates a
-  chapter's GitHub team under `chapters`. `chapter_team_create()` had
-  been in the package, and reachable from nothing.
 
 ## Blog announcements carry the post's own preview
 

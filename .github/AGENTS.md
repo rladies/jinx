@@ -46,9 +46,10 @@ The Slack bridge runs as a Cloudflare Worker at `https://jinx.rladies.workers.de
 /ai/generate        POST   Workers AI passthrough for other RLadies+ repos
 /links/shorten      POST   Create (or reuse) a l.rladies.org short link
 /workspace/mailbox  POST   Create a chapter mailbox in Google Workspace
+/content/fetch      POST   Fetch a public URL from Cloudflare's network
 ```
 
-Routes follow `/<service>/<action>` — never flat paths like `/slack-interact` or `/airtable-webhook`. Slack-side endpoints all run through `verifySlackSignature()` in the router; `/airtable/webhook` uses its own `x-airtable-secret` header; `/ai/generate`, `/links/shorten` and `/workspace/mailbox` are gated by a shared `JINX_WORKER_API_KEY` bearer token (constant-time compared, `worker/src/api-auth.js`) — see the README's "HTTP API for other repos" section for the request/response contract of each.
+Routes follow `/<service>/<action>` — never flat paths like `/slack-interact` or `/airtable-webhook`. Slack-side endpoints all run through `verifySlackSignature()` in the router; `/airtable/webhook` uses its own `x-airtable-secret` header; `/ai/generate`, `/links/shorten`, `/workspace/mailbox` and `/content/fetch` are gated by a shared `JINX_WORKER_API_KEY` bearer token (constant-time compared, `worker/src/api-auth.js`) — see the README's "HTTP API for other repos" section for the request/response contract of each.
 
 (An earlier `/analytics/rum` route proxying Cloudflare Web Analytics was removed — `rum_collect_analytics()`, already exported from the `jinx` R package, covers that need directly as an R dependency instead.)
 
@@ -56,6 +57,28 @@ The same worker also answers `GET <code>` on a second hostname, `l.rladies.org`
 (routed via the `routes` entry in `wrangler.jsonc`, not the `/<service>/<action>`
 API above), 301-redirecting to the short link's target or `404` if the code is
 unknown. See "URL shortener" below.
+
+### Fetching feeds through the worker
+
+`POST /content/fetch` (`worker/src/fetch-proxy.js`) takes `{url, user_agent?}` and
+returns the upstream body with the upstream status mirrored, so a caller's
+own error handling still sees a 403 as a 403.
+
+It exists because several blogs in `awesome-rladies-creations` sit behind
+Cloudflare with Bot Fight Mode on, which managed-challenges the Azure ranges
+GitHub Actions runs on: those feeds answered every scheduled poll of
+`blog_feed_run()` with a 403 while the run itself stayed green, so posts went
+unannounced for days before anyone noticed. A worker's egress is scored
+differently and the same request succeeds. `rag_request_proxied()` on the R
+side routes through it whenever `JINX_WORKER_URL` and `JINX_WORKER_API_KEY`
+are both set, and falls back to a direct request otherwise, so local runs and
+tests need no worker.
+
+It is a fetch proxy, so beyond the bearer gate the target must be an http(s)
+URL on a public hostname — IP literals, `localhost` and the `.local`,
+`.internal` and dotless names are refused before any fetch happens, which is
+what keeps cloud metadata endpoints out of reach — and the response is capped
+at 2 MB.
 
 ### Chapter mailbox provisioning — stays in JavaScript
 
